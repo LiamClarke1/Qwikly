@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { useState, useMemo } from "react";
+import { CheckCircle2, ArrowRight, Calculator, MessageCircle } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
 import CTAButton from "@/components/CTAButton";
 import FAQ from "@/components/FAQ";
@@ -77,11 +77,26 @@ const comparisons = [
 
 export default function PricingPage() {
   const [selectedTrade, setSelectedTrade] = useState(2); // Default to Plumber
+  const [customJobValue, setCustomJobValue] = useState("");
+  const [customIndustry, setCustomIndustry] = useState("");
+
   const trade = tradePricing[selectedTrade];
   const bookingsPerMonth = 10;
   const revenue = bookingsPerMonth * trade.jobValue;
   const cost = bookingsPerMonth * trade.price;
   const roi = Math.round((revenue / cost) * 100);
+
+  // Custom calculator: 8% of declared job value, minimum R200, maximum R5,000
+  const customCalc = useMemo(() => {
+    const val = parseFloat(customJobValue.replace(/[^0-9.]/g, ""));
+    if (!val || val <= 0) return null;
+    const raw = Math.round(val * 0.08);
+    const fee = Math.max(200, Math.min(5000, Math.round(raw / 50) * 50)); // Round to nearest R50
+    const monthlyRevenue = bookingsPerMonth * val;
+    const monthlyCost = bookingsPerMonth * fee;
+    const calcRoi = Math.round((monthlyRevenue / monthlyCost) * 100);
+    return { fee, monthlyRevenue, monthlyCost, calcRoi, jobValue: val };
+  }, [customJobValue]);
 
   return (
     <main className="bg-background">
@@ -138,8 +153,105 @@ export default function PricingPage() {
             </div>
             <div className="px-6 py-3 bg-[#f8fafc] border-t border-border">
               <p className="text-xs text-muted text-center">
-                Other industries priced at consultation. Click a trade above to see your ROI breakdown.
+                Click a trade above to see your ROI breakdown below.
               </p>
+            </div>
+          </div>
+
+          {/* Custom Industry Calculator */}
+          <div className="mt-10 max-w-3xl mx-auto bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
+            <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] px-6 py-4 flex items-center gap-3">
+              <Calculator className="w-5 h-5 text-cta" />
+              <h3 className="text-white font-heading font-semibold">
+                Don&apos;t see your industry? Calculate your price.
+              </h3>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-muted mb-6">
+                Your per-booking fee is based on what you charge your customers. Enter your average service price and we&apos;ll show you exactly what Qwikly costs.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Your industry</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Dentist, Beauty Salon, Auto Mechanic"
+                    value={customIndustry}
+                    onChange={(e) => setCustomIndustry(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-cta/40 focus:border-cta transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1.5">Average service/job price (Rands)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 3000"
+                    value={customJobValue}
+                    onChange={(e) => setCustomJobValue(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-cta/40 focus:border-cta transition-colors"
+                  />
+                </div>
+              </div>
+
+              {customCalc && (
+                <div className="space-y-3">
+                  <div className="bg-[#f8fafc] rounded-xl p-5 border border-border">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm text-muted">Your per-booking fee</span>
+                      <span className="font-heading text-3xl font-bold text-cta">
+                        R{customCalc.fee.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm text-muted">At 10 bookings/month, you pay</span>
+                      <span className="font-heading text-lg font-bold text-foreground">
+                        R{customCalc.monthlyCost.toLocaleString()}/month
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm text-muted">Revenue those bookings generate</span>
+                      <span className="font-heading text-lg font-bold text-green-600">
+                        R{customCalc.monthlyRevenue.toLocaleString()}/month
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between pt-3 border-t border-border">
+                      <span className="text-sm font-semibold text-foreground">Your ROI</span>
+                      <span className="font-heading text-2xl font-bold text-green-600">
+                        {customCalc.calcRoi}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-cta/5 rounded-lg p-4 border border-cta/20">
+                    <p className="text-xs text-foreground leading-relaxed">
+                      <strong>How this works:</strong> Your per-booking fee is calculated at ~8% of your average service price.
+                      During onboarding, you&apos;ll enter the actual prices you charge customers. The AI uses these prices when
+                      talking to leads, and your per-booking fee is tied to them. If your service prices change, your booking fee
+                      adjusts to match. This keeps pricing fair for everyone.
+                    </p>
+                  </div>
+
+                  <div className="text-center pt-2">
+                    <CTAButton size="md">
+                      Get Started with {customIndustry || "Your Business"}
+                    </CTAButton>
+                  </div>
+                </div>
+              )}
+
+              {!customCalc && (
+                <div className="flex items-center gap-3 pt-2">
+                  <MessageCircle className="w-5 h-5 text-cta flex-shrink-0" />
+                  <p className="text-sm text-muted">
+                    Prefer to chat? Message us on{" "}
+                    <a href="https://wa.me/27000000000" className="text-cta hover:underline cursor-pointer">
+                      WhatsApp
+                    </a>{" "}
+                    and we&apos;ll work out your pricing together.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
