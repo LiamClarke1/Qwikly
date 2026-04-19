@@ -9,15 +9,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#111827",
-        cta: "#d97706",
-        "cta-hover": "#b45309",
+        primary: "#0F172A",
+        "primary-light": "#1E293B",
+        cta: "#CA8A04",
+        "cta-hover": "#A16207",
+        "cta-light": "#FEF3C7",
+        accent: "#0EA5E9",
         background: "#F8FAFC",
-        foreground: "#1E293B",
+        foreground: "#0F172A",
         muted: "#64748B",
         "muted-light": "#94A3B8",
         border: "#E2E8F0",
         card: "#FFFFFF",
+        success: "#16A34A",
+        danger: "#DC2626",
       },
       fontFamily: {
         heading: ["var(--font-poppins)", "sans-serif"],

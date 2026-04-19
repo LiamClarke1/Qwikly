@@ -8,62 +8,67 @@ const faqs = [
   {
     question: "What is Qwikly?",
     answer:
-      "Qwikly is an AI-powered WhatsApp assistant built for trade and service businesses. It replies to incoming leads instantly, qualifies them, answers common questions about your services, and books appointments on your behalf, so you never lose a job because you were too busy to reply.",
+      "Qwikly is an AI-powered lead response and lifecycle management platform built for South African service businesses. It handles WhatsApp and email leads, qualifies them, books appointments, sends automated follow-ups, recovers no-shows, and revives dormant leads. It runs 24/7 so you never lose a job because you were too busy to reply.",
+  },
+  {
+    question: "Does Qwikly handle email leads too?",
+    answer:
+      "Yes. Qwikly responds to email leads on behalf of your business, using the same trade-specific AI. If a customer reaches out via email, the AI replies, qualifies them, and books the appointment, just like it does on WhatsApp.",
+  },
+  {
+    question: "What happens if a customer doesn\u2019t reply?",
+    answer:
+      "Qwikly automatically follows up. If a lead goes quiet, the AI re-engages them at 4 hours, 24 hours, 2 days, and 5 days. If they still don\u2019t respond on WhatsApp, the AI switches to email. No lead falls through the cracks.",
+  },
+  {
+    question: "What about no-shows?",
+    answer:
+      "If a customer misses their appointment, Qwikly sends an automatic rebooking message within minutes. It suggests the next available time slot and makes it easy for the customer to reschedule, recovering revenue that would otherwise be lost.",
+  },
+  {
+    question: "Can I see what the AI is saying to my customers?",
+    answer:
+      "Absolutely. The Qwikly dashboard gives you full visibility into every conversation, across both WhatsApp and email. You can read transcripts, see booking details, review qualification outcomes, and step in at any time.",
+  },
+  {
+    question: "Does it work with Google Calendar?",
+    answer:
+      "Yes. Qwikly connects directly to your Google Calendar. It checks your real-time availability, offers slots to leads, books confirmed appointments, and sends reminders 24 hours and 1 hour before each appointment to both you and the customer.",
   },
   {
     question: "How does the AI know about my business?",
     answer:
-      "During setup we walk through your services, pricing, service areas, and FAQs. The AI is trained on that information so every reply sounds like it came from you, not a robot.",
+      "During setup we walk through your services, pricing, service areas, and FAQs. The AI is trained on your specific trade, so every reply sounds like it came from you, not a robot. We have custom prompts for 10+ trades including electricians, plumbers, roofers, solar, and more.",
   },
   {
-    question: "Will customers know it's an AI?",
+    question: "Will customers know it\u2019s an AI?",
     answer:
-      "Most won't. The AI uses natural, conversational language tailored to your brand voice. If a customer ever asks directly, the AI will be transparent, but the goal is to feel like a helpful team member, not a chatbot.",
-  },
-  {
-    question: "What happens after the AI books an appointment?",
-    answer:
-      "You get an instant notification with the customer's name, contact details, service requested, and the confirmed time. From there you take over and do what you do best.",
+      "Most won\u2019t. The AI uses natural, conversational language tailored to your brand voice and trade. If a customer ever asks directly, the AI will be transparent, but the goal is to feel like a helpful team member, not a chatbot.",
   },
   {
     question: "How much does it cost?",
     answer:
-      "Qwikly starts with a free trial so you can see results before paying anything. After that, plans are simple and affordable, designed for small businesses. Check the Pricing section for current rates.",
-  },
-  {
-    question: "Is there a contract or monthly fee?",
-    answer:
-      "No long-term contracts. Qwikly is month-to-month, and you can cancel anytime. We keep your business because of results, not lock-in.",
+      "R750 per booked appointment. No monthly fees, no setup costs, no contracts. You only pay when the AI successfully books a real appointment. Start with a free 7-day trial to see results before paying anything.",
   },
   {
     question: "What trades do you work with?",
     answer:
-      "Plumbers, electricians, painters, landscapers, HVAC techs, cleaners, pest control, pool services, dental practices, beauty salons, and more. If your business gets leads via WhatsApp, Qwikly can help.",
+      "Electricians, plumbers, roofers, solar installers, pest control, aircon technicians, pool services, landscapers, garage door specialists, security companies, and more. If your business gets leads via WhatsApp or email, Qwikly can help.",
   },
   {
     question: "How long does setup take?",
     answer:
-      "Most businesses are live within 24 to 48 hours. We handle the heavy lifting. You just answer a few questions about your services and availability.",
+      "Most businesses are live within 24 to 48 hours. We handle the heavy lifting, including WhatsApp integration, email setup, calendar connection, and AI training. You just answer a few questions about your services and availability.",
   },
   {
-    question: "What if a lead asks something the AI can't answer?",
+    question: "What if a lead asks something the AI can\u2019t answer?",
     answer:
-      "The AI will let the customer know that someone from your team will follow up shortly and immediately notifies you so nothing falls through the cracks.",
-  },
-  {
-    question: "Can I see the conversations the AI has?",
-    answer:
-      "Absolutely. You have full visibility into every conversation. You can review chats anytime and step in whenever you want.",
-  },
-  {
-    question: "Does it work after hours and on weekends?",
-    answer:
-      "Yes, Qwikly runs 24/7. Leads that come in at midnight or on a Sunday morning get an instant, professional reply, so you wake up to booked appointments instead of missed messages.",
+      "The AI will let the customer know that someone from your team will follow up shortly and immediately notifies you so nothing falls through the cracks. You can jump in at any time from the dashboard.",
   },
   {
     question: "How do I get started?",
     answer:
-      "Click the 'Start Free Trial' button, fill in a few details, and we'll reach out to get you set up. Most businesses start seeing results within their first week.",
+      "Click the \u2018Start Free Trial\u2019 button, fill in a few details, and we\u2019ll reach out to get you set up. Most businesses start seeing results within their first week.",
   },
 ];
 
@@ -79,7 +84,7 @@ export default function FAQ() {
       <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
         <SectionHeading
           title="Frequently Asked Questions"
-          subtitle="Everything you need to know about Qwikly."
+          subtitle="Everything you need to know about the Qwikly platform."
         />
 
         <div className="mt-12 max-w-3xl mx-auto divide-y divide-border">
@@ -89,9 +94,9 @@ export default function FAQ() {
               <div key={index}>
                 <button
                   onClick={() => toggle(index)}
-                  className="w-full flex items-center justify-between py-5 text-left gap-4 cursor-pointer"
+                  className="w-full flex items-center justify-between py-5 text-left gap-4 cursor-pointer group"
                 >
-                  <span className="font-heading font-semibold text-primary text-base md:text-lg">
+                  <span className="font-heading font-semibold text-primary text-base md:text-lg group-hover:text-cta transition-colors duration-200">
                     {faq.question}
                   </span>
                   <ChevronDown

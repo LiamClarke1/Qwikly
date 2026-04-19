@@ -46,7 +46,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${poppins.variable} ${openSans.variable}`}>
-      <body className="font-body text-foreground bg-background antialiased">
+      <body className="font-body text-foreground bg-background antialiased pt-16">
         <Navbar />
         <main>{children}</main>
         <Footer />

@@ -62,7 +62,7 @@ export default function HowItWorksPage() {
   return (
     <main className="bg-background">
       {/* Hero */}
-      <section className="pt-24 pb-16">
+      <section className="pt-8 pb-16">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <SectionHeading
             title="How Qwikly Works"
@@ -144,8 +144,9 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 bg-primary">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center">
+      <section className="py-20 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
+        <div className="absolute inset-0 hero-grid pointer-events-none" />
+        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-heading text-3xl md:text-4xl font-bold text-white">
             See It In Action
           </h2>

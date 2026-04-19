@@ -1,40 +1,70 @@
 import Link from "next/link";
 
 const footerLinks = [
+  { label: "Features", href: "/#features" },
   { label: "How It Works", href: "/#how-it-works" },
   { label: "Pricing", href: "/#pricing" },
   { label: "FAQ", href: "/#faq" },
 ];
 
+const productLinks = [
+  { label: "Dashboard", href: "/#features" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "How It Works", href: "/how-it-works" },
+];
+
 export default function Footer() {
   return (
-    <footer className="bg-primary text-white">
+    <footer className="bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white">
       <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
-          <div>
-            <Link href="/" className="font-heading font-bold text-2xl">
+          <div className="md:col-span-1">
+            <Link
+              href="/"
+              className="font-heading font-bold text-2xl cursor-pointer"
+            >
               Qwikly
             </Link>
-            <p className="text-gray-400 mt-2 text-sm">
-              Never miss a WhatsApp lead again.
+            <p className="text-gray-400 mt-2 text-sm leading-relaxed">
+              AI-powered lead response and lifecycle management for South
+              African service businesses.
             </p>
           </div>
 
-          {/* Links */}
+          {/* Navigation */}
           <div>
             <h3 className="font-heading font-semibold text-sm uppercase tracking-wider mb-4">
-              Links
+              Navigation
             </h3>
             <ul className="space-y-2">
               {footerLinks.map((link) => (
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="text-gray-400 hover:text-white transition-colors duration-200 text-sm"
+                    className="text-gray-400 hover:text-white transition-colors duration-200 text-sm cursor-pointer"
                   >
                     {link.label}
                   </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Product */}
+          <div>
+            <h3 className="font-heading font-semibold text-sm uppercase tracking-wider mb-4">
+              Product
+            </h3>
+            <ul className="space-y-2">
+              {productLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-gray-400 hover:text-white transition-colors duration-200 text-sm cursor-pointer"
+                  >
+                    {link.label}
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -47,7 +77,7 @@ export default function Footer() {
             </h3>
             <a
               href="mailto:hello@qwikly.co.za"
-              className="text-gray-400 hover:text-white transition-colors duration-200 text-sm"
+              className="text-gray-400 hover:text-white transition-colors duration-200 text-sm cursor-pointer"
             >
               hello@qwikly.co.za
             </a>

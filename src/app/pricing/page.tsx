@@ -48,7 +48,7 @@ export default function PricingPage() {
   return (
     <main className="bg-background">
       {/* Hero */}
-      <section className="pt-24 pb-16">
+      <section className="pt-8 pb-16">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <SectionHeading
             title="Simple, Transparent Pricing"
@@ -184,7 +184,7 @@ export default function PricingPage() {
                 </div>
               </div>
 
-              <div className="bg-primary rounded-xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] rounded-xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <span className="text-gray-300 font-semibold">Return on Investment</span>
                 <span className="font-heading text-4xl font-bold text-cta">
                   567%

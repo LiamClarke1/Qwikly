@@ -1,323 +1,681 @@
+"use client";
+
 import {
   Zap,
   Wrench,
   Home as HomeIcon,
   Sun,
   Bug,
+  Wind,
+  Waves,
+  TreePine,
+  DoorOpen,
+  ShieldCheck,
   MessageSquare,
-  Bot,
-  CalendarCheck,
   Clock,
-  UserCheck,
-  MessageCircle,
-  CreditCard,
-  Shield,
+  CalendarX,
+  CalendarClock,
+  ArrowRight,
+  XCircle,
   CheckCircle2,
   Quote,
+  MessageCircle,
+  Bot,
+  CalendarCheck,
+  RefreshCw,
+  Bell,
+  MailCheck,
+  BarChart3,
+  Users,
 } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 import FAQ from "@/components/FAQ";
 import SectionHeading from "@/components/SectionHeading";
+import WhatsAppMock from "@/components/WhatsAppMock";
+import ComparisonTable from "@/components/ComparisonTable";
+import FeatureBlock from "@/components/FeatureBlock";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
-const trades = [
+/* ──────────────── DATA ──────────────── */
+
+const allTrades = [
   { icon: Zap, label: "Electricians" },
   { icon: Wrench, label: "Plumbers" },
   { icon: HomeIcon, label: "Roofers" },
   { icon: Sun, label: "Solar" },
   { icon: Bug, label: "Pest Control" },
-];
-
-const howItWorks = [
-  {
-    icon: MessageSquare,
-    title: "Lead Messages You",
-    description:
-      "A potential customer WhatsApps your business number about a job.",
-  },
-  {
-    icon: Bot,
-    title: "AI Qualifies in 30 Seconds",
-    description:
-      "Qwikly replies instantly, asks the right questions, and checks if they're in your area.",
-  },
-  {
-    icon: CalendarCheck,
-    title: "Appointment Booked",
-    description:
-      "Qualified leads get booked straight into your Google Calendar. You get notified immediately.",
-  },
+  { icon: Wind, label: "Aircon" },
+  { icon: Waves, label: "Pool" },
+  { icon: TreePine, label: "Landscaping" },
+  { icon: DoorOpen, label: "Garage Doors" },
+  { icon: ShieldCheck, label: "Security" },
 ];
 
 const stats = [
-  { value: "352", label: "appointments booked" },
-  { value: "30s", label: "average response time" },
-  { value: "94%", label: "lead qualification rate" },
-  { value: "24/7", label: "always-on coverage" },
+  { value: "500+", label: "leads handled" },
+  { value: "30s", label: "avg response" },
+  { value: "94%", label: "qualification rate" },
+  { value: "24/7", label: "coverage" },
 ];
 
-const benefits = [
+const howItWorksSteps = [
   {
-    icon: Clock,
-    title: "30-Second Replies",
-    description: "Every lead gets an instant response, even at 2am on a Sunday.",
+    icon: MessageSquare,
+    step: "01",
+    title: "Lead reaches out",
+    description: "A customer messages via WhatsApp or email about a job.",
   },
   {
-    icon: UserCheck,
-    title: "Smart Qualification",
-    description:
-      "The AI asks the right questions: area, job type, urgency, budget range.",
+    icon: Bot,
+    step: "02",
+    title: "AI responds in 30 seconds",
+    description: "Qualifies the lead, asks the right questions, checks your service area.",
   },
   {
     icon: CalendarCheck,
-    title: "Automatic Booking",
-    description:
-      "Qualified leads are booked directly into your Google Calendar.",
+    step: "03",
+    title: "Appointment booked",
+    description: "Straight into your Google Calendar. You and the customer get notified.",
   },
   {
-    icon: MessageCircle,
-    title: "Sounds Human",
-    description:
-      "Natural SA English conversations. Most leads don't even realise it's AI.",
-  },
-  {
-    icon: CreditCard,
-    title: "Pay Per Booking",
-    description: "R750 per booked appointment. Nothing if it doesn't book.",
-  },
-  {
-    icon: Shield,
-    title: "7-Day Free Trial",
-    description:
-      "Test it with real leads for a full week before paying anything.",
+    icon: RefreshCw,
+    step: "04",
+    title: "Follow-up automated",
+    description: "Reminders, no-show recovery, and lead revival happen automatically.",
   },
 ];
 
 const pricingIncludes = [
-  "30-second WhatsApp replies",
-  "Lead qualification",
-  "Google Calendar booking",
-  "Client notifications",
-  "Conversation logging",
-  "24/7 coverage",
+  "30-second WhatsApp response",
+  "Email lead handling",
+  "Automated follow-ups (4h, 24h, 2d, 5d)",
+  "No-show recovery",
+  "Quote follow-ups",
+  "Lead revival (30+ day dormant leads)",
+  "Appointment reminders (24h + 1h)",
+  "Multi-channel (WhatsApp + Email)",
+  "Client dashboard with conversation transcripts",
+  "Trade-specific AI for 10 trades",
 ];
 
 const tradeCards = [
   {
     icon: Zap,
     trade: "Electricians",
-    description:
-      "DB board trips at 9pm. The homeowner WhatsApps you. Qwikly replies in 30 seconds and books the callout.",
+    pain: "DB board trips at 9pm. Qwikly books the callout before your competitor wakes up.",
   },
   {
     icon: Wrench,
     trade: "Plumbers",
-    description:
-      "Burst geyser on a Sunday. Every plumber's phone goes off. Qwikly makes sure you're the first to reply.",
+    pain: "Burst geyser on a Sunday. Qwikly makes sure you are the first to reply.",
   },
   {
     icon: HomeIcon,
     trade: "Roofers",
-    description:
-      "Hail season hits, quotes pile up. Qwikly catches every one while you're on the roof.",
+    pain: "Hail season hits, quotes pile up. Qwikly catches every one while you are on the roof.",
   },
   {
     icon: Sun,
     trade: "Solar Installers",
-    description:
-      "Load shedding announcement drops. 20 leads in a day. Qwikly qualifies and books them all.",
+    pain: "Load shedding announcement drops. 20 leads in a day. Qwikly qualifies and books them all.",
   },
   {
     icon: Bug,
     trade: "Pest Control",
-    description:
-      "Rats at midnight. The customer isn't sleeping. Qwikly books the callout before your competitor wakes up.",
+    pain: "Rats at midnight. The customer is not sleeping. Qwikly books it before sunrise.",
+  },
+  {
+    icon: Wind,
+    trade: "Aircon",
+    pain: "Heatwave hits Joburg. Leads flood in. Qwikly responds in 30 seconds to every single one.",
+  },
+  {
+    icon: Waves,
+    trade: "Pool Services",
+    pain: "Summer green pools everywhere. Qwikly qualifies leads while you are cleaning.",
+  },
+  {
+    icon: TreePine,
+    trade: "Landscaping",
+    pain: "Estate managers want quotes fast. Qwikly handles the enquiry and books the site visit.",
+  },
+  {
+    icon: DoorOpen,
+    trade: "Garage Doors",
+    pain: "Broken motor at 6am. Qwikly replies instantly and gets the booking in your calendar.",
+  },
+  {
+    icon: ShieldCheck,
+    trade: "Security",
+    pain: "Break-in scare at midnight. Qwikly responds, qualifies, and books the assessment.",
   },
 ];
 
 const testimonials = [
   {
     quote:
-      "Qwikly picked up 12 extra jobs in our first month. The AI replies faster than my best receptionist.",
+      "Qwikly picked up 12 extra jobs in our first month. The AI replies faster than my best receptionist and follows up on every single quote.",
     name: "Thabo M.",
-    role: "Electrician, Johannesburg",
+    trade: "Electrician",
+    city: "Johannesburg",
   },
   {
     quote:
-      "I was losing weekend leads for years. Now every WhatsApp gets answered in 30 seconds, even on Christmas Day.",
+      "I was losing weekend leads for years. Now every WhatsApp and email gets answered in 30 seconds, even on Christmas Day. The no-show recovery alone has paid for itself.",
     name: "Sarah K.",
-    role: "Pool Services, Cape Town",
+    trade: "Pool Services",
+    city: "Cape Town",
   },
   {
     quote:
-      "The setup took 2 days and I haven't thought about it since. It just works.",
+      "The setup took 2 days and I have not thought about it since. It just works. The dashboard shows me everything the AI is saying.",
     name: "James R.",
-    role: "Plumber, Pretoria",
+    trade: "Plumber",
+    city: "Pretoria",
   },
 ];
 
+/* ──────────────── MINI VISUAL COMPONENTS ──────────────── */
+
+function MiniWhatsAppVisual() {
+  return (
+    <div className="bg-[#0b141a] rounded-2xl p-4 max-w-sm w-full shadow-lg border border-white/5">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-6 h-6 rounded-full bg-[#00a884]/20 flex items-center justify-center">
+          <MessageCircle className="w-3 h-3 text-[#00a884]" />
+        </div>
+        <span className="text-[#e9edef] text-xs font-medium">WhatsApp</span>
+        <span className="ml-auto text-[#00a884] text-[10px] font-medium bg-[#00a884]/10 px-2 py-0.5 rounded-full">30s reply</span>
+      </div>
+      <div className="space-y-2">
+        <div className="flex justify-end">
+          <div className="bg-[#005c4b] text-white text-[11px] px-3 py-1.5 rounded-lg max-w-[80%]">
+            Hi, I need a plumber in Randburg. Geyser is leaking.
+          </div>
+        </div>
+        <div className="flex justify-start">
+          <div className="bg-[#1f2c34] text-[#e9edef] text-[11px] px-3 py-1.5 rounded-lg max-w-[80%]">
+            Hi! I can help. When did the leak start? Is there hot water damage?
+          </div>
+        </div>
+        <div className="flex justify-start">
+          <div className="bg-[#1f2c34] text-[#e9edef] text-[11px] px-3 py-1.5 rounded-lg max-w-[80%]">
+            I have a slot available at 10am tomorrow. Shall I book it?
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniEmailVisual() {
+  return (
+    <div className="bg-card rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center">
+          <MailCheck className="w-3 h-3 text-blue-600" />
+        </div>
+        <span className="text-foreground text-xs font-medium">Email Response</span>
+      </div>
+      <div className="space-y-2 text-[11px]">
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-muted text-[10px] mb-1">From: leads@yourbusiness.co.za</p>
+          <p className="text-foreground font-medium">Re: Electrical COC Inspection</p>
+          <p className="text-muted mt-1.5 leading-relaxed">
+            Thanks for reaching out! We can do a compliance certificate inspection. Our next available slot is Thursday at 2pm. Would that work for you?
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniTimelineVisual() {
+  const followUps = [
+    { time: "4 hours", label: "First check-in", active: true },
+    { time: "24 hours", label: "Gentle reminder", active: true },
+    { time: "2 days", label: "Value message", active: false },
+    { time: "5 days", label: "Final follow-up", active: false },
+  ];
+  return (
+    <div className="bg-card rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-6 h-6 rounded-full bg-cta/10 flex items-center justify-center">
+          <Clock className="w-3 h-3 text-cta" />
+        </div>
+        <span className="text-foreground text-xs font-medium">Follow-up Cadence</span>
+      </div>
+      <div className="space-y-0">
+        {followUps.map((item, i) => (
+          <div key={item.time} className="flex items-start gap-3">
+            <div className="flex flex-col items-center">
+              <div className={`w-3 h-3 rounded-full border-2 flex-shrink-0 ${item.active ? "border-cta bg-cta" : "border-border bg-white"}`} />
+              {i < followUps.length - 1 && <div className="w-0.5 h-6 bg-border" />}
+            </div>
+            <div className="pb-2">
+              <p className="text-foreground text-[11px] font-semibold">{item.time}</p>
+              <p className="text-muted text-[10px]">{item.label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MiniNotificationVisual() {
+  return (
+    <div className="bg-card rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-6 h-6 rounded-full bg-red-50 flex items-center justify-center">
+          <CalendarX className="w-3 h-3 text-red-500" />
+        </div>
+        <span className="text-foreground text-xs font-medium">No-Show Recovery</span>
+      </div>
+      <div className="space-y-2">
+        <div className="bg-red-50 rounded-lg p-3 border border-red-100">
+          <p className="text-red-700 text-[11px] font-medium">Missed: 9:00 AM appointment</p>
+          <p className="text-red-600/70 text-[10px] mt-0.5">Sarah M. - DB board repair</p>
+        </div>
+        <div className="bg-green-50 rounded-lg p-3 border border-green-100">
+          <div className="flex items-center gap-1.5 mb-1">
+            <Bell className="w-3 h-3 text-green-600" />
+            <p className="text-green-700 text-[11px] font-medium">Auto-rebooking sent</p>
+          </div>
+          <p className="text-green-600/70 text-[10px]">&ldquo;Hi Sarah, I noticed we missed you today. Would tomorrow at 10am work?&rdquo;</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniRevivalVisual() {
+  return (
+    <div className="bg-card rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-6 h-6 rounded-full bg-purple-50 flex items-center justify-center">
+          <CalendarClock className="w-3 h-3 text-purple-600" />
+        </div>
+        <span className="text-foreground text-xs font-medium">Lead Revival</span>
+      </div>
+      <div className="space-y-2">
+        <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
+          <p className="text-purple-700 text-[10px] font-medium mb-1">35 days dormant</p>
+          <p className="text-purple-600/70 text-[10px]">John D. - Solar installation quote</p>
+        </div>
+        <div className="bg-background rounded-lg p-3 border border-border">
+          <p className="text-foreground text-[11px]">&ldquo;Hi John, summer is coming and electricity prices just went up. Still thinking about going solar?&rdquo;</p>
+          <p className="text-cta text-[10px] font-medium mt-1">Seasonal re-engagement sent</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniDashboardVisual() {
+  return (
+    <div className="bg-card rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center">
+          <BarChart3 className="w-3 h-3 text-blue-600" />
+        </div>
+        <span className="text-foreground text-xs font-medium">Client Dashboard</span>
+      </div>
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="bg-background rounded-lg p-2 text-center border border-border">
+          <p className="text-foreground text-sm font-bold">47</p>
+          <p className="text-muted text-[9px]">Leads</p>
+        </div>
+        <div className="bg-background rounded-lg p-2 text-center border border-border">
+          <p className="text-cta text-sm font-bold">32</p>
+          <p className="text-muted text-[9px]">Booked</p>
+        </div>
+        <div className="bg-background rounded-lg p-2 text-center border border-border">
+          <p className="text-green-600 text-sm font-bold">94%</p>
+          <p className="text-muted text-[9px]">Rate</p>
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between bg-background rounded-lg px-3 py-1.5 border border-border">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+            <span className="text-[10px] text-foreground">Sarah M.</span>
+          </div>
+          <span className="text-[9px] text-cta font-medium">Booked</span>
+        </div>
+        <div className="flex items-center justify-between bg-background rounded-lg px-3 py-1.5 border border-border">
+          <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
+            <span className="text-[10px] text-foreground">David K.</span>
+          </div>
+          <span className="text-[9px] text-muted font-medium">Following up</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ──────────────── PAGE ──────────────── */
+
 export default function Home() {
+  useScrollReveal();
+
   return (
     <>
-      {/* ───── HERO ───── */}
-      <section className="bg-background py-20 md:py-28">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl font-bold text-primary leading-tight">
-            Never miss a WhatsApp
-            <br className="hidden sm:block" /> lead again.
-          </h1>
-          <p className="mt-6 text-lg md:text-xl text-muted max-w-2xl mx-auto leading-relaxed">
-            AI that replies to every lead in 30 seconds, qualifies them, and
-            books appointments straight into your calendar. Built for South
-            African service businesses.
-          </p>
+      {/* ─── SECTION 1: HERO (dark navy) ─── */}
+      <section className="bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 hero-grid pointer-events-none" />
 
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <CTAButton size="lg">Start Your Free Trial</CTAButton>
-            <CTAButton variant="outline" size="lg" href="#how-it-works">
-              See How It Works
-            </CTAButton>
-          </div>
+        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8 py-16 md:py-24 lg:py-28">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+            {/* Left: copy */}
+            <div className="flex-1 text-center lg:text-left">
+              <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-bold text-white leading-tight">
+                Every lead answered.
+                <br />
+                Every follow-up sent.
+                <br />
+                Every appointment booked.
+              </h1>
+              <p className="mt-6 text-base md:text-lg text-gray-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                AI that responds in 30 seconds, follows up automatically, and
+                never lets a lead go cold. Built for South African service
+                businesses.
+              </p>
 
-          <p className="mt-6 text-sm text-muted-light">
-            No setup fees. No contracts. Pay only when it books.
-          </p>
-        </div>
-      </section>
-
-      {/* ───── SOCIAL PROOF BAR ───── */}
-      <section className="bg-border/40 py-10">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-muted font-medium text-sm uppercase tracking-wide">
-            Trusted by 50+ service businesses across South Africa
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-8 md:gap-12">
-            {trades.map(({ icon: Icon, label }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center gap-2 text-muted"
-              >
-                <Icon className="w-7 h-7" />
-                <span className="text-xs font-medium">{label}</span>
+              <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
+                  Start Free Trial
+                </CTAButton>
+                <CTAButton variant="outline" size="lg" href="#how-it-works" className="border-white/30 text-white hover:bg-white/10 hover:text-white">
+                  See How It Works
+                </CTAButton>
               </div>
-            ))}
+
+              <p className="mt-5 text-sm text-gray-400">
+                No setup fees. No contracts. Cancel anytime.
+              </p>
+            </div>
+
+            {/* Right: WhatsApp mock */}
+            <div className="flex-shrink-0">
+              <WhatsAppMock />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ───── HOW IT WORKS ───── */}
-      <section id="how-it-works" className="py-20 bg-background">
+      {/* ─── SECTION 2: SOCIAL PROOF BAR ─── */}
+      <section className="bg-[#f1f5f9] py-10 border-y border-border/50">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <SectionHeading
-            title="How Qwikly Works"
-            subtitle="Three steps to never losing a lead again"
-          />
+          <p className="text-center text-muted font-medium text-sm uppercase tracking-wide">
+            Trusted by service businesses across Johannesburg, Pretoria, Cape
+            Town, and Durban
+          </p>
 
-          <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8">
-            {howItWorks.map(({ icon: Icon, title, description }, i) => (
+          {/* Trade icons */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-6 md:gap-10">
+            {allTrades.map(({ icon: Icon, label }) => (
               <div
-                key={title}
-                className="bg-card rounded-xl shadow-sm hover:shadow-md transition-shadow p-8 text-center"
+                key={label}
+                className="flex flex-col items-center gap-1.5 text-muted hover:text-cta transition-colors duration-200"
               >
-                <div className="mx-auto flex items-center justify-center w-14 h-14 rounded-full bg-cta/10 mb-6">
-                  <Icon className="w-7 h-7 text-cta" />
-                </div>
-                <p className="text-xs font-semibold text-cta uppercase tracking-wide mb-2">
-                  Step {i + 1}
-                </p>
-                <h3 className="font-heading text-xl font-semibold text-primary">
-                  {title}
-                </h3>
-                <p className="mt-3 text-muted leading-relaxed">{description}</p>
+                <Icon className="w-6 h-6" />
+                <span className="text-[10px] font-medium uppercase tracking-wider">
+                  {label}
+                </span>
               </div>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* ───── CASE STUDY / METRICS ───── */}
-      <section className="py-20 bg-primary text-white">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold">
-            The Results Speak for Themselves
-          </h2>
-
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6">
+          {/* Counter stats */}
+          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
             {stats.map(({ value, label }) => (
-              <div
-                key={label}
-                className="bg-white/10 rounded-xl p-6 backdrop-blur-sm"
-              >
-                <p className="font-heading text-4xl md:text-5xl font-bold text-cta">
+              <div key={label} className="stat-card text-center bg-white rounded-xl p-4">
+                <p className="font-heading text-2xl md:text-3xl font-bold text-primary">
                   {value}
                 </p>
-                <p className="mt-2 text-sm text-white/70 capitalize">{label}</p>
+                <p className="text-xs text-muted mt-0.5 uppercase tracking-wide">
+                  {label}
+                </p>
               </div>
             ))}
           </div>
-
-          <blockquote className="mt-14 max-w-2xl mx-auto">
-            <Quote className="w-8 h-8 text-cta mx-auto mb-4 opacity-60" />
-            <p className="text-lg md:text-xl italic leading-relaxed text-white/90">
-              &ldquo;Since switching to Qwikly, we&rsquo;ve picked up 40% more
-              jobs. The AI replies faster than we ever could.&rdquo;
-            </p>
-            <footer className="mt-4 text-sm text-white/60">
-              &mdash; Johan V., Solar Installer, Durban
-            </footer>
-          </blockquote>
         </div>
       </section>
 
-      {/* ───── BENEFITS GRID ───── */}
-      <section className="py-20 bg-background">
+      {/* ─── SECTION 3: THE PROBLEM ─── */}
+      <section className="py-20 bg-white">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <SectionHeading
-            title="Why Service Businesses Choose Qwikly"
-          />
+          <div className="text-center reveal">
+            <SectionHeading
+              title="You're losing 30-40% of your leads right now"
+              subtitle="Most service businesses take hours to reply. By then, the customer has already booked someone else."
+            />
+          </div>
 
-          <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {benefits.map(({ icon: Icon, title, description }) => (
+          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 reveal">
+            {/* WITHOUT */}
+            <div className="bg-red-50/60 border border-red-200/60 rounded-2xl p-6 md:p-8">
+              <div className="flex items-center gap-2 mb-6">
+                <XCircle className="w-5 h-5 text-red-500" />
+                <span className="font-heading font-bold text-red-700 text-sm uppercase tracking-wide">
+                  Without Qwikly
+                </span>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { text: "Lead messages at 7pm", icon: MessageSquare },
+                  { text: "You're on site, phone in your pocket", icon: Wrench },
+                  { text: "Reply at 10pm", icon: Clock },
+                  { text: "They've already booked someone else", icon: Users },
+                  { text: "R5,000 job lost", icon: XCircle },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 flex-shrink-0">
+                      <item.icon className="w-4 h-4 text-red-500" />
+                    </div>
+                    <span className="text-red-800 text-sm font-medium">{item.text}</span>
+                    {i < 4 && <ArrowRight className="w-3 h-3 text-red-300 ml-auto flex-shrink-0 hidden sm:block" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* WITH */}
+            <div className="bg-green-50/60 border border-green-200/60 rounded-2xl p-6 md:p-8">
+              <div className="flex items-center gap-2 mb-6">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                <span className="font-heading font-bold text-green-700 text-sm uppercase tracking-wide">
+                  With Qwikly
+                </span>
+              </div>
+              <div className="space-y-4">
+                {[
+                  { text: "Lead messages at 7pm", icon: MessageSquare },
+                  { text: "AI replies in 30 seconds", icon: Bot },
+                  { text: "Qualifies the lead automatically", icon: CheckCircle2 },
+                  { text: "Books the appointment", icon: CalendarCheck },
+                  { text: "R5,000 job won", icon: CheckCircle2 },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 flex-shrink-0">
+                      <item.icon className="w-4 h-4 text-green-600" />
+                    </div>
+                    <span className="text-green-800 text-sm font-medium">{item.text}</span>
+                    {i < 4 && <ArrowRight className="w-3 h-3 text-green-300 ml-auto flex-shrink-0 hidden sm:block" />}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SECTION 4: PLATFORM FEATURES (alternating) ─── */}
+      <section id="features" className="py-20 bg-background">
+        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 reveal">
+            <SectionHeading
+              title="One Platform. Every Touchpoint Covered."
+              subtitle="From first message to rebooking, Qwikly handles the entire lead lifecycle."
+            />
+          </div>
+
+          <div className="space-y-20 md:space-y-28">
+            <div className="reveal">
+              <FeatureBlock
+                badge="WHATSAPP"
+                badgeColor="bg-[#00a884]/10 text-[#00a884]"
+                title="Instant WhatsApp Response"
+                description="Every WhatsApp lead gets a reply within 30 seconds, 24 hours a day, 7 days a week. The AI qualifies them, asks the right questions, and books the appointment. Most customers do not even realise it is AI."
+                visual={<MiniWhatsAppVisual />}
+              />
+            </div>
+
+            <div className="reveal">
+              <FeatureBlock
+                badge="EMAIL"
+                badgeColor="bg-blue-50 text-blue-600"
+                title="Email Lead Handling"
+                description="Leads do not only come through WhatsApp. Qwikly responds to email enquiries on behalf of your business, using the same trade-specific AI. Same speed, same quality, different channel."
+                reversed
+                visual={<MiniEmailVisual />}
+              />
+            </div>
+
+            <div className="reveal">
+              <FeatureBlock
+                badge="AUTOMATION"
+                title="Automated Follow-ups"
+                description="When a lead goes quiet, Qwikly re-engages them automatically at 4 hours, 24 hours, 2 days, and 5 days. If WhatsApp gets no response, the AI switches to email. No lead falls through the cracks."
+                visual={<MiniTimelineVisual />}
+              />
+            </div>
+
+            <div className="reveal">
+              <FeatureBlock
+                badge="RECOVERY"
+                badgeColor="bg-red-50 text-red-600"
+                title="No-Show Recovery"
+                description="Missed appointments mean lost revenue. When a customer does not show up, Qwikly sends an automatic rebooking message within minutes, suggesting the next available slot."
+                reversed
+                visual={<MiniNotificationVisual />}
+              />
+            </div>
+
+            <div className="reveal">
+              <FeatureBlock
+                badge="REVIVAL"
+                badgeColor="bg-purple-50 text-purple-600"
+                title="Lead Revival"
+                description="Leads that went cold 30 or more days ago are not dead. Qwikly sends seasonal, trade-specific re-engagement messages that bring dormant leads back to life."
+                visual={<MiniRevivalVisual />}
+              />
+            </div>
+
+            <div className="reveal">
+              <FeatureBlock
+                badge="DASHBOARD"
+                badgeColor="bg-blue-50 text-blue-600"
+                title="Client Dashboard"
+                description="See every conversation, every booking, and every stat in real time. Read full transcripts, review AI performance, and step in whenever you want. Full visibility, full control."
+                reversed
+                visual={<MiniDashboardVisual />}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SECTION 5: HOW IT WORKS (dark navy) ─── */}
+      <section id="how-it-works" className="py-20 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
+        <div className="absolute inset-0 hero-grid pointer-events-none" />
+        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14 reveal">
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-1 bg-cta rounded-full mb-4" />
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-white">
+                How Qwikly Works
+              </h2>
+              <p className="text-gray-400 text-lg mt-4 max-w-2xl">
+                Four steps from first message to fully automated lifecycle management.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 reveal">
+            {howItWorksSteps.map(({ icon: Icon, step, title, description }) => (
               <div
-                key={title}
-                className="bg-card rounded-xl shadow-sm hover:shadow-md transition-shadow p-8"
+                key={step}
+                className="relative bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-cta/30 transition-all duration-300"
               >
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-cta/10 mb-5">
+                <span className="font-heading text-5xl font-bold text-white/5 absolute top-3 right-4">
+                  {step}
+                </span>
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-cta/10 mb-5">
                   <Icon className="w-6 h-6 text-cta" />
                 </div>
-                <h3 className="font-heading text-lg font-semibold text-primary">
+                <h3 className="font-heading text-lg font-semibold text-white mb-2">
                   {title}
                 </h3>
-                <p className="mt-2 text-muted leading-relaxed">{description}</p>
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  {description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ───── PRICING ───── */}
-      <section id="pricing" className="py-20 bg-border/20">
+      {/* ─── SECTION 6: COMPARISON TABLE ─── */}
+      <section className="py-20 bg-white">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <SectionHeading
-            title="Simple, Transparent Pricing"
-          />
+          <div className="text-center mb-14 reveal">
+            <SectionHeading
+              title="How Qwikly Stacks Up"
+              subtitle="See why service businesses choose Qwikly over the alternatives."
+            />
+          </div>
 
-          <div className="mt-14 max-w-md mx-auto bg-card rounded-2xl shadow-lg border-t-4 border-cta p-8 md:p-10 text-center">
-            <p className="font-heading text-5xl md:text-6xl font-bold text-primary">
-              R750
-            </p>
-            <p className="mt-2 text-muted text-lg">per booked appointment</p>
+          <div className="reveal max-w-4xl mx-auto">
+            <ComparisonTable />
+          </div>
+        </div>
+      </section>
 
-            <ul className="mt-8 space-y-3 text-left">
+      {/* ─── SECTION 7: PRICING ─── */}
+      <section id="pricing" className="py-20 bg-[#f1f5f9]">
+        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+          <div className="text-center reveal">
+            <SectionHeading title="Simple, Transparent Pricing" />
+          </div>
+
+          <div className="mt-14 max-w-lg mx-auto bg-card rounded-2xl shadow-xl border border-border p-8 md:p-10 reveal">
+            <div className="text-center">
+              <span className="inline-block text-xs font-bold uppercase tracking-wider text-cta bg-cta/10 px-3 py-1 rounded-full mb-4">
+                Pay Per Booking
+              </span>
+              <p className="font-heading text-5xl md:text-6xl font-bold text-primary">
+                R750
+              </p>
+              <p className="mt-2 text-muted text-lg">per booked appointment</p>
+            </div>
+
+            <div className="w-full h-px bg-border my-8" />
+
+            <ul className="space-y-3">
               {pricingIncludes.map((item) => (
-                <li key={item} className="flex items-center gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span className="text-foreground">{item}</span>
+                <li key={item} className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground text-sm">{item}</span>
                 </li>
               ))}
             </ul>
 
-            <p className="mt-8 text-sm text-muted">
-              No monthly fees. No setup cost. No contracts.
+            <p className="mt-8 text-sm text-muted text-center">
+              No monthly fees. No setup cost. No contracts. 7-day free trial.
             </p>
 
             <div className="mt-6">
@@ -329,53 +687,65 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ───── TRADES SECTION ───── */}
-      <section className="py-20 bg-background">
+      {/* ─── SECTION 8: BUILT FOR YOUR TRADE ─── */}
+      <section className="py-20 bg-white">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <SectionHeading
-            title="Built for Your Trade"
-            subtitle="Trade-specific AI that knows your business"
-          />
+          <div className="text-center mb-14 reveal">
+            <SectionHeading
+              title="Built for Your Trade"
+              subtitle="Custom AI prompts trained for 10 trades. The AI knows your industry."
+            />
+          </div>
 
-          <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {tradeCards.map(({ icon: Icon, trade, description }) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 reveal">
+            {tradeCards.map(({ icon: Icon, trade, pain }) => (
               <div
                 key={trade}
-                className="bg-card rounded-xl shadow-sm hover:shadow-md transition-shadow p-8"
+                className="trade-card-hover bg-background rounded-xl p-5 border border-border hover:border-cta/30 transition-all duration-300 group"
               >
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-cta/10 mb-5">
-                  <Icon className="w-6 h-6 text-cta" />
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cta/10 mb-3 group-hover:bg-cta/20 transition-colors duration-300">
+                  <Icon className="w-5 h-5 text-cta" />
                 </div>
-                <h3 className="font-heading text-lg font-semibold text-primary">
+                <h3 className="font-heading text-sm font-semibold text-primary mb-1.5">
                   {trade}
                 </h3>
-                <p className="mt-2 text-muted leading-relaxed">{description}</p>
+                <p className="text-muted text-xs leading-relaxed">{pain}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ───── TESTIMONIALS ───── */}
-      <section className="py-20 bg-border/20">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <SectionHeading title="What Our Clients Say" />
+      {/* ─── SECTION 9: TESTIMONIALS (dark navy) ─── */}
+      <section className="py-20 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
+        <div className="absolute inset-0 hero-grid pointer-events-none" />
+        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14 reveal">
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-1 bg-cta rounded-full mb-4" />
+              <h2 className="font-heading text-3xl md:text-4xl font-bold text-white">
+                What Our Clients Say
+              </h2>
+            </div>
+          </div>
 
-          <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map(({ quote, name, role }) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 reveal">
+            {testimonials.map(({ quote, name, trade, city }) => (
               <div
                 key={name}
-                className="bg-card rounded-xl shadow-sm p-8 flex flex-col"
+                className="bg-white/5 backdrop-blur-sm rounded-xl p-6 md:p-8 border border-white/10 flex flex-col"
               >
-                <Quote className="w-6 h-6 text-cta/40 mb-4" />
-                <p className="text-foreground leading-relaxed flex-1">
+                <Quote className="w-8 h-8 text-cta/40 mb-4 flex-shrink-0" />
+                <p className="text-gray-200 leading-relaxed flex-1 text-sm md:text-base">
                   &ldquo;{quote}&rdquo;
                 </p>
-                <div className="mt-6 pt-4 border-t border-border">
-                  <p className="font-heading font-semibold text-primary text-sm">
+                <div className="mt-6 pt-4 border-t border-white/10">
+                  <p className="font-heading font-semibold text-white text-sm">
                     {name}
                   </p>
-                  <p className="text-muted text-sm">{role}</p>
+                  <p className="text-gray-400 text-sm">
+                    {trade}, {city}
+                  </p>
                 </div>
               </div>
             ))}
@@ -383,27 +753,28 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ───── FAQ ───── */}
+      {/* ─── SECTION 10: FAQ ─── */}
       <FAQ />
 
-      {/* ───── FINAL CTA ───── */}
-      <section className="py-20 bg-primary text-white">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold">
-            Ready to Stop Losing Leads?
+      {/* ─── SECTION 11: FINAL CTA (dark navy) ─── */}
+      <section className="py-20 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
+        <div className="absolute inset-0 hero-grid pointer-events-none" />
+        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center reveal">
+          <h2 className="font-heading text-3xl md:text-4xl font-bold text-white">
+            Stop losing leads. Start today.
           </h2>
-          <p className="mt-4 text-lg text-white/70 max-w-xl mx-auto">
-            Start your free 7-day trial today. No setup fees, no contracts, no
-            risk.
+          <p className="mt-4 text-lg text-gray-400 max-w-xl mx-auto">
+            Join 50+ service businesses across South Africa that never miss a
+            lead.
           </p>
           <div className="mt-8">
-            <CTAButton
-              size="lg"
-              className="bg-cta hover:bg-cta-hover text-white"
-            >
+            <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
               Start Your Free Trial
             </CTAButton>
           </div>
+          <p className="mt-4 text-sm text-gray-500">
+            No setup fees. No contracts. 7-day free trial.
+          </p>
         </div>
       </section>
     </>
