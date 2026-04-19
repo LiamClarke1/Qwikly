@@ -133,15 +133,15 @@ const pricingIncludes = [
 
 const tradePricing = [
   { trade: "Pest Control", price: "R200", jobValue: "R1,500", roi: "7.5x" },
-  { trade: "Pool Cleaning", price: "R250", jobValue: "R1,800/mo", roi: "7x" },
+  { trade: "Pool Cleaning", price: "R400", jobValue: "R1,800/mo", roi: "4.5x" },
   { trade: "Plumber", price: "R500", jobValue: "R5,000", roi: "10x" },
   { trade: "Electrician", price: "R500", jobValue: "R7,000", roi: "14x" },
-  { trade: "Security", price: "R500", jobValue: "R1,000/mo", roi: "24x" },
+  { trade: "Security", price: "R750", jobValue: "R1,000/mo", roi: "16x" },
   { trade: "Aircon", price: "R600", jobValue: "R8,000", roi: "13x" },
   { trade: "Landscaper", price: "R750", jobValue: "R10,000", roi: "13x" },
   { trade: "Garage Doors", price: "R1,000", jobValue: "R12,000", roi: "12x" },
-  { trade: "Roofer", price: "R1,500", jobValue: "R40,000", roi: "27x" },
-  { trade: "Solar", price: "R3,000", jobValue: "R150,000", roi: "50x" },
+  { trade: "Roofer", price: "R2,000", jobValue: "R40,000", roi: "20x" },
+  { trade: "Solar", price: "R5,000", jobValue: "R150,000", roi: "30x" },
 ];
 
 const tradeCards = [

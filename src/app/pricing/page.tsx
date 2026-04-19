@@ -22,15 +22,15 @@ const allFeatures = [
 
 const tradePricing = [
   { trade: "Pest Control", price: 200, jobValue: 1500, jobLabel: "R1,500", recurring: false },
-  { trade: "Pool Cleaning", price: 250, jobValue: 1800, jobLabel: "R1,800/mo", recurring: true },
+  { trade: "Pool Cleaning", price: 400, jobValue: 1800, jobLabel: "R1,800/mo", recurring: true },
   { trade: "Plumber", price: 500, jobValue: 5000, jobLabel: "R5,000", recurring: false },
   { trade: "Electrician", price: 500, jobValue: 7000, jobLabel: "R7,000", recurring: false },
-  { trade: "Security", price: 500, jobValue: 1000, jobLabel: "R1,000/mo", recurring: true },
+  { trade: "Security", price: 750, jobValue: 1000, jobLabel: "R1,000/mo", recurring: true },
   { trade: "Aircon / HVAC", price: 600, jobValue: 8000, jobLabel: "R8,000", recurring: false },
   { trade: "Landscaper", price: 750, jobValue: 10000, jobLabel: "R10,000", recurring: false },
   { trade: "Garage Doors", price: 1000, jobValue: 12000, jobLabel: "R12,000", recurring: false },
-  { trade: "Roofer", price: 1500, jobValue: 40000, jobLabel: "R40,000", recurring: false },
-  { trade: "Solar Installer", price: 3000, jobValue: 150000, jobLabel: "R150,000", recurring: false },
+  { trade: "Roofer", price: 2000, jobValue: 40000, jobLabel: "R40,000", recurring: false },
+  { trade: "Solar Installer", price: 5000, jobValue: 150000, jobLabel: "R150,000", recurring: false },
 ];
 
 const comparisons = [
