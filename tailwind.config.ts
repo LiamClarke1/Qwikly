@@ -25,8 +25,7 @@ const config: Config = {
         danger: "#DC2626",
       },
       fontFamily: {
-        heading: ["var(--font-poppins)", "sans-serif"],
-        body: ["var(--font-opensans)", "sans-serif"],
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
       },
       maxWidth: {
         site: "1200px",

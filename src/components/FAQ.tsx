@@ -95,7 +95,7 @@ export default function FAQ() {
   }
 
   return (
-    <section id="faq" className="py-20 bg-background">
+    <section id="faq" className="py-16 bg-background">
       <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
         <SectionHeading
           title="Frequently Asked Questions"
@@ -111,7 +111,7 @@ export default function FAQ() {
                   onClick={() => toggle(index)}
                   className="w-full flex items-center justify-between py-5 text-left gap-4 cursor-pointer group"
                 >
-                  <span className="font-heading font-semibold text-primary text-base md:text-lg group-hover:text-cta transition-colors duration-200">
+                  <span className="font-sans font-semibold text-primary text-base md:text-lg group-hover:text-cta transition-colors duration-200">
                     {faq.question}
                   </span>
                   <ChevronDown

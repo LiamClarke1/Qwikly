@@ -83,7 +83,7 @@ export default function HowItWorksPage() {
                 <div key={step.title} className="relative flex gap-6">
                   {/* Timeline column */}
                   <div className="flex flex-col items-center">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-cta text-white font-heading font-bold text-sm flex-shrink-0">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-cta text-white font-sans font-bold text-sm flex-shrink-0">
                       {index + 1}
                     </div>
                     {!isLast && (
@@ -95,7 +95,7 @@ export default function HowItWorksPage() {
                   <div className={`pb-12 ${isLast ? "pb-0" : ""}`}>
                     <div className="flex items-center gap-3 mb-2">
                       <Icon className="w-5 h-5 text-cta" />
-                      <h3 className="font-heading text-xl font-semibold text-primary">
+                      <h3 className="font-sans text-xl font-semibold text-primary">
                         {step.title}
                       </h3>
                     </div>
@@ -127,10 +127,8 @@ export default function HowItWorksPage() {
                   key={feature.title}
                   className="bg-card rounded-2xl p-8 border border-border"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-cta/10 flex items-center justify-center mb-5">
-                    <Icon className="w-6 h-6 text-cta" />
-                  </div>
-                  <h3 className="font-heading text-lg font-semibold text-primary mb-3">
+                  <Icon className="w-8 h-8 text-cta mb-4" />
+                  <h3 className="text-lg font-semibold text-primary mb-3">
                     {feature.title}
                   </h3>
                   <p className="text-muted text-sm leading-relaxed">
@@ -147,7 +145,7 @@ export default function HowItWorksPage() {
       <section className="py-20 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
         <div className="absolute inset-0 hero-grid pointer-events-none" />
         <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-white">
+          <h2 className="font-sans text-3xl md:text-4xl font-bold text-white">
             See It In Action
           </h2>
           <p className="text-gray-300 text-lg mt-4 max-w-xl mx-auto">

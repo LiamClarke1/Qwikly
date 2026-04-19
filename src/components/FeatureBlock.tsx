@@ -28,7 +28,7 @@ export default function FeatureBlock({
         >
           {badge}
         </span>
-        <h3 className="font-heading text-2xl md:text-3xl font-bold text-primary mt-4">
+        <h3 className="font-sans text-2xl md:text-3xl font-bold text-primary mt-4">
           {title}
         </h3>
         <p className="text-muted text-base md:text-lg leading-relaxed mt-4 max-w-lg">

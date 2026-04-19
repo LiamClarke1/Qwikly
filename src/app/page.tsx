@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Check,
   Zap,
   Wrench,
   Home as HomeIcon,
@@ -393,11 +394,11 @@ export default function Home() {
         {/* Grid pattern overlay */}
         <div className="absolute inset-0 hero-grid pointer-events-none" />
 
-        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8 py-16 md:py-24 lg:py-28">
+        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8 py-24 md:py-32">
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
             {/* Left: copy */}
             <div className="flex-1 text-center lg:text-left">
-              <h1 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-bold text-white leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight text-white leading-tight">
                 Every lead answered.
                 <br />
                 Every follow-up sent.
@@ -409,6 +410,20 @@ export default function Home() {
                 never lets a lead go cold. Built for South African service
                 businesses.
               </p>
+
+              <ul className="mt-6 space-y-2 max-w-md mx-auto lg:mx-0">
+                {[
+                  "WhatsApp + Email response in 30 seconds",
+                  "Automated follow-ups, no-show recovery, lead revival",
+                  "Books into Google Calendar, 24/7",
+                  "8% per booking, 7-day free trial",
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-2.5 text-sm text-gray-300">
+                    <Check className="w-4 h-4 text-cta flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
 
               <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
@@ -433,9 +448,9 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 2: SOCIAL PROOF BAR ─── */}
-      <section className="bg-[#f1f5f9] py-10 border-y border-border/50">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-foreground font-heading font-semibold text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
+      <section className="bg-[#f1f5f9] py-8 border-y border-border/50">
+        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 reveal-up">
+          <p className="text-center text-foreground font-semibold text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
             Helping service businesses across Johannesburg, Pretoria, Cape Town,
             and Durban respond faster and book more
           </p>
@@ -444,7 +459,7 @@ export default function Home() {
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
             {stats.map(({ value, label }) => (
               <div key={label} className="stat-card text-center bg-white rounded-xl p-4">
-                <p className="font-heading text-2xl md:text-3xl font-bold text-primary">
+                <p className="font-sans text-2xl md:text-3xl font-bold text-primary">
                   {value}
                 </p>
                 <p className="text-xs text-muted mt-0.5 uppercase tracking-wide">
@@ -473,21 +488,21 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 3: THE PROBLEM ─── */}
-      <section className="py-20 bg-white">
+      <section className="py-16 bg-white">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <div className="text-center reveal">
+          <div className="text-center reveal-up">
             <SectionHeading
               title="You're losing 30-40% of your leads right now"
               subtitle="Most service businesses take hours to reply. By then, the customer has already booked someone else."
             />
           </div>
 
-          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 reveal">
+          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
             {/* WITHOUT */}
-            <div className="bg-red-50/60 border border-red-200/60 rounded-2xl p-6 md:p-8">
+            <div className="reveal-left bg-red-50/60 border border-red-200/60 rounded-2xl p-6 md:p-8">
               <div className="flex items-center gap-2 mb-6">
                 <XCircle className="w-5 h-5 text-red-500" />
-                <span className="font-heading font-bold text-red-700 text-sm uppercase tracking-wide">
+                <span className="font-sans font-bold text-red-700 text-sm uppercase tracking-wide">
                   Without Qwikly
                 </span>
               </div>
@@ -511,10 +526,10 @@ export default function Home() {
             </div>
 
             {/* WITH */}
-            <div className="bg-green-50/60 border border-green-200/60 rounded-2xl p-6 md:p-8">
+            <div className="reveal-right bg-green-50/60 border border-green-200/60 rounded-2xl p-6 md:p-8">
               <div className="flex items-center gap-2 mb-6">
                 <CheckCircle2 className="w-5 h-5 text-green-600" />
-                <span className="font-heading font-bold text-green-700 text-sm uppercase tracking-wide">
+                <span className="font-sans font-bold text-green-700 text-sm uppercase tracking-wide">
                   With Qwikly
                 </span>
               </div>
@@ -543,7 +558,7 @@ export default function Home() {
       {/* ─── SECTION 4: PLATFORM FEATURES (alternating) ─── */}
       <section id="features" className="py-20 bg-background">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 reveal">
+          <div className="text-center mb-16 reveal-up">
             <SectionHeading
               title="One Platform. Every Touchpoint Covered."
               subtitle="From first message to rebooking, Qwikly handles the entire lead lifecycle."
@@ -551,7 +566,7 @@ export default function Home() {
           </div>
 
           <div className="space-y-20 md:space-y-28">
-            <div className="reveal">
+            <div className="reveal-left">
               <FeatureBlock
                 badge="WHATSAPP"
                 badgeColor="bg-[#00a884]/10 text-[#00a884]"
@@ -561,7 +576,7 @@ export default function Home() {
               />
             </div>
 
-            <div className="reveal">
+            <div className="reveal-right">
               <FeatureBlock
                 badge="EMAIL"
                 badgeColor="bg-blue-50 text-blue-600"
@@ -572,7 +587,7 @@ export default function Home() {
               />
             </div>
 
-            <div className="reveal">
+            <div className="reveal-left">
               <FeatureBlock
                 badge="AUTOMATION"
                 title="Automated Follow-ups"
@@ -581,7 +596,7 @@ export default function Home() {
               />
             </div>
 
-            <div className="reveal">
+            <div className="reveal-right">
               <FeatureBlock
                 badge="RECOVERY"
                 badgeColor="bg-red-50 text-red-600"
@@ -592,7 +607,7 @@ export default function Home() {
               />
             </div>
 
-            <div className="reveal">
+            <div className="reveal-left">
               <FeatureBlock
                 badge="REVIVAL"
                 badgeColor="bg-purple-50 text-purple-600"
@@ -602,7 +617,7 @@ export default function Home() {
               />
             </div>
 
-            <div className="reveal">
+            <div className="reveal-right">
               <FeatureBlock
                 badge="DASHBOARD"
                 badgeColor="bg-blue-50 text-blue-600"
@@ -617,13 +632,13 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 5: HOW IT WORKS (dark navy) ─── */}
-      <section id="how-it-works" className="py-20 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
+      <section id="how-it-works" className="py-16 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
         <div className="absolute inset-0 hero-grid pointer-events-none" />
         <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14 reveal">
+          <div className="text-center mb-14 reveal-up">
             <div className="flex flex-col items-center">
-              <div className="w-12 h-1 bg-cta rounded-full mb-4" />
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-white">
+              <div className="w-16 h-px bg-white/20 mb-6" />
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
                 How Qwikly Works
               </h2>
               <p className="text-gray-400 text-lg mt-4 max-w-2xl">
@@ -632,19 +647,20 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 reveal">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 reveal-stagger">
             {howItWorksSteps.map(({ icon: Icon, step, title, description }) => (
               <div
                 key={step}
                 className="relative bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-cta/30 transition-all duration-300"
               >
-                <span className="font-heading text-5xl font-bold text-white/5 absolute top-3 right-4">
+                <span className="text-5xl font-extrabold text-white/5 absolute top-3 right-4">
                   {step}
                 </span>
-                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-cta/10 mb-5">
-                  <Icon className="w-6 h-6 text-cta" />
-                </div>
-                <h3 className="font-heading text-lg font-semibold text-white mb-2">
+                <span className="text-sm font-semibold tracking-wide uppercase text-cta mb-3 block">
+                  Step {step}
+                </span>
+                <Icon className="w-8 h-8 text-cta mb-4" />
+                <h3 className="text-lg font-semibold text-white mb-2">
                   {title}
                 </h3>
                 <p className="text-gray-400 text-sm leading-relaxed">
@@ -657,16 +673,16 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 6: COMPARISON TABLE ─── */}
-      <section className="py-20 bg-white">
+      <section className="py-16 bg-white">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14 reveal">
+          <div className="text-center mb-14 reveal-up">
             <SectionHeading
               title="How Qwikly Stacks Up"
               subtitle="See why service businesses choose Qwikly over the alternatives."
             />
           </div>
 
-          <div className="reveal max-w-4xl mx-auto">
+          <div className="reveal-scale max-w-4xl mx-auto">
             <ComparisonTable />
           </div>
         </div>
@@ -675,7 +691,7 @@ export default function Home() {
       {/* ─── SECTION 7: PRICING ─── */}
       <section id="pricing" className="py-20 bg-[#f1f5f9]">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <div className="text-center reveal">
+          <div className="text-center reveal-up">
             <SectionHeading
               title="One Simple Rule: 8% of the Service Price"
               subtitle="You list your services and prices during setup. When Qwikly books a customer, we take 8% of that specific service. Different services, different fees. Always fair."
@@ -683,10 +699,10 @@ export default function Home() {
           </div>
 
           {/* The rule */}
-          <div className="mt-10 max-w-2xl mx-auto reveal">
+          <div className="mt-10 max-w-2xl mx-auto reveal-up">
             <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] rounded-2xl p-8 text-center">
               <p className="text-gray-400 text-sm uppercase tracking-wider font-semibold mb-2">Per booking fee</p>
-              <p className="font-heading text-5xl md:text-6xl font-bold text-cta">8%</p>
+              <p className="font-sans text-5xl md:text-6xl font-bold text-cta">8%</p>
               <p className="text-gray-300 mt-2 text-lg">of the service price booked</p>
               <div className="flex items-center justify-center gap-6 mt-6 text-sm text-gray-400">
                 <span>Minimum <span className="text-white font-semibold">R150</span></span>
@@ -698,9 +714,9 @@ export default function Home() {
 
           <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
             {/* Service examples table */}
-            <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden reveal">
+            <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden reveal-left">
               <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] px-6 py-4">
-                <p className="text-white font-heading font-semibold text-sm">Real examples across industries</p>
+                <p className="text-white font-sans font-semibold text-sm">Real examples across industries</p>
               </div>
               <div className="divide-y divide-border">
                 <div className="grid grid-cols-4 px-6 py-2.5 bg-[#f8fafc]">
@@ -729,11 +745,11 @@ export default function Home() {
             </div>
 
             {/* What's included card */}
-            <div className="bg-card rounded-2xl shadow-xl border border-border p-8 reveal">
+            <div className="bg-card rounded-2xl shadow-xl border border-border p-8 reveal-right">
               <span className="inline-block text-xs font-bold uppercase tracking-wider text-cta bg-cta/10 px-3 py-1 rounded-full mb-6">
                 Everything Included
               </span>
-              <p className="font-heading text-xl font-bold text-primary mb-6">
+              <p className="font-sans text-xl font-bold text-primary mb-6">
                 Every business gets the full platform:
               </p>
 
@@ -761,9 +777,9 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 8: BUILT FOR EVERY SERVICE BUSINESS ─── */}
-      <section className="py-20 bg-white">
+      <section className="py-16 bg-white">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14 reveal">
+          <div className="text-center mb-14 reveal-up">
             <SectionHeading
               title="Built for Every Service Business"
               subtitle="From tradespeople to professionals, if your business gets leads, Qwikly handles them."
@@ -771,16 +787,14 @@ export default function Home() {
           </div>
 
           {/* Primary trade cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 reveal">
-            {tradeCards.map(({ icon: Icon, trade, pain }) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 reveal-stagger">
+            {tradeCards.map(({ icon: Icon, trade, pain }, i) => (
               <div
                 key={trade}
-                className="trade-card-hover bg-background rounded-xl p-5 border border-border hover:border-cta/30 transition-all duration-300 group"
+                className={`trade-card-hover bg-background rounded-xl p-5 border border-border hover:border-cta/30 transition-all duration-300 group ${i % 3 === 0 ? "border-l-2 border-l-cta" : ""}`}
               >
-                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-cta/10 mb-3 group-hover:bg-cta/20 transition-colors duration-300">
-                  <Icon className="w-5 h-5 text-cta" />
-                </div>
-                <h3 className="font-heading text-sm font-semibold text-primary mb-1.5">
+                <Icon className="w-8 h-8 text-cta mb-4" />
+                <h3 className="text-sm font-semibold text-primary mb-1.5">
                   {trade}
                 </h3>
                 <p className="text-muted text-xs leading-relaxed">{pain}</p>
@@ -789,8 +803,8 @@ export default function Home() {
           </div>
 
           {/* Plus many more */}
-          <div className="mt-10 reveal">
-            <p className="text-center text-muted font-heading font-semibold text-sm uppercase tracking-wide mb-5">
+          <div className="mt-10 reveal-up">
+            <p className="text-center text-muted font-sans font-semibold text-sm uppercase tracking-wide mb-5">
               Plus many more...
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -814,16 +828,16 @@ export default function Home() {
       <section className="py-20 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
         <div className="absolute inset-0 hero-grid pointer-events-none" />
         <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14 reveal">
+          <div className="text-center mb-14 reveal-up">
             <div className="flex flex-col items-center">
-              <div className="w-12 h-1 bg-cta rounded-full mb-4" />
-              <h2 className="font-heading text-3xl md:text-4xl font-bold text-white">
+              <div className="w-16 h-px bg-white/20 mb-6" />
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
                 What Our Clients Say
               </h2>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 reveal">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 reveal-stagger">
             {testimonials.map(({ quote, name, trade, city }) => (
               <div
                 key={name}
@@ -834,7 +848,7 @@ export default function Home() {
                   &ldquo;{quote}&rdquo;
                 </p>
                 <div className="mt-6 pt-4 border-t border-white/10">
-                  <p className="font-heading font-semibold text-white text-sm">
+                  <p className="font-sans font-semibold text-white text-sm">
                     {name}
                   </p>
                   <p className="text-gray-400 text-sm">
@@ -851,10 +865,10 @@ export default function Home() {
       <FAQ />
 
       {/* ─── SECTION 11: FINAL CTA (dark navy) ─── */}
-      <section className="py-20 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
+      <section className="py-12 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
         <div className="absolute inset-0 hero-grid pointer-events-none" />
-        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center reveal">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-white">
+        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center reveal-up">
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
             Stop losing leads. Start today.
           </h2>
           <p className="mt-4 text-lg text-gray-400 max-w-xl mx-auto">

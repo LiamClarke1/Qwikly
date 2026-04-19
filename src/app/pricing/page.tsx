@@ -108,7 +108,7 @@ export default function PricingPage() {
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mx-auto bg-gradient-to-r from-[#0F172A] to-[#1E293B] rounded-2xl p-8 text-center">
             <p className="text-gray-400 text-sm uppercase tracking-wider font-semibold mb-2">Per booking fee</p>
-            <p className="font-heading text-6xl md:text-7xl font-bold text-cta">8%</p>
+            <p className="font-sans text-6xl md:text-7xl font-bold text-cta">8%</p>
             <p className="text-gray-300 mt-2 text-lg">of the service price your customer books</p>
             <div className="flex items-center justify-center gap-6 mt-6 text-sm text-gray-400">
               <span>Minimum <span className="text-white font-semibold">R150</span> per booking</span>
@@ -125,7 +125,7 @@ export default function PricingPage() {
           <div className="max-w-xl mx-auto bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
             <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] px-6 py-4 flex items-center gap-3">
               <Calculator className="w-5 h-5 text-cta" />
-              <h3 className="text-white font-heading font-semibold">Calculate your per-booking fee</h3>
+              <h3 className="text-white font-sans font-semibold">Calculate your per-booking fee</h3>
             </div>
             <div className="p-6">
               <label className="block text-sm font-medium text-foreground mb-2">
@@ -146,7 +146,7 @@ export default function PricingPage() {
                 <div className="mt-6 space-y-4">
                   <div className="bg-[#f8fafc] rounded-xl p-6 border border-border text-center">
                     <p className="text-sm text-muted mb-1">Your per-booking fee for this service</p>
-                    <p className="font-heading text-4xl font-bold text-cta">
+                    <p className="font-sans text-4xl font-bold text-cta">
                       R{calcResult.fee.toLocaleString()}
                     </p>
                     <p className="text-sm text-muted mt-1">
@@ -159,14 +159,14 @@ export default function PricingPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-[#f8fafc] rounded-xl p-4 border border-border text-center">
                       <p className="text-xs text-muted mb-1">You earn</p>
-                      <p className="font-heading text-xl font-bold text-foreground">
+                      <p className="font-sans text-xl font-bold text-foreground">
                         R{(calcResult.servicePrice - calcResult.fee).toLocaleString()}
                       </p>
                       <p className="text-xs text-muted">after Qwikly fee</p>
                     </div>
                     <div className="bg-[#f8fafc] rounded-xl p-4 border border-border text-center">
                       <p className="text-xs text-muted mb-1">At 10 bookings/month</p>
-                      <p className="font-heading text-xl font-bold text-green-600">
+                      <p className="font-sans text-xl font-bold text-green-600">
                         R{(10 * (calcResult.servicePrice - calcResult.fee)).toLocaleString()}
                       </p>
                       <p className="text-xs text-muted">net revenue</p>
@@ -279,10 +279,10 @@ export default function PricingPage() {
                     RECOMMENDED
                   </span>
                 )}
-                <h3 className={`font-heading text-lg font-semibold ${item.highlight ? "text-white" : "text-primary"}`}>
+                <h3 className={`font-sans text-lg font-semibold ${item.highlight ? "text-white" : "text-primary"}`}>
                   {item.title}
                 </h3>
-                <p className={`font-heading text-3xl font-bold mt-2 ${item.highlight ? "text-cta" : "text-foreground"}`}>
+                <p className={`font-sans text-3xl font-bold mt-2 ${item.highlight ? "text-cta" : "text-foreground"}`}>
                   {item.cost}
                 </p>
                 <ul className="mt-6 space-y-3">
@@ -318,7 +318,7 @@ export default function PricingPage() {
       {/* Final CTA */}
       <section className="py-20 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A]">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-heading text-3xl md:text-4xl font-bold text-white">
+          <h2 className="font-sans text-3xl md:text-4xl font-bold text-white">
             Ready to stop losing leads?
           </h2>
           <p className="mt-4 text-lg text-gray-400 max-w-xl mx-auto">

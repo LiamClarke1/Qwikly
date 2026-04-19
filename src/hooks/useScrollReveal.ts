@@ -4,11 +4,13 @@ import { useEffect } from "react";
 
 /**
  * IntersectionObserver hook that adds 'visible' class to elements
- * with 'reveal' class when they scroll into view.
+ * with reveal classes when they scroll into view.
  */
 export function useScrollReveal() {
   useEffect(() => {
-    const elements = document.querySelectorAll(".reveal");
+    const elements = document.querySelectorAll(
+      ".reveal, .reveal-up, .reveal-left, .reveal-right, .reveal-scale, .reveal-stagger"
+    );
 
     if (elements.length === 0) return;
 

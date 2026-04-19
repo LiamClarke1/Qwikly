@@ -45,7 +45,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="font-heading font-bold text-xl text-primary cursor-pointer"
+            className="font-sans font-bold text-xl text-primary cursor-pointer"
           >
             Qwikly
           </Link>

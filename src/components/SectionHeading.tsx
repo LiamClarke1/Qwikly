@@ -11,8 +11,8 @@ export default function SectionHeading({
 }: SectionHeadingProps) {
   return (
     <div className={centered ? "text-center flex flex-col items-center" : ""}>
-      <div className="w-12 h-1 bg-cta rounded-full mb-4" />
-      <h2 className="font-heading text-3xl md:text-4xl font-bold text-primary">
+      <div className="w-16 h-px bg-border mb-6" />
+      <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-primary">
         {title}
       </h2>
       {subtitle && (

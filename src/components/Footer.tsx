@@ -22,7 +22,7 @@ export default function Footer() {
           <div className="md:col-span-1">
             <Link
               href="/"
-              className="font-heading font-bold text-2xl cursor-pointer"
+              className="font-sans font-bold text-2xl cursor-pointer"
             >
               Qwikly
             </Link>
@@ -34,7 +34,7 @@ export default function Footer() {
 
           {/* Navigation */}
           <div>
-            <h3 className="font-heading font-semibold text-sm uppercase tracking-wider mb-4">
+            <h3 className="font-sans font-semibold text-sm uppercase tracking-wider mb-4">
               Navigation
             </h3>
             <ul className="space-y-2">
@@ -53,7 +53,7 @@ export default function Footer() {
 
           {/* Product */}
           <div>
-            <h3 className="font-heading font-semibold text-sm uppercase tracking-wider mb-4">
+            <h3 className="font-sans font-semibold text-sm uppercase tracking-wider mb-4">
               Product
             </h3>
             <ul className="space-y-2">
@@ -72,7 +72,7 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="font-heading font-semibold text-sm uppercase tracking-wider mb-4">
+            <h3 className="font-sans font-semibold text-sm uppercase tracking-wider mb-4">
               Contact
             </h3>
             <a
