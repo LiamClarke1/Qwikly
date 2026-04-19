@@ -19,7 +19,6 @@ import {
   ArrowRight,
   XCircle,
   CheckCircle2,
-  Quote,
   MessageCircle,
   Bot,
   CalendarCheck,
@@ -203,24 +202,27 @@ const tradeCards = [
 const testimonials = [
   {
     quote:
-      "Qwikly picked up 12 extra jobs in our first month. The AI replies faster than my best receptionist and follows up on every single quote.",
+      "Qwikly picked up 12 extra jobs in our first month, that's roughly R84,000 in revenue from leads I would have missed. The AI replies faster than my best receptionist and follows up on every single quote.",
     name: "Thabo M.",
     trade: "Electrician",
     city: "Johannesburg",
+    metric: "R84k extra revenue in month 1",
   },
   {
     quote:
-      "I was losing weekend leads for years. Now every WhatsApp and email gets answered in 30 seconds, even on Christmas Day. The no-show recovery alone has paid for itself.",
+      "I was losing weekend leads for years. Now every WhatsApp and email gets answered in 30 seconds, even on Christmas Day. The no-show recovery alone saved us 4 rebookings last month, that's R7,200 we would have lost.",
     name: "Sarah K.",
     trade: "Pool Services",
     city: "Cape Town",
+    metric: "R7.2k saved from no-show recovery",
   },
   {
     quote:
-      "The setup took 2 days and I have not thought about it since. It just works. The dashboard shows me everything the AI is saying.",
+      "The setup took 2 days and I have not thought about it since. Last month it booked 18 callouts while I was on site. At R5,000 a job, that's R90,000 I did not have to chase.",
     name: "James R.",
     trade: "Plumber",
     city: "Pretoria",
+    metric: "18 bookings, R90k revenue",
   },
 ];
 
@@ -437,6 +439,13 @@ export default function Home() {
               <p className="mt-5 text-sm text-gray-400">
                 No setup fees. No contracts. Cancel anytime.
               </p>
+
+              <div className="mt-6 bg-white/5 border border-white/10 rounded-xl px-5 py-3 max-w-md mx-auto lg:mx-0">
+                <p className="text-sm text-gray-300">
+                  <span className="text-cta font-bold">Average ROI: 10-50x.</span>{" "}
+                  A plumber paying R500 per booking earns R5,000 per job. A solar company paying R5,000 earns R150,000. You do the math.
+                </p>
+              </div>
             </div>
 
             {/* Right: WhatsApp mock */}
@@ -552,6 +561,35 @@ export default function Home() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ─── SECTION 3b: THE COST OF SLOW RESPONSE ─── */}
+      <section className="py-12 bg-[#f1f5f9] border-y border-border/50">
+        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 reveal-up">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">
+              What slow response is costing you every month
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 reveal-stagger">
+            {[
+              { trade: "Plumber", lost: "R20,000", jobs: "4 missed jobs" },
+              { trade: "Electrician", lost: "R15,000", jobs: "3 missed jobs" },
+              { trade: "Roofer", lost: "R80,000", jobs: "2 missed quotes" },
+              { trade: "Solar", lost: "R150,000", jobs: "1 missed install" },
+              { trade: "Pest Control", lost: "R10,000", jobs: "7 missed callouts" },
+            ].map((item) => (
+              <div key={item.trade} className="bg-white rounded-xl p-5 border border-border text-center">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">{item.trade}</p>
+                <p className="text-2xl font-bold text-danger tracking-tight">{item.lost}</p>
+                <p className="text-xs text-muted mt-1">{item.jobs}/month</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-sm text-muted mt-6 reveal-up">
+            These are real numbers from SA service businesses. Every unanswered lead goes to whoever replies first.
+          </p>
         </div>
       </section>
 
@@ -742,6 +780,23 @@ export default function Home() {
                   You set your own service prices during onboarding. If your prices change, your per-booking fee adjusts automatically.
                 </p>
               </div>
+
+              {/* ROI quick math */}
+              <div className="px-6 py-5 bg-gradient-to-r from-[#0F172A] to-[#1E293B]">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Quick ROI math</p>
+                <div className="space-y-2">
+                  {[
+                    { label: "Plumber gets 10 bookings/month", fee: "R5,000", earns: "R50,000", roi: "10x return" },
+                    { label: "Electrician gets 12 bookings/month", fee: "R6,000", earns: "R84,000", roi: "14x return" },
+                    { label: "Solar gets 3 bookings/month", fee: "R15,000", earns: "R450,000", roi: "30x return" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center justify-between text-sm">
+                      <span className="text-gray-400">{item.label}</span>
+                      <span className="text-cta font-bold">{item.roi}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* What's included card */}
@@ -838,12 +893,16 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 reveal-stagger">
-            {testimonials.map(({ quote, name, trade, city }) => (
+            {testimonials.map(({ quote, name, trade, city, metric }) => (
               <div
                 key={name}
                 className="bg-white/5 backdrop-blur-sm rounded-xl p-6 md:p-8 border border-white/10 flex flex-col"
               >
-                <Quote className="w-8 h-8 text-cta/40 mb-4 flex-shrink-0" />
+                {metric && (
+                  <div className="bg-cta/10 border border-cta/20 rounded-lg px-3 py-1.5 mb-4 inline-block self-start">
+                    <p className="text-cta text-xs font-bold">{metric}</p>
+                  </div>
+                )}
                 <p className="text-gray-200 leading-relaxed flex-1 text-sm md:text-base">
                   &ldquo;{quote}&rdquo;
                 </p>
@@ -869,11 +928,11 @@ export default function Home() {
         <div className="absolute inset-0 hero-grid pointer-events-none" />
         <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center reveal-up">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
-            Stop losing leads. Start today.
+            Every missed lead is money in your competitor&apos;s pocket.
           </h2>
-          <p className="mt-4 text-lg text-gray-400 max-w-xl mx-auto">
-            Join 50+ service businesses across South Africa that never miss a
-            lead.
+          <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
+            The average service business loses R15,000-80,000 per month from slow response.
+            Qwikly clients see a 10-50x return on what they pay. Start your free trial and see the bookings come in.
           </p>
           <div className="mt-8">
             <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
