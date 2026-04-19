@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { CheckCircle2, ArrowRight, Calculator, MessageCircle } from "lucide-react";
+import { CheckCircle2, Calculator } from "lucide-react";
 import SectionHeading from "@/components/SectionHeading";
 import CTAButton from "@/components/CTAButton";
 import FAQ from "@/components/FAQ";
@@ -20,17 +20,21 @@ const allFeatures = [
   "7-day free trial",
 ];
 
-const tradePricing = [
-  { trade: "Pest Control", price: 200, jobValue: 1500, jobLabel: "R1,500", recurring: false },
-  { trade: "Pool Cleaning", price: 400, jobValue: 1800, jobLabel: "R1,800/mo", recurring: true },
-  { trade: "Plumber", price: 500, jobValue: 5000, jobLabel: "R5,000", recurring: false },
-  { trade: "Electrician", price: 500, jobValue: 7000, jobLabel: "R7,000", recurring: false },
-  { trade: "Security", price: 750, jobValue: 1000, jobLabel: "R1,000/mo", recurring: true },
-  { trade: "Aircon / HVAC", price: 600, jobValue: 8000, jobLabel: "R8,000", recurring: false },
-  { trade: "Landscaper", price: 750, jobValue: 10000, jobLabel: "R10,000", recurring: false },
-  { trade: "Garage Doors", price: 1000, jobValue: 12000, jobLabel: "R12,000", recurring: false },
-  { trade: "Roofer", price: 2000, jobValue: 40000, jobLabel: "R40,000", recurring: false },
-  { trade: "Solar Installer", price: 5000, jobValue: 150000, jobLabel: "R150,000", recurring: false },
+const serviceExamples = [
+  { business: "Pest Control", service: "Rat treatment", price: 1500, fee: 150 },
+  { business: "Pool Cleaning", service: "Monthly maintenance", price: 1800, fee: 150 },
+  { business: "Pool Cleaning", service: "Green pool cleanup", price: 2500, fee: 200 },
+  { business: "Plumber", service: "Blocked drain", price: 1500, fee: 150 },
+  { business: "Plumber", service: "Geyser replacement", price: 8000, fee: 640 },
+  { business: "Electrician", service: "COC certificate", price: 2500, fee: 200 },
+  { business: "Electrician", service: "DB board upgrade", price: 12000, fee: 960 },
+  { business: "Dentist", service: "Check-up + clean", price: 1200, fee: 150 },
+  { business: "Dentist", service: "Root canal", price: 6000, fee: 480 },
+  { business: "Beauty Salon", service: "Full set nails", price: 800, fee: 150 },
+  { business: "Auto Mechanic", service: "Full service", price: 4500, fee: 360 },
+  { business: "Roofer", service: "Tile repair", price: 3500, fee: 280 },
+  { business: "Roofer", service: "Full re-roof", price: 80000, fee: 5000 },
+  { business: "Solar", service: "Full installation", price: 150000, fee: 5000 },
 ];
 
 const comparisons = [
@@ -62,7 +66,7 @@ const comparisons = [
   },
   {
     title: "Qwikly",
-    cost: "From R200/booking",
+    cost: "8% per booking",
     highlight: true,
     pros: [
       "Available 24/7, every day",
@@ -76,27 +80,16 @@ const comparisons = [
 ];
 
 export default function PricingPage() {
-  const [selectedTrade, setSelectedTrade] = useState(2); // Default to Plumber
-  const [customJobValue, setCustomJobValue] = useState("");
-  const [customIndustry, setCustomIndustry] = useState("");
+  const [calcPrice, setCalcPrice] = useState("");
 
-  const trade = tradePricing[selectedTrade];
-  const bookingsPerMonth = 10;
-  const revenue = bookingsPerMonth * trade.jobValue;
-  const cost = bookingsPerMonth * trade.price;
-  const roi = Math.round((revenue / cost) * 100);
-
-  // Custom calculator: 8% of declared job value, minimum R200, maximum R5,000
-  const customCalc = useMemo(() => {
-    const val = parseFloat(customJobValue.replace(/[^0-9.]/g, ""));
+  const calcResult = useMemo(() => {
+    const val = parseFloat(calcPrice.replace(/[^0-9.]/g, ""));
     if (!val || val <= 0) return null;
     const raw = Math.round(val * 0.08);
-    const fee = Math.max(200, Math.min(5000, Math.round(raw / 50) * 50)); // Round to nearest R50
-    const monthlyRevenue = bookingsPerMonth * val;
-    const monthlyCost = bookingsPerMonth * fee;
-    const calcRoi = Math.round((monthlyRevenue / monthlyCost) * 100);
-    return { fee, monthlyRevenue, monthlyCost, calcRoi, jobValue: val };
-  }, [customJobValue]);
+    const fee = Math.max(150, Math.min(5000, Math.round(raw / 10) * 10));
+    const percent = ((fee / val) * 100).toFixed(1);
+    return { fee, percent, servicePrice: val };
+  }, [calcPrice]);
 
   return (
     <main className="bg-background">
@@ -104,209 +97,130 @@ export default function PricingPage() {
       <section className="pt-8 pb-16">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <SectionHeading
-            title="Priced for Your Trade. Pay Per Booking."
-            subtitle="Every trade has different job values, so every trade gets a fair price. You only pay when Qwikly books a real appointment."
+            title="One Simple Rule: 8% of the Service Price"
+            subtitle="You list your services and prices. When Qwikly books a customer for a specific service, we take 8%. Different services, different fees. Always fair."
           />
         </div>
       </section>
 
-      {/* Trade Pricing Table */}
-      <section className="pb-20">
+      {/* The Rule */}
+      <section className="pb-16">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
-            <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] px-6 py-4">
-              <div className="grid grid-cols-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                <span>Your Trade</span>
-                <span className="text-center">Per Booking</span>
-                <span className="text-center">Avg Job Value</span>
-                <span className="text-right">ROI per Booking</span>
-              </div>
-            </div>
-            <div className="divide-y divide-border">
-              {tradePricing.map((item, i) => {
-                const itemRoi = Math.round(item.jobValue / item.price);
-                return (
-                  <button
-                    key={item.trade}
-                    onClick={() => setSelectedTrade(i)}
-                    className={`w-full grid grid-cols-4 items-center px-6 py-4 transition-colors duration-200 cursor-pointer text-left ${
-                      selectedTrade === i
-                        ? "bg-cta/10 border-l-4 border-cta"
-                        : "hover:bg-[#f8fafc]"
-                    }`}
-                  >
-                    <span className={`text-sm font-medium ${selectedTrade === i ? "text-cta font-bold" : "text-foreground"}`}>
-                      {item.trade}
-                    </span>
-                    <span className="text-center text-sm font-bold text-cta">
-                      R{item.price.toLocaleString()}
-                    </span>
-                    <span className="text-center text-sm text-muted">
-                      {item.jobLabel}
-                    </span>
-                    <span className="text-right text-sm font-bold text-green-600">
-                      {itemRoi}x return
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="px-6 py-3 bg-[#f8fafc] border-t border-border">
-              <p className="text-xs text-muted text-center">
-                Click a trade above to see your ROI breakdown below.
-              </p>
+          <div className="max-w-2xl mx-auto bg-gradient-to-r from-[#0F172A] to-[#1E293B] rounded-2xl p-8 text-center">
+            <p className="text-gray-400 text-sm uppercase tracking-wider font-semibold mb-2">Per booking fee</p>
+            <p className="font-heading text-6xl md:text-7xl font-bold text-cta">8%</p>
+            <p className="text-gray-300 mt-2 text-lg">of the service price your customer books</p>
+            <div className="flex items-center justify-center gap-6 mt-6 text-sm text-gray-400">
+              <span>Minimum <span className="text-white font-semibold">R150</span> per booking</span>
+              <span className="text-gray-600">|</span>
+              <span>Maximum <span className="text-white font-semibold">R5,000</span> per booking</span>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Custom Industry Calculator */}
-          <div className="mt-10 max-w-3xl mx-auto bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
+      {/* Calculator */}
+      <section className="pb-20">
+        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+          <div className="max-w-xl mx-auto bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
             <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] px-6 py-4 flex items-center gap-3">
               <Calculator className="w-5 h-5 text-cta" />
-              <h3 className="text-white font-heading font-semibold">
-                Don&apos;t see your industry? Calculate your price.
-              </h3>
+              <h3 className="text-white font-heading font-semibold">Calculate your per-booking fee</h3>
             </div>
             <div className="p-6">
-              <p className="text-sm text-muted mb-6">
-                Your per-booking fee is based on what you charge your customers. Enter your average service price and we&apos;ll show you exactly what Qwikly costs.
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">Your industry</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Dentist, Beauty Salon, Auto Mechanic"
-                    value={customIndustry}
-                    onChange={(e) => setCustomIndustry(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-cta/40 focus:border-cta transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1.5">Average service/job price (Rands)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 3000"
-                    value={customJobValue}
-                    onChange={(e) => setCustomJobValue(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-cta/40 focus:border-cta transition-colors"
-                  />
-                </div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Enter any service price your business charges (in Rands)
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted font-semibold">R</span>
+                <input
+                  type="text"
+                  placeholder="e.g. 5000"
+                  value={calcPrice}
+                  onChange={(e) => setCalcPrice(e.target.value)}
+                  className="w-full pl-10 pr-4 py-4 rounded-lg border border-border bg-background text-foreground text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-cta/40 focus:border-cta transition-colors"
+                />
               </div>
 
-              {customCalc && (
-                <div className="space-y-3">
-                  <div className="bg-[#f8fafc] rounded-xl p-5 border border-border">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm text-muted">Your per-booking fee</span>
-                      <span className="font-heading text-3xl font-bold text-cta">
-                        R{customCalc.fee.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm text-muted">At 10 bookings/month, you pay</span>
-                      <span className="font-heading text-lg font-bold text-foreground">
-                        R{customCalc.monthlyCost.toLocaleString()}/month
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm text-muted">Revenue those bookings generate</span>
-                      <span className="font-heading text-lg font-bold text-green-600">
-                        R{customCalc.monthlyRevenue.toLocaleString()}/month
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between pt-3 border-t border-border">
-                      <span className="text-sm font-semibold text-foreground">Your ROI</span>
-                      <span className="font-heading text-2xl font-bold text-green-600">
-                        {customCalc.calcRoi}%
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="bg-cta/5 rounded-lg p-4 border border-cta/20">
-                    <p className="text-xs text-foreground leading-relaxed">
-                      <strong>How this works:</strong> Your per-booking fee is calculated at ~8% of your average service price.
-                      During onboarding, you&apos;ll enter the actual prices you charge customers. The AI uses these prices when
-                      talking to leads, and your per-booking fee is tied to them. If your service prices change, your booking fee
-                      adjusts to match. This keeps pricing fair for everyone.
+              {calcResult && (
+                <div className="mt-6 space-y-4">
+                  <div className="bg-[#f8fafc] rounded-xl p-6 border border-border text-center">
+                    <p className="text-sm text-muted mb-1">Your per-booking fee for this service</p>
+                    <p className="font-heading text-4xl font-bold text-cta">
+                      R{calcResult.fee.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-muted mt-1">
+                      {calcResult.percent}% of R{calcResult.servicePrice.toLocaleString()}
+                      {calcResult.fee === 150 && " (minimum applies)"}
+                      {calcResult.fee === 5000 && " (maximum applies)"}
                     </p>
                   </div>
 
-                  <div className="text-center pt-2">
-                    <CTAButton size="md">
-                      Get Started with {customIndustry || "Your Business"}
-                    </CTAButton>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-[#f8fafc] rounded-xl p-4 border border-border text-center">
+                      <p className="text-xs text-muted mb-1">You earn</p>
+                      <p className="font-heading text-xl font-bold text-foreground">
+                        R{(calcResult.servicePrice - calcResult.fee).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted">after Qwikly fee</p>
+                    </div>
+                    <div className="bg-[#f8fafc] rounded-xl p-4 border border-border text-center">
+                      <p className="text-xs text-muted mb-1">At 10 bookings/month</p>
+                      <p className="font-heading text-xl font-bold text-green-600">
+                        R{(10 * (calcResult.servicePrice - calcResult.fee)).toLocaleString()}
+                      </p>
+                      <p className="text-xs text-muted">net revenue</p>
+                    </div>
                   </div>
+
+                  <CTAButton size="lg" className="w-full justify-center">
+                    Start Your Free 7-Day Trial
+                  </CTAButton>
                 </div>
               )}
 
-              {!customCalc && (
-                <div className="flex items-center gap-3 pt-2">
-                  <MessageCircle className="w-5 h-5 text-cta flex-shrink-0" />
-                  <p className="text-sm text-muted">
-                    Prefer to chat? Message us on{" "}
-                    <a href="https://wa.me/27000000000" className="text-cta hover:underline cursor-pointer">
-                      WhatsApp
-                    </a>{" "}
-                    and we&apos;ll work out your pricing together.
-                  </p>
-                </div>
-              )}
+              <div className="mt-6 bg-cta/5 rounded-lg p-4 border border-cta/20">
+                <p className="text-xs text-foreground leading-relaxed">
+                  <strong>How it works:</strong> During onboarding, you list every service you offer and what you charge for it.
+                  The AI uses these prices when talking to your leads. When a booking is made, the fee is calculated from the
+                  specific service booked. If you offer a R1,500 drain unblock and a R8,000 geyser replacement, those
+                  have different fees. If your prices go up later, the fees adjust to match.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Interactive ROI Calculator */}
+      {/* Real Examples Table */}
       <section className="py-20 bg-white">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <SectionHeading
-            title="The Math Is Simple"
-            subtitle={`Here's what ${bookingsPerMonth} bookings per month looks like for a ${trade.trade.toLowerCase()}`}
+            title="Real Examples Across Industries"
+            subtitle="See exactly what different businesses pay for different services."
           />
 
-          <div className="mt-12 max-w-2xl mx-auto space-y-4">
-            <div className="bg-card rounded-xl p-6 border border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <span className="text-muted">Your Qwikly investment</span>
-              <div className="text-right">
-                <span className="text-sm text-muted">
-                  {bookingsPerMonth} x R{trade.price.toLocaleString()} ={" "}
-                </span>
-                <span className="font-heading text-2xl font-bold text-foreground">
-                  R{cost.toLocaleString()}/month
-                </span>
-              </div>
+          <div className="mt-12 max-w-3xl mx-auto bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
+            <div className="grid grid-cols-4 px-6 py-3 bg-gradient-to-r from-[#0F172A] to-[#1E293B]">
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Business</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Service</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 text-center">Service Price</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 text-right">Qwikly Fee (8%)</span>
             </div>
-
-            <div className="bg-card rounded-xl p-6 border border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <span className="text-muted">Average {trade.trade.toLowerCase()} job value</span>
-              <span className="font-heading text-2xl font-bold text-foreground sm:text-right">
-                {trade.jobLabel}
-              </span>
+            <div className="divide-y divide-border">
+              {serviceExamples.map((item, i) => (
+                <div key={i} className="grid grid-cols-4 items-center px-6 py-3 hover:bg-cta/5 transition-colors duration-200">
+                  <span className="text-sm text-muted">{item.business}</span>
+                  <span className="text-sm font-medium text-foreground">{item.service}</span>
+                  <span className="text-center text-sm text-muted">R{item.price.toLocaleString()}</span>
+                  <span className="text-right text-sm font-bold text-cta">
+                    R{item.fee.toLocaleString()}
+                    {item.fee === 150 && <span className="text-[10px] text-muted ml-1">(min)</span>}
+                    {item.fee === 5000 && <span className="text-[10px] text-muted ml-1">(max)</span>}
+                  </span>
+                </div>
+              ))}
             </div>
-
-            <div className="bg-card rounded-xl p-6 border border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <span className="text-muted">New revenue from Qwikly bookings</span>
-              <div className="text-right">
-                <span className="text-sm text-muted">
-                  {bookingsPerMonth} x {trade.jobLabel} ={" "}
-                </span>
-                <span className="font-heading text-2xl font-bold text-green-600">
-                  R{revenue.toLocaleString()}/month
-                </span>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] rounded-xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <span className="text-gray-300 font-semibold">Return on Investment</span>
-              <span className="font-heading text-4xl font-bold text-cta">
-                {roi}%
-              </span>
-            </div>
-
-            <p className="text-center text-sm text-muted mt-4">
-              Click a trade in the table above to see your specific ROI
-            </p>
           </div>
         </div>
       </section>
@@ -315,8 +229,8 @@ export default function PricingPage() {
       <section className="py-20 bg-[#f1f5f9]">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <SectionHeading
-            title="Every Trade Gets the Full Platform"
-            subtitle="Same features, fair pricing. No tiers, no upsells, no hidden costs."
+            title="Every Business Gets the Full Platform"
+            subtitle="Same features for everyone. No tiers, no upsells, no hidden costs."
           />
 
           <div className="mt-12 max-w-lg mx-auto bg-card rounded-2xl shadow-xl border border-border p-8">
@@ -365,21 +279,12 @@ export default function PricingPage() {
                     RECOMMENDED
                   </span>
                 )}
-                <h3
-                  className={`font-heading text-lg font-semibold ${
-                    item.highlight ? "text-white" : "text-primary"
-                  }`}
-                >
+                <h3 className={`font-heading text-lg font-semibold ${item.highlight ? "text-white" : "text-primary"}`}>
                   {item.title}
                 </h3>
-                <p
-                  className={`font-heading text-3xl font-bold mt-2 ${
-                    item.highlight ? "text-cta" : "text-foreground"
-                  }`}
-                >
+                <p className={`font-heading text-3xl font-bold mt-2 ${item.highlight ? "text-cta" : "text-foreground"}`}>
                   {item.cost}
                 </p>
-
                 <ul className="mt-6 space-y-3">
                   {item.pros.map((detail) => (
                     <li key={detail} className="flex items-start gap-2 text-sm text-gray-300">
@@ -388,22 +293,16 @@ export default function PricingPage() {
                     </li>
                   ))}
                   {item.cons.map((detail) => (
-                    <li
-                      key={detail}
-                      className={`flex items-start gap-2 text-sm ${
-                        item.highlight ? "text-gray-300" : "text-muted"
-                      }`}
-                    >
-                      <span className="text-red-400 flex-shrink-0 mt-0.5">✕</span>
+                    <li key={detail} className={`flex items-start gap-2 text-sm ${item.highlight ? "text-gray-300" : "text-muted"}`}>
+                      <span className="text-red-400 flex-shrink-0 mt-0.5">&#x2715;</span>
                       {detail}
                     </li>
                   ))}
                 </ul>
-
                 {item.highlight && (
                   <div className="mt-6">
                     <CTAButton size="md" className="w-full justify-center">
-                      Start Free Trial <ArrowRight className="w-4 h-4" />
+                      Start Free Trial
                     </CTAButton>
                   </div>
                 )}

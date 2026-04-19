@@ -131,17 +131,19 @@ const pricingIncludes = [
   "Trade-specific AI",
 ];
 
-const tradePricing = [
-  { trade: "Pest Control", price: "R200", jobValue: "R1,500", roi: "7.5x" },
-  { trade: "Pool Cleaning", price: "R400", jobValue: "R1,800/mo", roi: "4.5x" },
-  { trade: "Plumber", price: "R500", jobValue: "R5,000", roi: "10x" },
-  { trade: "Electrician", price: "R500", jobValue: "R7,000", roi: "14x" },
-  { trade: "Security", price: "R750", jobValue: "R1,000/mo", roi: "16x" },
-  { trade: "Aircon", price: "R600", jobValue: "R8,000", roi: "13x" },
-  { trade: "Landscaper", price: "R750", jobValue: "R10,000", roi: "13x" },
-  { trade: "Garage Doors", price: "R1,000", jobValue: "R12,000", roi: "12x" },
-  { trade: "Roofer", price: "R2,000", jobValue: "R40,000", roi: "20x" },
-  { trade: "Solar", price: "R5,000", jobValue: "R150,000", roi: "30x" },
+const serviceExamples = [
+  { business: "Pest Control", service: "Rat treatment", servicePrice: "R1,500", fee: "R150", feeNote: "min" },
+  { business: "Pool Cleaning", service: "Monthly maintenance", servicePrice: "R1,800", fee: "R150", feeNote: "min" },
+  { business: "Pool Cleaning", service: "Green pool cleanup", servicePrice: "R2,500", fee: "R200", feeNote: "" },
+  { business: "Plumber", service: "Blocked drain", servicePrice: "R1,500", fee: "R150", feeNote: "min" },
+  { business: "Plumber", service: "Geyser replacement", servicePrice: "R8,000", fee: "R640", feeNote: "" },
+  { business: "Electrician", service: "COC certificate", servicePrice: "R2,500", fee: "R200", feeNote: "" },
+  { business: "Electrician", service: "DB board upgrade", servicePrice: "R12,000", fee: "R960", feeNote: "" },
+  { business: "Aircon", service: "Split unit install", servicePrice: "R8,000", fee: "R640", feeNote: "" },
+  { business: "Roofer", service: "Tile repair", servicePrice: "R3,500", fee: "R280", feeNote: "" },
+  { business: "Roofer", service: "Full re-roof", servicePrice: "R80,000", fee: "R5,000", feeNote: "max" },
+  { business: "Solar", service: "Site assessment", servicePrice: "Free", fee: "R150", feeNote: "min" },
+  { business: "Solar", service: "Full installation", servicePrice: "R150,000", fee: "R5,000", feeNote: "max" },
 ];
 
 const tradeCards = [
@@ -675,34 +677,54 @@ export default function Home() {
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center reveal">
             <SectionHeading
-              title="Pay Per Booking. Priced for Your Trade."
-              subtitle="Every trade has different job values, so every trade gets a fair price. You only pay when Qwikly books a real appointment."
+              title="One Simple Rule: 8% of the Service Price"
+              subtitle="You list your services and prices during setup. When Qwikly books a customer, we take 8% of that specific service. Different services, different fees. Always fair."
             />
           </div>
 
-          <div className="mt-14 grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-            {/* Trade pricing table */}
+          {/* The rule */}
+          <div className="mt-10 max-w-2xl mx-auto reveal">
+            <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] rounded-2xl p-8 text-center">
+              <p className="text-gray-400 text-sm uppercase tracking-wider font-semibold mb-2">Per booking fee</p>
+              <p className="font-heading text-5xl md:text-6xl font-bold text-cta">8%</p>
+              <p className="text-gray-300 mt-2 text-lg">of the service price booked</p>
+              <div className="flex items-center justify-center gap-6 mt-6 text-sm text-gray-400">
+                <span>Minimum <span className="text-white font-semibold">R150</span></span>
+                <span className="text-gray-600">|</span>
+                <span>Maximum <span className="text-white font-semibold">R5,000</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+            {/* Service examples table */}
             <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden reveal">
               <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] px-6 py-4">
-                <div className="grid grid-cols-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
-                  <span>Trade</span>
-                  <span className="text-center">Per Booking</span>
-                  <span className="text-center">Avg Job Value</span>
-                  <span className="text-right">Your ROI</span>
-                </div>
+                <p className="text-white font-heading font-semibold text-sm">Real examples across industries</p>
               </div>
               <div className="divide-y divide-border">
-                {tradePricing.map((item) => (
-                  <div key={item.trade} className="grid grid-cols-4 items-center px-6 py-3.5 hover:bg-cta/5 transition-colors duration-200">
-                    <span className="text-sm font-medium text-foreground">{item.trade}</span>
-                    <span className="text-center text-sm font-bold text-cta">{item.price}</span>
-                    <span className="text-center text-sm text-muted">{item.jobValue}</span>
-                    <span className="text-right text-sm font-bold text-success">{item.roi}</span>
+                <div className="grid grid-cols-4 px-6 py-2.5 bg-[#f8fafc]">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">Business</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">Service</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted text-center">Price</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted text-right">Qwikly Fee</span>
+                </div>
+                {serviceExamples.map((item, i) => (
+                  <div key={i} className="grid grid-cols-4 items-center px-6 py-3 hover:bg-cta/5 transition-colors duration-200">
+                    <span className="text-sm text-muted">{item.business}</span>
+                    <span className="text-sm font-medium text-foreground">{item.service}</span>
+                    <span className="text-center text-sm text-muted">{item.servicePrice}</span>
+                    <span className="text-right text-sm font-bold text-cta">
+                      {item.fee}
+                      {item.feeNote && <span className="text-[10px] text-muted ml-1">({item.feeNote})</span>}
+                    </span>
                   </div>
                 ))}
               </div>
-              <div className="px-6 py-4 bg-[#f8fafc] border-t border-border">
-                <p className="text-xs text-muted text-center">Other industries priced at consultation. Same features, fair pricing.</p>
+              <div className="px-6 py-4 bg-cta/5 border-t border-cta/20">
+                <p className="text-xs text-foreground text-center">
+                  You set your own service prices during onboarding. If your prices change, your per-booking fee adjusts automatically.
+                </p>
               </div>
             </div>
 
@@ -712,7 +734,7 @@ export default function Home() {
                 Everything Included
               </span>
               <p className="font-heading text-xl font-bold text-primary mb-6">
-                Every plan includes the full Qwikly platform:
+                Every business gets the full platform:
               </p>
 
               <ul className="space-y-3">
