@@ -65,7 +65,7 @@ const rows: ComparisonRow[] = [
     receptionist: "R8-15k/mo",
     autoReply: "Free",
     diyChatbot: "R500-2k/mo",
-    qwikly: "R750/booking",
+    qwikly: "8% per booking",
   },
 ];
 
@@ -124,13 +124,13 @@ export default function ComparisonTable() {
                       : "text-foreground"
                   }`}
                 >
-                  <span className={col.key === "qwikly" ? "relative" : ""}>
-                    {col.label}
+                  <span className={col.key === "qwikly" ? "inline-flex flex-col items-center gap-1" : ""}>
                     {col.key === "qwikly" && (
-                      <span className="absolute -top-2 -right-2 bg-gradient-to-r from-[#CA8A04] to-[#F59E0B] text-white text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
-                        Best
+                      <span className="bg-gradient-to-r from-[#CA8A04] to-[#F59E0B] text-white text-[8px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">
+                        Recommended
                       </span>
                     )}
+                    {col.label}
                   </span>
                 </th>
               ))}
