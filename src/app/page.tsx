@@ -24,31 +24,64 @@ import {
   CalendarCheck,
   RefreshCw,
   Bell,
-  MailCheck,
   BarChart3,
   Users,
+  Stethoscope,
+  Scissors,
+  Car,
+  Building2,
+  Sparkles,
+  GraduationCap,
+  PawPrint,
+  Camera,
+  Truck,
+  Dumbbell,
 } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 import FAQ from "@/components/FAQ";
 import SectionHeading from "@/components/SectionHeading";
 import WhatsAppMock from "@/components/WhatsAppMock";
+import EmailMock from "@/components/EmailMock";
 import ComparisonTable from "@/components/ComparisonTable";
 import FeatureBlock from "@/components/FeatureBlock";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 /* ──────────────── DATA ──────────────── */
 
-const allTrades = [
-  { icon: Zap, label: "Electricians" },
-  { icon: Wrench, label: "Plumbers" },
-  { icon: HomeIcon, label: "Roofers" },
-  { icon: Sun, label: "Solar" },
-  { icon: Bug, label: "Pest Control" },
-  { icon: Wind, label: "Aircon" },
-  { icon: Waves, label: "Pool" },
-  { icon: TreePine, label: "Landscaping" },
-  { icon: DoorOpen, label: "Garage Doors" },
-  { icon: ShieldCheck, label: "Security" },
+const additionalIndustries = [
+  { icon: Stethoscope, label: "Dentists" },
+  { icon: Scissors, label: "Beauty Salons" },
+  { icon: Car, label: "Auto Mechanics" },
+  { icon: Building2, label: "Estate Agents" },
+  { icon: Sparkles, label: "Cleaning Services" },
+  { icon: GraduationCap, label: "Tutoring" },
+  { icon: PawPrint, label: "Vets" },
+  { icon: Camera, label: "Photographers" },
+  { icon: Truck, label: "Moving Companies" },
+  { icon: Dumbbell, label: "Fitness Trainers" },
+];
+
+const tickerLabels = [
+  "Electricians",
+  "Plumbers",
+  "Roofers",
+  "Solar Companies",
+  "Pest Control",
+  "Aircon",
+  "Pool Services",
+  "Landscaping",
+  "Garage Doors",
+  "Security",
+  "Dentists",
+  "Beauty Salons",
+  "Auto Mechanics",
+  "Estate Agents",
+  "Cleaning Services",
+  "Tutoring",
+  "Vets",
+  "Photographers",
+  "Moving Companies",
+  "Fitness Trainers",
 ];
 
 const stats = [
@@ -202,28 +235,6 @@ function MiniWhatsAppVisual() {
           <div className="bg-[#1f2c34] text-[#e9edef] text-[11px] px-3 py-1.5 rounded-lg max-w-[80%]">
             I have a slot available at 10am tomorrow. Shall I book it?
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MiniEmailVisual() {
-  return (
-    <div className="bg-card rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center">
-          <MailCheck className="w-3 h-3 text-blue-600" />
-        </div>
-        <span className="text-foreground text-xs font-medium">Email Response</span>
-      </div>
-      <div className="space-y-2 text-[11px]">
-        <div className="bg-background rounded-lg p-3 border border-border">
-          <p className="text-muted text-[10px] mb-1">From: leads@yourbusiness.co.za</p>
-          <p className="text-foreground font-medium">Re: Electrical COC Inspection</p>
-          <p className="text-muted mt-1.5 leading-relaxed">
-            Thanks for reaching out! We can do a compliance certificate inspection. Our next available slot is Thursday at 2pm. Would that work for you?
-          </p>
         </div>
       </div>
     </div>
@@ -409,25 +420,10 @@ export default function Home() {
       {/* ─── SECTION 2: SOCIAL PROOF BAR ─── */}
       <section className="bg-[#f1f5f9] py-10 border-y border-border/50">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-muted font-medium text-sm uppercase tracking-wide">
-            Trusted by service businesses across Johannesburg, Pretoria, Cape
-            Town, and Durban
+          <p className="text-center text-foreground font-heading font-semibold text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
+            Helping service businesses across Johannesburg, Pretoria, Cape Town,
+            and Durban respond faster and book more
           </p>
-
-          {/* Trade icons */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-6 md:gap-10">
-            {allTrades.map(({ icon: Icon, label }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center gap-1.5 text-muted hover:text-cta transition-colors duration-200"
-              >
-                <Icon className="w-6 h-6" />
-                <span className="text-[10px] font-medium uppercase tracking-wider">
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
 
           {/* Counter stats */}
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
@@ -441,6 +437,22 @@ export default function Home() {
                 </p>
               </div>
             ))}
+          </div>
+
+          {/* Scrolling industry ticker */}
+          <div className="mt-8 overflow-hidden relative">
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#f1f5f9] to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#f1f5f9] to-transparent z-10 pointer-events-none" />
+            <div className="ticker-scroll flex items-center gap-4 w-max">
+              {[...tickerLabels, ...tickerLabels].map((label, i) => (
+                <span
+                  key={`${label}-${i}`}
+                  className="inline-flex items-center text-xs font-medium text-muted bg-white px-3 py-1.5 rounded-full border border-border whitespace-nowrap"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -541,7 +553,7 @@ export default function Home() {
                 title="Email Lead Handling"
                 description="Leads do not only come through WhatsApp. Qwikly responds to email enquiries on behalf of your business, using the same trade-specific AI. Same speed, same quality, different channel."
                 reversed
-                visual={<MiniEmailVisual />}
+                visual={<EmailMock />}
               />
             </div>
 
@@ -687,16 +699,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── SECTION 8: BUILT FOR YOUR TRADE ─── */}
+      {/* ─── SECTION 8: BUILT FOR EVERY SERVICE BUSINESS ─── */}
       <section className="py-20 bg-white">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 reveal">
             <SectionHeading
-              title="Built for Your Trade"
-              subtitle="Custom AI prompts trained for 10 trades. The AI knows your industry."
+              title="Built for Every Service Business"
+              subtitle="From tradespeople to professionals, if your business gets leads, Qwikly handles them."
             />
           </div>
 
+          {/* Primary trade cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 reveal">
             {tradeCards.map(({ icon: Icon, trade, pain }) => (
               <div
@@ -712,6 +725,26 @@ export default function Home() {
                 <p className="text-muted text-xs leading-relaxed">{pain}</p>
               </div>
             ))}
+          </div>
+
+          {/* Plus many more */}
+          <div className="mt-10 reveal">
+            <p className="text-center text-muted font-heading font-semibold text-sm uppercase tracking-wide mb-5">
+              Plus many more...
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {additionalIndustries.map(({ icon: Icon, label }) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-2 bg-background border border-border rounded-full px-4 py-2 hover:border-cta/30 transition-colors duration-200"
+                >
+                  <Icon className="w-4 h-4 text-cta" />
+                  <span className="text-sm text-foreground font-medium">
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

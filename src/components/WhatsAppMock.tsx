@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Check, CheckCheck, Phone, Video, ChevronLeft } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Check, CheckCheck, Phone, Video, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Message {
   text: string;
@@ -98,8 +98,18 @@ function ReadReceipt({ delivered, read }: { delivered?: boolean; read?: boolean 
 export default function WhatsAppMock() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [visible, setVisible] = useState(true);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const rotateConversation = useCallback(() => {
+  const goTo = useCallback((index: number) => {
+    if (index === activeIndex) return;
+    setVisible(false);
+    setTimeout(() => {
+      setActiveIndex(index);
+      setVisible(true);
+    }, 300);
+  }, [activeIndex]);
+
+  const goNext = useCallback(() => {
     setVisible(false);
     setTimeout(() => {
       setActiveIndex((prev) => (prev + 1) % conversations.length);
@@ -107,17 +117,48 @@ export default function WhatsAppMock() {
     }, 300);
   }, []);
 
+  const goPrev = useCallback(() => {
+    setVisible(false);
+    setTimeout(() => {
+      setActiveIndex((prev) => (prev - 1 + conversations.length) % conversations.length);
+      setVisible(true);
+    }, 300);
+  }, []);
+
+  const resetTimer = useCallback(() => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(goNext, 8000);
+  }, [goNext]);
+
   useEffect(() => {
-    const interval = setInterval(rotateConversation, 5000);
-    return () => clearInterval(interval);
-  }, [rotateConversation]);
+    timerRef.current = setInterval(goNext, 8000);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [goNext]);
 
   const convo = conversations[activeIndex];
 
   return (
     <div className="animate-phone-float">
-      {/* Phone frame */}
+      {/* Phone frame with navigation arrows */}
       <div className="relative w-[300px] sm:w-[340px] mx-auto">
+        {/* Left arrow */}
+        <button
+          onClick={() => { goPrev(); resetTimer(); }}
+          className="absolute left-[-36px] sm:left-[-44px] top-1/2 -translate-y-1/2 z-20 opacity-30 hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+          aria-label="Previous conversation"
+        >
+          <ChevronLeft className="w-7 h-7 text-white" />
+        </button>
+        {/* Right arrow */}
+        <button
+          onClick={() => { goNext(); resetTimer(); }}
+          className="absolute right-[-36px] sm:right-[-44px] top-1/2 -translate-y-1/2 z-20 opacity-30 hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+          aria-label="Next conversation"
+        >
+          <ChevronRight className="w-7 h-7 text-white" />
+        </button>
         {/* Phone outer shell */}
         <div className="bg-[#1a1a1a] rounded-[2.5rem] p-2 shadow-2xl shadow-black/40">
           {/* Notch */}
@@ -229,11 +270,8 @@ export default function WhatsAppMock() {
               key={i}
               onClick={() => {
                 if (i !== activeIndex) {
-                  setVisible(false);
-                  setTimeout(() => {
-                    setActiveIndex(i);
-                    setVisible(true);
-                  }, 300);
+                  goTo(i);
+                  resetTimer();
                 }
               }}
               className={`rounded-full transition-all duration-300 ${

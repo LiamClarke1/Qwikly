@@ -162,3 +162,12 @@
   transform: translateY(-4px);
   box-shadow: 0 8px 30px rgba(202, 138, 4, 0.15);
 }
+
+/* Industry ticker scroll */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-scroll {
+  animation: ticker-scroll 30s linear infinite;
+}

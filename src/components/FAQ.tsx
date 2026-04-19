@@ -70,6 +70,21 @@ const faqs = [
     answer:
       "Click the \u2018Start Free Trial\u2019 button, fill in a few details, and we\u2019ll reach out to get you set up. Most businesses start seeing results within their first week.",
   },
+  {
+    question: "What industries do you work with?",
+    answer:
+      "Electricians, plumbers, roofers, solar installers, pest control, aircon technicians, pool services, landscapers, garage door specialists, security companies, dentists and dental practices, beauty salons and spas, auto mechanics and panel beaters, estate agents and property management, cleaning services (domestic and commercial), tutoring and education services, vets and animal clinics, photographers, moving companies, fitness trainers and gyms, and any other service business that receives leads.",
+  },
+  {
+    question: "How does the email channel work?",
+    answer:
+      "When a lead emails your business, Qwikly\u2019s AI responds on your behalf within seconds, using the same trade-specific qualification flow as WhatsApp. The AI asks the right questions, qualifies the lead, checks your availability, and books the appointment, all through email. You can see every email conversation in the dashboard.",
+  },
+  {
+    question: "What happens when a customer doesn\u2019t respond?",
+    answer:
+      "Qwikly runs an automated follow-up sequence. If the customer goes quiet, the AI re-engages at 4 hours, then 24 hours, then 2 days, then 5 days. If they still do not reply, the lead is marked dormant. At 30 days, Qwikly sends a seasonal or trade-specific revival message to bring them back. No lead is ever abandoned.",
+  },
 ];
 
 export default function FAQ() {
