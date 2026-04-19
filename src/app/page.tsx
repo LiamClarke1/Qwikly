@@ -128,7 +128,20 @@ const pricingIncludes = [
   "Appointment reminders (24h + 1h)",
   "Multi-channel (WhatsApp + Email)",
   "Client dashboard with conversation transcripts",
-  "Trade-specific AI for 10 trades",
+  "Trade-specific AI",
+];
+
+const tradePricing = [
+  { trade: "Pest Control", price: "R200", jobValue: "R1,500", roi: "7.5x" },
+  { trade: "Pool Cleaning", price: "R250", jobValue: "R1,800/mo", roi: "7x" },
+  { trade: "Plumber", price: "R500", jobValue: "R5,000", roi: "10x" },
+  { trade: "Electrician", price: "R500", jobValue: "R7,000", roi: "14x" },
+  { trade: "Security", price: "R500", jobValue: "R1,000/mo", roi: "24x" },
+  { trade: "Aircon", price: "R600", jobValue: "R8,000", roi: "13x" },
+  { trade: "Landscaper", price: "R750", jobValue: "R10,000", roi: "13x" },
+  { trade: "Garage Doors", price: "R1,000", jobValue: "R12,000", roi: "12x" },
+  { trade: "Roofer", price: "R1,500", jobValue: "R40,000", roi: "27x" },
+  { trade: "Solar", price: "R3,000", jobValue: "R150,000", roi: "50x" },
 ];
 
 const tradeCards = [
@@ -661,36 +674,62 @@ export default function Home() {
       <section id="pricing" className="py-20 bg-[#f1f5f9]">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center reveal">
-            <SectionHeading title="Simple, Transparent Pricing" />
+            <SectionHeading
+              title="Pay Per Booking. Priced for Your Trade."
+              subtitle="Every trade has different job values, so every trade gets a fair price. You only pay when Qwikly books a real appointment."
+            />
           </div>
 
-          <div className="mt-14 max-w-lg mx-auto bg-card rounded-2xl shadow-xl border border-border p-8 md:p-10 reveal">
-            <div className="text-center">
-              <span className="inline-block text-xs font-bold uppercase tracking-wider text-cta bg-cta/10 px-3 py-1 rounded-full mb-4">
-                Pay Per Booking
-              </span>
-              <p className="font-heading text-5xl md:text-6xl font-bold text-primary">
-                R750
-              </p>
-              <p className="mt-2 text-muted text-lg">per booked appointment</p>
+          <div className="mt-14 grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+            {/* Trade pricing table */}
+            <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden reveal">
+              <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] px-6 py-4">
+                <div className="grid grid-cols-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <span>Trade</span>
+                  <span className="text-center">Per Booking</span>
+                  <span className="text-center">Avg Job Value</span>
+                  <span className="text-right">Your ROI</span>
+                </div>
+              </div>
+              <div className="divide-y divide-border">
+                {tradePricing.map((item) => (
+                  <div key={item.trade} className="grid grid-cols-4 items-center px-6 py-3.5 hover:bg-cta/5 transition-colors duration-200">
+                    <span className="text-sm font-medium text-foreground">{item.trade}</span>
+                    <span className="text-center text-sm font-bold text-cta">{item.price}</span>
+                    <span className="text-center text-sm text-muted">{item.jobValue}</span>
+                    <span className="text-right text-sm font-bold text-success">{item.roi}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="px-6 py-4 bg-[#f8fafc] border-t border-border">
+                <p className="text-xs text-muted text-center">Other industries priced at consultation. Same features, fair pricing.</p>
+              </div>
             </div>
 
-            <div className="w-full h-px bg-border my-8" />
+            {/* What's included card */}
+            <div className="bg-card rounded-2xl shadow-xl border border-border p-8 reveal">
+              <span className="inline-block text-xs font-bold uppercase tracking-wider text-cta bg-cta/10 px-3 py-1 rounded-full mb-6">
+                Everything Included
+              </span>
+              <p className="font-heading text-xl font-bold text-primary mb-6">
+                Every plan includes the full Qwikly platform:
+              </p>
 
-            <ul className="space-y-3">
-              {pricingIncludes.map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-foreground text-sm">{item}</span>
-                </li>
-              ))}
-            </ul>
+              <ul className="space-y-3">
+                {pricingIncludes.map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                    <span className="text-foreground text-sm">{item}</span>
+                  </li>
+                ))}
+              </ul>
 
-            <p className="mt-8 text-sm text-muted text-center">
-              No monthly fees. No setup cost. No contracts. 7-day free trial.
-            </p>
+              <div className="w-full h-px bg-border my-6" />
 
-            <div className="mt-6">
+              <p className="text-sm text-muted text-center mb-6">
+                No monthly fees. No setup cost. No contracts. 7-day free trial.
+              </p>
+
               <CTAButton size="lg" className="w-full justify-center">
                 Start Your Free 7-Day Trial
               </CTAButton>
