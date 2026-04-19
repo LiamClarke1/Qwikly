@@ -60,7 +60,7 @@ const behindTheScenes = [
 
 export default function HowItWorksPage() {
   return (
-    <main className="bg-background">
+    <main className="bg-bg-light">
       {/* Hero */}
       <section className="pt-8 pb-16">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
@@ -83,23 +83,23 @@ export default function HowItWorksPage() {
                 <div key={step.title} className="relative flex gap-6">
                   {/* Timeline column */}
                   <div className="flex flex-col items-center">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-cta text-white font-sans font-bold text-sm flex-shrink-0">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-accent text-bg-dark font-sans font-bold text-sm flex-shrink-0">
                       {index + 1}
                     </div>
                     {!isLast && (
-                      <div className="w-0.5 bg-border flex-1 my-2" />
+                      <div className="w-0.5 bg-border-light flex-1 my-2" />
                     )}
                   </div>
 
                   {/* Content */}
                   <div className={`pb-12 ${isLast ? "pb-0" : ""}`}>
                     <div className="flex items-center gap-3 mb-2">
-                      <Icon className="w-5 h-5 text-cta" />
-                      <h3 className="font-sans text-xl font-semibold text-primary">
+                      <Icon className="w-5 h-5 text-accent" />
+                      <h3 className="font-sans text-xl font-semibold text-text-dark">
                         {step.title}
                       </h3>
                     </div>
-                    <p className="text-muted leading-relaxed">
+                    <p className="text-text-muted-dark leading-relaxed">
                       {step.description}
                     </p>
                   </div>
@@ -111,7 +111,7 @@ export default function HowItWorksPage() {
       </section>
 
       {/* What Happens Behind the Scenes */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-bg-subtle">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <SectionHeading
             title="What Happens Behind the Scenes"
@@ -125,13 +125,13 @@ export default function HowItWorksPage() {
               return (
                 <div
                   key={feature.title}
-                  className="bg-card rounded-2xl p-8 border border-border"
+                  className="bg-white rounded-2xl p-8 border border-border-light"
                 >
-                  <Icon className="w-8 h-8 text-cta mb-4" />
-                  <h3 className="text-lg font-semibold text-primary mb-3">
+                  <Icon className="w-8 h-8 text-accent mb-4" />
+                  <h3 className="text-lg font-semibold text-text-dark mb-3">
                     {feature.title}
                   </h3>
-                  <p className="text-muted text-sm leading-relaxed">
+                  <p className="text-text-muted-dark text-sm leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
@@ -142,17 +142,16 @@ export default function HowItWorksPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
-        <div className="absolute inset-0 hero-grid pointer-events-none" />
-        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-sans text-3xl md:text-4xl font-bold text-white">
+      <section className="py-20 bg-bg-dark relative overflow-hidden noise-overlay">
+        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center hero-glow">
+          <h2 className="relative z-10 font-sans text-3xl md:text-4xl font-bold text-white">
             See It In Action
           </h2>
-          <p className="text-gray-300 text-lg mt-4 max-w-xl mx-auto">
+          <p className="relative z-10 text-text-secondary text-lg mt-4 max-w-xl mx-auto">
             Start your free 7-day trial and watch Qwikly handle your first
             leads.
           </p>
-          <div className="mt-8">
+          <div className="relative z-10 mt-8">
             <CTAButton size="lg">Start Your Free 7-Day Trial</CTAButton>
           </div>
         </div>

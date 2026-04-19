@@ -9,20 +9,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#0F172A",
-        "primary-light": "#1E293B",
-        cta: "#CA8A04",
-        "cta-hover": "#A16207",
-        "cta-light": "#FEF3C7",
-        accent: "#0EA5E9",
-        background: "#F8FAFC",
-        foreground: "#0F172A",
-        muted: "#64748B",
-        "muted-light": "#94A3B8",
-        border: "#E2E8F0",
-        card: "#FFFFFF",
-        success: "#16A34A",
-        danger: "#DC2626",
+        // Backgrounds — dark, layered, premium
+        "bg-dark": "#050505",
+        "bg-card": "#0C0C0C",
+        "bg-elevated": "#141414",
+        "bg-light": "#FAFAFA",
+        "bg-subtle": "#F5F5F5",
+
+        // Accent — warm gold
+        accent: "#D4A843",
+        "accent-hover": "#B8922F",
+
+        // Text
+        "text-primary": "#FFFFFF",
+        "text-secondary": "rgba(255,255,255,0.65)",
+        "text-tertiary": "rgba(255,255,255,0.4)",
+        "text-dark": "#0C0A09",
+        "text-muted-dark": "#57534E",
+
+        // Borders
+        "border-subtle": "rgba(255,255,255,0.07)",
+        "border-light": "#E7E5E4",
+
+        // Status
+        success: "#22C55E",
+        danger: "#EF4444",
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],

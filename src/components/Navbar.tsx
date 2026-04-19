@@ -36,8 +36,8 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-white/80 backdrop-blur-md shadow-sm border-b border-border/50"
-          : "bg-white/60 backdrop-blur-sm"
+          ? "bg-bg-dark/90 backdrop-blur-xl border-b border-border-subtle"
+          : "bg-bg-dark/80 backdrop-blur-xl border-b border-border-subtle"
       }`}
     >
       <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
@@ -45,7 +45,7 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             href="/"
-            className="font-sans font-bold text-xl text-primary cursor-pointer"
+            className="font-sans font-bold text-xl text-white cursor-pointer"
           >
             Qwikly
           </Link>
@@ -56,7 +56,7 @@ export default function Navbar() {
               <a
                 key={link.label}
                 href={getHref(link.anchor)}
-                className="text-foreground hover:text-cta transition-colors duration-200 text-sm font-medium cursor-pointer"
+                className="text-text-secondary hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer"
               >
                 {link.label}
               </a>
@@ -66,7 +66,7 @@ export default function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 text-primary cursor-pointer"
+            className="md:hidden p-2 text-white cursor-pointer"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
@@ -85,13 +85,13 @@ export default function Navbar() {
           mobileOpen ? "max-h-96" : "max-h-0"
         }`}
       >
-        <div className="bg-white/95 backdrop-blur-md border-t border-border/50 px-4 py-4 space-y-4">
+        <div className="bg-bg-dark/95 backdrop-blur-xl border-t border-border-subtle px-4 py-4 space-y-4">
           {navLinks.map((link) => (
             <a
               key={link.label}
               href={getHref(link.anchor)}
               onClick={() => setMobileOpen(false)}
-              className="block text-foreground hover:text-cta transition-colors duration-200 text-base font-medium cursor-pointer"
+              className="block text-text-secondary hover:text-white transition-colors duration-200 text-base font-medium cursor-pointer"
             >
               {link.label}
             </a>

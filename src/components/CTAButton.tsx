@@ -29,8 +29,8 @@ export default function CTAButton({
 
   const variantClasses =
     variant === "primary"
-      ? "bg-cta hover:bg-cta-hover text-white"
-      : "border-2 border-cta text-cta hover:bg-cta hover:text-white";
+      ? "bg-accent hover:bg-accent-hover text-bg-dark"
+      : "border-2 border-border-subtle text-white hover:bg-bg-elevated";
 
   const classes = `${baseClasses} ${variantClasses} ${sizeClasses[size]} ${className}`;
 

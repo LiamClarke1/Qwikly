@@ -267,23 +267,23 @@ function MiniTimelineVisual() {
     { time: "5 days", label: "Final follow-up", active: false },
   ];
   return (
-    <div className="bg-card rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border">
+    <div className="bg-white rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border-light">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-6 h-6 rounded-full bg-cta/10 flex items-center justify-center">
-          <Clock className="w-3 h-3 text-cta" />
+        <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center">
+          <Clock className="w-3 h-3 text-accent" />
         </div>
-        <span className="text-foreground text-xs font-medium">Follow-up Cadence</span>
+        <span className="text-text-dark text-xs font-medium">Follow-up Cadence</span>
       </div>
       <div className="space-y-0">
         {followUps.map((item, i) => (
           <div key={item.time} className="flex items-start gap-3">
             <div className="flex flex-col items-center">
-              <div className={`w-3 h-3 rounded-full border-2 flex-shrink-0 ${item.active ? "border-cta bg-cta" : "border-border bg-white"}`} />
-              {i < followUps.length - 1 && <div className="w-0.5 h-6 bg-border" />}
+              <div className={`w-3 h-3 rounded-full border-2 flex-shrink-0 ${item.active ? "border-accent bg-accent" : "border-border-light bg-white"}`} />
+              {i < followUps.length - 1 && <div className="w-0.5 h-6 bg-border-light" />}
             </div>
             <div className="pb-2">
-              <p className="text-foreground text-[11px] font-semibold">{item.time}</p>
-              <p className="text-muted text-[10px]">{item.label}</p>
+              <p className="text-text-dark text-[11px] font-semibold">{item.time}</p>
+              <p className="text-text-muted-dark text-[10px]">{item.label}</p>
             </div>
           </div>
         ))}
@@ -294,12 +294,12 @@ function MiniTimelineVisual() {
 
 function MiniNotificationVisual() {
   return (
-    <div className="bg-card rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border">
+    <div className="bg-white rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border-light">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-6 h-6 rounded-full bg-red-50 flex items-center justify-center">
           <CalendarX className="w-3 h-3 text-red-500" />
         </div>
-        <span className="text-foreground text-xs font-medium">No-Show Recovery</span>
+        <span className="text-text-dark text-xs font-medium">No-Show Recovery</span>
       </div>
       <div className="space-y-2">
         <div className="bg-red-50 rounded-lg p-3 border border-red-100">
@@ -320,21 +320,21 @@ function MiniNotificationVisual() {
 
 function MiniRevivalVisual() {
   return (
-    <div className="bg-card rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border">
+    <div className="bg-white rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border-light">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-6 h-6 rounded-full bg-purple-50 flex items-center justify-center">
           <CalendarClock className="w-3 h-3 text-purple-600" />
         </div>
-        <span className="text-foreground text-xs font-medium">Lead Revival</span>
+        <span className="text-text-dark text-xs font-medium">Lead Revival</span>
       </div>
       <div className="space-y-2">
         <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
           <p className="text-purple-700 text-[10px] font-medium mb-1">35 days dormant</p>
           <p className="text-purple-600/70 text-[10px]">John D. - Solar installation quote</p>
         </div>
-        <div className="bg-background rounded-lg p-3 border border-border">
-          <p className="text-foreground text-[11px]">&ldquo;Hi John, summer is coming and electricity prices just went up. Still thinking about going solar?&rdquo;</p>
-          <p className="text-cta text-[10px] font-medium mt-1">Seasonal re-engagement sent</p>
+        <div className="bg-bg-subtle rounded-lg p-3 border border-border-light">
+          <p className="text-text-dark text-[11px]">&ldquo;Hi John, summer is coming and electricity prices just went up. Still thinking about going solar?&rdquo;</p>
+          <p className="text-accent text-[10px] font-medium mt-1">Seasonal re-engagement sent</p>
         </div>
       </div>
     </div>
@@ -343,41 +343,41 @@ function MiniRevivalVisual() {
 
 function MiniDashboardVisual() {
   return (
-    <div className="bg-card rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border">
+    <div className="bg-white rounded-2xl p-4 max-w-sm w-full shadow-lg border border-border-light">
       <div className="flex items-center gap-2 mb-3">
         <div className="w-6 h-6 rounded-full bg-blue-50 flex items-center justify-center">
           <BarChart3 className="w-3 h-3 text-blue-600" />
         </div>
-        <span className="text-foreground text-xs font-medium">Client Dashboard</span>
+        <span className="text-text-dark text-xs font-medium">Client Dashboard</span>
       </div>
       <div className="grid grid-cols-3 gap-2 mb-3">
-        <div className="bg-background rounded-lg p-2 text-center border border-border">
-          <p className="text-foreground text-sm font-bold">47</p>
-          <p className="text-muted text-[9px]">Leads</p>
+        <div className="bg-bg-subtle rounded-lg p-2 text-center border border-border-light">
+          <p className="text-text-dark text-sm font-bold">47</p>
+          <p className="text-text-muted-dark text-[9px]">Leads</p>
         </div>
-        <div className="bg-background rounded-lg p-2 text-center border border-border">
-          <p className="text-cta text-sm font-bold">32</p>
-          <p className="text-muted text-[9px]">Booked</p>
+        <div className="bg-bg-subtle rounded-lg p-2 text-center border border-border-light">
+          <p className="text-accent text-sm font-bold">32</p>
+          <p className="text-text-muted-dark text-[9px]">Booked</p>
         </div>
-        <div className="bg-background rounded-lg p-2 text-center border border-border">
+        <div className="bg-bg-subtle rounded-lg p-2 text-center border border-border-light">
           <p className="text-green-600 text-sm font-bold">94%</p>
-          <p className="text-muted text-[9px]">Rate</p>
+          <p className="text-text-muted-dark text-[9px]">Rate</p>
         </div>
       </div>
       <div className="space-y-1.5">
-        <div className="flex items-center justify-between bg-background rounded-lg px-3 py-1.5 border border-border">
+        <div className="flex items-center justify-between bg-bg-subtle rounded-lg px-3 py-1.5 border border-border-light">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-            <span className="text-[10px] text-foreground">Sarah M.</span>
+            <span className="text-[10px] text-text-dark">Sarah M.</span>
           </div>
-          <span className="text-[9px] text-cta font-medium">Booked</span>
+          <span className="text-[9px] text-accent font-medium">Booked</span>
         </div>
-        <div className="flex items-center justify-between bg-background rounded-lg px-3 py-1.5 border border-border">
+        <div className="flex items-center justify-between bg-bg-subtle rounded-lg px-3 py-1.5 border border-border-light">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
-            <span className="text-[10px] text-foreground">David K.</span>
+            <span className="text-[10px] text-text-dark">David K.</span>
           </div>
-          <span className="text-[9px] text-muted font-medium">Following up</span>
+          <span className="text-[9px] text-text-muted-dark font-medium">Following up</span>
         </div>
       </div>
     </div>
@@ -391,65 +391,62 @@ export default function Home() {
 
   return (
     <>
-      {/* ─── SECTION 1: HERO (dark navy) ─── */}
-      <section className="bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 hero-grid pointer-events-none" />
-
-        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8 py-24 md:py-32">
+      {/* ─── SECTION 1: HERO (dark) ─── */}
+      <section className="bg-bg-dark relative overflow-hidden noise-overlay">
+        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8 py-24 md:py-32">
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
             {/* Left: copy */}
-            <div className="flex-1 text-center lg:text-left">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight text-white leading-tight">
+            <div className="flex-1 text-center lg:text-left hero-glow">
+              <h1 className="relative z-10 text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight text-white leading-tight">
                 Every lead answered.
                 <br />
                 Every follow-up sent.
                 <br />
-                Every appointment booked.
+                Every appointment <span className="text-accent">booked</span>.
               </h1>
-              <p className="mt-6 text-base md:text-lg text-gray-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              <p className="relative z-10 mt-6 text-base md:text-lg text-text-secondary max-w-xl mx-auto lg:mx-0 leading-relaxed">
                 AI that responds in 30 seconds, follows up automatically, and
                 never lets a lead go cold. Built for South African service
                 businesses.
               </p>
 
-              <ul className="mt-6 space-y-2 max-w-md mx-auto lg:mx-0">
+              <ul className="relative z-10 mt-6 space-y-2 max-w-md mx-auto lg:mx-0">
                 {[
                   "WhatsApp + Email response in 30 seconds",
                   "Automated follow-ups, no-show recovery, lead revival",
                   "Books into Google Calendar, 24/7",
                   "8% per booking, 7-day free trial",
                 ].map((item) => (
-                  <li key={item} className="flex items-center gap-2.5 text-sm text-gray-300">
-                    <Check className="w-4 h-4 text-cta flex-shrink-0" />
+                  <li key={item} className="flex items-center gap-2.5 text-sm text-text-secondary">
+                    <Check className="w-4 h-4 text-accent flex-shrink-0" />
                     {item}
                   </li>
                 ))}
               </ul>
 
-              <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+              <div className="relative z-10 mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
                   Start Free Trial
                 </CTAButton>
-                <CTAButton variant="outline" size="lg" href="#how-it-works" className="border-white/30 text-white hover:bg-white/10 hover:text-white">
+                <CTAButton variant="outline" size="lg" href="#how-it-works" className="border-border-subtle text-white hover:bg-bg-elevated hover:text-white">
                   See How It Works
                 </CTAButton>
               </div>
 
-              <p className="mt-5 text-sm text-gray-400">
+              <p className="relative z-10 mt-5 text-sm text-text-tertiary">
                 No setup fees. No contracts. Cancel anytime.
               </p>
 
-              <div className="mt-6 bg-white/5 border border-white/10 rounded-xl px-5 py-3 max-w-md mx-auto lg:mx-0">
-                <p className="text-sm text-gray-300">
-                  <span className="text-cta font-bold">Average ROI: 10-50x.</span>{" "}
+              <div className="relative z-10 mt-6 bg-bg-card border border-border-subtle rounded-xl px-5 py-3 max-w-md mx-auto lg:mx-0">
+                <p className="text-sm text-text-secondary">
+                  <span className="text-accent font-bold">Average ROI: 10-50x.</span>{" "}
                   A plumber paying R500 per booking earns R5,000 per job. A solar company paying R5,000 earns R150,000. You do the math.
                 </p>
               </div>
             </div>
 
             {/* Right: WhatsApp mock */}
-            <div className="flex-shrink-0">
+            <div className="relative z-10 flex-shrink-0">
               <WhatsAppMock />
             </div>
           </div>
@@ -457,9 +454,9 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 2: SOCIAL PROOF BAR ─── */}
-      <section className="bg-[#f1f5f9] py-8 border-y border-border/50">
+      <section className="bg-bg-card py-8 border-y border-border-subtle">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 reveal-up">
-          <p className="text-center text-foreground font-semibold text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
+          <p className="text-center text-text-secondary font-semibold text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
             Helping service businesses across Johannesburg, Pretoria, Cape Town,
             and Durban respond faster and book more
           </p>
@@ -467,11 +464,11 @@ export default function Home() {
           {/* Counter stats */}
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
             {stats.map(({ value, label }) => (
-              <div key={label} className="stat-card text-center bg-white rounded-xl p-4">
-                <p className="font-sans text-2xl md:text-3xl font-bold text-primary">
+              <div key={label} className="stat-card text-center bg-bg-elevated border border-border-subtle rounded-xl p-4">
+                <p className="font-sans text-2xl md:text-3xl font-bold text-white">
                   {value}
                 </p>
-                <p className="text-xs text-muted mt-0.5 uppercase tracking-wide">
+                <p className="text-xs text-text-tertiary mt-0.5 uppercase tracking-wide">
                   {label}
                 </p>
               </div>
@@ -480,13 +477,13 @@ export default function Home() {
 
           {/* Scrolling industry ticker */}
           <div className="mt-8 overflow-hidden relative">
-            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#f1f5f9] to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#f1f5f9] to-transparent z-10 pointer-events-none" />
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-bg-card to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-bg-card to-transparent z-10 pointer-events-none" />
             <div className="ticker-scroll flex items-center gap-4 w-max">
               {[...tickerLabels, ...tickerLabels].map((label, i) => (
                 <span
                   key={`${label}-${i}`}
-                  className="inline-flex items-center text-xs font-medium text-muted bg-white px-3 py-1.5 rounded-full border border-border whitespace-nowrap"
+                  className="inline-flex items-center text-xs font-medium text-text-tertiary bg-bg-elevated px-3 py-1.5 rounded-full border border-border-subtle whitespace-nowrap"
                 >
                   {label}
                 </span>
@@ -497,7 +494,7 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 3: THE PROBLEM ─── */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-bg-light">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center reveal-up">
             <SectionHeading
@@ -565,10 +562,10 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 3b: THE COST OF SLOW RESPONSE ─── */}
-      <section className="py-12 bg-[#f1f5f9] border-y border-border/50">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+      <section className="py-12 bg-bg-dark relative noise-overlay">
+        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 reveal-up">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white">
               What slow response is costing you every month
             </h2>
           </div>
@@ -580,21 +577,21 @@ export default function Home() {
               { trade: "Solar", lost: "R150,000", jobs: "1 missed install" },
               { trade: "Pest Control", lost: "R10,000", jobs: "7 missed callouts" },
             ].map((item) => (
-              <div key={item.trade} className="bg-white rounded-xl p-5 border border-border text-center">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">{item.trade}</p>
+              <div key={item.trade} className="bg-bg-card rounded-xl p-5 border border-border-subtle text-center">
+                <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary mb-2">{item.trade}</p>
                 <p className="text-2xl font-bold text-danger tracking-tight">{item.lost}</p>
-                <p className="text-xs text-muted mt-1">{item.jobs}/month</p>
+                <p className="text-xs text-text-tertiary mt-1">{item.jobs}/month</p>
               </div>
             ))}
           </div>
-          <p className="text-center text-sm text-muted mt-6 reveal-up">
+          <p className="text-center text-sm text-text-tertiary mt-6 reveal-up">
             These are real numbers from SA service businesses. Every unanswered lead goes to whoever replies first.
           </p>
         </div>
       </section>
 
       {/* ─── SECTION 4: PLATFORM FEATURES (alternating) ─── */}
-      <section id="features" className="py-20 bg-background">
+      <section id="features" className="py-20 bg-bg-light">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 reveal-up">
             <SectionHeading
@@ -669,17 +666,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── SECTION 5: HOW IT WORKS (dark navy) ─── */}
-      <section id="how-it-works" className="py-16 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
-        <div className="absolute inset-0 hero-grid pointer-events-none" />
-        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+      {/* ─── SECTION 5: HOW IT WORKS (dark) ─── */}
+      <section id="how-it-works" className="py-16 bg-bg-dark relative overflow-hidden noise-overlay">
+        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 reveal-up">
             <div className="flex flex-col items-center">
-              <div className="w-16 h-px bg-white/20 mb-6" />
+              <div className="w-16 gold-line mb-6" />
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
                 How Qwikly Works
               </h2>
-              <p className="text-gray-400 text-lg mt-4 max-w-2xl">
+              <p className="text-text-tertiary text-lg mt-4 max-w-2xl">
                 Four steps from first message to fully automated lifecycle management.
               </p>
             </div>
@@ -689,19 +685,19 @@ export default function Home() {
             {howItWorksSteps.map(({ icon: Icon, step, title, description }) => (
               <div
                 key={step}
-                className="relative bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-cta/30 transition-all duration-300"
+                className="gradient-border relative p-6 hover:bg-bg-elevated transition-all duration-300"
               >
                 <span className="text-5xl font-extrabold text-white/5 absolute top-3 right-4">
                   {step}
                 </span>
-                <span className="text-sm font-semibold tracking-wide uppercase text-cta mb-3 block">
+                <span className="text-sm font-semibold tracking-wide uppercase text-accent mb-3 block">
                   Step {step}
                 </span>
-                <Icon className="w-8 h-8 text-cta mb-4" />
+                <Icon className="w-8 h-8 text-accent mb-4" />
                 <h3 className="text-lg font-semibold text-white mb-2">
                   {title}
                 </h3>
-                <p className="text-gray-400 text-sm leading-relaxed">
+                <p className="text-text-tertiary text-sm leading-relaxed">
                   {description}
                 </p>
               </div>
@@ -711,7 +707,7 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 6: COMPARISON TABLE ─── */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-bg-subtle">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 reveal-up">
             <SectionHeading
@@ -727,7 +723,7 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 7: PRICING ─── */}
-      <section id="pricing" className="py-20 bg-[#f1f5f9]">
+      <section id="pricing" className="py-20 bg-bg-light">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center reveal-up">
             <SectionHeading
@@ -738,15 +734,15 @@ export default function Home() {
 
           {/* The rule */}
           <div className="mt-10 max-w-2xl mx-auto reveal-up">
-            <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] rounded-xl px-6 py-5 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+            <div className="bg-bg-dark rounded-xl px-6 py-5 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl md:text-3xl font-bold text-cta">8%</span>
-                <span className="text-gray-300 text-sm">of the service price booked</span>
+                <span className="text-2xl md:text-3xl font-bold text-accent">8%</span>
+                <span className="text-text-secondary text-sm">of the service price booked</span>
               </div>
-              <div className="hidden sm:block w-px h-8 bg-gray-600" />
-              <div className="flex items-center gap-4 text-sm text-gray-400">
+              <div className="hidden sm:block w-px h-8 bg-border-subtle" />
+              <div className="flex items-center gap-4 text-sm text-text-tertiary">
                 <span>Minimum <span className="text-white font-semibold">R150</span></span>
-                <span className="text-gray-600">|</span>
+                <span className="text-text-tertiary">|</span>
                 <span>Maximum <span className="text-white font-semibold">R5,000</span></span>
               </div>
             </div>
@@ -754,38 +750,38 @@ export default function Home() {
 
           <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
             {/* Service examples table */}
-            <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden reveal-left">
-              <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] px-6 py-4">
+            <div className="bg-white rounded-2xl shadow-xl border border-border-light overflow-hidden reveal-left">
+              <div className="bg-bg-dark px-6 py-4">
                 <p className="text-white font-sans font-semibold text-sm">Real examples across industries</p>
               </div>
-              <div className="divide-y divide-border">
-                <div className="grid grid-cols-4 px-6 py-2.5 bg-[#f8fafc]">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">Business</span>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted">Service</span>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted text-center">Price</span>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-muted text-right">Qwikly Fee</span>
+              <div className="divide-y divide-border-light">
+                <div className="grid grid-cols-4 px-6 py-2.5 bg-bg-subtle">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted-dark">Business</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted-dark">Service</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted-dark text-center">Price</span>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted-dark text-right">Qwikly Fee</span>
                 </div>
                 {serviceExamples.map((item, i) => (
-                  <div key={i} className="grid grid-cols-4 items-center px-6 py-3 hover:bg-cta/5 transition-colors duration-200">
-                    <span className="text-sm text-muted">{item.business}</span>
-                    <span className="text-sm font-medium text-foreground">{item.service}</span>
-                    <span className="text-center text-sm text-muted">{item.servicePrice}</span>
-                    <span className="text-right text-sm font-bold text-cta">
+                  <div key={i} className="grid grid-cols-4 items-center px-6 py-3 hover:bg-accent/5 transition-colors duration-200">
+                    <span className="text-sm text-text-muted-dark">{item.business}</span>
+                    <span className="text-sm font-medium text-text-dark">{item.service}</span>
+                    <span className="text-center text-sm text-text-muted-dark">{item.servicePrice}</span>
+                    <span className="text-right text-sm font-bold text-accent">
                       {item.fee}
-                      {item.feeNote && <span className="text-[10px] text-muted ml-1">({item.feeNote})</span>}
+                      {item.feeNote && <span className="text-[10px] text-text-muted-dark ml-1">({item.feeNote})</span>}
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="px-6 py-4 bg-cta/5 border-t border-cta/20">
-                <p className="text-xs text-foreground text-center">
+              <div className="px-6 py-4 bg-accent/5 border-t border-accent/20">
+                <p className="text-xs text-text-dark text-center">
                   You set your own service prices during onboarding. If your prices change, your per-booking fee adjusts automatically.
                 </p>
               </div>
 
               {/* ROI quick math */}
-              <div className="px-6 py-5 bg-gradient-to-r from-[#0F172A] to-[#1E293B]">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">Quick ROI math</p>
+              <div className="px-6 py-5 bg-bg-dark gradient-border rounded-none rounded-b-2xl">
+                <p className="text-xs font-semibold uppercase tracking-wider text-text-tertiary mb-3">Quick ROI math</p>
                 <div className="space-y-2">
                   {[
                     { label: "Plumber gets 10 bookings/month", fee: "R5,000", earns: "R50,000", roi: "10x return" },
@@ -793,8 +789,8 @@ export default function Home() {
                     { label: "Solar gets 3 bookings/month", fee: "R15,000", earns: "R450,000", roi: "30x return" },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-400">{item.label}</span>
-                      <span className="text-cta font-bold">{item.roi}</span>
+                      <span className="text-text-tertiary">{item.label}</span>
+                      <span className="text-accent font-bold">{item.roi}</span>
                     </div>
                   ))}
                 </div>
@@ -802,11 +798,11 @@ export default function Home() {
             </div>
 
             {/* What's included card */}
-            <div className="bg-card rounded-2xl shadow-xl border border-border p-8 reveal-right">
-              <span className="inline-block text-xs font-bold uppercase tracking-wider text-cta bg-cta/10 px-3 py-1 rounded-full mb-6">
+            <div className="bg-white rounded-2xl shadow-xl border border-border-light p-8 reveal-right">
+              <span className="inline-block text-xs font-bold uppercase tracking-wider text-accent bg-accent/10 px-3 py-1 rounded-full mb-6">
                 Everything Included
               </span>
-              <p className="font-sans text-xl font-bold text-primary mb-6">
+              <p className="font-sans text-xl font-bold text-text-dark mb-6">
                 Every business gets the full platform:
               </p>
 
@@ -814,14 +810,14 @@ export default function Home() {
                 {pricingIncludes.map((item) => (
                   <li key={item} className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
-                    <span className="text-foreground text-sm">{item}</span>
+                    <span className="text-text-dark text-sm">{item}</span>
                   </li>
                 ))}
               </ul>
 
-              <div className="w-full h-px bg-border my-6" />
+              <div className="w-full h-px bg-border-light my-6" />
 
-              <p className="text-sm text-muted text-center mb-6">
+              <p className="text-sm text-text-muted-dark text-center mb-6">
                 No monthly fees. No setup cost. No contracts. 7-day free trial.
               </p>
 
@@ -834,7 +830,7 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 8: BUILT FOR EVERY SERVICE BUSINESS ─── */}
-      <section className="py-16 bg-white">
+      <section className="py-16 bg-bg-subtle">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 reveal-up">
             <SectionHeading
@@ -848,30 +844,30 @@ export default function Home() {
             {tradeCards.map(({ icon: Icon, trade, pain }, i) => (
               <div
                 key={trade}
-                className={`trade-card-hover bg-background rounded-xl p-5 border border-border hover:border-cta/30 transition-all duration-300 group ${i % 3 === 0 ? "border-l-2 border-l-cta" : ""}`}
+                className={`trade-card-hover bg-white rounded-xl p-5 border border-border-light hover:border-accent/30 transition-all duration-300 group ${i % 3 === 0 ? "border-l-2 border-l-accent" : ""}`}
               >
-                <Icon className="w-8 h-8 text-cta mb-4" />
-                <h3 className="text-sm font-semibold text-primary mb-1.5">
+                <Icon className="w-8 h-8 text-accent mb-4" />
+                <h3 className="text-sm font-semibold text-text-dark mb-1.5">
                   {trade}
                 </h3>
-                <p className="text-muted text-xs leading-relaxed">{pain}</p>
+                <p className="text-text-muted-dark text-xs leading-relaxed">{pain}</p>
               </div>
             ))}
           </div>
 
           {/* Plus many more */}
           <div className="mt-10 reveal-up">
-            <p className="text-center text-muted font-sans font-semibold text-sm uppercase tracking-wide mb-5">
+            <p className="text-center text-text-muted-dark font-sans font-semibold text-sm uppercase tracking-wide mb-5">
               Plus many more...
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               {additionalIndustries.map(({ icon: Icon, label }) => (
                 <div
                   key={label}
-                  className="flex items-center gap-2 bg-background border border-border rounded-full px-4 py-2 hover:border-cta/30 transition-colors duration-200"
+                  className="flex items-center gap-2 bg-white border border-border-light rounded-full px-4 py-2 hover:border-accent/30 transition-colors duration-200"
                 >
-                  <Icon className="w-4 h-4 text-cta" />
-                  <span className="text-sm text-foreground font-medium">
+                  <Icon className="w-4 h-4 text-accent" />
+                  <span className="text-sm text-text-dark font-medium">
                     {label}
                   </span>
                 </div>
@@ -881,13 +877,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── SECTION 9: TESTIMONIALS (dark navy) ─── */}
-      <section className="py-20 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
-        <div className="absolute inset-0 hero-grid pointer-events-none" />
-        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+      {/* ─── SECTION 9: TESTIMONIALS (dark) ─── */}
+      <section className="py-20 bg-bg-dark relative overflow-hidden noise-overlay">
+        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 reveal-up">
             <div className="flex flex-col items-center">
-              <div className="w-16 h-px bg-white/20 mb-6" />
+              <div className="w-16 gold-line mb-6" />
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
                 What Our Clients Say
               </h2>
@@ -898,21 +893,21 @@ export default function Home() {
             {testimonials.map(({ quote, name, trade, city, metric }) => (
               <div
                 key={name}
-                className="bg-white/5 backdrop-blur-sm rounded-xl p-6 md:p-8 border border-white/10 flex flex-col"
+                className="gradient-border p-6 md:p-8 flex flex-col"
               >
                 {metric && (
-                  <div className="bg-cta/10 border border-cta/20 rounded-lg px-3 py-1.5 mb-4 inline-block self-start">
-                    <p className="text-cta text-xs font-bold">{metric}</p>
+                  <div className="bg-accent/10 border border-accent/20 rounded-lg px-3 py-1.5 mb-4 inline-block self-start">
+                    <p className="text-accent text-xs font-bold">{metric}</p>
                   </div>
                 )}
-                <p className="text-gray-200 leading-relaxed flex-1 text-sm md:text-base">
+                <p className="text-text-secondary leading-relaxed flex-1 text-sm md:text-base">
                   &ldquo;{quote}&rdquo;
                 </p>
-                <div className="mt-6 pt-4 border-t border-white/10">
+                <div className="mt-6 pt-4 border-t border-border-subtle">
                   <p className="font-sans font-semibold text-white text-sm">
                     {name}
                   </p>
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-text-tertiary text-sm">
                     {trade}, {city}
                   </p>
                 </div>
@@ -925,23 +920,22 @@ export default function Home() {
       {/* ─── SECTION 10: FAQ ─── */}
       <FAQ />
 
-      {/* ─── SECTION 11: FINAL CTA (dark navy) ─── */}
-      <section className="py-12 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] relative overflow-hidden">
-        <div className="absolute inset-0 hero-grid pointer-events-none" />
-        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center reveal-up">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
+      {/* ─── SECTION 11: FINAL CTA (dark) ─── */}
+      <section className="py-12 bg-bg-dark relative overflow-hidden noise-overlay">
+        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center reveal-up hero-glow">
+          <h2 className="relative z-10 text-3xl md:text-4xl font-bold tracking-tight text-white">
             Every missed lead is money in your competitor&apos;s pocket.
           </h2>
-          <p className="mt-4 text-lg text-gray-400 max-w-2xl mx-auto">
+          <p className="relative z-10 mt-4 text-lg text-text-tertiary max-w-2xl mx-auto">
             The average service business loses R15,000-80,000 per month from slow response.
             Qwikly clients see a 10-50x return on what they pay. Start your free trial and see the bookings come in.
           </p>
-          <div className="mt-8">
+          <div className="relative z-10 mt-8">
             <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
               Start Your Free Trial
             </CTAButton>
           </div>
-          <p className="mt-4 text-sm text-gray-500">
+          <p className="relative z-10 mt-4 text-sm text-text-tertiary">
             No setup fees. No contracts. 7-day free trial.
           </p>
         </div>

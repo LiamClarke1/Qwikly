@@ -95,14 +95,14 @@ export default function FAQ() {
   }
 
   return (
-    <section id="faq" className="py-16 bg-background">
+    <section id="faq" className="py-16 bg-bg-light">
       <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
         <SectionHeading
           title="Frequently Asked Questions"
           subtitle="Everything you need to know about the Qwikly platform."
         />
 
-        <div className="mt-12 max-w-3xl mx-auto divide-y divide-border">
+        <div className="mt-12 max-w-3xl mx-auto divide-y divide-border-light">
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
             return (
@@ -111,11 +111,11 @@ export default function FAQ() {
                   onClick={() => toggle(index)}
                   className="w-full flex items-center justify-between py-5 text-left gap-4 cursor-pointer group"
                 >
-                  <span className="font-sans font-semibold text-primary text-base md:text-lg group-hover:text-cta transition-colors duration-200">
+                  <span className="font-sans font-semibold text-text-dark text-base md:text-lg group-hover:text-accent transition-colors duration-200">
                     {faq.question}
                   </span>
                   <ChevronDown
-                    className={`w-5 h-5 text-muted flex-shrink-0 transition-transform duration-200 ${
+                    className={`w-5 h-5 text-text-muted-dark flex-shrink-0 transition-transform duration-200 ${
                       isOpen ? "rotate-180" : ""
                     }`}
                   />
@@ -125,7 +125,7 @@ export default function FAQ() {
                     isOpen ? "max-h-96 pb-5" : "max-h-0"
                   }`}
                 >
-                  <p className="text-muted text-sm md:text-base leading-relaxed">
+                  <p className="text-text-muted-dark text-sm md:text-base leading-relaxed">
                     {faq.answer}
                   </p>
                 </div>

@@ -92,7 +92,7 @@ export default function PricingPage() {
   }, [calcPrice]);
 
   return (
-    <main className="bg-background">
+    <main className="bg-bg-light">
       {/* Hero */}
       <section className="pt-8 pb-16">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
@@ -106,13 +106,13 @@ export default function PricingPage() {
       {/* The Rule */}
       <section className="pb-16">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl mx-auto bg-gradient-to-r from-[#0F172A] to-[#1E293B] rounded-2xl p-8 text-center">
-            <p className="text-gray-400 text-sm uppercase tracking-wider font-semibold mb-2">Per booking fee</p>
-            <p className="font-sans text-6xl md:text-7xl font-bold text-cta">8%</p>
-            <p className="text-gray-300 mt-2 text-lg">of the service price your customer books</p>
-            <div className="flex items-center justify-center gap-6 mt-6 text-sm text-gray-400">
+          <div className="max-w-2xl mx-auto bg-bg-dark rounded-2xl p-8 text-center">
+            <p className="text-text-tertiary text-sm uppercase tracking-wider font-semibold mb-2">Per booking fee</p>
+            <p className="font-sans text-6xl md:text-7xl font-bold text-accent">8%</p>
+            <p className="text-text-secondary mt-2 text-lg">of the service price your customer books</p>
+            <div className="flex items-center justify-center gap-6 mt-6 text-sm text-text-tertiary">
               <span>Minimum <span className="text-white font-semibold">R150</span> per booking</span>
-              <span className="text-gray-600">|</span>
+              <span className="text-text-tertiary">|</span>
               <span>Maximum <span className="text-white font-semibold">R5,000</span> per booking</span>
             </div>
           </div>
@@ -122,34 +122,34 @@ export default function PricingPage() {
       {/* Calculator */}
       <section className="pb-20">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <div className="max-w-xl mx-auto bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
-            <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] px-6 py-4 flex items-center gap-3">
-              <Calculator className="w-5 h-5 text-cta" />
+          <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-xl border border-border-light overflow-hidden">
+            <div className="bg-bg-dark px-6 py-4 flex items-center gap-3">
+              <Calculator className="w-5 h-5 text-accent" />
               <h3 className="text-white font-sans font-semibold">Calculate your per-booking fee</h3>
             </div>
             <div className="p-6">
-              <label className="block text-sm font-medium text-foreground mb-2">
+              <label className="block text-sm font-medium text-text-dark mb-2">
                 Enter any service price your business charges (in Rands)
               </label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted font-semibold">R</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted-dark font-semibold">R</span>
                 <input
                   type="text"
                   placeholder="e.g. 5000"
                   value={calcPrice}
                   onChange={(e) => setCalcPrice(e.target.value)}
-                  className="w-full pl-10 pr-4 py-4 rounded-lg border border-border bg-background text-foreground text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-cta/40 focus:border-cta transition-colors"
+                  className="w-full pl-10 pr-4 py-4 rounded-lg border border-border-light bg-bg-subtle text-text-dark text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors"
                 />
               </div>
 
               {calcResult && (
                 <div className="mt-6 space-y-4">
-                  <div className="bg-[#f8fafc] rounded-xl p-6 border border-border text-center">
-                    <p className="text-sm text-muted mb-1">Your per-booking fee for this service</p>
-                    <p className="font-sans text-4xl font-bold text-cta">
+                  <div className="bg-bg-subtle rounded-xl p-6 border border-border-light text-center">
+                    <p className="text-sm text-text-muted-dark mb-1">Your per-booking fee for this service</p>
+                    <p className="font-sans text-4xl font-bold text-accent">
                       R{calcResult.fee.toLocaleString()}
                     </p>
-                    <p className="text-sm text-muted mt-1">
+                    <p className="text-sm text-text-muted-dark mt-1">
                       {calcResult.percent}% of R{calcResult.servicePrice.toLocaleString()}
                       {calcResult.fee === 150 && " (minimum applies)"}
                       {calcResult.fee === 5000 && " (maximum applies)"}
@@ -157,19 +157,19 @@ export default function PricingPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-[#f8fafc] rounded-xl p-4 border border-border text-center">
-                      <p className="text-xs text-muted mb-1">You earn</p>
-                      <p className="font-sans text-xl font-bold text-foreground">
+                    <div className="bg-bg-subtle rounded-xl p-4 border border-border-light text-center">
+                      <p className="text-xs text-text-muted-dark mb-1">You earn</p>
+                      <p className="font-sans text-xl font-bold text-text-dark">
                         R{(calcResult.servicePrice - calcResult.fee).toLocaleString()}
                       </p>
-                      <p className="text-xs text-muted">after Qwikly fee</p>
+                      <p className="text-xs text-text-muted-dark">after Qwikly fee</p>
                     </div>
-                    <div className="bg-[#f8fafc] rounded-xl p-4 border border-border text-center">
-                      <p className="text-xs text-muted mb-1">At 10 bookings/month</p>
+                    <div className="bg-bg-subtle rounded-xl p-4 border border-border-light text-center">
+                      <p className="text-xs text-text-muted-dark mb-1">At 10 bookings/month</p>
                       <p className="font-sans text-xl font-bold text-green-600">
                         R{(10 * (calcResult.servicePrice - calcResult.fee)).toLocaleString()}
                       </p>
-                      <p className="text-xs text-muted">net revenue</p>
+                      <p className="text-xs text-text-muted-dark">net revenue</p>
                     </div>
                   </div>
 
@@ -179,8 +179,8 @@ export default function PricingPage() {
                 </div>
               )}
 
-              <div className="mt-6 bg-cta/5 rounded-lg p-4 border border-cta/20">
-                <p className="text-xs text-foreground leading-relaxed">
+              <div className="mt-6 bg-accent/5 rounded-lg p-4 border border-accent/20">
+                <p className="text-xs text-text-dark leading-relaxed">
                   <strong>How it works:</strong> During onboarding, you list every service you offer and what you charge for it.
                   The AI uses these prices when talking to your leads. When a booking is made, the fee is calculated from the
                   specific service booked. If you offer a R1,500 drain unblock and a R8,000 geyser replacement, those
@@ -193,30 +193,30 @@ export default function PricingPage() {
       </section>
 
       {/* Real Examples Table */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-bg-subtle">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <SectionHeading
             title="Real Examples Across Industries"
             subtitle="See exactly what different businesses pay for different services."
           />
 
-          <div className="mt-12 max-w-3xl mx-auto bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
-            <div className="grid grid-cols-4 px-6 py-3 bg-gradient-to-r from-[#0F172A] to-[#1E293B]">
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Business</span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Service</span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 text-center">Service Price</span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-400 text-right">Qwikly Fee (8%)</span>
+          <div className="mt-12 max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-border-light overflow-hidden">
+            <div className="grid grid-cols-4 px-6 py-3 bg-bg-dark">
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Business</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Service</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary text-center">Service Price</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary text-right">Qwikly Fee (8%)</span>
             </div>
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-border-light">
               {serviceExamples.map((item, i) => (
-                <div key={i} className="grid grid-cols-4 items-center px-6 py-3 hover:bg-cta/5 transition-colors duration-200">
-                  <span className="text-sm text-muted">{item.business}</span>
-                  <span className="text-sm font-medium text-foreground">{item.service}</span>
-                  <span className="text-center text-sm text-muted">R{item.price.toLocaleString()}</span>
-                  <span className="text-right text-sm font-bold text-cta">
+                <div key={i} className="grid grid-cols-4 items-center px-6 py-3 hover:bg-accent/5 transition-colors duration-200">
+                  <span className="text-sm text-text-muted-dark">{item.business}</span>
+                  <span className="text-sm font-medium text-text-dark">{item.service}</span>
+                  <span className="text-center text-sm text-text-muted-dark">R{item.price.toLocaleString()}</span>
+                  <span className="text-right text-sm font-bold text-accent">
                     R{item.fee.toLocaleString()}
-                    {item.fee === 150 && <span className="text-[10px] text-muted ml-1">(min)</span>}
-                    {item.fee === 5000 && <span className="text-[10px] text-muted ml-1">(max)</span>}
+                    {item.fee === 150 && <span className="text-[10px] text-text-muted-dark ml-1">(min)</span>}
+                    {item.fee === 5000 && <span className="text-[10px] text-text-muted-dark ml-1">(max)</span>}
                   </span>
                 </div>
               ))}
@@ -226,26 +226,26 @@ export default function PricingPage() {
       </section>
 
       {/* What's Included */}
-      <section className="py-20 bg-[#f1f5f9]">
+      <section className="py-20 bg-bg-light">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <SectionHeading
             title="Every Business Gets the Full Platform"
             subtitle="Same features for everyone. No tiers, no upsells, no hidden costs."
           />
 
-          <div className="mt-12 max-w-lg mx-auto bg-card rounded-2xl shadow-xl border border-border p-8">
+          <div className="mt-12 max-w-lg mx-auto bg-white rounded-2xl shadow-xl border border-border-light p-8">
             <ul className="space-y-3">
               {allFeatures.map((item) => (
                 <li key={item} className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span className="text-foreground">{item}</span>
+                  <CheckCircle2 className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                  <span className="text-text-dark">{item}</span>
                 </li>
               ))}
             </ul>
 
-            <div className="w-full h-px bg-border my-6" />
+            <div className="w-full h-px bg-border-light my-6" />
 
-            <p className="text-sm text-muted text-center mb-6">
+            <p className="text-sm text-text-muted-dark text-center mb-6">
               No monthly fees. No setup cost. No contracts.
             </p>
 
@@ -257,7 +257,7 @@ export default function PricingPage() {
       </section>
 
       {/* Comparison */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-bg-subtle">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <SectionHeading
             title="How Qwikly Compares"
@@ -270,30 +270,30 @@ export default function PricingPage() {
                 key={item.title}
                 className={`rounded-2xl p-6 sm:p-8 ${
                   item.highlight
-                    ? "bg-gradient-to-br from-[#0F172A] to-[#1E293B] text-white ring-2 ring-cta relative"
-                    : "bg-card border border-border"
+                    ? "bg-bg-dark text-white ring-2 ring-accent relative gradient-border"
+                    : "bg-white border border-border-light"
                 }`}
               >
                 {item.highlight && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cta text-white text-xs font-bold px-3 py-1 rounded-full">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-bg-dark text-xs font-bold px-3 py-1 rounded-full">
                     RECOMMENDED
                   </span>
                 )}
-                <h3 className={`font-sans text-lg font-semibold ${item.highlight ? "text-white" : "text-primary"}`}>
+                <h3 className={`font-sans text-lg font-semibold ${item.highlight ? "text-white" : "text-text-dark"}`}>
                   {item.title}
                 </h3>
-                <p className={`font-sans text-3xl font-bold mt-2 ${item.highlight ? "text-cta" : "text-foreground"}`}>
+                <p className={`font-sans text-3xl font-bold mt-2 ${item.highlight ? "text-accent" : "text-text-dark"}`}>
                   {item.cost}
                 </p>
                 <ul className="mt-6 space-y-3">
                   {item.pros.map((detail) => (
-                    <li key={detail} className="flex items-start gap-2 text-sm text-gray-300">
+                    <li key={detail} className="flex items-start gap-2 text-sm text-text-secondary">
                       <CheckCircle2 className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
                       {detail}
                     </li>
                   ))}
                   {item.cons.map((detail) => (
-                    <li key={detail} className={`flex items-start gap-2 text-sm ${item.highlight ? "text-gray-300" : "text-muted"}`}>
+                    <li key={detail} className={`flex items-start gap-2 text-sm ${item.highlight ? "text-text-secondary" : "text-text-muted-dark"}`}>
                       <span className="text-red-400 flex-shrink-0 mt-0.5">&#x2715;</span>
                       {detail}
                     </li>
@@ -316,15 +316,15 @@ export default function PricingPage() {
       <FAQ />
 
       {/* Final CTA */}
-      <section className="py-20 bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A]">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-sans text-3xl md:text-4xl font-bold text-white">
+      <section className="py-20 bg-bg-dark relative noise-overlay">
+        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center hero-glow">
+          <h2 className="relative z-10 font-sans text-3xl md:text-4xl font-bold text-white">
             Ready to stop losing leads?
           </h2>
-          <p className="mt-4 text-lg text-gray-400 max-w-xl mx-auto">
+          <p className="relative z-10 mt-4 text-lg text-text-tertiary max-w-xl mx-auto">
             Start your free 7-day trial. See the bookings come in. Only pay when it works.
           </p>
-          <div className="mt-8">
+          <div className="relative z-10 mt-8">
             <CTAButton size="lg" className="cta-glow">
               Start Your Free 7-Day Trial
             </CTAButton>

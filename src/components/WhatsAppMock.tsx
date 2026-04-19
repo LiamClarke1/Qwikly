@@ -313,7 +313,7 @@ export default function WhatsAppMock() {
               }}
               className={`rounded-full transition-all duration-300 ${
                 i === activeIndex
-                  ? "w-6 h-2 bg-cta"
+                  ? "w-6 h-2 bg-accent"
                   : "w-2 h-2 bg-white/30 hover:bg-white/50"
               }`}
               aria-label={`View conversation ${i + 1}`}

@@ -79,8 +79,8 @@ const columns = [
 function CellContent({ value, isQwikly }: { value: CellValue; isQwikly: boolean }) {
   if (value === "yes") {
     return (
-      <div className={`flex items-center justify-center w-6 h-6 rounded-full mx-auto ${isQwikly ? "bg-cta/20" : "bg-green-100"}`}>
-        <Check className={`w-4 h-4 ${isQwikly ? "text-cta" : "text-green-600"}`} />
+      <div className={`flex items-center justify-center w-6 h-6 rounded-full mx-auto ${isQwikly ? "bg-accent/20" : "bg-green-100"}`}>
+        <Check className={`w-4 h-4 ${isQwikly ? "text-accent" : "text-green-600"}`} />
       </div>
     );
   }
@@ -99,7 +99,7 @@ function CellContent({ value, isQwikly }: { value: CellValue; isQwikly: boolean 
     );
   }
   return (
-    <span className={`text-sm font-medium ${isQwikly ? "text-cta font-semibold" : "text-foreground"}`}>
+    <span className={`text-sm font-medium ${isQwikly ? "text-accent font-semibold" : "text-text-dark"}`}>
       {value}
     </span>
   );
@@ -112,7 +112,7 @@ export default function ComparisonTable() {
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              <th className="text-left py-4 px-4 text-sm font-medium text-muted w-[180px]">
+              <th className="text-left py-4 px-4 text-sm font-medium text-text-muted-dark w-[180px]">
                 Feature
               </th>
               {columns.map((col) => (
@@ -120,13 +120,13 @@ export default function ComparisonTable() {
                   key={col.key}
                   className={`py-4 px-3 text-center text-sm font-semibold ${
                     col.key === "qwikly"
-                      ? "text-cta bg-gradient-to-b from-[#CA8A04]/10 to-transparent"
-                      : "text-foreground"
+                      ? "text-accent bg-gradient-to-b from-accent/10 to-transparent"
+                      : "text-text-dark"
                   }`}
                 >
                   <span className={col.key === "qwikly" ? "inline-flex flex-col items-center gap-1" : ""}>
                     {col.key === "qwikly" && (
-                      <span className="bg-gradient-to-r from-[#CA8A04] to-[#F59E0B] text-white text-[8px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">
+                      <span className="bg-gradient-to-r from-accent to-accent-hover text-white text-[8px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">
                         Recommended
                       </span>
                     )}
@@ -140,9 +140,9 @@ export default function ComparisonTable() {
             {rows.map((row, i) => (
               <tr
                 key={row.feature}
-                className={`border-t border-border ${i % 2 === 0 ? "bg-white" : "bg-background"}`}
+                className={`border-t border-border-light ${i % 2 === 0 ? "bg-white" : "bg-bg-subtle"}`}
               >
-                <td className="py-4 px-4 text-sm font-medium text-foreground">
+                <td className="py-4 px-4 text-sm font-medium text-text-dark">
                   {row.feature}
                 </td>
                 {columns.map((col) => (
@@ -150,15 +150,15 @@ export default function ComparisonTable() {
                     key={col.key}
                     className={`py-4 px-3 text-center ${
                       col.key === "qwikly"
-                        ? "bg-cta/5 border-l-2 border-r-2 border-cta/20"
+                        ? "bg-accent/5 border-l-2 border-r-2 border-accent/20"
                         : ""
                     } ${
                       col.key === "qwikly" && i === 0
-                        ? "border-t-2 border-t-cta/20"
+                        ? "border-t-2 border-t-accent/20"
                         : ""
                     } ${
                       col.key === "qwikly" && i === rows.length - 1
-                        ? "border-b-2 border-b-cta/20"
+                        ? "border-b-2 border-b-accent/20"
                         : ""
                     }`}
                   >

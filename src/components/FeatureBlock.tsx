@@ -9,7 +9,7 @@ interface FeatureBlockProps {
 
 export default function FeatureBlock({
   badge,
-  badgeColor = "bg-cta/10 text-cta",
+  badgeColor = "bg-accent/10 text-accent",
   title,
   description,
   reversed = false,
@@ -28,10 +28,10 @@ export default function FeatureBlock({
         >
           {badge}
         </span>
-        <h3 className="font-sans text-2xl md:text-3xl font-bold text-primary mt-4">
+        <h3 className="font-sans text-2xl md:text-3xl font-bold text-text-dark mt-4">
           {title}
         </h3>
-        <p className="text-muted text-base md:text-lg leading-relaxed mt-4 max-w-lg">
+        <p className="text-text-muted-dark text-base md:text-lg leading-relaxed mt-4 max-w-lg">
           {description}
         </p>
       </div>

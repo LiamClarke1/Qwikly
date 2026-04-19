@@ -15,7 +15,7 @@ const productLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0F172A] text-white">
+    <footer className="bg-bg-dark border-t border-border-subtle text-white">
       <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
@@ -26,7 +26,7 @@ export default function Footer() {
             >
               Qwikly
             </Link>
-            <p className="text-gray-400 mt-2 text-sm leading-relaxed">
+            <p className="text-text-tertiary mt-2 text-sm leading-relaxed">
               AI-powered lead response and lifecycle management for South
               African service businesses.
             </p>
@@ -34,7 +34,7 @@ export default function Footer() {
 
           {/* Navigation */}
           <div>
-            <h3 className="font-sans font-semibold text-sm uppercase tracking-wider mb-4">
+            <h3 className="font-sans font-semibold text-sm uppercase tracking-wider mb-4 text-text-secondary">
               Navigation
             </h3>
             <ul className="space-y-2">
@@ -42,7 +42,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="text-gray-400 hover:text-white transition-colors duration-200 text-sm cursor-pointer"
+                    className="text-text-tertiary hover:text-white transition-colors duration-200 text-sm cursor-pointer"
                   >
                     {link.label}
                   </a>
@@ -53,7 +53,7 @@ export default function Footer() {
 
           {/* Product */}
           <div>
-            <h3 className="font-sans font-semibold text-sm uppercase tracking-wider mb-4">
+            <h3 className="font-sans font-semibold text-sm uppercase tracking-wider mb-4 text-text-secondary">
               Product
             </h3>
             <ul className="space-y-2">
@@ -61,7 +61,7 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
-                    className="text-gray-400 hover:text-white transition-colors duration-200 text-sm cursor-pointer"
+                    className="text-text-tertiary hover:text-white transition-colors duration-200 text-sm cursor-pointer"
                   >
                     {link.label}
                   </Link>
@@ -72,12 +72,12 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="font-sans font-semibold text-sm uppercase tracking-wider mb-4">
+            <h3 className="font-sans font-semibold text-sm uppercase tracking-wider mb-4 text-text-secondary">
               Contact
             </h3>
             <a
               href="mailto:hello@qwikly.co.za"
-              className="text-gray-400 hover:text-white transition-colors duration-200 text-sm cursor-pointer"
+              className="text-text-tertiary hover:text-white transition-colors duration-200 text-sm cursor-pointer"
             >
               hello@qwikly.co.za
             </a>
@@ -85,7 +85,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-gray-700 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-gray-500">
+        <div className="border-t border-border-subtle mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-text-tertiary">
           <span>Built by Clarke Agency</span>
           <span>&copy; {2026} Qwikly. All rights reserved.</span>
         </div>
