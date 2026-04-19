@@ -202,27 +202,27 @@ const tradeCards = [
 const testimonials = [
   {
     quote:
-      "Qwikly picked up 12 extra jobs in our first month, that's roughly R84,000 in revenue from leads I would have missed. The AI replies faster than my best receptionist and follows up on every single quote.",
+      "Qwikly picked up 4 extra jobs in the first month that I know I would have missed. That's about R28,000 in work just from after-hours leads. The follow-ups are what got me, it chased a quote I forgot about and the guy booked.",
     name: "Thabo M.",
     trade: "Electrician",
     city: "Johannesburg",
-    metric: "R84k extra revenue in month 1",
+    metric: "4 extra jobs, ~R28k revenue",
   },
   {
     quote:
-      "I was losing weekend leads for years. Now every WhatsApp and email gets answered in 30 seconds, even on Christmas Day. The no-show recovery alone saved us 4 rebookings last month, that's R7,200 we would have lost.",
+      "Two of my no-shows last month got automatically rebooked. That alone covered what I pay Qwikly. The weekend leads are the big win though, I used to lose every single one.",
     name: "Sarah K.",
     trade: "Pool Services",
     city: "Cape Town",
-    metric: "R7.2k saved from no-show recovery",
+    metric: "2 no-shows recovered",
   },
   {
     quote:
-      "The setup took 2 days and I have not thought about it since. Last month it booked 18 callouts while I was on site. At R5,000 a job, that's R90,000 I did not have to chase.",
+      "Setup was quick and I haven't thought about it since. It handles about 6-8 bookings a month for me now. The ones that come in while I'm under a sink used to just disappear.",
     name: "James R.",
     trade: "Plumber",
     city: "Pretoria",
-    metric: "18 bookings, R90k revenue",
+    metric: "6-8 bookings/month",
   },
 ];
 
@@ -738,11 +738,13 @@ export default function Home() {
 
           {/* The rule */}
           <div className="mt-10 max-w-2xl mx-auto reveal-up">
-            <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] rounded-2xl p-8 text-center">
-              <p className="text-gray-400 text-sm uppercase tracking-wider font-semibold mb-2">Per booking fee</p>
-              <p className="font-sans text-5xl md:text-6xl font-bold text-cta">8%</p>
-              <p className="text-gray-300 mt-2 text-lg">of the service price booked</p>
-              <div className="flex items-center justify-center gap-6 mt-6 text-sm text-gray-400">
+            <div className="bg-gradient-to-r from-[#0F172A] to-[#1E293B] rounded-xl px-6 py-5 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl md:text-3xl font-bold text-cta">8%</span>
+                <span className="text-gray-300 text-sm">of the service price booked</span>
+              </div>
+              <div className="hidden sm:block w-px h-8 bg-gray-600" />
+              <div className="flex items-center gap-4 text-sm text-gray-400">
                 <span>Minimum <span className="text-white font-semibold">R150</span></span>
                 <span className="text-gray-600">|</span>
                 <span>Maximum <span className="text-white font-semibold">R5,000</span></span>
