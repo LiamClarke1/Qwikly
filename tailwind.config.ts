@@ -9,30 +9,30 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Backgrounds — dark, layered, premium
-        "bg-dark": "#050505",
-        "bg-card": "#0C0C0C",
-        "bg-elevated": "#141414",
-        "bg-light": "#FAFAFA",
-        "bg-subtle": "#F5F5F5",
+        // Backgrounds — clean, friendly
+        "bg-dark": "#111827",
+        "bg-card": "#1F2937",
+        "bg-elevated": "#374151",
+        "bg-light": "#FFFFFF",
+        "bg-subtle": "#F9FAFB",
 
-        // Accent — warm gold
-        accent: "#D4A843",
-        "accent-hover": "#B8922F",
+        // Accent — friendly blue
+        accent: "#2563EB",
+        "accent-hover": "#1D4ED8",
 
         // Text
         "text-primary": "#FFFFFF",
-        "text-secondary": "rgba(255,255,255,0.65)",
-        "text-tertiary": "rgba(255,255,255,0.4)",
-        "text-dark": "#0C0A09",
-        "text-muted-dark": "#57534E",
+        "text-secondary": "rgba(255,255,255,0.75)",
+        "text-tertiary": "rgba(255,255,255,0.55)",
+        "text-dark": "#111827",
+        "text-muted-dark": "#6B7280",
 
         // Borders
-        "border-subtle": "rgba(255,255,255,0.07)",
-        "border-light": "#E7E5E4",
+        "border-subtle": "rgba(255,255,255,0.1)",
+        "border-light": "#E5E7EB",
 
         // Status
-        success: "#22C55E",
+        success: "#10B981",
         danger: "#EF4444",
       },
       fontFamily: {
