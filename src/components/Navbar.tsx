@@ -61,7 +61,7 @@ export default function Navbar() {
                 {link.label}
               </a>
             ))}
-            <CTAButton size="sm">Start Free Trial</CTAButton>
+            <CTAButton size="sm">Explore Your 7-Day Trial</CTAButton>
           </div>
 
           {/* Mobile hamburger */}
@@ -97,7 +97,7 @@ export default function Navbar() {
             </a>
           ))}
           <CTAButton size="sm" className="w-full justify-center">
-            Start Free Trial
+            Explore Your 7-Day Trial
           </CTAButton>
         </div>
       </div>

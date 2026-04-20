@@ -11,14 +11,24 @@ const faqs = [
       "Qwikly is an AI-powered lead response and lifecycle management platform built for South African service businesses. It handles WhatsApp and email leads, qualifies them, books appointments, sends automated follow-ups, recovers no-shows, and revives dormant leads. It runs 24/7 so you never lose a job because you were too busy to reply.",
   },
   {
-    question: "Does Qwikly handle email leads too?",
+    question: "How much does it cost?",
     answer:
-      "Yes. Qwikly responds to email leads on behalf of your business, using the same trade-specific AI. If a customer reaches out via email, the AI replies, qualifies them, and books the appointment, just like it does on WhatsApp.",
+      "Qwikly charges 8% of the service price when a booking is made. There are no monthly fees, no setup costs, and no contracts. The minimum per booking is R150 and the maximum is R5,000, so you always pay a fair amount relative to what you earn. You only pay when the AI successfully books a real appointment.",
   },
   {
-    question: "What happens if a customer doesn\u2019t reply?",
+    question: "What trades and industries do you work with?",
     answer:
-      "Qwikly automatically follows up. If a lead goes quiet, the AI re-engages them at 4 hours, 24 hours, 2 days, and 5 days. If they still don\u2019t respond on WhatsApp, the AI switches to email. No lead falls through the cracks.",
+      "Electricians, plumbers, roofers, solar installers, pest control, aircon technicians, pool services, landscapers, garage door specialists, security companies, dentists, beauty salons and spas, auto mechanics, estate agents, cleaning services, tutoring, vets, photographers, moving companies, fitness trainers, and more. If your business gets leads via WhatsApp or email, Qwikly can handle them.",
+  },
+  {
+    question: "Does Qwikly handle email leads too?",
+    answer:
+      "Yes. Qwikly responds to email leads on behalf of your business using the same trade-specific AI. The AI replies, qualifies the lead, checks your availability, and books the appointment, all through email. Every email conversation is visible in your dashboard.",
+  },
+  {
+    question: "What happens if a customer goes quiet?",
+    answer:
+      "Qwikly runs an automated follow-up sequence. If the lead goes quiet, the AI re-engages at 4 hours, 24 hours, 2 days, and 5 days. If they don't respond on WhatsApp, the AI switches to email. At 30 days dormant, Qwikly sends a seasonal or trade-specific revival message to bring them back. No lead is ever abandoned.",
   },
   {
     question: "What about no-shows?",
@@ -26,19 +36,19 @@ const faqs = [
       "If a customer misses their appointment, Qwikly sends an automatic rebooking message within minutes. It suggests the next available time slot and makes it easy for the customer to reschedule, recovering revenue that would otherwise be lost.",
   },
   {
-    question: "Can I see what the AI is saying to my customers?",
-    answer:
-      "Absolutely. The Qwikly dashboard gives you full visibility into every conversation, across both WhatsApp and email. You can read transcripts, see booking details, review qualification outcomes, and step in at any time.",
-  },
-  {
     question: "Does it work with Google Calendar?",
     answer:
       "Yes. Qwikly connects directly to your Google Calendar. It checks your real-time availability, offers slots to leads, books confirmed appointments, and sends reminders 24 hours and 1 hour before each appointment to both you and the customer.",
   },
   {
+    question: "Can I see what the AI is saying to my customers?",
+    answer:
+      "Absolutely. The Qwikly dashboard gives you full visibility into every conversation, across both WhatsApp and email. You can read transcripts, see booking details, review qualification outcomes, and step in at any time.",
+  },
+  {
     question: "How does the AI know about my business?",
     answer:
-      "During setup we walk through your services, pricing, service areas, and FAQs. The AI is trained on your specific trade, so every reply sounds like it came from you, not a robot. We have custom prompts for 10+ trades including electricians, plumbers, roofers, solar, and more.",
+      "During setup we walk through your services, pricing, service areas, and FAQs. The AI is trained on your specific trade, so every reply sounds like it came from you, not a robot. We have custom prompts for 10+ trades including electricians, plumbers, roofers, solar installers, and more.",
   },
   {
     question: "Will customers know it\u2019s an AI?",
@@ -46,14 +56,9 @@ const faqs = [
       "Most won\u2019t. The AI uses natural, conversational language tailored to your brand voice and trade. If a customer ever asks directly, the AI will be transparent, but the goal is to feel like a helpful team member, not a chatbot.",
   },
   {
-    question: "How much does it cost?",
+    question: "What if a lead asks something the AI can\u2019t answer?",
     answer:
-      "R750 per booked appointment. No monthly fees, no setup costs, no contracts. You only pay when the AI successfully books a real appointment. Start with a free 7-day trial to see results before paying anything.",
-  },
-  {
-    question: "What trades do you work with?",
-    answer:
-      "Electricians, plumbers, roofers, solar installers, pest control, aircon technicians, pool services, landscapers, garage door specialists, security companies, and more. If your business gets leads via WhatsApp or email, Qwikly can help.",
+      "The AI will let the customer know that someone from your team will follow up shortly and immediately notifies you so nothing falls through the cracks. You can jump in at any time from the dashboard.",
   },
   {
     question: "How long does setup take?",
@@ -61,29 +66,9 @@ const faqs = [
       "Most businesses are live within 24 to 48 hours. We handle the heavy lifting, including WhatsApp integration, email setup, calendar connection, and AI training. You just answer a few questions about your services and availability.",
   },
   {
-    question: "What if a lead asks something the AI can\u2019t answer?",
-    answer:
-      "The AI will let the customer know that someone from your team will follow up shortly and immediately notifies you so nothing falls through the cracks. You can jump in at any time from the dashboard.",
-  },
-  {
     question: "How do I get started?",
     answer:
-      "Click the \u2018Start Free Trial\u2019 button, fill in a few details, and we\u2019ll reach out to get you set up. Most businesses start seeing results within their first week.",
-  },
-  {
-    question: "What industries do you work with?",
-    answer:
-      "Electricians, plumbers, roofers, solar installers, pest control, aircon technicians, pool services, landscapers, garage door specialists, security companies, dentists and dental practices, beauty salons and spas, auto mechanics and panel beaters, estate agents and property management, cleaning services (domestic and commercial), tutoring and education services, vets and animal clinics, photographers, moving companies, fitness trainers and gyms, and any other service business that receives leads.",
-  },
-  {
-    question: "How does the email channel work?",
-    answer:
-      "When a lead emails your business, Qwikly\u2019s AI responds on your behalf within seconds, using the same trade-specific qualification flow as WhatsApp. The AI asks the right questions, qualifies the lead, checks your availability, and books the appointment, all through email. You can see every email conversation in the dashboard.",
-  },
-  {
-    question: "What happens when a customer doesn\u2019t respond?",
-    answer:
-      "Qwikly runs an automated follow-up sequence. If the customer goes quiet, the AI re-engages at 4 hours, then 24 hours, then 2 days, then 5 days. If they still do not reply, the lead is marked dormant. At 30 days, Qwikly sends a seasonal or trade-specific revival message to bring them back. No lead is ever abandoned.",
+      "Click the \u2018Explore Your 7-Day Trial\u2019 button, fill in a few details, and we\u2019ll reach out to get you set up. Most businesses start seeing results within their first week.",
   },
 ];
 

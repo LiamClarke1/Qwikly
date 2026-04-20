@@ -415,7 +415,7 @@ export default function Home() {
                   "WhatsApp + Email response in 30 seconds",
                   "Automated follow-ups, no-show recovery, lead revival",
                   "Books into Google Calendar, 24/7",
-                  "8% per booking, 7-day free trial",
+                  "8% per booking, limited-time pricing",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-2.5 text-sm text-text-secondary">
                     <Check className="w-4 h-4 text-accent flex-shrink-0" />
@@ -426,7 +426,7 @@ export default function Home() {
 
               <div className="relative z-10 mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
-                  Start Free Trial
+                  Explore Your 7-Day Trial
                 </CTAButton>
                 <CTAButton variant="outline" size="lg" href="#how-it-works" className="border-border-subtle text-white hover:bg-bg-elevated hover:text-white">
                   See How It Works
@@ -818,11 +818,11 @@ export default function Home() {
               <div className="w-full h-px bg-border-light my-6" />
 
               <p className="text-sm text-text-muted-dark text-center mb-6">
-                No monthly fees. No setup cost. No contracts. 7-day free trial.
+                Affordable, performance-based pricing. No contracts.
               </p>
 
               <CTAButton size="lg" className="w-full justify-center">
-                Start Your Free 7-Day Trial
+                Get Your Spot Now
               </CTAButton>
             </div>
           </div>
@@ -932,11 +932,11 @@ export default function Home() {
           </p>
           <div className="relative z-10 mt-8">
             <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
-              Start Your Free Trial
+              Get Your Spot Now
             </CTAButton>
           </div>
           <p className="relative z-10 mt-4 text-sm text-text-tertiary">
-            No setup fees. No contracts. 7-day free trial.
+            Affordable pricing. No contracts. Limited spots available.
           </p>
         </div>
       </section>

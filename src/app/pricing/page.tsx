@@ -174,7 +174,7 @@ export default function PricingPage() {
                   </div>
 
                   <CTAButton size="lg" className="w-full justify-center">
-                    Start Your Free 7-Day Trial
+                    Get Your Spot Now
                   </CTAButton>
                 </div>
               )}
@@ -250,7 +250,7 @@ export default function PricingPage() {
             </p>
 
             <CTAButton size="lg" className="w-full justify-center">
-              Start Your Free 7-Day Trial
+              Get Your Spot Now
             </CTAButton>
           </div>
         </div>
@@ -322,11 +322,11 @@ export default function PricingPage() {
             Ready to stop losing leads?
           </h2>
           <p className="relative z-10 mt-4 text-lg text-text-tertiary max-w-xl mx-auto">
-            Start your free 7-day trial. See the bookings come in. Only pay when it works.
+            Explore your 7-day trial. See the bookings come in. Only pay when it works.
           </p>
           <div className="relative z-10 mt-8">
             <CTAButton size="lg" className="cta-glow">
-              Start Your Free 7-Day Trial
+              Get Your Spot Now
             </CTAButton>
           </div>
         </div>

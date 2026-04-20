@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-const TALLY_URL = "https://tally.so/r/YOUR_FORM_ID";
+const TALLY_URL = "/get-started";
 
 interface CTAButtonProps {
   children: React.ReactNode;
