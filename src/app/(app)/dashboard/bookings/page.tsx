@@ -5,9 +5,10 @@ export const dynamic = "force-dynamic";
 import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays, ChevronLeft, ChevronRight, Plus, Rows3, LayoutGrid,
-  Phone, MessageSquare, MapPin, Search, X, Check, Clock,
+  Phone, MessageSquare, MapPin, Search, X, Check, Clock, Link2,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useClient } from "@/lib/use-client";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ const SLOT_COLOR: Record<string, string> = {
   completed: "bg-success/15 text-success border border-success/20",
   cancelled: "bg-danger/15 text-danger border border-danger/20",
   "no-show": "bg-warning/15 text-warning border border-warning/20",
+  gcal: "bg-violet/15 text-violet border border-violet/20 opacity-80",
 };
 
 function startOfWeek(d: Date) {
@@ -56,7 +58,17 @@ const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const BLANK = { customer_name: "", customer_phone: "", job_type: "", area: "", date: "", time: "09:00" };
 
+interface GCalEvent {
+  id: string | null | undefined;
+  title: string;
+  start: string | null | undefined;
+  end: string | null | undefined;
+  description: string | null;
+  location: string | null;
+}
+
 export default function BookingsPage() {
+  const { client } = useClient();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"calendar" | "list">("calendar");
@@ -68,6 +80,8 @@ export default function BookingsPage() {
   const [addForm, setAddForm] = useState(BLANK);
   const [addLoading, setAddLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [gCalEvents, setGCalEvents] = useState<GCalEvent[]>([]);
+  const [calConnected, setCalConnected] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -76,6 +90,21 @@ export default function BookingsPage() {
       setLoading(false);
     })();
   }, []);
+
+  // Fetch Google Calendar events for visible week
+  useEffect(() => {
+    if (!client?.id) return;
+    const start = new Date(weekStart);
+    const end = new Date(weekStart);
+    end.setDate(end.getDate() + 7);
+    fetch(`/api/calendar/events?clientId=${client.id}&start=${start.toISOString()}&end=${end.toISOString()}`)
+      .then((r) => r.json())
+      .then((json) => {
+        setCalConnected(json.connected ?? false);
+        setGCalEvents(json.events ?? []);
+      })
+      .catch(() => {});
+  }, [client?.id, weekStart]);
 
   const filtered = useMemo(() => {
     let list = filter === "All" ? bookings : bookings.filter((b) => b.status.toLowerCase() === filter.toLowerCase());
@@ -108,8 +137,25 @@ export default function BookingsPage() {
       if (!m[key]) m[key] = [];
       m[key].push(b);
     });
+    // Overlay Google Calendar events as read-only entries
+    gCalEvents.forEach((e) => {
+      if (!e.start) return;
+      const d = new Date(e.start);
+      const key = `${d.toDateString()}:${d.getHours()}`;
+      if (!m[key]) m[key] = [];
+      // Cast gCal event to a Booking-like shape for display
+      m[key].push({
+        id: e.id ?? `gcal-${e.start}`,
+        customer_name: e.title,
+        customer_phone: "",
+        job_type: e.location ?? null,
+        area: null,
+        booking_datetime: e.start,
+        status: "gcal",
+      } as Booking);
+    });
     return m;
-  }, [bookings]);
+  }, [bookings, gCalEvents]);
 
   const stats = {
     total: bookings.length,
@@ -135,20 +181,29 @@ export default function BookingsPage() {
     if (!addForm.customer_name.trim() || !addForm.date) return;
     setAddLoading(true);
     const dt = new Date(`${addForm.date}T${addForm.time}:00`);
-    const { data, error } = await supabase.from("bookings").insert([{
+    const booking = {
       customer_name: addForm.customer_name,
       customer_phone: addForm.customer_phone || "",
       job_type: addForm.job_type || null,
       area: addForm.area || null,
       booking_datetime: dt.toISOString(),
       status: "booked",
-    }]).select().single();
-    setAddLoading(false);
+    };
+    const { data, error } = await supabase.from("bookings").insert([booking]).select().single();
     if (!error && data) {
       setBookings((bs) => [data as Booking, ...bs]);
       setShowAdd(false);
       setAddForm(BLANK);
+      // Sync to Google Calendar if connected
+      if (client?.id && calConnected) {
+        fetch("/api/calendar/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ clientId: client.id, booking }),
+        }).catch(() => {});
+      }
     }
+    setAddLoading(false);
   };
 
   const prevWeek = () => {
@@ -203,7 +258,7 @@ export default function BookingsPage() {
       {view === "calendar" ? (
         <Card className="!p-0 overflow-hidden">
           {/* Calendar toolbar */}
-          <div className="px-4 py-3 border-b border-line flex items-center justify-between gap-4">
+          <div className="px-4 py-3 border-b border-line flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
               <p className="text-small font-semibold text-fg">
                 {days[0].toLocaleDateString("en-ZA", { day: "numeric", month: "short" })}
@@ -213,6 +268,16 @@ export default function BookingsPage() {
               <Button variant="ghost" size="sm" onClick={() => { setWeekStart(startOfWeek(new Date())); setSelectedDay(null); }}>
                 Today
               </Button>
+              {calConnected ? (
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-brand/10 border border-brand/20 text-tiny text-brand font-medium">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand" />
+                  Google Calendar
+                </span>
+              ) : (
+                <a href="/dashboard/settings?tab=integrations" className="hidden sm:inline-flex items-center gap-1 text-tiny text-fg-subtle hover:text-brand transition-colors cursor-pointer">
+                  <Link2 className="w-3 h-3" /> Connect calendar
+                </a>
+              )}
             </div>
             <div className="flex items-center gap-1.5">
               <p className="text-tiny text-fg-subtle mr-1 hidden sm:block">Click any slot to add a booking</p>

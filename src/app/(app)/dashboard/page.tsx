@@ -13,6 +13,8 @@ import {
   AlertTriangle,
   Plus,
   Send,
+  Bot,
+  ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -135,6 +137,27 @@ export default function OverviewPage() {
           </>
         }
       />
+
+      {/* Setup banner — shown when onboarding not complete */}
+      {!loading && client && !client.onboarding_complete && (
+        <Link href="/dashboard/setup" className="block mb-4 group">
+          <div className="px-5 py-4 rounded-xl bg-grad-brand border border-brand/30 flex items-center gap-4 hover:opacity-90 transition-opacity duration-150">
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+              <Bot className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-small font-bold text-white">Connect your digital assistant</p>
+              <p className="text-tiny text-white/70 mt-0.5">
+                Answer a few questions so your AI knows your business, pricing, and how to speak to your customers.
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0 bg-white/15 px-3 py-1.5 rounded-lg">
+              <span className="text-tiny font-semibold text-white">Start setup</span>
+              <ChevronRight className="w-3.5 h-3.5 text-white" />
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* Attention banner */}
       {escalations.length > 0 && (

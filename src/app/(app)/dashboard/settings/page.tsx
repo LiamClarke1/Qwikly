@@ -3,10 +3,11 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState, FormEvent } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import {
   Building2, Bot, Clock, Plug, Bell,
-  Save, Check, AlertCircle,
+  Save, Check, AlertCircle, Calendar, Link2, Link2Off, ExternalLink,
+  Wrench, DollarSign, Star,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -50,10 +51,14 @@ interface Client {
   notification_phone: string | null;
   meta_business_id: string | null;
   meta_phone_number_id: string | null;
+  google_access_token: string | null;
+  google_refresh_token: string | null;
+  google_token_expiry: number | null;
 }
 
 export default function SettingsPage() {
   const sp = useSearchParams();
+  const router = useRouter();
   const initial = (sp.get("tab") as TabId) || "profile";
   const [tab, setTab] = useState<TabId>(initial);
   const [client, setClient] = useState<Client | null>(null);
@@ -68,6 +73,18 @@ export default function SettingsPage() {
       setLoading(false);
     })();
   }, []);
+
+  // Show toast if redirected back from Google OAuth
+  useEffect(() => {
+    const cal = sp.get("cal");
+    if (cal === "connected") {
+      showToast("Google Calendar connected");
+      router.replace("/dashboard/settings?tab=integrations");
+    } else if (cal === "error") {
+      showToast("Failed to connect Google Calendar", "danger");
+      router.replace("/dashboard/settings?tab=integrations");
+    }
+  }, [sp]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const showToast = (msg: string, tone: "success" | "danger" = "success") => {
     setToast({ msg, tone });
@@ -298,8 +315,24 @@ function IntegrationsTab({ client, save, saving }: { client: Client; save: (p: P
     meta_business_id: client.meta_business_id ?? "",
     meta_phone_number_id: client.meta_phone_number_id ?? "",
   });
-  const [calendar, setCalendar] = useState(client.google_calendar_id ?? "");
+  const [disconnecting, setDisconnecting] = useState(false);
   const metaConnected = !!client.meta_phone_number_id;
+  const calConnected = !!client.google_access_token;
+
+  const connectCalendar = () => {
+    window.location.href = `/api/calendar/connect?clientId=${client.id}`;
+  };
+
+  const disconnectCalendar = async () => {
+    setDisconnecting(true);
+    await fetch("/api/calendar/disconnect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clientId: client.id }),
+    });
+    save({ google_access_token: null, google_refresh_token: null, google_token_expiry: null });
+    setDisconnecting(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -324,13 +357,69 @@ function IntegrationsTab({ client, save, saving }: { client: Client; save: (p: P
       <Card>
         <CardHeader
           title="Google Calendar"
-          description="Bookings get added to this calendar."
-          action={calendar ? <Badge tone="success" dot>Connected</Badge> : <Badge tone="warning" dot>Not set</Badge>}
+          description="Every booking Qwikly creates gets added to your calendar automatically."
+          action={calConnected ? <Badge tone="success" dot>Connected</Badge> : <Badge tone="warning" dot>Not connected</Badge>}
         />
-        <Field label="Calendar email"><Input value={calendar} onChange={(e) => setCalendar(e.target.value)} /></Field>
-        <div className="flex justify-end mt-4">
-          <Button loading={saving} icon={<Save className="w-4 h-4" />} onClick={() => save({ google_calendar_id: calendar })}>Save</Button>
-        </div>
+
+        {calConnected ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-brand/[0.06] border border-brand/20">
+              <Calendar className="w-4 h-4 text-brand shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-small font-medium text-fg">Calendar connected</p>
+                <p className="text-tiny text-fg-muted truncate">{client.google_calendar_id ?? "Google Calendar"}</p>
+              </div>
+              <a
+                href="https://calendar.google.com"
+                target="_blank"
+                rel="noreferrer"
+                className="text-tiny text-brand hover:underline flex items-center gap-1 cursor-pointer"
+              >
+                Open <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+            <p className="text-tiny text-fg-muted leading-relaxed">
+              New bookings are added as 1-hour events. Existing calendar events are read-only in Qwikly and won&apos;t be modified.
+            </p>
+            <div className="flex justify-end">
+              <Button
+                variant="danger"
+                size="sm"
+                loading={disconnecting}
+                icon={<Link2Off className="w-3.5 h-3.5" />}
+                onClick={disconnectCalendar}
+              >
+                Disconnect calendar
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-small text-fg-muted leading-relaxed">
+              Connect your Google Calendar so every booking is synced automatically. Your calendar events will also appear in the Qwikly booking view.
+            </p>
+            <div className="px-4 py-3 rounded-xl bg-white/[0.03] border border-line space-y-1.5">
+              <p className="text-tiny font-semibold text-fg">What gets connected</p>
+              {[
+                "New bookings are added to your calendar as events",
+                "Your calendar shows inside the Qwikly booking view",
+                "No events are deleted or modified — read and write only",
+              ].map((t) => (
+                <div key={t} className="flex items-start gap-2">
+                  <Check className="w-3.5 h-3.5 text-success mt-0.5 shrink-0" />
+                  <p className="text-tiny text-fg-muted">{t}</p>
+                </div>
+              ))}
+            </div>
+            <Button
+              variant="primary"
+              icon={<Link2 className="w-4 h-4" />}
+              onClick={connectCalendar}
+            >
+              Connect Google Calendar
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   );
