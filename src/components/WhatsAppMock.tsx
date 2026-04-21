@@ -20,64 +20,66 @@ interface Conversation {
 
 const conversations: Conversation[] = [
   {
-    businessName: "Spark Electrical",
-    initials: "SE",
-    accentColor: "#EAB308",
-    messages: [
-      { text: "Hi, I need an electrician in Sandton. My DB board keeps tripping.", sender: "customer", time: "19:02", delivered: true, read: true },
-      { text: "Hi, sounds like an overload issue, fairly common fix.\n\nTo book you in, I just need:\n• Your name\n• Full address in Sandton\n• When the tripping happens (specific appliance or all the time)", sender: "ai", time: "19:02", delivered: true, read: true },
-      { text: "Sarah Nkosi. 22 Rivonia Road, Sandhurst. Trips when we use the oven and geyser at the same time.", sender: "customer", time: "19:04", delivered: true, read: true },
-      { text: "Perfect, that confirms it's an overload. I've got a slot tomorrow at 9am or Wednesday at 11am. Which works?", sender: "ai", time: "19:04", delivered: true, read: true },
-      { text: "Tomorrow 9am please", sender: "customer", time: "19:04", delivered: true, read: true },
-      { text: "All sorted Sarah. Booked for tomorrow at 9am at 22 Rivonia Road. Confirmation incoming.", sender: "ai", time: "19:04", delivered: true, read: false },
-    ],
-  },
-  {
-    businessName: "QuickFlow Plumbing",
-    initials: "QP",
+    businessName: "ArcticCool Aircon",
+    initials: "AC",
     accentColor: "#3B82F6",
     messages: [
-      { text: "Hi, I've got a burst geyser in Centurion. Water everywhere.", sender: "customer", time: "08:14", delivered: true, read: true },
-      { text: "That's urgent, let's get someone out fast. First, shut your main water valve if you haven't already.\n\nTo dispatch a plumber, reply with:\n• Your name\n• Full address in Centurion\n• Electric or gas geyser", sender: "ai", time: "08:14", delivered: true, read: true },
-      { text: "James Botha. 14 Maple Drive, Eldoraigne. Electric, it's in the roof. Valve is already shut.", sender: "customer", time: "08:15", delivered: true, read: true },
-      { text: "Good call on the valve. Emergency plumber booked, arriving within 2 hours at 14 Maple Drive. You'll get his name and number in the next minute.", sender: "ai", time: "08:15", delivered: true, read: false },
+      { text: "Hi, my aircon is blowing warm air. It's a Daikin, about 5 years old.", sender: "customer", time: "10:14", delivered: true, read: true },
+      { text: "Warm air on a 5-year Daikin is almost always a gas recharge or blocked filter — both quick fixes. We're in Bryanston today.\n\nJust reply with:\n• Your name\n• Suburb\n• Best time to come out", sender: "ai", time: "10:14", delivered: true, read: true },
+      { text: "Zanele Dlamini. Bryanston. Any time today works.", sender: "customer", time: "10:16", delivered: true, read: true },
+      { text: "Gas check + service on a Daikin is R850–R1,100 all-in. I've got 1pm or 4pm today in Bryanston. Which works?", sender: "ai", time: "10:16", delivered: true, read: true },
+      { text: "1pm please", sender: "customer", time: "10:17", delivered: true, read: true },
+      { text: "Confirmed Zanele. 1pm in Bryanston today. Technician will call 20 min before arrival.", sender: "ai", time: "10:17", delivered: true, read: false },
     ],
   },
   {
-    businessName: "SunPower Solar",
-    initials: "SS",
-    accentColor: "#F97316",
+    businessName: "ClearPool Services",
+    initials: "CP",
+    accentColor: "#06B6D4",
     messages: [
-      { text: "Hi, I'm interested in solar panels. My electricity bill is R4,200/month.", sender: "customer", time: "10:30", delivered: true, read: true },
-      { text: "At R4,200/month, solar makes serious sense. We offer a free site assessment (no obligation) where we measure your roof, check usage, and quote on the spot.\n\nTo book it, reply with:\n• Your name\n• Suburb / city\n• House or business\n• With or without battery backup", sender: "ai", time: "10:30", delivered: true, read: true },
-      { text: "Mike van der Merwe. Fourways, Johannesburg. 4 bedroom house. With battery, for load shedding cover.", sender: "customer", time: "10:32", delivered: true, read: true },
-      { text: "Perfect, you're looking at a 5-8kW system with battery. We cover Fourways. I've got Saturday 9am or Tuesday 2pm for the assessment. Which suits?", sender: "ai", time: "10:32", delivered: true, read: true },
-      { text: "Saturday 9am", sender: "customer", time: "10:32", delivered: true, read: true },
-      { text: "Booked Mike. Saturday at 9am in Fourways. Our assessor will call 30 min before to confirm.", sender: "ai", time: "10:33", delivered: true, read: false },
+      { text: "Hi, how much do you charge for weekly pool cleaning?", sender: "customer", time: "09:03", delivered: true, read: true },
+      { text: "Weekly cleaning is R650/month — includes chemicals, brushing, and skimming. No lock-in contracts.\n\nWhich area are you in?", sender: "ai", time: "09:03", delivered: true, read: true },
+      { text: "Fourways. It's a standard 8x4m pool, been a bit neglected lately.", sender: "customer", time: "09:05", delivered: true, read: true },
+      { text: "Fourways, no problem. For a slightly neglected pool we'd do a once-off deep clean first (R450), then weekly from there. First month is half price.\n\nWant to lock in a day?", sender: "ai", time: "09:05", delivered: true, read: true },
+      { text: "Yes, Thursdays would work well", sender: "customer", time: "09:06", delivered: true, read: true },
+      { text: "Thursdays it is. Deep clean this Thursday, then weekly from next week. Reply with your name and address to confirm.", sender: "ai", time: "09:06", delivered: true, read: false },
     ],
   },
   {
-    businessName: "SafeGuard Pest",
-    initials: "SG",
-    accentColor: "#22C55E",
-    messages: [
-      { text: "Hi, I've got rats in my roof. It's getting worse at night.", sender: "customer", time: "21:45", delivered: true, read: true },
-      { text: "Rats spread fast, good that you're sorting it now. One treatment usually fixes it if caught early.\n\nTo book, reply with:\n• Your name\n• Suburb\n• How long you've heard them\n• Any pets or small children (for treatment choice)", sender: "ai", time: "21:45", delivered: true, read: true },
-      { text: "Priya Naidoo. Randburg. About a week now. One dog.", sender: "customer", time: "21:47", delivered: true, read: true },
-      { text: "Caught early, that's good. We'll use pet-safe methods for your dog. Technician booked for tomorrow 8am in Randburg. He'll assess, treat, and seal entry points same day.", sender: "ai", time: "21:47", delivered: true, read: false },
-    ],
-  },
-  {
-    businessName: "TopCover Roofing",
-    initials: "TC",
+    businessName: "ProGuard Security",
+    initials: "PG",
     accentColor: "#EF4444",
     messages: [
-      { text: "Hi, I've got a few cracked tiles and it leaks when it rains. Getting worse.", sender: "customer", time: "14:20", delivered: true, read: true },
-      { text: "Leaks only get worse, let's sort it. Tile repairs typically range R2,000-5,000 depending on access. We do a full inspection and quote on the spot.\n\nTo book, reply with:\n• Your name\n• Area\n• Roof type (tiled / IBR / other)\n• Rough number of cracked tiles", sender: "ai", time: "14:20", delivered: true, read: true },
-      { text: "Willem Pretorius. Durbanville, Cape Town. Concrete tiled roof. Looks like 3-4 tiles, leak is in the main bedroom ceiling.", sender: "customer", time: "14:22", delivered: true, read: true },
-      { text: "3-4 tiles is a straightforward repair. Thursday 2pm or Friday 9am, which works?", sender: "ai", time: "14:22", delivered: true, read: true },
-      { text: "Friday 9am please", sender: "customer", time: "14:22", delivered: true, read: true },
-      { text: "Done Willem. Friday 9am in Durbanville. Full inspection and quote on the spot, no obligation.", sender: "ai", time: "14:23", delivered: true, read: false },
+      { text: "Someone tried to break in tonight through the kitchen window. I need security bars urgently.", sender: "customer", time: "23:11", delivered: true, read: true },
+      { text: "That's frightening — glad you're okay. Lock all entry points tonight and keep lights on outside.\n\nWe can get an assessor to you first thing tomorrow. Reply with:\n• Your name\n• Area\n• Number of windows needing bars", sender: "ai", time: "23:11", delivered: true, read: true },
+      { text: "Mpho Sithole. Midrand. About 6 windows and the kitchen door.", sender: "customer", time: "23:13", delivered: true, read: true },
+      { text: "Priority booking confirmed Mpho. Assessor at your door tomorrow 7:30am in Midrand. He'll quote on the spot and can start fitting same day if you approve.", sender: "ai", time: "23:13", delivered: true, read: false },
+    ],
+  },
+  {
+    businessName: "BrightBuild Painting",
+    initials: "BB",
+    accentColor: "#A855F7",
+    messages: [
+      { text: "Another company quoted me R6,000 less for the same exterior paint job. Why are you more expensive?", sender: "customer", time: "14:32", delivered: true, read: true },
+      { text: "Fair question — that's a big gap. A few things worth checking:\n• Do they include a 2-coat system?\n• Is their paint Plascon or a budget brand?\n• Do they give a written 3-year warranty?\n\nWe include all three. What matters most to you?", sender: "ai", time: "14:32", delivered: true, read: true },
+      { text: "Honestly the warranty. I had a painter flake on me last year and had to redo it 8 months later.", sender: "customer", time: "14:34", delivered: true, read: true },
+      { text: "That's exactly why we put it in writing. Our 3-year guarantee covers peeling, blistering, and callbacks — no charge. Want to book a free quote so you can compare like-for-like?", sender: "ai", time: "14:35", delivered: true, read: true },
+      { text: "Yes let's do that", sender: "customer", time: "14:35", delivered: true, read: true },
+      { text: "Great. What area are you in and which days work for you? I'll get a slot locked in.", sender: "ai", time: "14:35", delivered: true, read: false },
+    ],
+  },
+  {
+    businessName: "GreenCut Landscaping",
+    initials: "GC",
+    accentColor: "#22C55E",
+    messages: [
+      { text: "Hi, do you do once-off garden cleanups? Not looking for a monthly contract.", sender: "customer", time: "08:50", delivered: true, read: true },
+      { text: "Yes, absolutely — no contracts needed. Once-off includes cutting, edging, trimming, and full waste removal. Most standard gardens come in at R950–R1,400.\n\nWhich area are you in?", sender: "ai", time: "08:50", delivered: true, read: true },
+      { text: "Tableview, Cape Town. Garden's been ignored for about 3 months.", sender: "customer", time: "08:52", delivered: true, read: true },
+      { text: "Tableview's covered. For 3 months of growth, budget R1,200–R1,500 — we quote on arrival, no surprises. This weekend (Sat or Sun) work for you?", sender: "ai", time: "08:52", delivered: true, read: true },
+      { text: "Saturday please", sender: "customer", time: "08:53", delivered: true, read: true },
+      { text: "Saturday is yours. Reply with your name and address and I'll send the confirmation now.", sender: "ai", time: "08:53", delivered: true, read: false },
     ],
   },
 ];
@@ -279,6 +281,23 @@ export default function WhatsAppMock() {
               aria-label={`View conversation ${i + 1}`}
             />
           ))}
+        </div>
+
+        {/* Brand customisation caption */}
+        <div className="mt-6 mx-auto max-w-[300px] sm:max-w-[340px] text-center space-y-3">
+          <p className="text-sm text-text-secondary leading-relaxed">
+            Tune the tone, style, and personality to match your brand — from warm and friendly to direct and professional.
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {["Friendly & warm", "Direct & efficient", "Professional", "Handles objections", "Quotes prices"].map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center text-[11px] font-medium text-text-tertiary bg-white/[0.06] border border-white/10 px-2.5 py-1 rounded-full"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </div>
