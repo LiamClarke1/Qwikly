@@ -37,7 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!authed) return null;
 
   return (
-    <div className="min-h-screen flex bg-ink-950">
+    <div className="min-h-screen flex bg-[#111827]">
       <div className="hidden md:block sticky top-0 h-screen">
         <Sidebar />
       </div>

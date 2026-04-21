@@ -17,6 +17,7 @@ export function Card({ className, padded = true, glow, children, ...rest }: Card
       )}
       {...rest}
     >
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent pointer-events-none" />
       {children}
     </div>
   );

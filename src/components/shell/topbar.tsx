@@ -42,7 +42,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
   };
 
   return (
-    <header className="sticky top-0 z-30 h-16 px-4 md:px-7 border-b border-line bg-ink-950/70 backdrop-blur-xl flex items-center gap-3">
+    <header className="sticky top-0 z-30 h-16 px-4 md:px-7 border-b border-line bg-[#111827]/90 backdrop-blur-xl flex items-center gap-3">
       <button
         onClick={onMenu}
         className="md:hidden h-9 w-9 rounded-lg flex items-center justify-center text-fg-muted hover:text-fg hover:bg-white/[0.04] cursor-pointer"

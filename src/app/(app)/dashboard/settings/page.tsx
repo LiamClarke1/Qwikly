@@ -225,10 +225,10 @@ function AITab({ client, save, saving }: { client: Client; save: (p: Partial<Cli
 
       <Card>
         <CardHeader
-          title="Free-form knowledge"
-          description="Anything else the AI should know. Pricing, edge cases, scripts, etc."
+          title="Your setup answers"
+          description="Everything you filled in during setup — services, pricing, availability, AI personality, and more. Edit anything that has changed."
         />
-        <Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={10} placeholder="e.g. We charge R750 call-out, free quotes within 10km…" />
+        <Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={20} placeholder="Your business setup answers will appear here after completing the get-started form." />
       </Card>
 
       <div className="flex justify-end">

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import {
   LayoutDashboard,
@@ -11,7 +11,9 @@ import {
   BarChart3,
   Settings,
   Sparkles,
+  LogOut,
 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const nav = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -24,13 +26,19 @@ const nav = [
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const router = useRouter();
   const isActive = (href: string) =>
     href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
 
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
+
   return (
-    <aside className="h-full w-64 shrink-0 flex flex-col bg-ink-900/80 backdrop-blur-xl border-r border-line">
+    <aside className="h-full w-64 shrink-0 flex flex-col bg-[#0D111A] backdrop-blur-xl border-r border-white/[0.06]">
       <div className="px-5 pt-6 pb-5">
-        <Link href="/dashboard" className="flex items-center gap-2.5 group">
+        <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-9 h-9 rounded-xl bg-grad-brand flex items-center justify-center shadow-glow">
             <Sparkles className="w-4 h-4 text-white" strokeWidth={2.5} />
           </div>
@@ -58,7 +66,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               )}
             >
               {active && (
-                <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-brand rounded-full shadow-[0_0_12px_rgba(16,185,129,0.6)]" />
+                <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-brand rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
               )}
               <Icon className={cn("w-[18px] h-[18px]", active ? "text-brand" : "text-fg-subtle group-hover:text-fg-muted")} />
               <span>{item.label}</span>
@@ -84,6 +92,16 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         >
           Set up →
         </Link>
+      </div>
+
+      <div className="px-3 pb-4">
+        <button
+          onClick={signOut}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-body font-medium text-fg-muted hover:text-fg hover:bg-white/[0.03] transition-all duration-150 cursor-pointer"
+        >
+          <LogOut className="w-[18px] h-[18px] text-fg-subtle" />
+          <span>Sign out</span>
+        </button>
       </div>
     </aside>
   );

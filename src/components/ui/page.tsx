@@ -13,7 +13,7 @@ export function PageHeader({
     <div className="flex flex-wrap items-end justify-between gap-4 mb-7">
       <div>
         {eyebrow && (
-          <p className="text-tiny uppercase tracking-wider text-brand font-semibold mb-2">
+          <p className="text-small text-brand font-medium mb-1.5">
             {eyebrow}
           </p>
         )}
