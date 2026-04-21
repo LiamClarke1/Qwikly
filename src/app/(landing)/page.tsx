@@ -766,21 +766,39 @@ export default function Home() {
                 <p className="text-white font-sans font-semibold text-sm">Real examples across industries</p>
               </div>
               <div className="divide-y divide-border-light">
-                <div className="grid grid-cols-4 px-6 py-2.5 bg-bg-subtle">
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted-dark">Business</span>
+                {/* Header — 2-col mobile, 4-col sm+ */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 px-4 sm:px-6 py-2.5 bg-bg-subtle">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted-dark">Service</span>
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted-dark text-center">Price</span>
+                  <span className="hidden sm:block text-[11px] font-semibold uppercase tracking-wider text-text-muted-dark" />
+                  <span className="hidden sm:block text-[11px] font-semibold uppercase tracking-wider text-text-muted-dark text-center">Price</span>
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted-dark text-right">Qwikly Fee</span>
                 </div>
                 {serviceExamples.map((item, i) => (
-                  <div key={i} className="grid grid-cols-4 items-center px-6 py-3 hover:bg-accent/5 transition-colors duration-200">
-                    <span className="text-sm text-text-muted-dark">{item.business}</span>
-                    <span className="text-sm font-medium text-text-dark">{item.service}</span>
-                    <span className="text-center text-sm text-text-muted-dark">{item.servicePrice}</span>
-                    <span className="text-right text-sm font-bold text-accent">
-                      {item.fee}
-                      {item.feeNote && <span className="text-[10px] text-text-muted-dark ml-1">({item.feeNote})</span>}
-                    </span>
+                  <div key={i} className="hover:bg-accent/5 transition-colors duration-200">
+                    {/* Mobile: 2-col card */}
+                    <div className="sm:hidden grid grid-cols-2 items-start px-4 py-3 gap-2">
+                      <div className="min-w-0">
+                        <span className="block text-[11px] text-text-muted-dark leading-tight">{item.business}</span>
+                        <span className="block text-sm font-medium text-text-dark leading-snug mt-0.5">{item.service}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="block text-[11px] text-text-muted-dark leading-tight">{item.servicePrice}</span>
+                        <span className="block text-sm font-bold text-accent leading-snug mt-0.5">
+                          {item.fee}
+                          {item.feeNote && <span className="text-[10px] text-text-muted-dark ml-1">({item.feeNote})</span>}
+                        </span>
+                      </div>
+                    </div>
+                    {/* Desktop: 4-col grid */}
+                    <div className="hidden sm:grid grid-cols-4 items-center px-6 py-3">
+                      <span className="text-sm text-text-muted-dark">{item.business}</span>
+                      <span className="text-sm font-medium text-text-dark">{item.service}</span>
+                      <span className="text-center text-sm text-text-muted-dark">{item.servicePrice}</span>
+                      <span className="text-right text-sm font-bold text-accent">
+                        {item.fee}
+                        {item.feeNote && <span className="text-[10px] text-text-muted-dark ml-1">({item.feeNote})</span>}
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -799,9 +817,9 @@ export default function Home() {
                     { label: "Electrician gets 12 bookings/month", fee: "R6,000", earns: "R84,000", roi: "14x return" },
                     { label: "Solar gets 3 bookings/month", fee: "R15,000", earns: "R450,000", roi: "30x return" },
                   ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between text-sm">
-                      <span className="text-text-tertiary">{item.label}</span>
-                      <span className="text-accent font-bold">{item.roi}</span>
+                    <div key={item.label} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="text-text-tertiary leading-snug">{item.label}</span>
+                      <span className="text-accent font-bold shrink-0">{item.roi}</span>
                     </div>
                   ))}
                 </div>

@@ -110,9 +110,9 @@ export default function PricingPage() {
             <p className="text-text-tertiary text-sm uppercase tracking-wider font-semibold mb-2">Per booking fee</p>
             <p className="font-sans text-6xl md:text-7xl font-bold text-accent">8%</p>
             <p className="text-text-secondary mt-2 text-lg">of the service price your customer books</p>
-            <div className="flex items-center justify-center gap-6 mt-6 text-sm text-text-tertiary">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 mt-6 text-sm text-text-tertiary">
               <span>Minimum <span className="text-white font-semibold">R150</span> per booking</span>
-              <span className="text-text-tertiary">|</span>
+              <span className="hidden sm:inline text-text-tertiary">|</span>
               <span>Maximum <span className="text-white font-semibold">R5,000</span> per booking</span>
             </div>
           </div>
@@ -201,23 +201,42 @@ export default function PricingPage() {
           />
 
           <div className="mt-12 max-w-3xl mx-auto bg-white rounded-2xl shadow-xl border border-border-light overflow-hidden">
-            <div className="grid grid-cols-4 px-6 py-3 bg-bg-dark">
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Business</span>
+            {/* Header — 2-col mobile, 4-col sm+ */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 px-4 sm:px-6 py-3 bg-bg-dark">
               <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary">Service</span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary text-center">Service Price</span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary text-right">Qwikly Fee (8%)</span>
+              <span className="hidden sm:block text-xs font-semibold uppercase tracking-wider text-text-tertiary" />
+              <span className="hidden sm:block text-xs font-semibold uppercase tracking-wider text-text-tertiary text-center">Price</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-tertiary text-right">Fee (8%)</span>
             </div>
             <div className="divide-y divide-border-light">
               {serviceExamples.map((item, i) => (
-                <div key={i} className="grid grid-cols-4 items-center px-6 py-3 hover:bg-accent/5 transition-colors duration-200">
-                  <span className="text-sm text-text-muted-dark">{item.business}</span>
-                  <span className="text-sm font-medium text-text-dark">{item.service}</span>
-                  <span className="text-center text-sm text-text-muted-dark">R{item.price.toLocaleString()}</span>
-                  <span className="text-right text-sm font-bold text-accent">
-                    R{item.fee.toLocaleString()}
-                    {item.fee === 150 && <span className="text-[10px] text-text-muted-dark ml-1">(min)</span>}
-                    {item.fee === 5000 && <span className="text-[10px] text-text-muted-dark ml-1">(max)</span>}
-                  </span>
+                <div key={i} className="hover:bg-accent/5 transition-colors duration-200">
+                  {/* Mobile: 2-col card */}
+                  <div className="sm:hidden grid grid-cols-2 items-start px-4 py-3 gap-2">
+                    <div className="min-w-0">
+                      <span className="block text-[11px] text-text-muted-dark leading-tight">{item.business}</span>
+                      <span className="block text-sm font-medium text-text-dark leading-snug mt-0.5">{item.service}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="block text-[11px] text-text-muted-dark leading-tight">R{item.price.toLocaleString()}</span>
+                      <span className="block text-sm font-bold text-accent leading-snug mt-0.5">
+                        R{item.fee.toLocaleString()}
+                        {item.fee === 150 && <span className="text-[10px] text-text-muted-dark ml-1">(min)</span>}
+                        {item.fee === 5000 && <span className="text-[10px] text-text-muted-dark ml-1">(max)</span>}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Desktop: 4-col grid */}
+                  <div className="hidden sm:grid grid-cols-4 items-center px-6 py-3">
+                    <span className="text-sm text-text-muted-dark">{item.business}</span>
+                    <span className="text-sm font-medium text-text-dark">{item.service}</span>
+                    <span className="text-center text-sm text-text-muted-dark">R{item.price.toLocaleString()}</span>
+                    <span className="text-right text-sm font-bold text-accent">
+                      R{item.fee.toLocaleString()}
+                      {item.fee === 150 && <span className="text-[10px] text-text-muted-dark ml-1">(min)</span>}
+                      {item.fee === 5000 && <span className="text-[10px] text-text-muted-dark ml-1">(max)</span>}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
