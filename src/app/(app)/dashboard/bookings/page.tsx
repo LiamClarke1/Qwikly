@@ -189,7 +189,7 @@ export default function BookingsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         {[
           { label: "Total bookings", value: stats.total, color: "#38BDF8" },
-          { label: "Upcoming", value: stats.upcoming, color: "#FBBF24" },
+          { label: "Upcoming", value: stats.upcoming, color: "#60A5FA" },
           { label: "Completed", value: stats.completed, color: "#22C55E" },
           { label: "Est. revenue", value: `R${stats.revenue.toLocaleString("en-ZA")}`, color: "#8B5CF6" },
         ].map((s, i) => (

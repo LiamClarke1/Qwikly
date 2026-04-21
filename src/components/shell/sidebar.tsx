@@ -66,7 +66,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               )}
             >
               {active && (
-                <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-brand rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+                <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-brand rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
               )}
               <Icon className={cn("w-[18px] h-[18px]", active ? "text-brand" : "text-fg-subtle group-hover:text-fg-muted")} />
               <span>{item.label}</span>

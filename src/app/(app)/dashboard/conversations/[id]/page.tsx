@@ -11,7 +11,7 @@ import type { Conversation, Message, Booking } from "@/lib/types";
 const STATUS_BADGE: Record<Conversation["status"], string> = {
   active: "bg-green-500/10 text-green-400 border border-green-500/20",
   completed: "bg-slate-500/10 text-slate-400 border border-slate-500/20",
-  escalated: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+  escalated: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
 };
 
 export default function ConversationDetailPage() {

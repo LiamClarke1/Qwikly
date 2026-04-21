@@ -63,7 +63,7 @@ export default function SignupPage() {
           </div>
           <Link
             href="/login"
-            className="inline-block w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3.5 rounded-xl cursor-pointer transition-colors duration-200 text-base"
+            className="inline-block w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3.5 rounded-xl cursor-pointer transition-colors duration-200 text-base"
           >
             Go to Sign In
           </Link>
@@ -77,7 +77,7 @@ export default function SignupPage() {
       {/* Left panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-card flex-col justify-between p-12">
         <div>
-          <a href="/" className="font-heading text-2xl font-bold text-white hover:text-amber-400 transition-colors duration-200 cursor-pointer">Qwikly</a>
+          <a href="/" className="font-heading text-2xl font-bold text-white hover:text-blue-400 transition-colors duration-200 cursor-pointer">Qwikly</a>
         </div>
 
         <div className="space-y-8">
@@ -97,7 +97,7 @@ export default function SignupPage() {
               { icon: <Zap className="w-5 h-5" />, text: "7-day free trial, no credit card required" },
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center flex-shrink-0">
                   {item.icon}
                 </div>
                 <span className="text-foreground text-sm">{item.text}</span>
@@ -113,7 +113,7 @@ export default function SignupPage() {
       <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-12 bg-background">
         <div className="w-full max-w-md">
           <div className="lg:hidden mb-8">
-            <a href="/" className="font-heading text-2xl font-bold text-white hover:text-amber-400 transition-colors duration-200 cursor-pointer">Qwikly</a>
+            <a href="/" className="font-heading text-2xl font-bold text-white hover:text-blue-400 transition-colors duration-200 cursor-pointer">Qwikly</a>
           </div>
 
           <div className="mb-8">
@@ -133,7 +133,7 @@ export default function SignupPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="you@example.com"
-                className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
+                className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               />
             </div>
 
@@ -149,7 +149,7 @@ export default function SignupPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="At least 8 characters"
-                  className="w-full bg-card border border-border rounded-xl px-4 py-3 pr-12 text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
+                  className="w-full bg-card border border-border rounded-xl px-4 py-3 pr-12 text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 />
                 <button
                   type="button"
@@ -173,7 +173,7 @@ export default function SignupPage() {
                 onChange={(e) => setConfirm(e.target.value)}
                 required
                 placeholder="Repeat your password"
-                className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200"
+                className="w-full bg-card border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
               />
             </div>
 
@@ -186,7 +186,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-200 text-base"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3.5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-200 text-base"
             >
               {loading ? "Creating account..." : "Create Account"}
             </button>
@@ -194,7 +194,7 @@ export default function SignupPage() {
 
           <p className="text-center text-sm text-muted mt-8">
             Already have an account?{" "}
-            <Link href="/login" className="text-amber-400 hover:text-amber-300 font-medium transition-colors duration-200">
+            <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-200">
               Sign in
             </Link>
           </p>

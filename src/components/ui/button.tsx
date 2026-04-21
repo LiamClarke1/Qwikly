@@ -16,7 +16,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-grad-brand text-white shadow-[0_8px_24px_-8px_rgba(245,158,11,0.5)] hover:brightness-110 active:brightness-95",
+    "bg-grad-brand text-white shadow-[0_8px_24px_-8px_rgba(59,130,246,0.5)] hover:brightness-110 active:brightness-95",
   secondary:
     "bg-white/[0.06] text-fg border border-line-strong hover:bg-white/[0.10]",
   ghost: "text-fg-muted hover:text-fg hover:bg-white/[0.04]",

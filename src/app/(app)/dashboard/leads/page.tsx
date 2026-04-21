@@ -29,8 +29,8 @@ interface Lead {
 
 const STAGES = [
   { id: "new", label: "New", tone: "sky" as const, color: "#38BDF8" },
-  { id: "followed_up", label: "Followed up", tone: "warning" as const, color: "#FBBF24" },
-  { id: "booked", label: "Booked", tone: "brand" as const, color: "#F59E0B" },
+  { id: "followed_up", label: "Followed up", tone: "warning" as const, color: "#60A5FA" },
+  { id: "booked", label: "Booked", tone: "brand" as const, color: "#3B82F6" },
   { id: "lost", label: "Lost", tone: "danger" as const, color: "#F87171" },
 ];
 
@@ -129,8 +129,8 @@ export default function LeadsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         {[
           { icon: Users, label: "Total leads", value: stats.total, color: "#38BDF8" },
-          { icon: PhoneCall, label: "New enquiries", value: stats.new, color: "#FBBF24" },
-          { icon: UserCheck, label: "Converted", value: stats.booked, color: "#F59E0B" },
+          { icon: PhoneCall, label: "New enquiries", value: stats.new, color: "#60A5FA" },
+          { icon: UserCheck, label: "Converted", value: stats.booked, color: "#3B82F6" },
           { icon: TrendingUp, label: "Conversion rate", value: `${stats.rate}%`, color: "#8B5CF6" },
         ].map((s, i) => {
           const Icon = s.icon;

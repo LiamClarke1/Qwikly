@@ -112,7 +112,7 @@ export default function OverviewPage() {
   const ownerFirst = (client?.owner_name ?? "").split(" ")[0];
 
   const stats = [
-    { label: "Bookings", value: bookingsCount, sub: "this month", trend: bookingTrend, color: "#F59E0B", icon: CalendarCheck },
+    { label: "Bookings", value: bookingsCount, sub: "this month", trend: bookingTrend, color: "#3B82F6", icon: CalendarCheck },
     { label: "Conversations", value: convoCount, sub: "this month", trend: convoTrend, color: "#38BDF8", icon: MessageSquare },
     { label: "Conversion", value: `${conversion}%`, sub: "enquiry → booked", trend: bookingTrend, color: "#8B5CF6", icon: TrendingUp },
     { label: "Est. revenue", value: formatZAR(revenue), sub: `${bookingsCount} bookings`, trend: bookingTrend, color: "#22C55E", icon: Sparkles },

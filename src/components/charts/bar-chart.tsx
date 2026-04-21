@@ -7,7 +7,7 @@ interface Props {
   showLabels?: boolean;
 }
 
-export function BarChart({ data, height = 200, color = "#F59E0B", showLabels = true }: Props) {
+export function BarChart({ data, height = 200, color = "#3B82F6", showLabels = true }: Props) {
   if (!data.length) return null;
   const max = Math.max(...data.map((d) => d.value), 1);
   const vbW = 800;

@@ -13,8 +13,8 @@ export function Sparkline({
   data,
   width = 120,
   height = 36,
-  color = "#F59E0B",
-  fill = "rgba(245,158,11,0.18)",
+  color = "#3B82F6",
+  fill = "rgba(59,130,246,0.18)",
   className,
 }: Props) {
   if (!data.length) return <svg width={width} height={height} className={className} />;

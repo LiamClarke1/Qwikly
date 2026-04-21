@@ -99,10 +99,10 @@ export default function AnalyticsPage() {
         statusCount[b.status] = (statusCount[b.status] ?? 0) + 1;
       });
       const statusColors: Record<string, string> = {
-        booked: "#F59E0B",
+        booked: "#3B82F6",
         completed: "#22C55E",
         cancelled: "#F87171",
-        "no-show": "#FBBF24",
+        "no-show": "#60A5FA",
       };
       const statusData = Object.entries(statusCount).map(([label, value]) => ({
         label, value, color: statusColors[label] ?? "#6B7280",
@@ -158,8 +158,8 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {[
           { icon: MessageSquare, label: "People you helped", value: stats.uniqueCustomers, color: "#38BDF8" },
-          { icon: Clock, label: "Reply speed", value: stats.avgResponse, color: "#F59E0B" },
-          { icon: TrendingUp, label: "Busiest time", value: stats.peakHour, color: "#FBBF24" },
+          { icon: Clock, label: "Reply speed", value: stats.avgResponse, color: "#3B82F6" },
+          { icon: TrendingUp, label: "Busiest time", value: stats.peakHour, color: "#60A5FA" },
           { icon: UserCheck, label: "Most requested job", value: stats.topJob, color: "#8B5CF6" },
         ].map((s, i) => {
           const Icon = s.icon;
@@ -186,7 +186,7 @@ export default function AnalyticsPage() {
           action={
             <div className="flex items-center gap-4">
               <Legend color="#38BDF8" label="Conversations" />
-              <Legend color="#F59E0B" label="Leads" />
+              <Legend color="#3B82F6" label="Leads" />
             </div>
           }
         />
@@ -195,7 +195,7 @@ export default function AnalyticsPage() {
             <EmptyState title="No activity yet" description="Once your AI starts chatting, the trend will show here." />
           ) : (
             <div className="h-64">
-              <AreaChart data={daily} series={[{ name: "Conversations", color: "#38BDF8" }, { name: "Leads", color: "#F59E0B" }]} />
+              <AreaChart data={daily} series={[{ name: "Conversations", color: "#38BDF8" }, { name: "Leads", color: "#3B82F6" }]} />
             </div>
           )
         }
