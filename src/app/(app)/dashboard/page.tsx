@@ -26,6 +26,7 @@ import { EmptyState, Skeleton } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page";
 import { formatTime, formatDateTime, timeAgo, formatZAR } from "@/lib/format";
 import { useClient } from "@/lib/use-client";
+import { useUser } from "@/lib/use-user";
 
 interface Booking {
   id: string;
@@ -47,6 +48,7 @@ interface Convo {
 
 export default function OverviewPage() {
   const { client } = useClient();
+  const { displayName } = useUser();
   const [loading, setLoading] = useState(true);
   const [bookingsCount, setBookingsCount] = useState(0);
   const [convoCount, setConvoCount] = useState(0);
@@ -111,7 +113,7 @@ export default function OverviewPage() {
     if (h < 17) return "Good afternoon";
     return "Good evening";
   }, []);
-  const ownerFirst = (client?.owner_name ?? "").split(" ")[0];
+  const ownerFirst = displayName.split(" ")[0];
 
   const stats = [
     { label: "Bookings", value: bookingsCount, sub: "this month", trend: bookingTrend, color: "#3B82F6", icon: CalendarCheck },
