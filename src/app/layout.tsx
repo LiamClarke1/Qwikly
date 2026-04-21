@@ -1,13 +1,25 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Poppins, Open_Sans } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
 const inter = Inter({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-inter",
+  display: "swap",
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
+});
+
+const openSans = Open_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-opensans",
   display: "swap",
 });
 
@@ -38,11 +50,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="font-sans text-text-dark bg-bg-light antialiased pt-16">
-        <Navbar />
-        <main>{children}</main>
-        <Footer />
+    <html lang="en" className={`${inter.variable} ${poppins.variable} ${openSans.variable}`}>
+      <body className="antialiased">
+        {children}
       </body>
     </html>
   );

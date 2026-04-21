@@ -97,8 +97,8 @@ export default function PricingPage() {
       <section className="pt-8 pb-16">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <SectionHeading
-            title="One Simple Rule: 8% of the Service Price"
-            subtitle="You list your services and prices. When Qwikly books a customer for a specific service, we take 8%. Different services, different fees. Always fair."
+            title="You Only Pay When You Get Paid"
+            subtitle="No monthly fee. No setup cost. When Qwikly books a real job, we take 8% of the service price. List your services, set your prices — Qwikly only earns when you earn."
           />
         </div>
       </section>
@@ -174,7 +174,7 @@ export default function PricingPage() {
                   </div>
 
                   <CTAButton size="lg" className="w-full justify-center">
-                    Get Your Spot Now
+                    Claim Your First Booking
                   </CTAButton>
                 </div>
               )}
@@ -229,8 +229,8 @@ export default function PricingPage() {
       <section className="py-20 bg-bg-light">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <SectionHeading
-            title="Every Business Gets the Full Platform"
-            subtitle="Same features for everyone. No tiers, no upsells, no hidden costs."
+            title="No Tiers. No Add-Ons. Everything Included."
+            subtitle="Every business gets the same full platform from day one. No upsells, no hidden costs, no surprises."
           />
 
           <div className="mt-12 max-w-lg mx-auto bg-white rounded-2xl shadow-xl border border-border-light p-8">
@@ -250,7 +250,7 @@ export default function PricingPage() {
             </p>
 
             <CTAButton size="lg" className="w-full justify-center">
-              Get Your Spot Now
+              Claim Your First Booking
             </CTAButton>
           </div>
         </div>
@@ -302,7 +302,7 @@ export default function PricingPage() {
                 {item.highlight && (
                   <div className="mt-6">
                     <CTAButton size="md" className="w-full justify-center">
-                      Start Free Trial
+                      Explore Your Trial
                     </CTAButton>
                   </div>
                 )}
@@ -326,7 +326,7 @@ export default function PricingPage() {
           </p>
           <div className="relative z-10 mt-8">
             <CTAButton size="lg" className="cta-glow">
-              Get Your Spot Now
+              Claim Your First Booking
             </CTAButton>
           </div>
         </div>

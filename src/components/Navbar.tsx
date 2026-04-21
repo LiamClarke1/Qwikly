@@ -62,12 +62,12 @@ export default function Navbar() {
               </a>
             ))}
             <a
-              href="https://qwikly-dashboard.vercel.app/login"
+              href="/login"
               className="text-text-secondary hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer"
             >
               Sign In
             </a>
-            <CTAButton size="sm" href="https://qwikly-dashboard.vercel.app/signup">Start Free Trial</CTAButton>
+            <CTAButton size="sm" href="/signup">Explore Your Trial</CTAButton>
           </div>
 
           {/* Mobile hamburger */}
@@ -103,14 +103,14 @@ export default function Navbar() {
             </a>
           ))}
           <a
-            href="https://qwikly-dashboard.vercel.app/login"
+            href="/login"
             className="block text-text-secondary hover:text-white transition-colors duration-200 text-base font-medium cursor-pointer"
             onClick={() => setMobileOpen(false)}
           >
             Sign In
           </a>
-          <CTAButton size="sm" href="https://qwikly-dashboard.vercel.app/signup" className="w-full justify-center">
-            Start Free Trial
+          <CTAButton size="sm" href="/signup" className="w-full justify-center">
+            Explore Your Trial
           </CTAButton>
         </div>
       </div>

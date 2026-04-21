@@ -85,9 +85,9 @@ const tickerLabels = [
 ];
 
 const stats = [
-  { value: "500+", label: "leads handled" },
-  { value: "30s", label: "avg response" },
-  { value: "94%", label: "qualification rate" },
+  { value: "500+", label: "leads captured" },
+  { value: "30s", label: "avg first reply" },
+  { value: "94%", label: "leads qualified" },
   { value: "24/7", label: "coverage" },
 ];
 
@@ -95,26 +95,26 @@ const howItWorksSteps = [
   {
     icon: MessageSquare,
     step: "01",
-    title: "Lead reaches out",
-    description: "A customer messages via WhatsApp or email about a job.",
+    title: "A lead messages in",
+    description: "Someone sends a WhatsApp or email — at 7pm, on a Sunday, while you're on another job.",
   },
   {
     icon: Bot,
     step: "02",
-    title: "AI responds in 30 seconds",
-    description: "Qualifies the lead, asks the right questions, checks your service area.",
+    title: "Qwikly replies in 30 seconds",
+    description: "Asks the right questions, checks your service area, and assesses what the job involves. Feels like your own front office.",
   },
   {
     icon: CalendarCheck,
     step: "03",
-    title: "Appointment booked",
-    description: "Straight into your Google Calendar. You and the customer get notified.",
+    title: "The appointment is locked in",
+    description: "Straight into your Google Calendar. Both you and the customer get a confirmation. No back-and-forth needed.",
   },
   {
     icon: RefreshCw,
     step: "04",
-    title: "Follow-up automated",
-    description: "Reminders, no-show recovery, and lead revival happen automatically.",
+    title: "Everything after runs itself",
+    description: "Reminders send. No-shows get rebooking messages. Cold leads get revival sequences. Nothing slips through.",
   },
 ];
 
@@ -398,24 +398,25 @@ export default function Home() {
             {/* Left: copy */}
             <div className="flex-1 text-center lg:text-left hero-glow">
               <h1 className="relative z-10 text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight text-white leading-tight">
-                Every lead answered.
+                You&apos;re on the job.
                 <br />
-                Every follow-up sent.
+                A new lead just messaged.
                 <br />
-                Every appointment <span className="text-accent">booked</span>.
+                They&apos;re already <span className="text-accent">booked</span>.
               </h1>
               <p className="relative z-10 mt-6 text-base md:text-lg text-text-secondary max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                AI that responds in 30 seconds, follows up automatically, and
-                never lets a lead go cold. Built for South African service
-                businesses.
+                While you&apos;re under a sink or up on a roof, Qwikly handles
+                every enquiry, chases every lead, and fills your calendar —
+                automatically. Built for SA service businesses who are too busy
+                to reply to everyone.
               </p>
 
               <ul className="relative z-10 mt-6 space-y-2 max-w-md mx-auto lg:mx-0">
                 {[
-                  "WhatsApp + Email response in 30 seconds",
-                  "Automated follow-ups, no-show recovery, lead revival",
-                  "Books into Google Calendar, 24/7",
-                  "8% per booking, limited-time pricing",
+                  "Replies to every WhatsApp and email within 30 seconds",
+                  "Follows up at 4h, 24h, 2 days, and 5 days — without lifting a finger",
+                  "Drops confirmed appointments into your Google Calendar, day or night",
+                  "Only pay 8% when a booking is made — nothing upfront, no monthly fees",
                 ].map((item) => (
                   <li key={item} className="flex items-center gap-2.5 text-sm text-text-secondary">
                     <Check className="w-4 h-4 text-accent flex-shrink-0" />
@@ -439,8 +440,8 @@ export default function Home() {
 
               <div className="relative z-10 mt-6 bg-bg-card border border-border-subtle rounded-xl px-5 py-3 max-w-md mx-auto lg:mx-0">
                 <p className="text-sm text-text-secondary">
-                  <span className="text-accent font-bold">Average ROI: 10-50x.</span>{" "}
-                  A plumber paying R500 per booking earns R5,000 per job. A solar company paying R5,000 earns R150,000. You do the math.
+                  <span className="text-accent font-bold">Average ROI: 10–50x.</span>{" "}
+                  One extra booking a week covers Qwikly for the month. Everything after that is money you were leaving on the table.
                 </p>
               </div>
             </div>
@@ -457,8 +458,8 @@ export default function Home() {
       <section className="bg-bg-card py-8 border-y border-border-subtle">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 reveal-up">
           <p className="text-center text-text-secondary font-semibold text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
-            Helping service businesses across Johannesburg, Pretoria, Cape Town,
-            and Durban respond faster and book more
+            SA service businesses in Johannesburg, Pretoria, Cape Town, and
+            Durban are capturing jobs they used to lose — every single day
           </p>
 
           {/* Counter stats */}
@@ -498,8 +499,8 @@ export default function Home() {
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center reveal-up">
             <SectionHeading
-              title="You're losing 30-40% of your leads right now"
-              subtitle="Most service businesses take hours to reply. By then, the customer has already booked someone else."
+              title="Right now, a third of your leads are booking with someone else"
+              subtitle="The average homeowner contacts 3 tradies and books whoever replies first. Speed isn't a nice-to-have — it's the whole game."
             />
           </div>
 
@@ -518,7 +519,7 @@ export default function Home() {
                   { text: "You're on site, phone in your pocket", icon: Wrench },
                   { text: "Reply at 10pm", icon: Clock },
                   { text: "They've already booked someone else", icon: Users },
-                  { text: "R5,000 job lost", icon: XCircle },
+                  { text: "R5,000 gone — before you even knew about it", icon: XCircle },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-red-100 flex-shrink-0">
@@ -545,7 +546,7 @@ export default function Home() {
                   { text: "AI replies in 30 seconds", icon: Bot },
                   { text: "Qualifies the lead automatically", icon: CheckCircle2 },
                   { text: "Books the appointment", icon: CalendarCheck },
-                  { text: "R5,000 job won", icon: CheckCircle2 },
+                  { text: "R5,000 booked — while you were still on the last job", icon: CheckCircle2 },
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 flex-shrink-0">
@@ -566,7 +567,7 @@ export default function Home() {
         <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 reveal-up">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white">
-              What slow response is costing you every month
+              What every unanswered message is quietly costing you
             </h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 reveal-stagger">
@@ -585,7 +586,7 @@ export default function Home() {
             ))}
           </div>
           <p className="text-center text-sm text-text-tertiary mt-6 reveal-up">
-            These are real numbers from SA service businesses. Every unanswered lead goes to whoever replies first.
+            Estimates based on average job values across SA trades. Every unanswered message is a booking in someone else&apos;s diary.
           </p>
         </div>
       </section>
@@ -595,8 +596,8 @@ export default function Home() {
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 reveal-up">
             <SectionHeading
-              title="One Platform. Every Touchpoint Covered."
-              subtitle="From first message to rebooking, Qwikly handles the entire lead lifecycle."
+              title="One Platform. Every Lead Covered."
+              subtitle="From the first WhatsApp to the rebooked appointment, Qwikly runs the entire lifecycle while you stay focused on the work."
             />
           </div>
 
@@ -605,8 +606,8 @@ export default function Home() {
               <FeatureBlock
                 badge="WHATSAPP"
                 badgeColor="bg-[#00a884]/10 text-[#00a884]"
-                title="Instant WhatsApp Response"
-                description="Every WhatsApp lead gets a reply within 30 seconds, 24 hours a day, 7 days a week. The AI qualifies them, asks the right questions, and books the appointment. Most customers do not even realise it is AI."
+                title="Replies Before Your Competitor Even Sees the Message"
+                description="A new message comes in at 7pm while you're on a callout. Qwikly replies within 30 seconds, asks the right questions, and has the appointment confirmed before you've packed up your van. Most customers think they're talking to your assistant."
                 visual={<MiniWhatsAppVisual />}
               />
             </div>
@@ -615,8 +616,8 @@ export default function Home() {
               <FeatureBlock
                 badge="EMAIL"
                 badgeColor="bg-blue-50 text-blue-600"
-                title="Email Lead Handling"
-                description="Leads do not only come through WhatsApp. Qwikly responds to email enquiries on behalf of your business, using the same trade-specific AI. Same speed, same quality, different channel."
+                title="Every Email Enquiry Answered, Every Time"
+                description="Not every lead messages on WhatsApp. Qwikly handles email enquiries with the same speed and trade knowledge — qualifies the lead, checks availability, and books the appointment. All conversations land in your dashboard."
                 reversed
                 visual={<EmailMock />}
               />
@@ -625,8 +626,8 @@ export default function Home() {
             <div className="reveal-left">
               <FeatureBlock
                 badge="AUTOMATION"
-                title="Automated Follow-ups"
-                description="When a lead goes quiet, Qwikly re-engages them automatically at 4 hours, 24 hours, 2 days, and 5 days. If WhatsApp gets no response, the AI switches to email. No lead falls through the cracks."
+                title="Four Follow-Ups. Zero Effort."
+                description="When a lead goes quiet, most businesses forget about them. Qwikly re-engages at 4 hours, 24 hours, 2 days, and 5 days — and switches from WhatsApp to email if needed. That quote you sent and forgot about? Qwikly chased it."
                 visual={<MiniTimelineVisual />}
               />
             </div>
@@ -635,8 +636,8 @@ export default function Home() {
               <FeatureBlock
                 badge="RECOVERY"
                 badgeColor="bg-red-50 text-red-600"
-                title="No-Show Recovery"
-                description="Missed appointments mean lost revenue. When a customer does not show up, Qwikly sends an automatic rebooking message within minutes, suggesting the next available slot."
+                title="Turn No-Shows Into Rebooked Jobs"
+                description="A no-show is a delayed job, not a lost one. The moment someone misses their slot, Qwikly sends a personal-feeling rebooking message with the next available time. Most reschedule within 24 hours."
                 reversed
                 visual={<MiniNotificationVisual />}
               />
@@ -646,8 +647,8 @@ export default function Home() {
               <FeatureBlock
                 badge="REVIVAL"
                 badgeColor="bg-purple-50 text-purple-600"
-                title="Lead Revival"
-                description="Leads that went cold 30 or more days ago are not dead. Qwikly sends seasonal, trade-specific re-engagement messages that bring dormant leads back to life."
+                title="The Leads You Forgot Aren't Gone Yet"
+                description="That solar quote from six weeks ago. The pest control enquiry from March. Qwikly tracks every dormant lead and re-engages them with a message timed to what's happening in their world — load shedding, summer heat, school holidays. Cold leads come back warm."
                 visual={<MiniRevivalVisual />}
               />
             </div>
@@ -656,8 +657,8 @@ export default function Home() {
               <FeatureBlock
                 badge="DASHBOARD"
                 badgeColor="bg-blue-50 text-blue-600"
-                title="Client Dashboard"
-                description="See every conversation, every booking, and every stat in real time. Read full transcripts, review AI performance, and step in whenever you want. Full visibility, full control."
+                title="See Everything. Miss Nothing."
+                description="Every conversation, booking, and stat in one place. Read exactly what Qwikly said to your leads, check qualification outcomes, and step in whenever you want. Full visibility without having to manage any of it."
                 reversed
                 visual={<MiniDashboardVisual />}
               />
@@ -673,10 +674,10 @@ export default function Home() {
             <div className="flex flex-col items-center">
               <div className="w-16 gold-line mb-6" />
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
-                How Qwikly Works
+                From First Message to Booked Job
               </h2>
               <p className="text-text-tertiary text-lg mt-4 max-w-2xl">
-                Four steps from first message to fully automated lifecycle management.
+                Lead comes in. Qwikly handles it. Booking lands in your calendar. You keep working.
               </p>
             </div>
           </div>
@@ -711,8 +712,8 @@ export default function Home() {
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 reveal-up">
             <SectionHeading
-              title="How Qwikly Stacks Up"
-              subtitle="See why service businesses choose Qwikly over the alternatives."
+              title="There's Only One Way to Beat the First-Reply Rule"
+              subtitle="Hiring a receptionist costs R15,000 a month. Doing it yourself means missed jobs. Qwikly is the only other option."
             />
           </div>
 
@@ -727,8 +728,8 @@ export default function Home() {
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center reveal-up">
             <SectionHeading
-              title="One Simple Rule: 8% of the Service Price"
-              subtitle="You list your services and prices during setup. When Qwikly books a customer, we take 8% of that specific service. Different services, different fees. Always fair."
+              title="You Only Pay When You Get Paid"
+              subtitle="No monthly fee. No setup cost. No contracts. When Qwikly books a real job, we take 8% of the service price — and not a cent before that. List your services, set your prices, and Qwikly only earns when you earn."
             />
           </div>
 
@@ -775,7 +776,7 @@ export default function Home() {
               </div>
               <div className="px-6 py-4 bg-accent/5 border-t border-accent/20">
                 <p className="text-xs text-text-dark text-center">
-                  You set your own service prices during onboarding. If your prices change, your per-booking fee adjusts automatically.
+                  Your service prices, your rules. Change them anytime and your Qwikly fee adjusts automatically.
                 </p>
               </div>
 
@@ -803,7 +804,7 @@ export default function Home() {
                 Everything Included
               </span>
               <p className="font-sans text-xl font-bold text-text-dark mb-6">
-                Every business gets the full platform:
+                No feature tiers. No add-ons. Every business gets:
               </p>
 
               <ul className="space-y-3">
@@ -818,11 +819,11 @@ export default function Home() {
               <div className="w-full h-px bg-border-light my-6" />
 
               <p className="text-sm text-text-muted-dark text-center mb-6">
-                Affordable, performance-based pricing. No contracts.
+                Only pay per booking. No contracts. No surprises.
               </p>
 
               <CTAButton size="lg" className="w-full justify-center">
-                Get Your Spot Now
+                Claim Your First Booking
               </CTAButton>
             </div>
           </div>
@@ -834,8 +835,8 @@ export default function Home() {
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 reveal-up">
             <SectionHeading
-              title="Built for Every Service Business"
-              subtitle="From tradespeople to professionals, if your business gets leads, Qwikly handles them."
+              title="If You Get Leads, Qwikly Works For You"
+              subtitle="Trades, professionals, and every service business in between. If a customer can message you, Qwikly can respond for you."
             />
           </div>
 
@@ -884,7 +885,7 @@ export default function Home() {
             <div className="flex flex-col items-center">
               <div className="w-16 gold-line mb-6" />
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
-                What Our Clients Say
+                Real Results From SA Service Businesses
               </h2>
             </div>
           </div>
@@ -927,16 +928,16 @@ export default function Home() {
             Every missed lead is money in your competitor&apos;s pocket.
           </h2>
           <p className="relative z-10 mt-4 text-lg text-text-tertiary max-w-2xl mx-auto">
-            The average service business loses R15,000-80,000 per month from slow response.
-            Qwikly clients see a 10-50x return on what they pay. Start your free trial and see the bookings come in.
+            The average SA service business loses R15,000–80,000 a month from slow response.
+            Qwikly clients see a 10–50x return. See what that looks like for your trade.
           </p>
           <div className="relative z-10 mt-8">
             <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
-              Get Your Spot Now
+              Start Your 7-Day Trial
             </CTAButton>
           </div>
           <p className="relative z-10 mt-4 text-sm text-text-tertiary">
-            Affordable pricing. No contracts. Limited spots available.
+            No setup fees. No monthly costs. Pay only when a job is booked.
           </p>
         </div>
       </section>
