@@ -36,6 +36,7 @@ import {
   Camera,
   Truck,
   Dumbbell,
+  Mail,
 } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 import FAQ from "@/components/FAQ";
@@ -495,7 +496,7 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 3: THE PROBLEM ─── */}
-      <section className="py-16 bg-bg-light">
+      <section className="py-16 bg-bg-light overflow-hidden">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center reveal-up">
             <SectionHeading
@@ -592,12 +593,21 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 4: PLATFORM FEATURES (alternating) ─── */}
-      <section id="features" className="py-20 bg-bg-light">
+      <section id="features" className="py-20 bg-bg-light overflow-hidden">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 reveal-up">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <span className="inline-flex items-center gap-1.5 bg-[#00a884]/10 text-[#00a884] text-xs font-semibold px-3 py-1 rounded-full border border-[#00a884]/20">
+                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+              </span>
+              <span className="text-text-tertiary text-sm">+</span>
+              <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 text-xs font-semibold px-3 py-1 rounded-full border border-blue-200">
+                <Mail className="w-3.5 h-3.5" /> Email
+              </span>
+            </div>
             <SectionHeading
               title="One Platform. Every Lead Covered."
-              subtitle="From the first WhatsApp to the rebooked appointment, Qwikly runs the entire lifecycle while you stay focused on the work."
+              subtitle="Whether they message you on WhatsApp or email, Qwikly replies in seconds, qualifies the lead, books the appointment, and follows up — automatically. You stay focused on the work."
             />
           </div>
 
@@ -677,7 +687,7 @@ export default function Home() {
                 From First Message to Booked Job
               </h2>
               <p className="text-text-tertiary text-lg mt-4 max-w-2xl">
-                Lead comes in. Qwikly handles it. Booking lands in your calendar. You keep working.
+                WhatsApp, email — it doesn&apos;t matter. Qwikly handles it. Booking lands in your calendar. You keep working.
               </p>
             </div>
           </div>

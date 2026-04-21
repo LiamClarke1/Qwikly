@@ -5,6 +5,12 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    overflow-x: clip; /* prevents horizontal scroll without breaking sticky positioning */
+  }
+
+  body {
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   h1, h2, h3, h4 {

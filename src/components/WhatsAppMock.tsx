@@ -194,7 +194,7 @@ export default function WhatsAppMock() {
 
             {/* Chat area */}
             <div
-              className="px-2.5 py-3 space-y-1.5 h-[420px] overflow-y-auto bg-[#0b141a] transition-all duration-300 ease-in-out scrollbar-thin"
+              className="px-2.5 py-3 space-y-1.5 h-[420px] overflow-hidden bg-[#0b141a] transition-all duration-300 ease-in-out"
               style={{
                 opacity: visible ? 1 : 0,
                 transform: visible ? "scale(1)" : "scale(0.98)",
