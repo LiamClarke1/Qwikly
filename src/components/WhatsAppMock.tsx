@@ -25,11 +25,11 @@ const conversations: Conversation[] = [
     accentColor: "#3B82F6",
     messages: [
       { text: "Hi, my aircon is blowing warm air. It's a Daikin, about 5 years old.", sender: "customer", time: "10:14", delivered: true, read: true },
-      { text: "Warm air on a 5-year Daikin is almost always a gas recharge or blocked filter — both quick fixes. We're in Bryanston today.\n\nJust reply with:\n• Your name\n• Suburb\n• Best time to come out", sender: "ai", time: "10:14", delivered: true, read: true },
+      { text: "That's almost always a gas recharge or dirty filter on a Daikin that age, both quick fixes. What's your name and which suburb are you in?", sender: "ai", time: "10:14", delivered: true, read: true },
       { text: "Zanele Dlamini. Bryanston. Any time today works.", sender: "customer", time: "10:16", delivered: true, read: true },
-      { text: "Gas check + service on a Daikin is R850–R1,100 all-in. I've got 1pm or 4pm today in Bryanston. Which works?", sender: "ai", time: "10:16", delivered: true, read: true },
+      { text: "We're actually in Bryanston today. Gas check and full service comes to around R950 all-in. I've got 1pm or 4pm available. Which suits you?", sender: "ai", time: "10:16", delivered: true, read: true },
       { text: "1pm please", sender: "customer", time: "10:17", delivered: true, read: true },
-      { text: "Confirmed Zanele. 1pm in Bryanston today. Technician will call 20 min before arrival.", sender: "ai", time: "10:17", delivered: true, read: false },
+      { text: "Sorted Zanele. 1pm in Bryanston today. The tech will call you 20 minutes before he arrives.", sender: "ai", time: "10:17", delivered: true, read: false },
     ],
   },
   {
@@ -38,11 +38,11 @@ const conversations: Conversation[] = [
     accentColor: "#06B6D4",
     messages: [
       { text: "Hi, how much do you charge for weekly pool cleaning?", sender: "customer", time: "09:03", delivered: true, read: true },
-      { text: "Weekly cleaning is R650/month — includes chemicals, brushing, and skimming. No lock-in contracts.\n\nWhich area are you in?", sender: "ai", time: "09:03", delivered: true, read: true },
+      { text: "Weekly is R650 a month, covers chemicals, brushing and skimming. No contracts. Which area are you in?", sender: "ai", time: "09:03", delivered: true, read: true },
       { text: "Fourways. It's a standard 8x4m pool, been a bit neglected lately.", sender: "customer", time: "09:05", delivered: true, read: true },
-      { text: "Fourways, no problem. For a slightly neglected pool we'd do a once-off deep clean first (R450), then weekly from there. First month is half price.\n\nWant to lock in a day?", sender: "ai", time: "09:05", delivered: true, read: true },
+      { text: "Fourways is covered. For a neglected pool we usually start with a once-off deep clean at R450 to get it right, then weekly from there. First month is half price. Want to lock in a day?", sender: "ai", time: "09:05", delivered: true, read: true },
       { text: "Yes, Thursdays would work well", sender: "customer", time: "09:06", delivered: true, read: true },
-      { text: "Thursdays it is. Deep clean this Thursday, then weekly from next week. Reply with your name and address to confirm.", sender: "ai", time: "09:06", delivered: true, read: false },
+      { text: "Thursdays it is. Deep clean this Thursday, then weekly from next week. What's your name and address so I can confirm the booking?", sender: "ai", time: "09:06", delivered: true, read: false },
     ],
   },
   {
@@ -51,9 +51,9 @@ const conversations: Conversation[] = [
     accentColor: "#EF4444",
     messages: [
       { text: "Someone tried to break in tonight through the kitchen window. I need security bars urgently.", sender: "customer", time: "23:11", delivered: true, read: true },
-      { text: "That's frightening — glad you're okay. Lock all entry points tonight and keep lights on outside.\n\nWe can get an assessor to you first thing tomorrow. Reply with:\n• Your name\n• Area\n• Number of windows needing bars", sender: "ai", time: "23:11", delivered: true, read: true },
+      { text: "That's awful, glad you're safe. Lock everything up tonight and leave outside lights on. What's your name, area and roughly how many windows need bars?", sender: "ai", time: "23:11", delivered: true, read: true },
       { text: "Mpho Sithole. Midrand. About 6 windows and the kitchen door.", sender: "customer", time: "23:13", delivered: true, read: true },
-      { text: "Priority booking confirmed Mpho. Assessor at your door tomorrow 7:30am in Midrand. He'll quote on the spot and can start fitting same day if you approve.", sender: "ai", time: "23:13", delivered: true, read: false },
+      { text: "Priority booking confirmed Mpho. Our assessor will be at your door at 7:30am tomorrow in Midrand. He'll quote on the spot and can start fitting same day if you're happy.", sender: "ai", time: "23:13", delivered: true, read: false },
     ],
   },
   {
@@ -62,11 +62,11 @@ const conversations: Conversation[] = [
     accentColor: "#A855F7",
     messages: [
       { text: "Another company quoted me R6,000 less for the same exterior paint job. Why are you more expensive?", sender: "customer", time: "14:32", delivered: true, read: true },
-      { text: "Fair question — that's a big gap. A few things worth checking:\n• Do they include a 2-coat system?\n• Is their paint Plascon or a budget brand?\n• Do they give a written 3-year warranty?\n\nWe include all three. What matters most to you?", sender: "ai", time: "14:32", delivered: true, read: true },
+      { text: "Fair point, worth asking. Do they use a full 2-coat system, Plascon paint, and give you a written 3-year guarantee? We include all three. What matters most to you?", sender: "ai", time: "14:32", delivered: true, read: true },
       { text: "Honestly the warranty. I had a painter flake on me last year and had to redo it 8 months later.", sender: "customer", time: "14:34", delivered: true, read: true },
-      { text: "That's exactly why we put it in writing. Our 3-year guarantee covers peeling, blistering, and callbacks — no charge. Want to book a free quote so you can compare like-for-like?", sender: "ai", time: "14:35", delivered: true, read: true },
+      { text: "That's exactly why we put it in writing. Our 3-year guarantee covers peeling, blistering, and any callbacks at no charge. Want a free quote so you can compare properly?", sender: "ai", time: "14:35", delivered: true, read: true },
       { text: "Yes let's do that", sender: "customer", time: "14:35", delivered: true, read: true },
-      { text: "Great. What area are you in and which days work for you? I'll get a slot locked in.", sender: "ai", time: "14:35", delivered: true, read: false },
+      { text: "Great. What area are you in and which days work for you? I'll get a slot locked in today.", sender: "ai", time: "14:35", delivered: true, read: false },
     ],
   },
   {
@@ -75,11 +75,11 @@ const conversations: Conversation[] = [
     accentColor: "#22C55E",
     messages: [
       { text: "Hi, do you do once-off garden cleanups? Not looking for a monthly contract.", sender: "customer", time: "08:50", delivered: true, read: true },
-      { text: "Yes, absolutely — no contracts needed. Once-off includes cutting, edging, trimming, and full waste removal. Most standard gardens come in at R950–R1,400.\n\nWhich area are you in?", sender: "ai", time: "08:50", delivered: true, read: true },
+      { text: "Yes, no contract needed at all. We do cutting, edging, trimming and take everything away. Most standard gardens run R950 to R1,400. Which area are you in?", sender: "ai", time: "08:50", delivered: true, read: true },
       { text: "Tableview, Cape Town. Garden's been ignored for about 3 months.", sender: "customer", time: "08:52", delivered: true, read: true },
-      { text: "Tableview's covered. For 3 months of growth, budget R1,200–R1,500 — we quote on arrival, no surprises. This weekend (Sat or Sun) work for you?", sender: "ai", time: "08:52", delivered: true, read: true },
+      { text: "Tableview is covered. For a garden that size with 3 months growth, I'd say budget around R1,200 to R1,500. We quote on arrival so no surprises. This Saturday or Sunday work for you?", sender: "ai", time: "08:52", delivered: true, read: true },
       { text: "Saturday please", sender: "customer", time: "08:53", delivered: true, read: true },
-      { text: "Saturday is yours. Reply with your name and address and I'll send the confirmation now.", sender: "ai", time: "08:53", delivered: true, read: false },
+      { text: "Saturday's yours. Just send me your name and address and I'll get the confirmation over to you now.", sender: "ai", time: "08:53", delivered: true, read: false },
     ],
   },
 ];
