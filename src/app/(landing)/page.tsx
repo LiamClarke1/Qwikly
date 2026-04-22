@@ -10,26 +10,12 @@ import {
   CheckCircle2,
   Clock,
   BarChart3,
-  Bell,
-  CalendarX,
-  CalendarClock,
-  MessageCircle,
-  Stethoscope,
-  Scissors,
-  Car,
-  Building2,
-  Sparkles,
-  GraduationCap,
-  PawPrint,
-  Camera,
-  Truck,
-  Dumbbell,
   Mail,
 } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 import FAQ from "@/components/FAQ";
-import Founder from "@/components/Founder";
 import WhatsAppMock from "@/components/WhatsAppMock";
+import EmailMock from "@/components/EmailMock";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 /* ──────────────── DATA ──────────────── */
@@ -260,58 +246,91 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8 py-20 md:py-28 lg:py-32">
-          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
 
-            {/* Left: copy — stripped to essentials */}
-            <div className="flex-1 text-center lg:text-left">
-              {/* Badge */}
-              <div className="flex justify-center lg:justify-start mb-6">
-                <span className="badge-pulse inline-flex items-center gap-2 bg-accent/10 border border-accent/25 text-accent text-xs font-semibold px-4 py-2 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                  Built for SA service businesses
-                </span>
-              </div>
-
-              {/* Headline — the 2-3 bold sentences */}
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4rem] font-extrabold tracking-tight text-white leading-[1.08]">
-                You&apos;re on the job.
-                <br />
-                A new lead just messaged.
-                <br />
-                They&apos;re already{" "}
-                <span className="text-gradient-blue">booked</span>.
-              </h1>
-
-              {/* ONE bold subline — that's all */}
-              <p className="mt-6 text-lg md:text-xl font-semibold text-text-secondary max-w-lg mx-auto lg:mx-0 leading-relaxed">
-                Qwikly replies in 30 seconds, books the appointment, and follows up — without you lifting a finger.
-              </p>
-
-              {/* CTAs */}
-              <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
-                <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
-                  Explore Your 7-Day Trial
-                </CTAButton>
-                <CTAButton
-                  variant="outline"
-                  size="lg"
-                  href="#how-it-works"
-                  className="border-border-subtle text-white hover:bg-bg-elevated hover:text-white"
-                >
-                  See How It Works
-                </CTAButton>
-              </div>
-
-              <p className="mt-4 text-sm text-text-tertiary">
-                No setup fees. No contracts. Pay only when a job is booked.
-              </p>
+          {/* Centered copy */}
+          <div className="text-center max-w-3xl mx-auto">
+            {/* Badge */}
+            <div className="flex justify-center mb-6">
+              <span className="badge-pulse inline-flex items-center gap-2 bg-accent/10 border border-accent/25 text-accent text-xs font-semibold px-4 py-2 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                Built for SA service businesses
+              </span>
             </div>
 
-            {/* Right: WhatsApp mock */}
-            <div className="relative z-10 flex-shrink-0">
-              <WhatsAppMock />
+            {/* Headline */}
+            <h1 className="font-heading text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.05]">
+              Never miss a lead on{" "}
+              <span className="text-gradient-blue">WhatsApp</span>{" "}
+              or{" "}
+              <span className="text-gradient-blue">email</span>{" "}
+              again.
+            </h1>
+
+            {/* Subline */}
+            <p className="mt-6 text-xl md:text-2xl font-medium text-text-secondary max-w-2xl mx-auto leading-relaxed">
+              Qwikly replies in 30 seconds, qualifies the lead, and books the appointment into your calendar — while you stay on the job.
+            </p>
+
+            {/* CTAs */}
+            <div className="mt-10 flex flex-col sm:flex-row items-center gap-4 justify-center">
+              <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
+                Explore Your 7-Day Trial
+              </CTAButton>
+              <CTAButton
+                variant="outline"
+                size="lg"
+                href="#how-it-works"
+                className="border-border-subtle text-white hover:bg-bg-elevated hover:text-white"
+              >
+                See How It Works
+              </CTAButton>
+            </div>
+
+            <p className="mt-4 text-sm text-text-tertiary">
+              No setup fees. No contracts. Pay only when a job is booked.
+            </p>
+          </div>
+
+          {/* Mocks — WhatsApp + Email side by side */}
+          <div className="mt-16 md:mt-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-start max-w-5xl mx-auto">
+
+            {/* WhatsApp panel */}
+            <div className="flex flex-col items-center gap-6">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#25D366" aria-hidden="true">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                <span className="text-sm font-semibold text-white">WhatsApp</span>
+                <span className="text-xs text-[#25D366] bg-[#25D366]/10 border border-[#25D366]/20 px-2.5 py-0.5 rounded-full font-medium">Replied in 30 seconds</span>
+              </div>
+              <div className="px-12 sm:px-14">
+                <WhatsAppMock />
+              </div>
+            </div>
+
+            {/* Email panel */}
+            <div className="flex flex-col items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-blue-400" />
+                <span className="text-sm font-semibold text-white">Email</span>
+                <span className="text-xs text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 rounded-full font-medium">Replied in 45 seconds</span>
+              </div>
+              <EmailMock />
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {["Reads the enquiry", "Qualifies the lead", "Books the slot", "Sends confirmation"].map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center text-[11px] font-medium text-text-tertiary bg-white/[0.06] border border-white/10 px-2.5 py-1 rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
+
+          {/* Bottom fade */}
+          <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-bg-card to-transparent pointer-events-none" aria-hidden="true" />
         </div>
       </section>
 
@@ -352,8 +371,8 @@ export default function Home() {
         <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 reveal-up">
             <p className="text-text-tertiary text-sm font-semibold uppercase tracking-widest mb-4">What Qwikly does</p>
-            <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-              One platform. Three automations. Zero leads lost.
+            <h2 className="font-heading text-4xl md:text-5xl font-bold text-white tracking-tight">
+              3 things. All automated.
             </h2>
           </div>
 
@@ -369,7 +388,7 @@ export default function Home() {
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+                  <h3 className="font-heading text-xl font-bold text-white mb-2">{title}</h3>
                   <p className="text-text-tertiary leading-relaxed text-sm md:text-base">{description}</p>
                 </div>
               </div>
@@ -451,11 +470,11 @@ export default function Home() {
         <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 reveal-up">
             <div className="w-16 gold-line mx-auto mb-6" />
-            <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-              From first message to booked job
+            <h2 className="font-heading text-4xl md:text-5xl font-bold text-white tracking-tight">
+              4 steps.
             </h2>
             <p className="mt-4 text-text-tertiary text-lg max-w-xl mx-auto">
-              WhatsApp, email — it doesn&apos;t matter. Qwikly handles it. You keep working.
+              WhatsApp or email — it doesn&apos;t matter. Qwikly handles it. You keep working.
             </p>
           </div>
 
@@ -466,7 +485,7 @@ export default function Home() {
                   <span className="text-6xl font-extrabold text-white/[0.04] absolute top-3 right-4 select-none">{step}</span>
                   <span className="text-xs font-bold tracking-widest uppercase text-accent mb-3 block">Step {step}</span>
                   <Icon className="w-9 h-9 text-accent mb-4" />
-                  <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+                  <h3 className="font-heading text-lg font-semibold text-white mb-2">{title}</h3>
                   <p className="text-text-tertiary text-sm leading-relaxed">{description}</p>
                 </div>
                 {index < howItWorksSteps.length - 1 && (
@@ -492,8 +511,8 @@ export default function Home() {
         <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 reveal-up">
             <div className="w-16 gold-line mx-auto mb-6" />
-            <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
-              Real results from SA service businesses
+            <h2 className="font-heading text-4xl md:text-5xl font-bold text-white tracking-tight">
+              Real results.
             </h2>
             <p className="mt-4 text-text-tertiary text-lg max-w-xl mx-auto">
               These aren&apos;t estimates. These are jobs that were booked because Qwikly replied first.
@@ -523,8 +542,8 @@ export default function Home() {
       <section id="pricing" className="py-20 bg-bg-light">
         <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:px-8">
           <div className="text-center reveal-up">
-            <h2 className="text-3xl md:text-4xl font-bold text-text-dark tracking-tight">
-              You only pay when you get paid
+            <h2 className="font-heading text-4xl md:text-5xl font-bold text-text-dark tracking-tight">
+              Simple pricing.
             </h2>
             <p className="mt-4 text-text-muted-dark text-lg max-w-xl mx-auto">
               No monthly fee. No setup cost. No contracts. Qwikly takes 8% when it books a real job — not a cent before that.
@@ -570,9 +589,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── FOUNDER ─── */}
-      <Founder />
-
       {/* ─── FAQ ─── */}
       <FAQ />
 
@@ -586,8 +602,8 @@ export default function Home() {
             <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
             7-day free trial
           </span>
-          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white max-w-3xl mx-auto leading-[1.1]">
-            Every missed lead is money in your competitor&apos;s pocket.
+          <h2 className="font-heading text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white max-w-3xl mx-auto leading-[1.05]">
+            Stop losing jobs to the first reply.
           </h2>
           <p className="mt-5 text-lg text-text-tertiary max-w-xl mx-auto">
             The average SA service business loses R15,000–80,000 a month from slow replies. Qwikly clients see a 10–50× return.
