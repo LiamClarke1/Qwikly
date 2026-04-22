@@ -5,13 +5,13 @@ const steps = [
     stamp: "i.",
     title: "A lead messages your business.",
     body:
-      "Someone WhatsApps about a job. Maybe a burst geyser at 2 a.m. Maybe a quote on a Saturday morning. Doesn't matter when — Qwikly is always on.",
+      "Someone WhatsApps about a job. Maybe a burst geyser at 2 a.m. Maybe a quote on a Saturday morning. Doesn't matter when. Qwikly is always on.",
   },
   {
     stamp: "ii.",
     title: "Qwikly replies in 30 seconds.",
     body:
-      "A real conversation, not a script. It asks the right qualifying questions — what they need, where they are, how urgent — in SA English, in your voice.",
+      "A real conversation, not a script. It asks the right qualifying questions: what they need, where they are, how urgent. In SA English, in your voice.",
   },
   {
     stamp: "iii.",
@@ -41,7 +41,7 @@ const underTheHood = [
   {
     title: "Full conversation log",
     body:
-      "Every exchange is recorded. See exactly what the AI said, how it qualified the lead, and why it booked — or didn't.",
+      "Every exchange is recorded. See exactly what the AI said, how it qualified the lead, and why it booked, or didn't.",
   },
 ];
 
@@ -99,9 +99,7 @@ export default function HowItWorksPage() {
             </div>
             <div className="md:col-span-6 md:col-start-7 md:pt-4">
               <p className="text-ink-700 text-lg leading-relaxed">
-                Everything you&rsquo;d expect from a full-time front office —
-                training, triage, logging, notifications — working silently
-                while you&rsquo;re on the tools.
+                Everything you&rsquo;d expect from a full-time front office: training, triage, logging, and notifications, working silently while you&rsquo;re on the tools.
               </p>
             </div>
           </div>

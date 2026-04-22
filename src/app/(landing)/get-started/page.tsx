@@ -48,7 +48,7 @@ const TONE_OPTS = [
     value: "warm_empathetic",
     label: "Warm & Empathetic",
     description: "Caring and reassuring. Perfect when customers are stressed about emergencies or big expenses.",
-    example: '"I completely understand — a burst pipe is stressful. Let\'s get this sorted for you right away."',
+    example: '"I completely understand, a burst pipe is stressful. Let\'s get this sorted for you right away."',
   },
   {
     value: "direct_efficient",
@@ -521,7 +521,7 @@ ${f.ai_never_say || "Not specified"}
         {/* Header */}
         <div className="text-center mb-8">
           <span className="inline-block bg-accent/10 text-accent text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-            Free 7-Day Trial — No card required
+            Free 7-Day Trial. No card required.
           </span>
           <h1 className="text-3xl font-bold text-text-dark mb-2">Set up your AI assistant</h1>
           <p className="text-text-muted-dark text-sm">
@@ -595,7 +595,7 @@ ${f.ai_never_say || "Not specified"}
               <textarea
                 value={pastedText}
                 onChange={(e) => setPastedText(e.target.value)}
-                placeholder="Paste anything here — your price list, services from your website, a Word document, old brochure text. The AI will extract and fill the form for you."
+                placeholder="Paste anything here: your price list, services from your website, a Word document, old brochure text. The AI will extract and fill the form for you."
                 rows={5}
                 className="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors duration-200 placeholder:text-gray-400 resize-none mb-2"
               />
@@ -674,7 +674,7 @@ ${f.ai_never_say || "Not specified"}
 
               <Field
                 label="Which cities and suburbs do you cover?"
-                hint="List every area you're willing to travel to. The AI will automatically decline enquiries from outside these areas — no more wasted time quoting jobs you won't take."
+                hint="List every area you're willing to travel to. The AI will automatically decline enquiries from outside these areas. No more wasted time quoting jobs you won't take."
               >
                 <Input value={form.areas} onChange={set("areas")} placeholder="e.g. Sandton, Midrand, Fourways, Randburg, Centurion, Roodepoort" />
               </Field>
@@ -699,7 +699,7 @@ ${f.ai_never_say || "Not specified"}
               <Field
                 label="Brands or products you install or recommend"
                 optional
-                hint="When customers ask 'what brand do you use?' or 'do you use quality parts?' — the AI will answer with this."
+                hint="When customers ask 'what brand do you use?' or 'do you use quality parts?', the AI will answer with this."
               >
                 <Input value={form.brands_used} onChange={set("brands_used")} placeholder="e.g. Defy, Bosch, Crabtree, Legrand, Franke, Geberit" />
               </Field>
@@ -713,7 +713,7 @@ ${f.ai_never_say || "Not specified"}
             {step === 2 && <>
               <Field
                 label="List every service you offer"
-                hint="This is your AI's menu — it can only offer what's listed here. Add everything, even the small stuff. One service per line."
+                hint="This is your AI's full menu. It can only offer what's listed here. Add everything, even the small stuff. One service per line."
               >
                 <Textarea
                   value={form.services_offered}
@@ -726,7 +726,7 @@ ${f.ai_never_say || "Not specified"}
               <Field
                 label="What jobs do you NOT take on?"
                 optional
-                hint="Very important. This stops the AI from accidentally quoting or promising work you don't do — which wastes your time and disappoints clients."
+                hint="Very important. This stops the AI from accidentally quoting or promising work you don't do. No wasted time quoting, no disappointed clients."
               >
                 <Textarea
                   value={form.services_excluded}
@@ -881,7 +881,7 @@ ${f.ai_never_say || "Not specified"}
                 <Textarea
                   value={form.unique_selling_point}
                   onChange={set("unique_selling_point")}
-                  placeholder={"e.g.\n- 12 years in business, all certified with Wireman's licences\n- We send a photo of the completed job with every invoice\n- No hidden fees — the price we quote is the price you pay\n- 1-year workmanship guarantee on everything we do\n- We arrive on time or we call ahead — always"}
+                  placeholder={"e.g.\n- 12 years in business, all certified with Wireman's licences\n- We send a photo of the completed job with every invoice\n- No hidden fees. The price we quote is the price you pay\n- 1-year workmanship guarantee on everything we do\n- We arrive on time or we call ahead, always"}
                   rows={5}
                 />
               </Field>
@@ -913,14 +913,14 @@ ${f.ai_never_say || "Not specified"}
               </Field>
 
               <Field
-                label="What do customers say when they don't book — and how do you handle it?"
+                label="What do customers say when they don't book, and how do you handle it?"
                 optional
                 hint="This trains the AI to handle objections without losing the sale. Think about the excuses you hear most."
               >
                 <Textarea
                   value={form.common_objections}
                   onChange={set("common_objections")}
-                  placeholder={"Format: Objection → How to respond\n\n- 'You're too expensive' → Our price includes a 1-year guarantee. Cheap fixes often cost more in the long run.\n- 'Let me get another quote first' → Totally fine — just note that our availability fills up quickly. Want me to pencil in a slot while you decide?\n- 'Can you do it cheaper?' → We don't cut corners on safety, but we can talk through options when we assess the job."}
+                  placeholder={"Format: Objection → How to respond\n\n- 'You're too expensive' → Our price includes a 1-year guarantee. Cheap fixes often cost more in the long run.\n- 'Let me get another quote first' → Totally fine. Just note that our availability fills up quickly. Want me to pencil in a slot while you decide?\n- 'Can you do it cheaper?' → We don't cut corners on safety, but we can talk through options when we assess the job."}
                   rows={6}
                 />
               </Field>
@@ -979,7 +979,7 @@ ${f.ai_never_say || "Not specified"}
               <Field
                 label="Opening message for new customers"
                 optional
-                hint="The first thing your AI says when someone messages for the first time. Keep it warm and human — this is their first impression."
+                hint="The first thing your AI says when someone messages for the first time. Keep it warm and human. This is their first impression."
               >
                 <Textarea
                   value={form.ai_greeting}
@@ -1064,7 +1064,7 @@ ${f.ai_never_say || "Not specified"}
                 <Textarea
                   value={form.ai_never_say}
                   onChange={set("ai_never_say")}
-                  placeholder={"One rule per line:\n- Never mention competitor names\n- Never quote a fixed price for solar — always say 'we need to assess first'\n- Never confirm same-day availability without checking with me first\n- Never say 'I don't know' — always say 'let me find out for you'"}
+                  placeholder={"One rule per line:\n- Never mention competitor names\n- Never quote a fixed price for solar. Always say 'we need to assess first'\n- Never confirm same-day availability without checking with me first\n- Never say 'I don't know'. Always say 'let me find out for you'"}
                   rows={4}
                 />
               </Field>

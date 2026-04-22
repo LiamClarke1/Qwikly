@@ -228,7 +228,7 @@ function CampaignEditor({
             <Field label="Type">
               <Select value={goal} onChange={(e) => setGoal(e.target.value as Goal)}>
                 {(Object.keys(GOAL_META) as Goal[]).map((g) => (
-                  <option key={g} value={g}>{GOAL_META[g].label} — {GOAL_META[g].desc}</option>
+                  <option key={g} value={g}>{GOAL_META[g].label}: {GOAL_META[g].desc}</option>
                 ))}
               </Select>
             </Field>

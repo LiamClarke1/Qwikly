@@ -17,7 +17,7 @@ const outcomes = [
     label: "recovered in month one",
     body:
       "4 jobs booked after 6 p.m. that would have gone to the next contractor to reply.",
-    attr: "Thabo — Electrician, Johannesburg",
+    attr: "Thabo, Electrician, Johannesburg",
   },
   {
     stat: "30 sec",
@@ -38,7 +38,7 @@ const outcomes = [
     label: "never off, never late",
     body:
       "2 a.m. burst geyser. Sunday pool pump. Public holiday roof leak. You wake up to a booked job.",
-    attr: "no monthly fee — pay only on booking",
+    attr: "no monthly fee. Pay only on booking.",
   },
 ];
 
@@ -70,13 +70,13 @@ const howSteps = [
     stamp: "i.",
     title: "A lead messages in.",
     body:
-      "WhatsApp at 7 p.m. while you're finishing a job. Email on a Sunday morning. It doesn't matter when — Qwikly sees it first.",
+      "WhatsApp at 7 p.m. while you're finishing a job. Email on a Sunday morning. It doesn't matter when. Qwikly sees it first.",
   },
   {
     stamp: "ii.",
     title: "Qwikly replies in 30 seconds.",
     body:
-      "Not a chatbot script. A real conversation. It asks the right qualifying questions — job type, area, urgency — in the voice of your business.",
+      "Not a chatbot script. A real conversation. It asks the right qualifying questions: job type, area, and urgency. In the voice of your business.",
   },
   {
     stamp: "iii.",
@@ -127,7 +127,7 @@ const pricingIncludes = [
   "Quote follow-up sequences",
   "Dormant-lead revival at 30 days",
   "Reminders 24h and 1h before each job",
-  "Trade-specific AI — trained for your services",
+  "Trade-specific AI trained for your services",
   "Full conversation dashboard",
   "Google Calendar sync",
 ];
@@ -229,7 +229,7 @@ export default function Home() {
               <p className="text-lg md:text-xl text-ink-700 max-w-xl leading-relaxed">
                 Every WhatsApp. Every email. Answered in{" "}
                 <span className="underline-ember">30 seconds</span>, qualified, and
-                booked into your calendar — while you stay on the job. You pay
+                booked into your calendar while you stay on the job. You pay
                 only when a real appointment is locked in.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -295,7 +295,7 @@ export default function Home() {
               {/* Right — editorial caption + email */}
               <div className="lg:col-span-6 space-y-10">
                 <div>
-                  <p className="eyebrow text-ember mb-3">Reply — 30 s</p>
+                  <p className="eyebrow text-ember mb-3">Reply in 30 s</p>
                   <p className="font-display text-2xl md:text-3xl text-ink leading-tight max-w-md">
                     It reads the message, asks what you&rsquo;d ask, and{" "}
                     <em className="italic text-ember">books the slot</em>. The
@@ -341,7 +341,7 @@ export default function Home() {
 
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <div className="flex items-center justify-between mb-16 reveal-up">
-            <p className="eyebrow text-paper/60">02 — Outcomes</p>
+            <p className="eyebrow text-paper/60">02. Outcomes</p>
             <p className="eyebrow text-paper/60">Jobs, not features.</p>
           </div>
 
@@ -361,7 +361,7 @@ export default function Home() {
                 <p className="mt-6 text-base md:text-lg text-paper/80 max-w-md leading-relaxed">
                   {o.body}
                 </p>
-                <p className="mt-4 eyebrow text-paper/40">— {o.attr}</p>
+                <p className="mt-4 eyebrow text-paper/40">{o.attr}</p>
               </div>
             ))}
           </div>
@@ -384,7 +384,7 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             <div className="lg:col-span-7">
               <p className="eyebrow text-ink-500 mb-6 reveal-up">
-                03 — Every lost lead has a time
+                03. Every lost lead has a time
               </p>
               <h2 className="display-xl text-ink reveal-up">
                 <span className="italic font-light">At</span> 2:14 a.m.
@@ -407,7 +407,7 @@ export default function Home() {
                 <span className="text-ink font-medium">
                   R15,000 to R80,000 a month
                 </span>{" "}
-                to slow replies. Not to bad work, not to price — to the clock.
+                to slow replies. Not to bad work, not to price. Just to the clock.
               </p>
             </div>
 
@@ -428,7 +428,7 @@ export default function Home() {
                     </div>
                     <div className="bg-ember/90 rounded-2xl px-4 py-3 max-w-[85%] ml-auto">
                       <p className="text-paper leading-relaxed">
-                        Hi — sorry to hear. I can send someone out now. Can you
+                        Hi, sorry to hear. I can send someone out now. Can you
                         confirm the suburb and shut the mains for me?
                       </p>
                       <p className="text-paper/70 text-[0.65rem] mt-1 num">
@@ -443,7 +443,7 @@ export default function Home() {
                     </div>
                     <div className="bg-ember/90 rounded-2xl px-4 py-3 max-w-[85%] ml-auto">
                       <p className="text-paper leading-relaxed">
-                        Booked — 02:45 tonight. You&rsquo;ll get a confirmation
+                        Booked for 02:45 tonight. You&rsquo;ll get a confirmation
                         SMS + a photo of the tech when they&rsquo;re 5 min away.
                       </p>
                       <p className="text-paper/70 text-[0.65rem] mt-1 num">
@@ -471,7 +471,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-20">
             <div className="md:col-span-4">
-              <p className="eyebrow text-ink-500 mb-6 reveal-up">04 — The work</p>
+              <p className="eyebrow text-ink-500 mb-6 reveal-up">04. The work</p>
               <h2 className="display-lg text-ink reveal-up">
                 Four steps.
                 <br />
@@ -481,7 +481,7 @@ export default function Home() {
             <div className="md:col-span-7 md:col-start-6 md:pt-6">
               <p className="text-lg text-ink-700 leading-relaxed reveal-up">
                 Qwikly doesn&rsquo;t bolt a bot onto your WhatsApp. It learns your
-                services, your pricing, your service area, the way you speak — and
+                services, your pricing, your service area, the way you speak, and
                 then it works a full sales cycle, start to finish, without you
                 touching it.
               </p>
@@ -513,7 +513,7 @@ export default function Home() {
 
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <p className="eyebrow text-paper/60 mb-10 reveal-up">
-            05 — While you work
+            05. While you work
           </p>
           <div className="space-y-2 reveal-up">
             <p className="display-xl text-paper">At 07:48</p>
@@ -558,7 +558,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <div className="flex items-baseline justify-between mb-16 reveal-up">
             <div>
-              <p className="eyebrow text-ink-500 mb-4">06 — Proof</p>
+              <p className="eyebrow text-ink-500 mb-4">06. Proof</p>
               <h2 className="display-lg text-ink max-w-[16ch]">
                 Booked jobs,{" "}
                 <em className="italic font-light">not promises</em>.
@@ -596,7 +596,7 @@ export default function Home() {
       >
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <div className="flex items-baseline justify-between mb-16 reveal-up">
-            <p className="eyebrow text-ink-500">07 — Pricing</p>
+            <p className="eyebrow text-ink-500">07. Pricing</p>
             <p className="eyebrow text-ink-500">No subscription · No setup</p>
           </div>
 
@@ -666,7 +666,7 @@ export default function Home() {
         <div className="dot-grid absolute inset-0 opacity-60" />
 
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
-          <p className="eyebrow text-paper/60 mb-10 reveal-up">09 — Your move</p>
+          <p className="eyebrow text-paper/60 mb-10 reveal-up">09. Your move</p>
           <h2 className="display-huge text-paper reveal-up max-w-[16ch] mx-auto">
             Stop losing jobs to the{" "}
             <em className="italic font-light text-ember">first reply</em>.

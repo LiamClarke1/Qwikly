@@ -53,7 +53,7 @@ const comparisons = [
     title: "A WhatsApp auto-reply",
     cost: "Free, and it shows.",
     lines: [
-      "'We'll get back to you' — the customer knows",
+      "'We'll get back to you.' The customer knows.",
       "No qualification, no booking",
       "No follow-ups, ever",
       "Lead still goes to whoever replies first",
@@ -66,7 +66,7 @@ const comparisons = [
     cost: "8% per booked job",
     lines: [
       "On every day, every hour, every holiday",
-      "Qualifies and books — start to finish",
+      "Qualifies and books, start to finish",
       "WhatsApp and email, trained on your trade",
       "Follow-ups, no-show rescue, dormant revival",
       "Only earns when you earn",
@@ -99,7 +99,7 @@ export default function PricingPage() {
           </h1>
           <p className="mt-8 text-lg text-ink-700 max-w-xl leading-relaxed">
             No subscription. No setup fee. No contract. Qwikly takes 8% when a
-            booking lands in your calendar — not a cent before that.
+            booking lands in your calendar. Not a cent before that.
           </p>
         </div>
       </section>
@@ -146,7 +146,7 @@ export default function PricingPage() {
               </h2>
               <p className="mt-6 text-ink-700 leading-relaxed max-w-sm">
                 Type any service price you charge. See exactly what Qwikly costs
-                — and what you keep.
+                and what you keep.
               </p>
             </div>
 
@@ -219,8 +219,8 @@ export default function PricingPage() {
 
                 <p className="mt-6 text-xs text-ink-500 leading-relaxed">
                   During onboarding you list every service you offer and what
-                  you charge. Qwikly uses those prices when talking to leads —
-                  the fee always matches the specific job booked. Prices go up?
+                  you charge. Qwikly uses those prices when talking to leads,
+                  so the fee always matches the specific job booked. Prices go up?
                   Fees adjust. You stay in control.
                 </p>
               </div>
@@ -366,7 +366,7 @@ export default function PricingPage() {
                           c.kind === "highlight" ? "text-ember" : "text-ember"
                         }
                       >
-                        —
+                        ·
                       </span>
                       <span>{line}</span>
                     </li>

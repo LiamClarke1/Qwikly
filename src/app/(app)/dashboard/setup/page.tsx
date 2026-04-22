@@ -32,7 +32,7 @@ const BOOKING_PREF_OPTS = ["WhatsApp", "Call", "Either works"];
 const TONE_OPTS = [
   { value: "friendly_casual", label: "Friendly & Casual", description: "Warm, approachable, everyday language. Great for residential clients.", example: '"Hey! Sure thing, we can sort that for you. Let me check availability..."' },
   { value: "professional_formal", label: "Professional & Formal", description: "Precise, respectful, no small talk. Ideal for commercial work.", example: '"Good day. Thank you for your enquiry. I would be happy to assist."' },
-  { value: "warm_empathetic", label: "Warm & Empathetic", description: "Caring and reassuring. Perfect for emergencies or big expenses.", example: '"I completely understand — let\'s get this sorted for you right away."' },
+  { value: "warm_empathetic", label: "Warm & Empathetic", description: "Caring and reassuring. Perfect for emergencies or big expenses.", example: '"I completely understand, let\'s get this sorted for you right away."' },
   { value: "direct_efficient", label: "Direct & Efficient", description: "No fluff. Quick answers, straight to the booking.", example: '"Call-out: R450. Available tomorrow 8am. Book now?"' },
 ];
 const LANGUAGE_OPTS = ["English only", "English & Afrikaans", "English & Zulu", "English & Sotho", "Match the customer's language"];
@@ -342,7 +342,7 @@ function IntroView({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-base font-semibold text-fg">Fill it in myself</p>
-          <p className="text-tiny text-fg-muted mt-0.5">No website? No problem — scroll down and fill in your details manually.</p>
+          <p className="text-tiny text-fg-muted mt-0.5">No website? No problem. Scroll down and fill in your details manually.</p>
         </div>
         <ArrowRight className="w-4 h-4 text-fg-subtle group-hover:text-brand group-hover:translate-x-0.5 transition-all duration-200 shrink-0" />
       </button>
@@ -377,7 +377,7 @@ function IntroView({
           <span className="text-small font-semibold text-fg">Upload documents</span>
           <span className="text-tiny text-fg-muted">(optional)</span>
         </div>
-        <p className="text-tiny text-fg-muted">Certificates, price lists, service menus, brochures — PDF, DOC, or TXT. Max 3 MB each.</p>
+        <p className="text-tiny text-fg-muted">Certificates, price lists, service menus, brochures. PDF, DOC, or TXT. Max 3 MB each.</p>
 
         {/* Drop zone */}
         <div
@@ -870,7 +870,7 @@ export default function SetupPage() {
             <div className="min-w-0">
               <h1 className="text-h1 text-fg leading-tight">Connect your digital assistant</h1>
               <p className="text-small text-fg-muted mt-0.5">
-                {autoFillResult ? "Review what we found — edit anything." : "The more detail, the smarter your AI."}
+                {autoFillResult ? "Review what we found. Edit anything." : "The more detail, the smarter your AI."}
               </p>
             </div>
           </div>
@@ -948,7 +948,7 @@ export default function SetupPage() {
           {/* ── STEP 2 ── */}
           {step === 2 && (
             <div className="space-y-5">
-              <Field label="Every service you offer" hint="One per line — this is your AI's full menu.">
+              <Field label="Every service you offer" hint="One per line. This is your AI's full menu.">
                 <WTextarea value={form.services_offered} onChange={set("services_offered")} placeholder={"- Geyser replacement\n- DB board upgrade\n- Certificate of Compliance\n- Solar installation"} rows={8} />
               </Field>
               <Field label="Jobs you don't take on" optional hint="Prevents the AI from promising work you won't do.">

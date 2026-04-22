@@ -153,7 +153,7 @@ export default function OverviewPage() {
           <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
           <p className="text-small text-fg flex-1">
             <span className="font-semibold">{escalations.length} conversation{escalations.length > 1 ? "s" : ""} need your attention</span>
-            <span className="text-fg-muted"> — your digital assistant passed these to you. Reply manually to keep momentum.</span>
+            <span className="text-fg-muted">, your digital assistant passed these to you. Reply manually to keep momentum.</span>
           </p>
           <div className="flex gap-2">
             {escalations.slice(0, 2).map((c) => (

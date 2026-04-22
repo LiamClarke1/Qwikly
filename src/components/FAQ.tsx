@@ -22,7 +22,7 @@ const faqs = [
   {
     question: "Does Qwikly handle email leads too?",
     answer:
-      "Yes. Qwikly responds to email leads on behalf of your business using the same trade-specific AI. It replies, qualifies, checks your availability, and books the appointment — all in email. Every conversation is visible in your dashboard.",
+      "Yes. Qwikly responds to email leads on behalf of your business using the same trade-specific AI. It replies, qualifies, checks your availability, and books the appointment, all in email. Every conversation is visible in your dashboard.",
   },
   {
     question: "What happens if a customer goes quiet?",
@@ -47,12 +47,12 @@ const faqs = [
   {
     question: "How does the AI know about my business?",
     answer:
-      "During setup we walk through your services, pricing, service areas, and FAQs. The AI is trained on your specific trade — so every reply sounds like it came from you, not a robot. We have custom prompts for 10+ trades.",
+      "During setup we walk through your services, pricing, service areas, and FAQs. The AI is trained on your specific trade, so every reply sounds like it came from you, not a robot. We have custom prompts for 10+ trades.",
   },
   {
     question: "Will customers know it's an AI?",
     answer:
-      "Most won't. The AI uses natural, conversational language tailored to your brand voice and trade. If a customer ever asks directly, the AI will be transparent — but the goal is to feel like a helpful team member, not a chatbot.",
+      "Most won't. The AI uses natural, conversational language tailored to your brand voice and trade. If a customer ever asks directly, the AI will be transparent. But the goal is to feel like a helpful team member, not a chatbot.",
   },
   {
     question: "What if a lead asks something the AI can't answer?",
@@ -62,7 +62,7 @@ const faqs = [
   {
     question: "How long does setup take?",
     answer:
-      "Most businesses are live within 24 to 48 hours. We handle the heavy lifting — WhatsApp integration, email setup, calendar connection, AI training. You just answer a few questions about your services and availability.",
+      "Most businesses are live within 24 to 48 hours. We handle the heavy lifting: WhatsApp integration, email setup, calendar connection, and AI training. You just answer a few questions about your services and availability.",
   },
   {
     question: "How do I get started?",
@@ -83,7 +83,7 @@ export default function FAQ() {
       <div className="relative mx-auto max-w-site px-6 lg:px-10">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-16">
           <div className="md:col-span-5">
-            <p className="eyebrow text-ink-500 mb-6 reveal-up">08 — Answers</p>
+            <p className="eyebrow text-ink-500 mb-6 reveal-up">08. Answers</p>
             <h2 className="display-lg text-ink reveal-up">
               Ask us
               <br />

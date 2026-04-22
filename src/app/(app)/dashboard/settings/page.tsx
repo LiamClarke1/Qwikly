@@ -434,7 +434,7 @@ function PricingTab({ client, save, saving }: { client: Client; save: (p: Partia
       </Card>
 
       <Card>
-        <CardHeader title="Example prices" description="Give the AI ballpark figures to share with customers — not exact quotes." />
+        <CardHeader title="Example prices" description="Give the AI ballpark figures to share with customers, not exact quotes." />
         <Textarea
           value={form.example_prices}
           onChange={set("example_prices")}
@@ -572,7 +572,7 @@ function AITab({ client, save, saving }: { client: Client; save: (p: Partial<Cli
           </div>
           <div className="md:col-span-2">
             <Field label="Sign-off message">
-              <Input value={personality.ai_sign_off} onChange={setp("ai_sign_off")} placeholder="e.g. Thanks again — we look forward to helping you!" />
+              <Input value={personality.ai_sign_off} onChange={setp("ai_sign_off")} placeholder="e.g. Thanks again, we look forward to helping you!" />
             </Field>
           </div>
         </div>
@@ -642,7 +642,7 @@ function AITab({ client, save, saving }: { client: Client; save: (p: Partial<Cli
       <Card>
         <CardHeader
           title="Full system prompt"
-          description="Advanced — the raw instructions your AI runs on. Edited automatically when you save other tabs."
+          description="Advanced: the raw instructions your AI runs on. Edited automatically when you save other tabs."
         />
         <Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={16} placeholder="Your business setup answers will appear here after completing setup." />
       </Card>
@@ -794,7 +794,7 @@ function IntegrationsTab({ client, save, saving }: { client: Client; save: (p: P
               {[
                 "New bookings are added to your calendar as events",
                 "Your calendar shows inside the Qwikly booking view",
-                "No events are deleted or modified — read and write only",
+                "No events are deleted or modified. Read and write only.",
               ].map((t) => (
                 <div key={t} className="flex items-start gap-2">
                   <Check className="w-3.5 h-3.5 text-success mt-0.5 shrink-0" />
@@ -886,7 +886,7 @@ function KnowledgeTab({ clientId }: { clientId: string }) {
           <p className="text-body font-semibold text-fg">{articles.length === 0 ? "No answers yet" : "No matches"}</p>
           <p className="text-small text-fg-muted mt-1 max-w-sm mx-auto">
             {articles.length === 0
-              ? "Add a few common questions — opening hours, pricing, and how to book are good starting points."
+              ? "Add a few common questions. Opening hours, pricing, and how to book are good starting points."
               : "Try a different search."}
           </p>
           {articles.length === 0 && (

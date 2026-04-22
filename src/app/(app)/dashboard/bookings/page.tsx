@@ -340,7 +340,7 @@ export default function BookingsPage() {
                           isSelected ? "bg-brand/[0.03]" : "hover:bg-white/[0.015]"
                         )}
                         onClick={() => { if (items.length === 0) openAddForSlot(d, h); }}
-                        title={items.length === 0 ? `Add booking — ${DAY_LABELS[i]} ${d.getDate()} at ${h}:00` : undefined}
+                        title={items.length === 0 ? `Add booking: ${DAY_LABELS[i]} ${d.getDate()} at ${h}:00` : undefined}
                       >
                         {items.map((b) => (
                           <button
@@ -408,8 +408,8 @@ export default function BookingsPage() {
                           </div>
                         </td>
                         <td className="px-5 py-3 text-fg-muted num">{formatPhone(b.customer_phone)}</td>
-                        <td className="px-5 py-3 text-fg-muted">{b.job_type ?? "—"}</td>
-                        <td className="px-5 py-3 text-fg-muted">{b.area ?? "—"}</td>
+                        <td className="px-5 py-3 text-fg-muted">{b.job_type ?? "N/A"}</td>
+                        <td className="px-5 py-3 text-fg-muted">{b.area ?? "N/A"}</td>
                         <td className="px-5 py-3 text-fg-muted num">{formatDateTime(b.booking_datetime)}</td>
                         <td className="px-5 py-3"><Badge tone={TONE[b.status] ?? "neutral"} dot>{b.status}</Badge></td>
                       </tr>
@@ -461,11 +461,11 @@ export default function BookingsPage() {
                 <div className="panel !p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-small text-fg-muted">Job type</span>
-                    <span className="text-small text-fg font-medium">{active.job_type ?? "—"}</span>
+                    <span className="text-small text-fg font-medium">{active.job_type ?? "N/A"}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-small text-fg-muted flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" />Area</span>
-                    <span className="text-small text-fg font-medium">{active.area ?? "—"}</span>
+                    <span className="text-small text-fg font-medium">{active.area ?? "N/A"}</span>
                   </div>
                 </div>
               </div>

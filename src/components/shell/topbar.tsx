@@ -71,7 +71,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
             ? "bg-warning-soft border-warning/30 text-warning"
             : "bg-brand-soft border-brand/30 text-brand"
         )}
-        title={paused ? "AI is paused — click to resume" : "AI is on — click to pause"}
+        title={paused ? "AI is paused. Click to resume." : "AI is on. Click to pause."}
       >
         {paused ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
         <span className="hidden sm:inline">{paused ? "AI paused" : "AI on"}</span>

@@ -241,8 +241,8 @@ export default function LeadsPage() {
                         </div>
                       </td>
                       <td className="px-5 py-3 text-fg-muted num">{formatPhone(l.phone_number)}</td>
-                      <td className="px-5 py-3 text-fg-muted">{l.job_type ?? "—"}</td>
-                      <td className="px-5 py-3 text-fg-muted">{l.area ?? "—"}</td>
+                      <td className="px-5 py-3 text-fg-muted">{l.job_type ?? "N/A"}</td>
+                      <td className="px-5 py-3 text-fg-muted">{l.area ?? "N/A"}</td>
                       <td className="px-5 py-3 text-fg-muted num">{formatDate(l.created_at)}</td>
                       <td className="px-5 py-3"><Badge tone={stage.tone} dot>{stage.label}</Badge></td>
                       <td className="px-5 py-3"><ChevronRight className="w-4 h-4 text-fg-subtle" /></td>
