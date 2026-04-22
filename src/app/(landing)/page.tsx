@@ -379,27 +379,65 @@ export default function Home() {
       </section>
 
       {/* ─── WHY QWIKLY ─── */}
-      <section className="py-20 bg-bg-subtle">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14 reveal-up">
-            <h2 className="text-3xl md:text-4xl font-bold text-text-dark tracking-tight">
-              Built differently. For businesses that can&apos;t afford to miss a lead.
-            </h2>
+      <section id="why" className="relative overflow-hidden bg-black">
+        {/* Starfield */}
+        <div className="why-stars absolute inset-0 pointer-events-none" aria-hidden="true" />
+
+        {/* Blue center glow */}
+        <div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] rounded-full pointer-events-none"
+          style={{ background: "radial-gradient(ellipse, rgba(7,69,162,0.28) 0%, transparent 70%)" }}
+          aria-hidden="true"
+        />
+
+        <div className="relative mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+          {/* Mobile / tablet */}
+          <div className="lg:hidden py-24 reveal-up">
+            <div className="text-center mb-10">
+              <p className="why-hero-sm select-none pointer-events-none">Why?</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-blue-400 mt-2">Why Qwikly</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 reveal-stagger">
+              {whyCards.map(({ title, description }) => (
+                <div key={title} className="why-card">
+                  <h3 className="why-card-title">{title}</h3>
+                  <p className="why-card-desc">{description}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 reveal-stagger">
-            {whyCards.map(({ icon: Icon, title, description, iconBg, iconBorder, iconColor }) => (
-              <div
-                key={title}
-                className="bg-white rounded-2xl p-7 border border-border-light hover:border-accent/25 hover:shadow-lg transition-all duration-300 cursor-default group"
-              >
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${iconBg} border ${iconBorder}`}>
-                  <Icon className={`w-5 h-5 ${iconColor}`} />
-                </div>
-                <h3 className="text-lg font-bold text-text-dark mb-2">{title}</h3>
-                <p className="text-text-muted-dark leading-relaxed text-sm">{description}</p>
-              </div>
-            ))}
+          {/* Desktop */}
+          <div className="hidden lg:block relative" style={{ height: "680px" }}>
+            {/* Giant WHY? centered */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center select-none pointer-events-none z-10">
+              <p className="why-hero-lg">Why?</p>
+              <p className="text-sm font-bold uppercase tracking-widest text-blue-400 -mt-2">Why Qwikly</p>
+            </div>
+
+            {/* Top-left */}
+            <div className="why-card absolute z-20" style={{ top: 90, left: 0, width: 310 }}>
+              <h3 className="why-card-title">{whyCards[0].title}</h3>
+              <p className="why-card-desc">{whyCards[0].description}</p>
+            </div>
+
+            {/* Bottom-left */}
+            <div className="why-card absolute z-20" style={{ bottom: 90, left: 0, width: 310 }}>
+              <h3 className="why-card-title">{whyCards[1].title}</h3>
+              <p className="why-card-desc">{whyCards[1].description}</p>
+            </div>
+
+            {/* Top-right */}
+            <div className="why-card absolute z-20" style={{ top: 90, right: 0, width: 310 }}>
+              <h3 className="why-card-title">{whyCards[2].title}</h3>
+              <p className="why-card-desc">{whyCards[2].description}</p>
+            </div>
+
+            {/* Bottom-right */}
+            <div className="why-card absolute z-20" style={{ bottom: 90, right: 0, width: 310 }}>
+              <h3 className="why-card-title">{whyCards[3].title}</h3>
+              <p className="why-card-desc">{whyCards[3].description}</p>
+            </div>
           </div>
         </div>
       </section>
