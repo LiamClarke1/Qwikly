@@ -12,16 +12,44 @@ import {
   Settings,
   Sparkles,
   LogOut,
+  Contact,
+  Megaphone,
+  Zap,
+  BookOpen,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
-const nav = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/conversations", label: "Conversations", icon: MessageSquare, badge: "live" },
-  { href: "/dashboard/leads", label: "Leads", icon: Users },
-  { href: "/dashboard/bookings", label: "Bookings", icon: CalendarCheck },
-  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings },
+type NavIcon = React.ComponentType<{ className?: string }>;
+type NavItem = { href: string; label: string; icon: NavIcon; badge?: string };
+type NavSection = { title?: string; items: NavItem[] };
+
+const sections: NavSection[] = [
+  {
+    items: [
+      { href: "/dashboard", label: "Overview", icon: LayoutDashboard as NavIcon },
+      { href: "/dashboard/conversations", label: "Conversations", icon: MessageSquare as NavIcon, badge: "live" },
+      { href: "/dashboard/contacts", label: "Contacts", icon: Contact as NavIcon },
+      { href: "/dashboard/leads", label: "Leads", icon: Users as NavIcon },
+      { href: "/dashboard/bookings", label: "Bookings", icon: CalendarCheck as NavIcon },
+    ],
+  },
+  {
+    title: "Growth",
+    items: [
+      { href: "/dashboard/campaigns", label: "Campaigns", icon: Megaphone as NavIcon },
+      { href: "/dashboard/automations", label: "Automations", icon: Zap as NavIcon },
+      { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 as NavIcon },
+    ],
+  },
+  {
+    title: "Assistant",
+    items: [
+      { href: "/dashboard/knowledge", label: "Knowledge", icon: BookOpen as NavIcon },
+    ],
+  },
+  {
+    items: [{ href: "/dashboard/settings", label: "Settings", icon: Settings as NavIcon }],
+  },
 ];
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -49,36 +77,45 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </Link>
       </div>
 
-      <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto scrollbar-thin">
-        {nav.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className={cn(
-                "group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-body font-medium transition-all duration-150 cursor-pointer",
-                active
-                  ? "bg-white/[0.06] text-fg shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
-                  : "text-fg-muted hover:text-fg hover:bg-white/[0.03]"
-              )}
-            >
-              {active && (
-                <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-brand rounded-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-              )}
-              <Icon className={cn("w-[18px] h-[18px]", active ? "text-brand" : "text-fg-subtle group-hover:text-fg-muted")} />
-              <span>{item.label}</span>
-              {item.badge && (
-                <span className="ml-auto inline-flex items-center gap-1 text-tiny font-semibold text-brand">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse-soft" />
-                  {item.badge}
-                </span>
-              )}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 px-3 space-y-4 overflow-y-auto scrollbar-thin pb-4">
+        {sections.map((section, i) => (
+          <div key={i} className="space-y-0.5">
+            {section.title && (
+              <p className="px-3 pt-2 pb-1 text-tiny uppercase tracking-wider font-semibold text-fg-subtle">
+                {section.title}
+              </p>
+            )}
+            {section.items.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onNavigate}
+                  className={cn(
+                    "group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-body font-medium transition-all duration-150 cursor-pointer",
+                    active
+                      ? "bg-white/[0.06] text-fg shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
+                      : "text-fg-muted hover:text-fg hover:bg-white/[0.03]"
+                  )}
+                >
+                  {active && (
+                    <span className="absolute left-0 top-2 bottom-2 w-0.5 bg-brand rounded-full shadow-[0_0_10px_rgba(232,90,44,0.5)]" />
+                  )}
+                  <Icon className={cn("w-[18px] h-[18px]", active ? "text-brand" : "text-fg-subtle group-hover:text-fg-muted")} />
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <span className="ml-auto inline-flex items-center gap-1 text-tiny font-semibold text-brand">
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse-soft" />
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       <div className="p-3 m-3 rounded-2xl bg-grad-mesh border border-line relative overflow-hidden">

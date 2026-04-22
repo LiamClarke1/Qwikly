@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import type { MessageParam } from "@anthropic-ai/sdk/resources/messages";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// ─── Claude Prompt ────────────────────────────────────────────────────────────
+// ─── Prompts ──────────────────────────────────────────────────────────────────
 
-const SYSTEM = `You are a business data extraction specialist for South African service businesses. Extract every piece of useful information from the provided website content. Return ONLY valid JSON — no markdown, no explanation, just the raw JSON object.`;
+const SYSTEM = `You are a business data extraction specialist for South African service businesses. Extract every piece of useful information from the provided content. Return ONLY valid JSON — no markdown, no explanation, just the raw JSON object.`;
 
-const buildPrompt = (content: string) => `You have been given the full text content scraped from multiple pages of a South African service business website. Extract every useful detail and return ONLY this JSON structure. Use "" for fields you cannot find. Never invent data — only use what is explicitly stated.
-
-{
+const JSON_SHAPE = `{
   "business_name": "",
   "owner_name": "",
   "trade": "",
@@ -35,28 +34,30 @@ const buildPrompt = (content: string) => `You have been given the full text cont
   "guarantees": "",
   "unique_selling_point": "",
   "common_questions": ""
-}
+}`;
 
-Field rules:
+const FIELD_RULES = `Field rules:
 - "trade": must be exactly one of: Electrician, Plumber, Roofer, Solar Installer, Pest Control, Aircon / HVAC, Pool Cleaning, Landscaper, Garage Doors, Security, Other
 - "after_hours": must be exactly one of: Yes, No, Depends on the job — or ""
 - "charge_type": must be exactly one of: Call-out fee + labour, Per job quote, Hourly rate, Mix of the above — or ""
 - "free_quotes": must be exactly one of: Yes, No, Only for big jobs — or ""
-- "services_offered": bullet list, one per line starting "- ", extract every single service mentioned anywhere on the site
+- "services_offered": bullet list, one per line starting "- ", extract every single service mentioned
 - "example_prices": bullet list "- Service name: R amount" — extract every price mentioned
 - "areas": all suburbs, cities, regions mentioned as service areas, comma-separated
 - "certifications": every accreditation, registration, licence, membership, award mentioned
 - "guarantees": every guarantee, warranty, promise mentioned
-- "unique_selling_point": combine all value propositions, trust signals, years of experience, team size, differentiators
-- "common_questions": every FAQ or question the site answers, as a bullet list
-- "payment_methods": all payment options mentioned (cash, EFT, card, etc.)
+- "unique_selling_point": combine all value propositions, trust signals, years of experience, differentiators
+- "common_questions": every FAQ or question answered, as a bullet list
+- "payment_methods": all payment options (cash, EFT, card, etc.)
 - "working_hours": exact hours if stated
 - "team_size": number of staff, technicians, vehicles if mentioned
 
-Be thorough. If something appears on any page of the site, capture it.
+Be thorough. Capture everything explicitly stated. Never invent data.`;
 
-WEBSITE CONTENT (${content.length} characters from multiple pages):
-${content}`;
+const buildWebPrompt = (content: string) =>
+  `You have been given text scraped from a South African service business website. Extract every useful detail and return ONLY this JSON:\n\n${JSON_SHAPE}\n\n${FIELD_RULES}\n\nWEBSITE CONTENT (${content.length} characters from multiple pages):\n${content}`;
+
+const PDF_PROMPT = `Extract every business detail from the attached documents and return ONLY this JSON structure. Use "" for fields you cannot find. Never invent data — only use what is explicitly stated.\n\n${JSON_SHAPE}\n\n${FIELD_RULES}`;
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -83,8 +84,6 @@ const BROWSER_HEADERS = {
   "Upgrade-Insecure-Requests": "1",
 };
 
-// ─── Link extraction & scoring ────────────────────────────────────────────────
-
 function extractInternalLinks(html: string, baseUrl: string): string[] {
   const { hostname, origin } = new URL(baseUrl);
   const linkRegex = /href=["']([^"'#?][^"']*?)["']/gi;
@@ -94,18 +93,14 @@ function extractInternalLinks(html: string, baseUrl: string): string[] {
   for (const match of Array.from(html.matchAll(linkRegex))) {
     const href = match[1].trim();
     if (!href || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("javascript:")) continue;
-
     try {
       const abs = new URL(href, origin).href.split("?")[0].split("#")[0];
       if (new URL(abs).hostname !== hostname) continue;
       if (seen.has(abs)) continue;
       seen.add(abs);
       links.push(abs);
-    } catch {
-      // skip invalid
-    }
+    } catch { /* skip invalid */ }
   }
-
   return links;
 }
 
@@ -121,7 +116,6 @@ function scoreLink(url: string): number {
   if (p.match(/\/(product|products|equipment|brands)/)) return 10;
   if (p.match(/\/(testimonial|reviews|feedback|clients)/)) return 9;
   if (p.match(/\/(work|projects|portfolio|gallery)/)) return 6;
-  // Deprioritise
   if (p.match(/\/(blog|news|article|post|media|press)/)) return -5;
   if (p.match(/\/(privacy|terms|cookie|legal|disclaimer)/)) return -10;
   if (p.match(/\/(cart|checkout|login|register|account|wp-admin)/)) return -20;
@@ -129,198 +123,167 @@ function scoreLink(url: string): number {
   return 3;
 }
 
-// ─── Fetch strategies ─────────────────────────────────────────────────────────
-
 async function tryFetch(url: string, timeoutMs = 8000): Promise<string | null> {
   try {
-    const res = await fetch(url, {
-      headers: BROWSER_HEADERS,
-      signal: AbortSignal.timeout(timeoutMs),
-      redirect: "follow",
-    });
+    const res = await fetch(url, { headers: BROWSER_HEADERS, signal: AbortSignal.timeout(timeoutMs), redirect: "follow" });
     if (!res.ok) return null;
-    const html = await res.text();
-    return html;
-  } catch {
-    return null;
-  }
+    return await res.text();
+  } catch { return null; }
 }
 
 async function tryWayback(url: string): Promise<string | null> {
   try {
-    const availRes = await fetch(
-      `https://archive.org/wayback/available?url=${encodeURIComponent(url)}`,
-      { signal: AbortSignal.timeout(6000) }
-    );
+    const availRes = await fetch(`https://archive.org/wayback/available?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(6000) });
     if (!availRes.ok) return null;
-
-    const data = await availRes.json() as {
-      archived_snapshots?: { closest?: { url?: string; available?: boolean } };
-    };
-
+    const data = await availRes.json() as { archived_snapshots?: { closest?: { url?: string; available?: boolean } } };
     const snapshotUrl = data?.archived_snapshots?.closest?.url;
     if (!snapshotUrl || !data?.archived_snapshots?.closest?.available) return null;
-
-    const snapRes = await fetch(snapshotUrl, {
-      headers: BROWSER_HEADERS,
-      signal: AbortSignal.timeout(10000),
-    });
+    const snapRes = await fetch(snapshotUrl, { headers: BROWSER_HEADERS, signal: AbortSignal.timeout(10000) });
     if (!snapRes.ok) return null;
-
     const html = await snapRes.text();
     return html.replace(/<!-- BEGIN WAYBACK[\s\S]*?END WAYBACK[^>]*?-->/gi, "");
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 async function tryAllOrigins(url: string): Promise<string | null> {
   try {
-    const res = await fetch(
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-      { signal: AbortSignal.timeout(12000) }
-    );
+    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, { signal: AbortSignal.timeout(12000) });
     if (!res.ok) return null;
     return await res.text();
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 async function tryCorsProxy(url: string): Promise<string | null> {
   try {
-    const res = await fetch(
-      `https://corsproxy.io/?${encodeURIComponent(url)}`,
-      { headers: BROWSER_HEADERS, signal: AbortSignal.timeout(12000) }
-    );
+    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`, { headers: BROWSER_HEADERS, signal: AbortSignal.timeout(12000) });
     if (!res.ok) return null;
     return await res.text();
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 async function tryThingProxy(url: string): Promise<string | null> {
   try {
-    const res = await fetch(
-      `https://thingproxy.freeboard.io/fetch/${url}`,
-      { signal: AbortSignal.timeout(12000) }
-    );
+    const res = await fetch(`https://thingproxy.freeboard.io/fetch/${url}`, { signal: AbortSignal.timeout(12000) });
     if (!res.ok) return null;
     return await res.text();
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
-// Fetch DuckDuckGo search snippets for a domain — works even on fully blocked sites
 async function tryDuckDuckGoSnippets(domain: string): Promise<string | null> {
   try {
-    const queries = [
-      `"${domain}" services pricing`,
-      `site:${domain}`,
-    ];
+    const queries = [`"${domain}" services pricing`, `site:${domain}`];
     const parts: string[] = [];
-
     for (const q of queries) {
-      const res = await fetch(
-        `https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}&kl=za-en`,
-        {
-          headers: {
-            ...BROWSER_HEADERS,
-            "Accept": "text/html",
-            "Referer": "https://duckduckgo.com/",
-          },
-          signal: AbortSignal.timeout(10000),
-        }
-      );
+      const res = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(q)}&kl=za-en`, {
+        headers: { ...BROWSER_HEADERS, "Accept": "text/html", "Referer": "https://duckduckgo.com/" },
+        signal: AbortSignal.timeout(10000),
+      });
       if (!res.ok) continue;
       const html = await res.text();
-      // Extract result snippets — DDG wraps them in .result__snippet
       const snippetMatches = Array.from(html.matchAll(/class="result__snippet"[^>]*>([\s\S]*?)<\/a>/gi));
       const titleMatches = Array.from(html.matchAll(/class="result__title"[^>]*>([\s\S]*?)<\/a>/gi));
-      const snippets = [...titleMatches, ...snippetMatches]
-        .map((m) => stripHtml(m[1]).trim())
-        .filter((s) => s.length > 20);
+      const snippets = [...titleMatches, ...snippetMatches].map((m) => stripHtml(m[1]).trim()).filter((s) => s.length > 20);
       if (snippets.length > 0) parts.push(snippets.join("\n"));
     }
-
     return parts.length > 0 ? `Search snippets for ${domain}:\n${parts.join("\n\n")}` : null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 async function fetchPage(url: string): Promise<{ html: string; text: string } | null> {
   let html: string | null = null;
-
   html = await tryFetch(url);
   if (!html || html.length < 100) html = await tryWayback(url);
   if (!html || html.length < 100) html = await tryAllOrigins(url);
   if (!html || html.length < 100) html = await tryCorsProxy(url);
   if (!html || html.length < 100) html = await tryThingProxy(url);
   if (!html || html.length < 100) return null;
-
   const text = stripHtml(html);
   if (text.length < 30) return null;
-
   return { html, text };
 }
-
-// ─── Full site crawl ──────────────────────────────────────────────────────────
 
 async function crawlSite(rawUrl: string): Promise<string> {
   const baseUrl = rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`;
   const rootUrl = (() => { try { const u = new URL(baseUrl); return `${u.protocol}//${u.hostname}`; } catch { return baseUrl; } })();
   const domain = (() => { try { return new URL(baseUrl).hostname; } catch { return baseUrl; } })();
 
-  // 1. Try the given URL, then root domain as fallback
   let seed = await fetchPage(baseUrl);
   if (!seed && baseUrl !== rootUrl) seed = await fetchPage(rootUrl);
 
-  // 2. If all page fetches failed, fall back to DuckDuckGo snippets
   if (!seed) {
     const snippets = await tryDuckDuckGoSnippets(domain);
-    if (snippets && snippets.length > 100) {
-      console.log(`[crawl] Using DuckDuckGo snippets for ${domain}`);
-      return snippets.slice(0, 28000);
-    }
+    if (snippets && snippets.length > 100) return snippets.slice(0, 28000);
     throw new Error("SEED_FAILED");
   }
 
-  // 2. Extract and score internal links
   const allLinks = extractInternalLinks(seed.html, baseUrl);
   const scored = allLinks
     .map((url) => ({ url, score: scoreLink(url) }))
     .filter((l) => l.score > 0)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 8) // fetch up to 8 additional pages
+    .slice(0, 8)
     .map((l) => l.url);
 
-  console.log(`[crawl] Seed: ${baseUrl} | Found ${allLinks.length} links | Fetching: ${scored.length} pages`);
+  const pageResults = await Promise.allSettled(scored.map((url) => fetchPage(url)));
 
-  // 3. Fetch additional pages in parallel
-  const pageResults = await Promise.allSettled(
-    scored.map((url) => fetchPage(url))
-  );
-
-  // 4. Combine all text
-  const parts: string[] = [];
-
-  parts.push(`\n=== PAGE: ${baseUrl} ===\n${seed.text.slice(0, 3000)}`);
-
+  const parts: string[] = [`\n=== PAGE: ${baseUrl} ===\n${seed.text.slice(0, 3000)}`];
   pageResults.forEach((result, i) => {
     if (result.status === "fulfilled" && result.value) {
-      const url = scored[i];
-      const text = result.value.text.slice(0, 2500);
-      parts.push(`\n=== PAGE: ${url} ===\n${text}`);
+      parts.push(`\n=== PAGE: ${scored[i]} ===\n${result.value.text.slice(0, 2500)}`);
     }
   });
 
-  const combined = parts.join("\n\n");
-  console.log(`[crawl] Total content: ${combined.length} chars from ${parts.length} pages`);
+  return parts.join("\n\n").slice(0, 28000);
+}
 
-  return combined.slice(0, 28000);
+// ─── Claude call helper ───────────────────────────────────────────────────────
+
+interface UploadedFile {
+  base64: string;
+  mediaType: string;
+  name: string;
+}
+
+async function runClaude(textContent: string, files: UploadedFile[]): Promise<Record<string, string>> {
+  const hasFiles = files.length > 0;
+
+  const userMessage: MessageParam = {
+    role: "user",
+    content: [
+      ...files.map((f) => ({
+        type: "document" as const,
+        source: { type: "base64" as const, media_type: "application/pdf" as const, data: f.base64 },
+      })),
+      {
+        type: "text" as const,
+        text: hasFiles && !textContent ? PDF_PROMPT : buildWebPrompt(textContent),
+      },
+    ],
+  };
+
+  const message = await client.messages.create({
+    model: hasFiles ? "claude-sonnet-4-6" : "claude-haiku-4-5-20251001",
+    max_tokens: 2500,
+    system: SYSTEM,
+    messages: [userMessage],
+  });
+
+  const raw = (message.content[0] as { type: string; text: string }).text.trim();
+  const cleaned = raw.replace(/^```json?\n?/i, "").replace(/\n?```$/i, "").trim();
+
+  let extracted: Record<string, string>;
+  try {
+    extracted = JSON.parse(cleaned);
+  } catch {
+    console.error("JSON parse failed:", raw.slice(0, 500));
+    throw new Error("PARSE_FAILED");
+  }
+
+  const safe: Record<string, string> = {};
+  for (const [k, v] of Object.entries(extracted)) {
+    safe[k] = typeof v === "string" ? v : String(v ?? "");
+  }
+  return safe;
 }
 
 // ─── Main handler ─────────────────────────────────────────────────────────────
@@ -330,73 +293,55 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "AI service not configured." }, { status: 503 });
   }
 
-  let body: { url?: string; fileText?: string };
+  let body: { url?: string; fileText?: string; files?: UploadedFile[] };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const { url, fileText } = body;
-  if (!url && !fileText) {
-    return NextResponse.json({ error: "Provide a URL or text content." }, { status: 400 });
+  const { url, fileText, files = [] } = body;
+
+  if (!url && !fileText && files.length === 0) {
+    return NextResponse.json({ error: "Provide a URL, files, or text content." }, { status: 400 });
   }
 
-  let content = "";
+  let textContent = "";
 
   if (url) {
     try {
-      content = await crawlSite(url);
+      textContent = await crawlSite(url);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg === "SEED_FAILED") {
-        return NextResponse.json(
-          { error: "Could not load that website after trying multiple methods. Try the 'Paste your info' option — copy text from their About or Services page and paste it in." },
-          { status: 422 }
-        );
+        // If we also have files, proceed with files only
+        if (files.length === 0 && !fileText) {
+          return NextResponse.json(
+            { error: "Could not load that website. Try uploading a PDF or using the 'Paste your info' option instead." },
+            { status: 422 }
+          );
+        }
+      } else {
+        if (files.length === 0 && !fileText) {
+          return NextResponse.json(
+            { error: "Something went wrong fetching the site. Try uploading a PDF instead." },
+            { status: 422 }
+          );
+        }
       }
-      return NextResponse.json(
-        { error: "Something went wrong fetching the site. Try the Paste option instead." },
-        { status: 422 }
-      );
     }
   } else if (fileText) {
-    content = fileText.slice(0, 28000);
-  }
-
-  if (!content.trim()) {
-    return NextResponse.json({ error: "No content found. Try the Paste option." }, { status: 422 });
+    textContent = fileText.slice(0, 28000);
   }
 
   try {
-    const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 2500,
-      system: SYSTEM,
-      messages: [{ role: "user", content: buildPrompt(content) }],
-    });
-
-    const raw = (message.content[0] as { type: string; text: string }).text.trim();
-    const cleaned = raw.replace(/^```json?\n?/i, "").replace(/\n?```$/i, "").trim();
-
-    let extracted: Record<string, string>;
-    try {
-      extracted = JSON.parse(cleaned);
-    } catch {
-      console.error("JSON parse failed:", raw.slice(0, 500));
-      return NextResponse.json(
-        { error: "AI couldn't structure the extracted data. Try pasting content directly." },
-        { status: 422 }
-      );
-    }
-
-    const safe: Record<string, string> = {};
-    for (const [k, v] of Object.entries(extracted)) {
-      safe[k] = typeof v === "string" ? v : String(v ?? "");
-    }
-
-    return NextResponse.json({ data: safe });
+    const data = await runClaude(textContent, files);
+    return NextResponse.json({ data });
   } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "";
+    if (msg === "PARSE_FAILED") {
+      return NextResponse.json({ error: "AI couldn't structure the data. Try adding more detail or pasting content directly." }, { status: 422 });
+    }
     console.error("Anthropic error:", err);
     return NextResponse.json({ error: "AI error. Please fill in manually." }, { status: 500 });
   }

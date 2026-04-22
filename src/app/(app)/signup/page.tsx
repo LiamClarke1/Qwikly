@@ -4,10 +4,12 @@ export const dynamic = "force-dynamic";
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Eye, EyeOff, MessageSquare, Zap, Calendar, CheckCircle } from "lucide-react";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -31,7 +33,7 @@ export default function SignupPage() {
 
     setLoading(true);
 
-    const { error: authError } = await supabase.auth.signUp({
+    const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -40,11 +42,27 @@ export default function SignupPage() {
     });
 
     if (authError) {
-      setError(authError.message);
+      // Raw Supabase error messages aren't user-friendly — translate them
+      const msg = authError.message.toLowerCase();
+      if (msg.includes("email") && (msg.includes("send") || msg.includes("confirm"))) {
+        setError("We couldn't send a confirmation email right now. Please try again in a few minutes, or contact support.");
+      } else if (msg.includes("already registered") || msg.includes("already exists") || msg.includes("user already")) {
+        setError("An account with this email already exists. Try signing in instead.");
+      } else {
+        setError(authError.message);
+      }
       setLoading(false);
       return;
     }
 
+    // Email confirmation is disabled in Supabase — session returned immediately
+    if (data.session) {
+      router.push("/dashboard/setup");
+      return;
+    }
+
+    // Email confirmation is enabled — user needs to verify
+    setLoading(false);
     setDone(true);
   };
 

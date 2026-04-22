@@ -24,6 +24,7 @@ import { Avatar } from "@/components/ui/avatar";
 import { Sparkline } from "@/components/charts/sparkline";
 import { EmptyState, Skeleton } from "@/components/ui/empty";
 import { PageHeader } from "@/components/ui/page";
+import { OnboardingChecklist } from "@/components/shell/onboarding-checklist";
 import { formatTime, formatDateTime, timeAgo, formatZAR } from "@/lib/format";
 import { useClient } from "@/lib/use-client";
 import { useUser } from "@/lib/use-user";
@@ -57,6 +58,7 @@ export default function OverviewPage() {
   const [recentConvos, setRecentConvos] = useState<Convo[]>([]);
   const [bookingTrend, setBookingTrend] = useState<number[]>([]);
   const [convoTrend, setConvoTrend] = useState<number[]>([]);
+  const [kbCount, setKbCount] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -67,7 +69,7 @@ export default function OverviewPage() {
       const start14 = new Date();
       start14.setDate(start14.getDate() - 13);
 
-      const [bC, cC, esc, today, recC, trendB, trendC] = await Promise.all([
+      const [bC, cC, esc, today, recC, trendB, trendC, kb] = await Promise.all([
         supabase.from("bookings").select("*", { count: "exact", head: true }).gte("created_at", startMonth),
         supabase.from("conversations").select("*", { count: "exact", head: true }).gte("created_at", startMonth),
         supabase.from("conversations").select("*").eq("status", "escalated").order("updated_at", { ascending: false }).limit(3),
@@ -75,6 +77,7 @@ export default function OverviewPage() {
         supabase.from("conversations").select("*").order("updated_at", { ascending: false }).limit(6),
         supabase.from("bookings").select("created_at").gte("created_at", start14.toISOString()),
         supabase.from("conversations").select("created_at").gte("created_at", start14.toISOString()),
+        supabase.from("kb_articles").select("*", { count: "exact", head: true }),
       ]);
 
       setBookingsCount(bC.count ?? 0);
@@ -97,6 +100,7 @@ export default function OverviewPage() {
       });
       setBookingTrend(buckets14);
       setConvoTrend(bucketsConv);
+      setKbCount(kb.count ?? 0);
       setLoading(false);
     })();
   }, []);
@@ -140,26 +144,8 @@ export default function OverviewPage() {
         }
       />
 
-      {/* Setup banner — shown when onboarding not complete */}
-      {!loading && client && !client.onboarding_complete && (
-        <Link href="/dashboard/setup" className="block mb-4 group">
-          <div className="px-5 py-4 rounded-xl bg-grad-brand border border-brand/30 flex items-center gap-4 hover:opacity-90 transition-opacity duration-150">
-            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-              <Bot className="w-5 h-5 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-small font-bold text-white">Connect your digital assistant</p>
-              <p className="text-tiny text-white/70 mt-0.5">
-                Answer a few questions so your AI knows your business, pricing, and how to speak to your customers.
-              </p>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0 bg-white/15 px-3 py-1.5 rounded-lg">
-              <span className="text-tiny font-semibold text-white">Start setup</span>
-              <ChevronRight className="w-3.5 h-3.5 text-white" />
-            </div>
-          </div>
-        </Link>
-      )}
+      {/* Six-step onboarding checklist */}
+      {!loading && <OnboardingChecklist client={client} kbCount={kbCount} />}
 
       {/* Attention banner */}
       {escalations.length > 0 && (
@@ -167,7 +153,7 @@ export default function OverviewPage() {
           <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
           <p className="text-small text-fg flex-1">
             <span className="font-semibold">{escalations.length} conversation{escalations.length > 1 ? "s" : ""} need your attention</span>
-            <span className="text-fg-muted"> — the AI escalated these. Reply manually to keep momentum.</span>
+            <span className="text-fg-muted"> — your digital assistant passed these to you. Reply manually to keep momentum.</span>
           </p>
           <div className="flex gap-2">
             {escalations.slice(0, 2).map((c) => (

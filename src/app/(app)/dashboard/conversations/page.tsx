@@ -19,6 +19,7 @@ import {
   AlertTriangle,
   Loader2,
   Inbox,
+  Mail,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Avatar } from "@/components/ui/avatar";
@@ -33,6 +34,7 @@ interface Convo {
   id: string;
   customer_name: string | null;
   customer_phone: string;
+  channel?: "whatsapp" | "email" | null;
   status: "active" | "completed" | "escalated";
   ai_paused?: boolean;
   notes?: string | null;
@@ -52,6 +54,8 @@ interface Message {
 
 const FILTERS = [
   { id: "all", label: "All" },
+  { id: "whatsapp", label: "WhatsApp" },
+  { id: "email", label: "Email" },
   { id: "needs", label: "Needs reply" },
   { id: "active", label: "Active" },
   { id: "escalated", label: "Escalated" },
@@ -60,10 +64,12 @@ const FILTERS = [
 type FilterId = (typeof FILTERS)[number]["id"];
 
 const TEMPLATES = [
-  { title: "On my way", body: "Hi! I'm on my way and should be with you in about 20 minutes." },
-  { title: "Quote ready", body: "Hey, I've put a quote together for you. Want me to WhatsApp it through?" },
-  { title: "Confirm appt", body: "Just confirming our appointment. Reply YES to lock it in or suggest a new time." },
-  { title: "Follow up", body: "Hi, following up on your enquiry. Still keen for me to come through?" },
+  { title: "On my way", body: "Hi! I'm on my way and should be with you in about 20 minutes.", channel: "whatsapp" },
+  { title: "Quote ready", body: "Hey, I've put a quote together for you. Want me to WhatsApp it through?", channel: "whatsapp" },
+  { title: "Confirm appt", body: "Just confirming our appointment. Reply YES to lock it in or suggest a new time.", channel: "both" },
+  { title: "Follow up", body: "Hi, following up on your enquiry. Still keen for me to come through?", channel: "both" },
+  { title: "Email quote", body: "Hi, thanks for your enquiry. I've attached a quote for you to review. Please reply if you'd like to go ahead or have any questions.", channel: "email" },
+  { title: "Email confirm", body: "Hi, just confirming your appointment. Please reply to confirm or let me know if you need to reschedule.", channel: "email" },
 ];
 
 export default function ConversationsPage() {
@@ -138,7 +144,9 @@ export default function ConversationsPage() {
 
   const filtered = useMemo(() => {
     let list = convos;
-    if (filter === "needs") list = list.filter((c) => c.status === "escalated" || c.ai_paused);
+    if (filter === "whatsapp") list = list.filter((c) => !c.channel || c.channel === "whatsapp");
+    else if (filter === "email") list = list.filter((c) => c.channel === "email");
+    else if (filter === "needs") list = list.filter((c) => c.status === "escalated" || c.ai_paused);
     else if (filter !== "all") list = list.filter((c) => c.status === filter);
     if (search.trim()) {
       const q = search.toLowerCase();
@@ -154,6 +162,8 @@ export default function ConversationsPage() {
 
   const counts = useMemo(() => ({
     all: convos.length,
+    whatsapp: convos.filter((c) => !c.channel || c.channel === "whatsapp").length,
+    email: convos.filter((c) => c.channel === "email").length,
     needs: convos.filter((c) => c.status === "escalated" || c.ai_paused).length,
     active: convos.filter((c) => c.status === "active").length,
     escalated: convos.filter((c) => c.status === "escalated").length,
@@ -276,6 +286,10 @@ export default function ConversationsPage() {
                         </div>
                         <p className="text-[11px] text-fg-muted truncate leading-snug">{c.last_message ?? "No messages yet"}</p>
                         <div className="flex items-center gap-1 mt-1">
+                          {c.channel === "email"
+                            ? <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 font-medium"><Mail className="w-2.5 h-2.5" /> Email</span>
+                            : <span className="inline-flex items-center gap-0.5 text-[10px] text-[#00a884] font-medium"><MessageSquare className="w-2.5 h-2.5" /> WhatsApp</span>
+                          }
                           {c.ai_paused && <Badge tone="warning">Manual</Badge>}
                           {c.status === "escalated" && <Badge tone="warning" dot>Escalated</Badge>}
                           {c.status === "active" && !c.ai_paused && <Badge tone="brand" dot>Active</Badge>}

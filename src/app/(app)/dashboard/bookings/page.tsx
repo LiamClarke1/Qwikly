@@ -255,6 +255,19 @@ export default function BookingsPage() {
         ))}
       </div>
 
+      {/* Connect calendar banner */}
+      {!calConnected && (
+        <div className="mb-4 flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-brand/[0.06] border border-brand/20">
+          <div className="flex items-center gap-3">
+            <CalendarDays className="w-4 h-4 text-brand shrink-0" />
+            <p className="text-small text-fg-muted">Connect your Google Calendar to see all your appointments in one place.</p>
+          </div>
+          <a href="/dashboard/settings?tab=integrations" className="shrink-0 text-small font-semibold text-brand hover:text-brand/80 transition-colors cursor-pointer">
+            Connect calendar
+          </a>
+        </div>
+      )}
+
       {view === "calendar" ? (
         <Card className="!p-0 overflow-hidden">
           {/* Calendar toolbar */}

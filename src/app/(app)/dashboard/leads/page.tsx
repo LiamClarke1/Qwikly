@@ -164,9 +164,8 @@ export default function LeadsPage() {
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-48 flex-1 min-w-[200px]" />)}
         </div>
       ) : view === "board" ? (
-        /* Always 4 cols — horizontal scroll on small screens */
-        <div className="overflow-x-auto -mx-4 sm:-mx-6 px-4 sm:px-6 pb-2">
-          <div className="grid grid-cols-[repeat(4,minmax(210px,1fr))] gap-3 min-w-[880px]">
+        <div className="pb-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {STAGES.map((s) => (
               <div key={s.id} className="panel !p-0 flex flex-col" style={{ maxHeight: "calc(100vh - 330px)", minHeight: "200px" }}>
                 <div className="flex items-center justify-between px-3 py-2.5 border-b border-line">
