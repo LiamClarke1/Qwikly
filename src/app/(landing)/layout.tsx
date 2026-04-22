@@ -7,7 +7,7 @@ export default function LandingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="font-sans text-text-dark bg-bg-light">
+    <div className="font-sans text-ink bg-paper antialiased">
       <Navbar />
       <main>{children}</main>
       <Footer />

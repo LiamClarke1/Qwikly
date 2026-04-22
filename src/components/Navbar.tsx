@@ -7,8 +7,8 @@ import { Menu, X } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 
 const navLinks = [
-  { label: "Features", anchor: "#features" },
-  { label: "How It Works", anchor: "#how-it-works" },
+  { label: "Outcomes", anchor: "#outcomes" },
+  { label: "How it works", anchor: "#how-it-works" },
   { label: "Pricing", anchor: "#pricing" },
   { label: "FAQ", anchor: "#faq" },
 ];
@@ -36,43 +36,46 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         scrolled
-          ? "bg-[#0d1117]/95 backdrop-blur-2xl border-b border-white/[0.06] shadow-xl shadow-black/30"
+          ? "bg-paper/80 backdrop-blur-xl border-b border-ink/[0.06]"
           : "bg-transparent border-b border-transparent"
       }`}
     >
-      <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+      <div className="mx-auto max-w-site px-6 lg:px-10">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link
             href="/"
-            className="font-sans font-bold text-xl text-white cursor-pointer"
+            className="font-display text-[1.6rem] tracking-tight text-ink cursor-pointer leading-none"
+            aria-label="Qwikly home"
           >
-            Qwikly
+            Qwikly<span className="text-ember">.</span>
           </Link>
 
           {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-10">
             {navLinks.map((link) => (
               <a
                 key={link.label}
                 href={getHref(link.anchor)}
-                className="text-text-secondary hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer"
+                className="text-ink-700 hover:text-ink transition-colors duration-200 text-[0.9rem] cursor-pointer"
               >
                 {link.label}
               </a>
             ))}
             <a
               href="/login"
-              className="text-text-secondary hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer"
+              className="text-ink-700 hover:text-ink transition-colors duration-200 text-[0.9rem] cursor-pointer"
             >
-              Sign In
+              Sign in
             </a>
-            <CTAButton size="sm" href="/signup">Explore Your Trial</CTAButton>
+            <CTAButton size="sm" href="/signup">
+              Start trial
+            </CTAButton>
           </div>
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 text-white cursor-pointer"
+            className="md:hidden p-2 text-ink cursor-pointer"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
@@ -91,26 +94,26 @@ export default function Navbar() {
           mobileOpen ? "max-h-96" : "max-h-0"
         }`}
       >
-        <div className="bg-bg-dark/95 backdrop-blur-xl border-t border-border-subtle px-4 py-4 space-y-4">
+        <div className="bg-paper/95 backdrop-blur-xl border-t border-ink/10 px-6 py-6 space-y-4">
           {navLinks.map((link) => (
             <a
               key={link.label}
               href={getHref(link.anchor)}
               onClick={() => setMobileOpen(false)}
-              className="block text-text-secondary hover:text-white transition-colors duration-200 text-base font-medium cursor-pointer"
+              className="block text-ink-700 hover:text-ink transition-colors duration-200 text-base font-medium cursor-pointer"
             >
               {link.label}
             </a>
           ))}
           <a
             href="/login"
-            className="block text-text-secondary hover:text-white transition-colors duration-200 text-base font-medium cursor-pointer"
+            className="block text-ink-700 hover:text-ink transition-colors duration-200 text-base font-medium cursor-pointer"
             onClick={() => setMobileOpen(false)}
           >
-            Sign In
+            Sign in
           </a>
           <CTAButton size="sm" href="/signup" className="w-full justify-center">
-            Explore Your Trial
+            Start trial
           </CTAButton>
         </div>
       </div>

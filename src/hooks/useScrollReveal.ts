@@ -3,13 +3,13 @@
 import { useEffect } from "react";
 
 /**
- * IntersectionObserver hook that adds 'visible' class to elements
- * with reveal classes when they scroll into view.
+ * IntersectionObserver that adds `visible` when elements enter view.
+ * Covers all reveal variants used in the editorial system.
  */
 export function useScrollReveal() {
   useEffect(() => {
     const elements = document.querySelectorAll(
-      ".reveal, .reveal-up, .reveal-left, .reveal-right, .reveal-scale, .reveal-stagger"
+      ".reveal, .reveal-up, .reveal-left, .reveal-right, .reveal-scale, .reveal-stagger, .reveal-words"
     );
 
     if (elements.length === 0) return;
@@ -24,8 +24,8 @@ export function useScrollReveal() {
         });
       },
       {
-        threshold: 0.1,
-        rootMargin: "0px 0px -40px 0px",
+        threshold: 0.12,
+        rootMargin: "0px 0px -60px 0px",
       }
     );
 

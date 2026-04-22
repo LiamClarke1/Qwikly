@@ -1,158 +1,141 @@
-import {
-  MessageSquare,
-  Bot,
-  UserCheck,
-  CalendarCheck,
-  Brain,
-  Bell,
-  BarChart3,
-} from "lucide-react";
-import SectionHeading from "@/components/SectionHeading";
 import CTAButton from "@/components/CTAButton";
 
 const steps = [
   {
-    icon: MessageSquare,
-    title: "A Lead Messages Your Business",
-    description:
-      "Someone WhatsApps your business number about a job. Maybe it's a burst geyser at 2am. Maybe it's a quote request on a Saturday morning. Doesn't matter when, Qwikly is always on.",
+    stamp: "i.",
+    title: "A lead messages your business.",
+    body:
+      "Someone WhatsApps about a job. Maybe a burst geyser at 2 a.m. Maybe a quote on a Saturday morning. Doesn't matter when — Qwikly is always on.",
   },
   {
-    icon: Bot,
-    title: "Qwikly Replies in 30 Seconds",
-    description:
-      "The AI responds instantly with a natural, friendly message. It asks the right qualifying questions: what they need, where they are, how urgent it is. No scripts, no decision trees, just natural conversation in SA English.",
+    stamp: "ii.",
+    title: "Qwikly replies in 30 seconds.",
+    body:
+      "A real conversation, not a script. It asks the right qualifying questions — what they need, where they are, how urgent — in SA English, in your voice.",
   },
   {
-    icon: UserCheck,
-    title: "The Lead Gets Qualified",
-    description:
-      "Qwikly checks if the lead is in your service area, understands the job type, and assesses urgency. Leads that don't qualify get a polite redirect. Qualified leads move to booking.",
+    stamp: "iii.",
+    title: "The lead gets qualified.",
+    body:
+      "Qwikly checks service area, understands the job, and assesses urgency. Leads that don't fit get a polite redirect. The ones that do move straight to booking.",
   },
   {
-    icon: CalendarCheck,
-    title: "Appointment Booked Into Your Calendar",
-    description:
-      "The AI checks your Google Calendar availability, offers time slots, and books the appointment. You get an instant WhatsApp notification with all the details. The customer gets a confirmation. Done.",
+    stamp: "iv.",
+    title: "Appointment booked into your calendar.",
+    body:
+      "It reads your Google Calendar, offers real slots, and locks in the job. You get a WhatsApp ping with all the details. The customer gets a confirmation.",
   },
 ];
 
-const behindTheScenes = [
+const underTheHood = [
   {
-    icon: Brain,
-    title: "Trade-Specific Knowledge",
-    description:
-      "The AI is trained on your specific trade. It knows what questions an electrician gets vs a plumber. It knows your service areas, your pricing ranges, and your FAQ.",
+    title: "Trade-specific intelligence",
+    body:
+      "The AI is trained on your specific trade. It knows what questions an electrician gets vs a plumber. It knows your service areas, your price ranges, your FAQ.",
   },
   {
-    icon: Bell,
-    title: "Instant Notifications",
-    description:
-      "Every time an appointment is booked, you get a WhatsApp notification with the customer's name, area, job type, and appointment time.",
+    title: "Instant notifications",
+    body:
+      "Every booking hits your WhatsApp with the customer's name, area, job type, and appointment time. No logging in, no hunting.",
   },
   {
-    icon: BarChart3,
-    title: "Conversation Logging",
-    description:
-      "Every conversation is logged. You can see exactly what the AI said, how it qualified the lead, and why it booked or didn't book.",
+    title: "Full conversation log",
+    body:
+      "Every exchange is recorded. See exactly what the AI said, how it qualified the lead, and why it booked — or didn't.",
   },
 ];
 
 export default function HowItWorksPage() {
   return (
-    <main className="bg-bg-light">
+    <main className="bg-paper">
       {/* Hero */}
-      <section className="pt-8 pb-16">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <SectionHeading
-            title="How Qwikly Works"
-            subtitle="From first message to booked appointment in under 2 minutes"
-          />
+      <section className="relative pt-40 pb-20 grain overflow-hidden">
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
+          <p className="eyebrow text-ink-500 mb-6">How it works</p>
+          <h1 className="display-xl text-ink max-w-[18ch]">
+            From first message to{" "}
+            <em className="italic font-light">booked appointment</em> in under
+            two minutes.
+          </h1>
+          <p className="mt-8 text-lg text-ink-700 max-w-xl leading-relaxed">
+            No forms to fill in, no integrations to wire up, no scripts to
+            maintain. Qwikly learns your business once and then works the full
+            sales cycle, 24/7, without you touching it.
+          </p>
         </div>
       </section>
 
-      {/* Step-by-Step Timeline */}
-      <section className="pb-20">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              const isLast = index === steps.length - 1;
-
-              return (
-                <div key={step.title} className="relative flex gap-6">
-                  {/* Timeline column */}
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-accent text-bg-dark font-sans font-bold text-sm flex-shrink-0">
-                      {index + 1}
-                    </div>
-                    {!isLast && (
-                      <div className="w-0.5 bg-border-light flex-1 my-2" />
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className={`pb-12 ${isLast ? "pb-0" : ""}`}>
-                    <div className="flex items-center gap-3 mb-2">
-                      <Icon className="w-5 h-5 text-accent" />
-                      <h3 className="font-sans text-xl font-semibold text-text-dark">
-                        {step.title}
-                      </h3>
-                    </div>
-                    <p className="text-text-muted-dark leading-relaxed">
-                      {step.description}
-                    </p>
-                  </div>
+      {/* Steps */}
+      <section className="py-24 grain">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+            {steps.map((s) => (
+              <div key={s.stamp} className="ed-card-ghost">
+                <div className="flex items-start justify-between mb-6">
+                  <span className="step-stamp">{s.stamp}</span>
+                  <span className="eyebrow text-ink-500">Step</span>
                 </div>
-              );
-            })}
+                <h3 className="font-display text-2xl md:text-3xl text-ink leading-tight">
+                  {s.title}
+                </h3>
+                <p className="mt-4 text-ink-700 leading-relaxed">{s.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* What Happens Behind the Scenes */}
-      <section className="py-20 bg-bg-subtle">
-        <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
-          <SectionHeading
-            title="What Happens Behind the Scenes"
-            subtitle="Powerful features working quietly in the background."
-          />
+      {/* Under the hood */}
+      <section className="py-24 bg-paper-deep grain">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-14">
+            <div className="md:col-span-5">
+              <p className="eyebrow text-ink-500 mb-5">Under the hood</p>
+              <h2 className="display-lg text-ink">
+                Quiet power,
+                <br />
+                <em className="italic font-light">running in the background</em>.
+              </h2>
+            </div>
+            <div className="md:col-span-6 md:col-start-7 md:pt-4">
+              <p className="text-ink-700 text-lg leading-relaxed">
+                Everything you&rsquo;d expect from a full-time front office —
+                training, triage, logging, notifications — working silently
+                while you&rsquo;re on the tools.
+              </p>
+            </div>
+          </div>
 
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-            {behindTheScenes.map((feature) => {
-              const Icon = feature.icon;
-
-              return (
-                <div
-                  key={feature.title}
-                  className="bg-white rounded-2xl p-8 border border-border-light"
-                >
-                  <Icon className="w-8 h-8 text-accent mb-4" />
-                  <h3 className="text-lg font-semibold text-text-dark mb-3">
-                    {feature.title}
-                  </h3>
-                  <p className="text-text-muted-dark text-sm leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {underTheHood.map((f) => (
+              <div key={f.title} className="ed-card">
+                <h3 className="font-display text-xl text-ink leading-tight mb-3">
+                  {f.title}
+                </h3>
+                <p className="text-ink-700 text-sm leading-relaxed">{f.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 bg-bg-dark relative overflow-hidden noise-overlay">
-        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center hero-glow">
-          <h2 className="relative z-10 font-sans text-3xl md:text-4xl font-bold text-white">
-            See It In Action
+      <section className="relative py-32 bg-ink text-paper overflow-hidden grain-dark">
+        <div className="ember-blob w-[800px] h-[500px] top-0 left-1/2 -translate-x-1/2" />
+        <div className="dot-grid absolute inset-0 opacity-50" />
+        <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
+          <h2 className="display-xl text-paper max-w-[18ch] mx-auto">
+            See it in{" "}
+            <em className="italic font-light text-ember">action</em>.
           </h2>
-          <p className="relative z-10 text-text-secondary text-lg mt-4 max-w-xl mx-auto">
-            Start your free 7-day trial and watch Qwikly handle your first
-            leads.
+          <p className="text-paper/70 text-lg mt-8 max-w-xl mx-auto leading-relaxed">
+            Start your 7-day trial and watch Qwikly handle your first real
+            leads. The first job usually pays for the whole year.
           </p>
-          <div className="relative z-10 mt-8">
-            <CTAButton size="lg">Start Your Free 7-Day Trial</CTAButton>
+          <div className="mt-12">
+            <CTAButton size="lg" variant="solid">
+              Start your 7-day trial
+            </CTAButton>
           </div>
         </div>
       </section>

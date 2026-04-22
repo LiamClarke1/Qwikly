@@ -9,34 +9,50 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Landing site colors
+        // ── EDITORIAL PALETTE (landing) ─────────────────────────
+        // Cream canvas + deep ink + single burnt-orange accent.
+        paper: "#F4EEE4",
+        "paper-deep": "#EAE1D1",
+        ink: {
+          DEFAULT: "#0E0E0C",
+          900: "#111110",
+          800: "#1A1A18",
+          700: "#2A2A27",
+          600: "#3C3C38",
+          500: "#6A6A63",
+          400: "#8F8F86",
+          300: "#B5B5AC",
+          200: "#D6D2C8",
+          100: "#E6E0D4",
+        },
+        ember: {
+          DEFAULT: "#E85A2C",
+          deep: "#C3431C",
+          soft: "rgba(232,90,44,0.12)",
+        },
+        sage: {
+          DEFAULT: "#3C5A3D",
+        },
+
+        // ── LEGACY (dashboard / auth) — kept for (app) routes ────
         "bg-dark": "#111827",
         "bg-card": "#1F2937",
         "bg-elevated": "#374151",
-        "bg-light": "#FFFFFF",
-        "bg-subtle": "#F9FAFB",
-        accent: "#2563EB",
-        "accent-hover": "#1D4ED8",
+        "bg-light": "#F4EEE4",
+        "bg-subtle": "#EAE1D1",
+        accent: "#E85A2C",
+        "accent-hover": "#C3431C",
         "text-primary": "#FFFFFF",
         "text-secondary": "rgba(255,255,255,0.75)",
         "text-tertiary": "rgba(255,255,255,0.55)",
-        "text-dark": "#111827",
-        "text-muted-dark": "#6B7280",
+        "text-dark": "#0E0E0C",
+        "text-muted-dark": "#6A6A63",
         "border-subtle": "rgba(255,255,255,0.1)",
-        "border-light": "#E5E7EB",
+        "border-light": "#D6D2C8",
 
-        // Dashboard: background layers
-        ink: {
-          950: "#07080B",
-          900: "#0B0D11",
-          800: "#0E1116",
-          700: "#13171E",
-          600: "#1A1F28",
-          500: "#242A35",
-        },
         line: {
-          DEFAULT: "rgba(255,255,255,0.06)",
-          strong: "rgba(255,255,255,0.10)",
+          DEFAULT: "rgba(14,14,12,0.08)",
+          strong: "rgba(14,14,12,0.16)",
         },
         ghost: {
           DEFAULT: "rgba(255,255,255,0.03)",
@@ -48,40 +64,29 @@ const config: Config = {
           subtle: "#6B7280",
           faint: "#4B5563",
         },
-        // Qwikly brand = blue
         brand: {
-          DEFAULT: "#3B82F6",
-          hover: "#2563EB",
-          glow: "rgba(59,130,246,0.18)",
-          soft: "rgba(59,130,246,0.10)",
+          DEFAULT: "#E85A2C",
+          hover: "#C3431C",
+          glow: "rgba(232,90,44,0.20)",
+          soft: "rgba(232,90,44,0.10)",
         },
-        violet: {
-          DEFAULT: "#8B5CF6",
-          soft: "rgba(139,92,246,0.10)",
-        },
-        sky: {
-          DEFAULT: "#38BDF8",
-          soft: "rgba(56,189,248,0.10)",
-        },
-        success: { DEFAULT: "#22C55E", soft: "rgba(34,197,94,0.10)" },
-        danger: { DEFAULT: "#F87171", soft: "rgba(248,113,113,0.10)" },
-        warning: { DEFAULT: "#FBBF24", soft: "rgba(251,191,36,0.10)" },
+        success: { DEFAULT: "#3C5A3D", soft: "rgba(60,90,61,0.10)" },
+        danger: { DEFAULT: "#C3431C", soft: "rgba(195,67,28,0.10)" },
+        warning: { DEFAULT: "#C8941A", soft: "rgba(200,148,26,0.10)" },
 
-        // Legacy dashboard compat
-        primary: "#1E40AF",
+        primary: "#E85A2C",
         background: "#07080B",
         foreground: "#F4F4F5",
         muted: "#9CA3AF",
         border: "#1E293B",
         card: "#0E1116",
-        danger_old: "#EF4444",
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
-        heading: ["var(--font-poppins)", "sans-serif"],
-        body: ["var(--font-opensans)", "sans-serif"],
-        display: ["var(--font-inter)", "system-ui", "sans-serif"],
-        mono: ["ui-monospace", "SFMono-Regular", "monospace"],
+        display: ["var(--font-fraunces)", "Georgia", "serif"],
+        heading: ["var(--font-fraunces)", "Georgia", "serif"],
+        body: ["var(--font-inter)", "system-ui", "sans-serif"],
+        mono: ["var(--font-jetbrains)", "ui-monospace", "monospace"],
       },
       fontSize: {
         "display-1": ["44px", { lineHeight: "48px", letterSpacing: "-0.02em", fontWeight: "600" }],
@@ -100,17 +105,17 @@ const config: Config = {
       },
       boxShadow: {
         card: "0 1px 0 rgba(255,255,255,0.04) inset, 0 1px 2px rgba(0,0,0,0.4)",
-        glow: "0 0 0 1px rgba(59,130,246,0.30), 0 8px 32px rgba(59,130,246,0.18)",
+        ink: "0 30px 60px -24px rgba(14,14,12,0.35)",
+        glow: "0 0 0 1px rgba(232,90,44,0.30), 0 8px 32px rgba(232,90,44,0.18)",
         pop: "0 24px 60px -20px rgba(0,0,0,0.6)",
       },
       backgroundImage: {
-        "grad-brand": "linear-gradient(135deg,#3B82F6 0%,#2563EB 100%)",
-        "grad-violet": "linear-gradient(135deg,#8B5CF6 0%,#6D28D9 100%)",
+        "grad-brand": "linear-gradient(135deg,#E85A2C 0%,#C3431C 100%)",
         "grad-card": "linear-gradient(180deg,rgba(255,255,255,0.04) 0%,rgba(255,255,255,0.01) 100%)",
-        "grad-mesh": "radial-gradient(60% 60% at 30% 0%,rgba(59,130,246,0.10) 0%,transparent 60%),radial-gradient(50% 50% at 80% 20%,rgba(139,92,246,0.08) 0%,transparent 60%)",
       },
       maxWidth: {
-        site: "1200px",
+        site: "1280px",
+        prose: "68ch",
       },
       animation: {
         "fade-in": "fadeIn 200ms ease-out",

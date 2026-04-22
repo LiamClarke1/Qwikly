@@ -145,18 +145,18 @@ export default function WhatsAppMock() {
         {/* Left arrow */}
         <button
           onClick={() => { goPrev(); resetTimer(); }}
-          className="absolute left-[-36px] sm:left-[-44px] top-1/2 -translate-y-1/2 z-20 opacity-30 hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+          className="absolute left-[-36px] sm:left-[-44px] top-1/2 -translate-y-1/2 z-20 opacity-40 hover:opacity-90 transition-opacity duration-200 cursor-pointer"
           aria-label="Previous conversation"
         >
-          <ChevronLeft className="w-7 h-7 text-white" />
+          <ChevronLeft className="w-7 h-7 text-ink" />
         </button>
         {/* Right arrow */}
         <button
           onClick={() => { goNext(); resetTimer(); }}
-          className="absolute right-[-36px] sm:right-[-44px] top-1/2 -translate-y-1/2 z-20 opacity-30 hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+          className="absolute right-[-36px] sm:right-[-44px] top-1/2 -translate-y-1/2 z-20 opacity-40 hover:opacity-90 transition-opacity duration-200 cursor-pointer"
           aria-label="Next conversation"
         >
-          <ChevronRight className="w-7 h-7 text-white" />
+          <ChevronRight className="w-7 h-7 text-ink" />
         </button>
         {/* Phone outer shell */}
         <div className="bg-[#1a1a1a] rounded-[2.5rem] p-2 shadow-2xl shadow-black/40">
@@ -275,8 +275,8 @@ export default function WhatsAppMock() {
               }}
               className={`rounded-full transition-all duration-300 ${
                 i === activeIndex
-                  ? "w-6 h-2 bg-accent"
-                  : "w-2 h-2 bg-white/30 hover:bg-white/50"
+                  ? "w-6 h-2 bg-ember"
+                  : "w-2 h-2 bg-ink/20 hover:bg-ink/40"
               }`}
               aria-label={`View conversation ${i + 1}`}
             />
@@ -285,14 +285,14 @@ export default function WhatsAppMock() {
 
         {/* Brand customisation caption */}
         <div className="mt-6 mx-auto max-w-[300px] sm:max-w-[340px] text-center space-y-3">
-          <p className="text-sm text-text-secondary leading-relaxed">
-            Tune the tone, style, and personality to match your brand — from warm and friendly to direct and professional.
+          <p className="text-sm text-ink-700 leading-relaxed">
+            Tuned to your brand voice, your services, your service area, and your typical price range.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             {["Friendly & warm", "Direct & efficient", "Professional", "Handles objections", "Quotes prices"].map((tag) => (
               <span
                 key={tag}
-                className="inline-flex items-center text-[11px] font-medium text-text-tertiary bg-white/[0.06] border border-white/10 px-2.5 py-1 rounded-full"
+                className="inline-flex items-center text-[11px] font-medium text-ink-700 bg-ink/5 border border-ink/10 px-2.5 py-1 rounded-full"
               >
                 {tag}
               </span>

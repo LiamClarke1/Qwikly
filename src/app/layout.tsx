@@ -1,34 +1,36 @@
 import type { Metadata } from "next";
-import { Inter, Poppins, Open_Sans } from "next/font/google";
+import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700", "800"],
   variable: "--font-inter",
   display: "swap",
 });
 
-const poppins = Poppins({
+const fraunces = Fraunces({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-poppins",
+  style: ["normal", "italic"],
+  axes: ["SOFT", "opsz"],
+  variable: "--font-fraunces",
   display: "swap",
 });
 
-const openSans = Open_Sans({
+const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-opensans",
+  weight: ["400", "500", "600"],
+  variable: "--font-jetbrains",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Qwikly | Never Miss a WhatsApp Lead Again",
+  title: "Qwikly | Never Miss a Lead Again",
   description:
-    "AI-powered WhatsApp assistant that replies to every lead in 30 seconds, qualifies them, and books appointments into your Google Calendar. Built for South African service businesses.",
+    "Qwikly replies to every WhatsApp and email lead in 30 seconds, qualifies them, and books the appointment into your Google Calendar. Built for South African service businesses. Pay only when a job is booked.",
   keywords: [
     "WhatsApp lead response",
+    "email lead response",
     "AI appointment booking",
     "service business leads",
     "South Africa",
@@ -36,9 +38,9 @@ export const metadata: Metadata = {
     "plumber leads",
   ],
   openGraph: {
-    title: "Qwikly | Never Miss a WhatsApp Lead Again",
+    title: "Qwikly | Never Miss a Lead Again",
     description:
-      "AI-powered WhatsApp assistant for South African service businesses. 30-second replies. Automatic booking. Pay per appointment.",
+      "Replies to every WhatsApp and email lead in 30 seconds. Books the job. Pay only when the calendar fills.",
     type: "website",
     locale: "en_ZA",
   },
@@ -50,10 +52,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${poppins.variable} ${openSans.variable}`}>
-      <body className="antialiased">
-        {children}
-      </body>
+    <html
+      lang="en"
+      className={`${inter.variable} ${fraunces.variable} ${jetbrains.variable}`}
+    >
+      <body className="antialiased bg-paper text-ink">{children}</body>
     </html>
   );
 }
