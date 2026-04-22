@@ -11,11 +11,16 @@
   html {
     scroll-behavior: smooth;
     overflow-x: clip;
+    /* Paint the root cream so any overscan, rubber-band, or compositor gap
+       during fast scroll never flashes white. */
+    background-color: #F4EEE4;
+    color: #0E0E0C;
   }
 
   body {
     overflow-x: hidden;
     max-width: 100%;
+    background-color: #F4EEE4;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -564,6 +569,11 @@
     rgba(232, 90, 44, 0.3) 0%,
     transparent 65%
   );
-  filter: blur(100px);
+  /* Smaller blur is much cheaper to composite during scroll without sacrificing
+     the soft glow. Promote to its own layer so the scroll thread doesn't
+     repaint it every frame. */
+  filter: blur(60px);
+  transform: translateZ(0);
+  will-change: transform;
   pointer-events: none;
 }
