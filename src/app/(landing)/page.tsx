@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState, useEffect } from "react";
 import {
   Check,
   Zap,
@@ -92,30 +93,73 @@ const stats = [
   { value: "24/7", label: "coverage" },
 ];
 
+const whyCards = [
+  {
+    icon: Zap,
+    title: "Built for SA service businesses",
+    description:
+      "Not a generic chatbot bolted onto your number. Qwikly is trained on your services, prices, and trade. It speaks like your front office, knows your area, and books jobs the way you would.",
+    iconBg: "bg-blue-600/15",
+    iconBorder: "border-blue-500/20",
+    iconColor: "text-blue-400",
+  },
+  {
+    icon: Clock,
+    title: "Works while you work",
+    description:
+      "At 7pm when you're finishing a job. At 2am when you're asleep. On a Sunday with your family. Qwikly never misses a message, never needs managing, and never calls in sick.",
+    iconBg: "bg-violet-600/15",
+    iconBorder: "border-violet-500/20",
+    iconColor: "text-violet-400",
+  },
+  {
+    icon: BarChart3,
+    title: "Full visibility, always",
+    description:
+      "Every conversation is logged in your dashboard. Read exactly what Qwikly said, see qualification outcomes, and step in whenever you want. Full automation with full control.",
+    iconBg: "bg-emerald-600/15",
+    iconBorder: "border-emerald-500/20",
+    iconColor: "text-emerald-400",
+  },
+  {
+    icon: CheckCircle2,
+    title: "Only pays when you earn",
+    description:
+      "8% per confirmed booking. That's it. No monthly subscription. No setup fee. No contract. Qwikly only gets paid when it actually puts money in your pocket.",
+    iconBg: "bg-orange-600/15",
+    iconBorder: "border-orange-500/20",
+    iconColor: "text-orange-400",
+  },
+];
+
 const howItWorksSteps = [
   {
     icon: MessageSquare,
     step: "01",
     title: "A lead messages in",
-    description: "Someone sends a WhatsApp or email — at 7pm, on a Sunday, while you're on another job.",
+    description:
+      "Someone sends a WhatsApp or email — at 7pm, on a Sunday, while you're on another job.",
   },
   {
     icon: Bot,
     step: "02",
     title: "Qwikly replies in 30 seconds",
-    description: "Asks the right questions, checks your service area, and assesses what the job involves. Feels like your own front office.",
+    description:
+      "Asks the right questions, checks your service area, and assesses what the job involves. Feels like your own front office.",
   },
   {
     icon: CalendarCheck,
     step: "03",
     title: "The appointment is locked in",
-    description: "Straight into your Google Calendar. Both you and the customer get a confirmation. No back-and-forth needed.",
+    description:
+      "Straight into your Google Calendar. Both you and the customer get a confirmation. No back-and-forth needed.",
   },
   {
     icon: RefreshCw,
     step: "04",
     title: "Everything after runs itself",
-    description: "Reminders send. No-shows get rebooking messages. Cold leads get revival sequences. Nothing slips through.",
+    description:
+      "Reminders send. No-shows get rebooking messages. Cold leads get revival sequences. Nothing slips through.",
   },
 ];
 
@@ -208,6 +252,9 @@ const testimonials = [
     trade: "Electrician",
     city: "Johannesburg",
     metric: "4 extra jobs, ~R28k revenue",
+    cardClass: "testimonial-blue",
+    accentColor: "text-blue-400",
+    badgeBg: "bg-blue-500/15 border border-blue-500/25",
   },
   {
     quote:
@@ -216,6 +263,9 @@ const testimonials = [
     trade: "Pool Services",
     city: "Cape Town",
     metric: "2 no-shows recovered",
+    cardClass: "testimonial-emerald",
+    accentColor: "text-emerald-400",
+    badgeBg: "bg-emerald-500/15 border border-emerald-500/25",
   },
   {
     quote:
@@ -224,8 +274,64 @@ const testimonials = [
     trade: "Plumber",
     city: "Pretoria",
     metric: "6-8 bookings/month",
+    cardClass: "testimonial-violet",
+    accentColor: "text-violet-400",
+    badgeBg: "bg-violet-500/15 border border-violet-500/25",
   },
 ];
+
+/* ──────────────── STAT COUNTER ──────────────── */
+
+function StatCounter({ value, label }: { value: string; label: string }) {
+  const [displayed, setDisplayed] = useState(value);
+  const ref = useRef<HTMLDivElement>(null);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    const match = value.match(/^(\d+)(.*)$/);
+    if (!match) return;
+
+    const target = parseInt(match[1]);
+    const suffix = match[2];
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || hasAnimated.current) return;
+        hasAnimated.current = true;
+        observer.disconnect();
+
+        const duration = 1600;
+        const startTime = performance.now();
+        const frame = (now: number) => {
+          const elapsed = now - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          setDisplayed(Math.round(eased * target) + suffix);
+          if (progress < 1) requestAnimationFrame(frame);
+        };
+        requestAnimationFrame(frame);
+      },
+      { threshold: 0.5 }
+    );
+
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [value]);
+
+  return (
+    <div
+      ref={ref}
+      className="stat-card text-center bg-bg-elevated/80 border border-border-subtle rounded-xl p-4 hover:border-accent/30 transition-colors duration-300 cursor-default"
+    >
+      <p className="font-sans text-2xl md:text-3xl font-bold text-white tabular-nums">
+        {displayed}
+      </p>
+      <p className="text-xs text-text-tertiary mt-0.5 uppercase tracking-wide">
+        {label}
+      </p>
+    </div>
+  );
+}
 
 /* ──────────────── MINI VISUAL COMPONENTS ──────────────── */
 
@@ -279,7 +385,11 @@ function MiniTimelineVisual() {
         {followUps.map((item, i) => (
           <div key={item.time} className="flex items-start gap-3">
             <div className="flex flex-col items-center">
-              <div className={`w-3 h-3 rounded-full border-2 flex-shrink-0 ${item.active ? "border-accent bg-accent" : "border-border-light bg-white"}`} />
+              <div
+                className={`w-3 h-3 rounded-full border-2 flex-shrink-0 ${
+                  item.active ? "border-accent bg-accent" : "border-border-light bg-white"
+                }`}
+              />
               {i < followUps.length - 1 && <div className="w-0.5 h-6 bg-border-light" />}
             </div>
             <div className="pb-2">
@@ -393,26 +503,44 @@ export default function Home() {
   return (
     <>
       {/* ─── SECTION 1: HERO (dark) ─── */}
-      <section className="bg-bg-dark relative overflow-hidden noise-overlay">
-        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8 py-24 md:py-32">
+      <section className="bg-bg-dark relative overflow-hidden -mt-0 pt-16 noise-overlay">
+        {/* Premium animated background */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="orb-a absolute w-[700px] h-[700px] -top-56 -left-40 rounded-full bg-blue-600/10 blur-[120px]" />
+          <div className="orb-b absolute w-[500px] h-[500px] -bottom-28 -right-28 rounded-full bg-violet-600/10 blur-[100px]" />
+          <div className="orb-c absolute w-[350px] h-[350px] top-1/4 right-1/3 rounded-full bg-sky-500/5 blur-[80px]" />
+          <div className="absolute inset-0 grid-bg opacity-40" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8 py-20 md:py-28">
           <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
             {/* Left: copy */}
-            <div className="flex-1 text-center lg:text-left hero-glow">
-              <h1 className="relative z-10 text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold tracking-tight text-white leading-tight">
+            <div className="flex-1 text-center lg:text-left">
+              {/* Animated badge */}
+              <div className="flex justify-center lg:justify-start mb-6">
+                <span className="badge-pulse inline-flex items-center gap-2 bg-accent/10 border border-accent/25 text-accent text-xs font-semibold px-4 py-2 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                  Built for SA service businesses
+                </span>
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.5rem] font-extrabold tracking-tight text-white leading-[1.1]">
                 You&apos;re on the job.
                 <br />
                 A new lead just messaged.
                 <br />
-                They&apos;re already <span className="text-accent">booked</span>.
+                They&apos;re already{" "}
+                <span className="text-gradient-blue">booked</span>.
               </h1>
-              <p className="relative z-10 mt-6 text-base md:text-lg text-text-secondary max-w-xl mx-auto lg:mx-0 leading-relaxed">
+
+              <p className="mt-6 text-base md:text-lg text-text-secondary max-w-xl mx-auto lg:mx-0 leading-relaxed">
                 While you&apos;re under a sink or up on a roof, Qwikly handles
                 every enquiry, chases every lead, and fills your calendar —
                 automatically. Built for SA service businesses who are too busy
                 to reply to everyone.
               </p>
 
-              <ul className="relative z-10 mt-6 space-y-2 max-w-md mx-auto lg:mx-0">
+              <ul className="mt-6 space-y-2 max-w-md mx-auto lg:mx-0">
                 {[
                   "Replies to every WhatsApp and email within 30 seconds",
                   "Follows up at 4h, 24h, 2 days, and 5 days — without lifting a finger",
@@ -426,20 +554,25 @@ export default function Home() {
                 ))}
               </ul>
 
-              <div className="relative z-10 mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+              <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
                   Explore Your 7-Day Trial
                 </CTAButton>
-                <CTAButton variant="outline" size="lg" href="#how-it-works" className="border-border-subtle text-white hover:bg-bg-elevated hover:text-white">
+                <CTAButton
+                  variant="outline"
+                  size="lg"
+                  href="#how-it-works"
+                  className="border-border-subtle text-white hover:bg-bg-elevated hover:text-white"
+                >
                   See How It Works
                 </CTAButton>
               </div>
 
-              <p className="relative z-10 mt-5 text-sm text-text-tertiary">
+              <p className="mt-5 text-sm text-text-tertiary">
                 No setup fees. No contracts. Cancel anytime.
               </p>
 
-              <div className="relative z-10 mt-6 bg-bg-card border border-border-subtle rounded-xl px-5 py-3 max-w-md mx-auto lg:mx-0">
+              <div className="mt-6 bg-bg-card border border-border-subtle rounded-xl px-5 py-3 max-w-md mx-auto lg:mx-0">
                 <p className="text-sm text-text-secondary">
                   <span className="text-accent font-bold">Average ROI: 10–50x.</span>{" "}
                   One extra booking a week covers Qwikly for the month. Everything after that is money you were leaving on the table.
@@ -456,24 +589,17 @@ export default function Home() {
       </section>
 
       {/* ─── SECTION 2: SOCIAL PROOF BAR ─── */}
-      <section className="bg-bg-card py-8 border-y border-border-subtle">
+      <section className="bg-bg-card py-10 border-y border-border-subtle">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8 reveal-up">
           <p className="text-center text-text-secondary font-semibold text-base md:text-lg max-w-3xl mx-auto leading-relaxed">
             SA service businesses in Johannesburg, Pretoria, Cape Town, and
             Durban are capturing jobs they used to lose — every single day
           </p>
 
-          {/* Counter stats */}
+          {/* Animated counter stats */}
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
             {stats.map(({ value, label }) => (
-              <div key={label} className="stat-card text-center bg-bg-elevated border border-border-subtle rounded-xl p-4">
-                <p className="font-sans text-2xl md:text-3xl font-bold text-white">
-                  {value}
-                </p>
-                <p className="text-xs text-text-tertiary mt-0.5 uppercase tracking-wide">
-                  {label}
-                </p>
-              </div>
+              <StatCounter key={label} value={value} label={label} />
             ))}
           </div>
 
@@ -485,7 +611,7 @@ export default function Home() {
               {[...tickerLabels, ...tickerLabels].map((label, i) => (
                 <span
                   key={`${label}-${i}`}
-                  className="inline-flex items-center text-xs font-medium text-text-tertiary bg-bg-elevated px-3 py-1.5 rounded-full border border-border-subtle whitespace-nowrap"
+                  className="inline-flex items-center text-xs font-medium text-text-tertiary bg-bg-elevated px-3 py-1.5 rounded-full border border-border-subtle whitespace-nowrap hover:border-accent/30 hover:text-white transition-colors duration-200 cursor-default"
                 >
                   {label}
                 </span>
@@ -495,7 +621,44 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── SECTION 3: THE PROBLEM ─── */}
+      {/* ─── SECTION: WHY QWIKLY (dark) ─── */}
+      <section className="py-24 bg-bg-dark relative overflow-hidden">
+        {/* Orbs */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="orb-b absolute w-[500px] h-[500px] -top-32 -right-32 rounded-full bg-blue-600/8 blur-[100px]" />
+          <div className="orb-c absolute w-[400px] h-[400px] bottom-0 -left-24 rounded-full bg-violet-600/6 blur-[80px]" />
+          <div className="absolute inset-0 grid-bg opacity-20" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 reveal-up">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold text-accent bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full mb-5">
+              <Zap className="w-3 h-3" />
+              Why Qwikly
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight mt-2">
+              Built differently. For businesses that can&apos;t afford to miss a lead.
+            </h2>
+            <p className="mt-4 text-text-tertiary text-lg max-w-2xl mx-auto">
+              Other tools send auto-replies. Qwikly qualifies, books, follows up, and recovers — end to end.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 reveal-stagger">
+            {whyCards.map(({ icon: Icon, title, description, iconBg, iconBorder, iconColor }) => (
+              <div key={title} className="glass-card-dark p-8">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-5 ${iconBg} border ${iconBorder}`}>
+                  <Icon className={`w-6 h-6 ${iconColor}`} />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3">{title}</h3>
+                <p className="text-text-tertiary leading-relaxed text-sm md:text-base">{description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── SECTION 3: THE PROBLEM (light) ─── */}
       <section className="py-16 bg-bg-light overflow-hidden">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center reveal-up">
@@ -563,8 +726,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── SECTION 3b: THE COST OF SLOW RESPONSE ─── */}
-      <section className="py-12 bg-bg-dark relative noise-overlay">
+      {/* ─── SECTION 3b: THE COST OF SLOW RESPONSE (dark) ─── */}
+      <section className="py-12 bg-bg-dark relative overflow-hidden noise-overlay">
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="orb-a absolute w-[600px] h-[300px] top-0 left-1/4 rounded-full bg-red-600/5 blur-[80px]" />
+        </div>
         <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 reveal-up">
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-white">
@@ -579,7 +745,7 @@ export default function Home() {
               { trade: "Solar", lost: "R150,000", jobs: "1 missed install" },
               { trade: "Pest Control", lost: "R10,000", jobs: "7 missed callouts" },
             ].map((item) => (
-              <div key={item.trade} className="bg-bg-card rounded-xl p-5 border border-border-subtle text-center">
+              <div key={item.trade} className="glass-card-dark p-5 text-center cursor-default">
                 <p className="text-xs font-semibold uppercase tracking-wide text-text-tertiary mb-2">{item.trade}</p>
                 <p className="text-2xl font-bold text-danger tracking-tight">{item.lost}</p>
                 <p className="text-xs text-text-tertiary mt-1">{item.jobs}/month</p>
@@ -592,7 +758,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ─── SECTION 4: PLATFORM FEATURES (alternating) ─── */}
+      {/* ─── SECTION 4: PLATFORM FEATURES (light) ─── */}
       <section id="features" className="py-20 bg-bg-light overflow-hidden">
         <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 reveal-up">
@@ -679,6 +845,11 @@ export default function Home() {
 
       {/* ─── SECTION 5: HOW IT WORKS (dark) ─── */}
       <section id="how-it-works" className="py-16 bg-bg-dark relative overflow-hidden noise-overlay">
+        {/* Orbs */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="orb-a absolute w-[500px] h-[500px] -top-32 left-1/2 -translate-x-1/2 rounded-full bg-blue-600/6 blur-[100px]" />
+        </div>
+
         <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 reveal-up">
             <div className="flex flex-col items-center">
@@ -693,24 +864,25 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 reveal-stagger">
-            {howItWorksSteps.map(({ icon: Icon, step, title, description }) => (
-              <div
-                key={step}
-                className="gradient-border relative p-6 hover:bg-bg-elevated transition-all duration-300"
-              >
-                <span className="text-5xl font-extrabold text-white/5 absolute top-3 right-4">
-                  {step}
-                </span>
-                <span className="text-sm font-semibold tracking-wide uppercase text-accent mb-3 block">
-                  Step {step}
-                </span>
-                <Icon className="w-8 h-8 text-accent mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  {title}
-                </h3>
-                <p className="text-text-tertiary text-sm leading-relaxed">
-                  {description}
-                </p>
+            {howItWorksSteps.map(({ icon: Icon, step, title, description }, index) => (
+              <div key={step} className="relative">
+                <div className="gradient-border relative p-6 hover:bg-bg-elevated transition-all duration-300 h-full">
+                  <span className="text-6xl font-extrabold text-white/[0.04] absolute top-3 right-4 select-none">
+                    {step}
+                  </span>
+                  <span className="text-xs font-bold tracking-widest uppercase text-accent mb-3 block">
+                    Step {step}
+                  </span>
+                  <Icon className="w-9 h-9 text-accent mb-4" />
+                  <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+                  <p className="text-text-tertiary text-sm leading-relaxed">{description}</p>
+                </div>
+                {/* Arrow connector — desktop only, not on last step */}
+                {index < howItWorksSteps.length - 1 && (
+                  <div className="step-connector-arrow">
+                    <ArrowRight className="w-5 h-5 text-accent/35" />
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -745,15 +917,15 @@ export default function Home() {
 
           {/* The rule */}
           <div className="mt-10 max-w-2xl mx-auto reveal-up">
-            <div className="bg-bg-dark rounded-xl px-6 py-5 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+            <div className="bg-bg-dark rounded-xl px-6 py-5 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 border border-border-subtle">
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl md:text-3xl font-bold text-accent">8%</span>
+                <span className="text-3xl md:text-4xl font-extrabold text-gradient-blue">8%</span>
                 <span className="text-text-secondary text-sm">of the service price booked</span>
               </div>
               <div className="hidden sm:block w-px h-8 bg-border-subtle" />
               <div className="flex items-center gap-4 text-sm text-text-tertiary">
                 <span>Minimum <span className="text-white font-semibold">R150</span></span>
-                <span className="text-text-tertiary">|</span>
+                <span className="hidden sm:inline text-text-tertiary">|</span>
                 <span>Maximum <span className="text-white font-semibold">R5,000</span></span>
               </div>
             </div>
@@ -766,7 +938,6 @@ export default function Home() {
                 <p className="text-white font-sans font-semibold text-sm">Real examples across industries</p>
               </div>
               <div className="divide-y divide-border-light">
-                {/* Header — 2-col mobile, 4-col sm+ */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 px-4 sm:px-6 py-2.5 bg-bg-subtle">
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-text-muted-dark">Service</span>
                   <span className="hidden sm:block text-[11px] font-semibold uppercase tracking-wider text-text-muted-dark" />
@@ -775,7 +946,6 @@ export default function Home() {
                 </div>
                 {serviceExamples.map((item, i) => (
                   <div key={i} className="hover:bg-accent/5 transition-colors duration-200">
-                    {/* Mobile: 2-col card */}
                     <div className="sm:hidden grid grid-cols-2 items-start px-4 py-3 gap-2">
                       <div className="min-w-0">
                         <span className="block text-[11px] text-text-muted-dark leading-tight">{item.business}</span>
@@ -789,7 +959,6 @@ export default function Home() {
                         </span>
                       </div>
                     </div>
-                    {/* Desktop: 4-col grid */}
                     <div className="hidden sm:grid grid-cols-4 items-center px-6 py-3">
                       <span className="text-sm text-text-muted-dark">{item.business}</span>
                       <span className="text-sm font-medium text-text-dark">{item.service}</span>
@@ -873,12 +1042,10 @@ export default function Home() {
             {tradeCards.map(({ icon: Icon, trade, pain }, i) => (
               <div
                 key={trade}
-                className={`trade-card-hover bg-white rounded-xl p-5 border border-border-light hover:border-accent/30 transition-all duration-300 group ${i % 3 === 0 ? "border-l-2 border-l-accent" : ""}`}
+                className={`trade-card-hover bg-white rounded-xl p-5 border border-border-light hover:border-accent/30 transition-all duration-300 group cursor-default ${i % 3 === 0 ? "border-l-2 border-l-accent" : ""}`}
               >
                 <Icon className="w-8 h-8 text-accent mb-4" />
-                <h3 className="text-sm font-semibold text-text-dark mb-1.5">
-                  {trade}
-                </h3>
+                <h3 className="text-sm font-semibold text-text-dark mb-1.5">{trade}</h3>
                 <p className="text-text-muted-dark text-xs leading-relaxed">{pain}</p>
               </div>
             ))}
@@ -893,12 +1060,10 @@ export default function Home() {
               {additionalIndustries.map(({ icon: Icon, label }) => (
                 <div
                   key={label}
-                  className="flex items-center gap-2 bg-white border border-border-light rounded-full px-4 py-2 hover:border-accent/30 transition-colors duration-200"
+                  className="flex items-center gap-2 bg-white border border-border-light rounded-full px-4 py-2 hover:border-accent/30 transition-colors duration-200 cursor-default"
                 >
                   <Icon className="w-4 h-4 text-accent" />
-                  <span className="text-sm text-text-dark font-medium">
-                    {label}
-                  </span>
+                  <span className="text-sm text-text-dark font-medium">{label}</span>
                 </div>
               ))}
             </div>
@@ -908,6 +1073,11 @@ export default function Home() {
 
       {/* ─── SECTION 9: TESTIMONIALS (dark) ─── */}
       <section className="py-20 bg-bg-dark relative overflow-hidden noise-overlay">
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="orb-b absolute w-[600px] h-[400px] top-0 left-0 rounded-full bg-blue-600/6 blur-[100px]" />
+          <div className="orb-c absolute w-[400px] h-[400px] bottom-0 right-0 rounded-full bg-violet-600/6 blur-[80px]" />
+        </div>
+
         <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 reveal-up">
             <div className="flex flex-col items-center">
@@ -915,27 +1085,25 @@ export default function Home() {
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
                 Real Results From SA Service Businesses
               </h2>
+              <p className="mt-4 text-text-tertiary text-lg max-w-xl">
+                These aren&apos;t estimates. These are jobs that were booked because Qwikly replied first.
+              </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 reveal-stagger">
-            {testimonials.map(({ quote, name, trade, city, metric }) => (
-              <div
-                key={name}
-                className="gradient-border p-6 md:p-8 flex flex-col"
-              >
+            {testimonials.map(({ quote, name, trade, city, metric, cardClass, accentColor, badgeBg }) => (
+              <div key={name} className={`${cardClass} p-6 md:p-8 flex flex-col`}>
                 {metric && (
-                  <div className="bg-accent/10 border border-accent/20 rounded-lg px-3 py-1.5 mb-4 inline-block self-start">
-                    <p className="text-accent text-xs font-bold">{metric}</p>
+                  <div className={`${badgeBg} rounded-lg px-3 py-1.5 mb-5 inline-block self-start`}>
+                    <p className={`${accentColor} text-xs font-bold`}>{metric}</p>
                   </div>
                 )}
                 <p className="text-text-secondary leading-relaxed flex-1 text-sm md:text-base">
                   &ldquo;{quote}&rdquo;
                 </p>
-                <div className="mt-6 pt-4 border-t border-border-subtle">
-                  <p className="font-sans font-semibold text-white text-sm">
-                    {name}
-                  </p>
+                <div className="mt-6 pt-4 border-t border-white/[0.07]">
+                  <p className="font-sans font-semibold text-white text-sm">{name}</p>
                   <p className="text-text-tertiary text-sm">
                     {trade}, {city}
                   </p>
@@ -950,21 +1118,31 @@ export default function Home() {
       <FAQ />
 
       {/* ─── SECTION 11: FINAL CTA (dark) ─── */}
-      <section className="py-12 bg-bg-dark relative overflow-hidden noise-overlay">
-        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center reveal-up hero-glow">
-          <h2 className="relative z-10 text-3xl md:text-4xl font-bold tracking-tight text-white">
+      <section className="py-20 cta-premium-bg relative overflow-hidden">
+        {/* Subtle animated orb behind the CTA */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="orb-a absolute w-[800px] h-[400px] top-0 left-1/2 -translate-x-1/2 rounded-full bg-blue-500/8 blur-[120px]" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-site px-4 sm:px-6 lg:px-8 text-center reveal-up">
+          <span className="inline-flex items-center gap-2 text-xs font-semibold text-accent bg-accent/10 border border-accent/20 px-4 py-1.5 rounded-full mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            7-day free trial
+          </span>
+
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white max-w-3xl mx-auto">
             Every missed lead is money in your competitor&apos;s pocket.
           </h2>
-          <p className="relative z-10 mt-4 text-lg text-text-tertiary max-w-2xl mx-auto">
+          <p className="mt-5 text-lg text-text-tertiary max-w-2xl mx-auto">
             The average SA service business loses R15,000–80,000 a month from slow response.
             Qwikly clients see a 10–50x return. See what that looks like for your trade.
           </p>
-          <div className="relative z-10 mt-8">
+          <div className="mt-10">
             <CTAButton size="lg" className="animate-subtle-pulse cta-glow">
               Start Your 7-Day Trial
             </CTAButton>
           </div>
-          <p className="relative z-10 mt-4 text-sm text-text-tertiary">
+          <p className="mt-4 text-sm text-text-tertiary">
             No setup fees. No monthly costs. Pay only when a job is booked.
           </p>
         </div>

@@ -268,3 +268,125 @@
 .ticker-scroll {
   animation: ticker-scroll 30s linear infinite;
 }
+
+/* ── PREMIUM VISUAL SYSTEM ───────────────────────────────────── */
+
+/* Animated gradient orbs */
+@keyframes orb-drift-a {
+  0%, 100% { transform: translate(0px, 0px); }
+  25%  { transform: translate(50px,  30px); }
+  50%  { transform: translate(25px,  70px); }
+  75%  { transform: translate(-25px, 25px); }
+}
+@keyframes orb-drift-b {
+  0%, 100% { transform: translate(0px, 0px); }
+  33%  { transform: translate(-60px, 50px); }
+  66%  { transform: translate(40px, -35px); }
+}
+@keyframes orb-drift-c {
+  0%, 100% { transform: translate(0px, 0px); }
+  20%  { transform: translate(35px, -25px); }
+  60%  { transform: translate(-30px, 40px); }
+  80%  { transform: translate(15px,  15px); }
+}
+.orb-a { animation: orb-drift-a 22s ease-in-out infinite; }
+.orb-b { animation: orb-drift-b 30s ease-in-out infinite; }
+.orb-c { animation: orb-drift-c 38s ease-in-out infinite; }
+
+/* Subtle grid overlay */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Glassmorphic dark card */
+.glass-card-dark {
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  transition:
+    background   0.4s ease,
+    border-color 0.4s ease,
+    box-shadow   0.4s ease,
+    transform    0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.glass-card-dark:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(37,99,235,0.3);
+  box-shadow: 0 0 50px rgba(37,99,235,0.12), 0 20px 40px rgba(0,0,0,0.4);
+  transform: translateY(-4px);
+}
+
+/* Gradient text */
+.text-gradient-blue {
+  background: linear-gradient(135deg, #93C5FD 0%, #2563EB 50%, #818CF8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animated hero badge pulse */
+@keyframes badge-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37,99,235,0); }
+  50%       { box-shadow: 0 0 0 5px rgba(37,99,235,0.15); }
+}
+.badge-pulse { animation: badge-glow 3s ease-in-out infinite; }
+
+/* Premium testimonial gradient cards */
+.testimonial-blue {
+  background: linear-gradient(145deg, rgba(37,99,235,0.15) 0%, rgba(17,24,39,0.98) 60%);
+  border: 1px solid rgba(37,99,235,0.25);
+  border-radius: 16px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.testimonial-emerald {
+  background: linear-gradient(145deg, rgba(16,185,129,0.12) 0%, rgba(17,24,39,0.98) 60%);
+  border: 1px solid rgba(16,185,129,0.2);
+  border-radius: 16px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.testimonial-violet {
+  background: linear-gradient(145deg, rgba(139,92,246,0.12) 0%, rgba(17,24,39,0.98) 60%);
+  border: 1px solid rgba(139,92,246,0.2);
+  border-radius: 16px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.testimonial-blue:hover,
+.testimonial-emerald:hover,
+.testimonial-violet:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+
+/* Premium CTA gradient background */
+.cta-premium-bg {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(37,99,235,0.2) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 85% 90%, rgba(139,92,246,0.1) 0%, transparent 60%),
+    #111827;
+}
+
+/* Section with orb glow behind it */
+.section-orb-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Step connector arrow (How It Works) */
+.step-connector-arrow {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .step-connector-arrow {
+    display: flex;
+    position: absolute;
+    top: 32px;
+    right: 0;
+    transform: translateX(50%);
+    z-index: 20;
+    align-items: center;
+    justify-content: center;
+  }
+}
