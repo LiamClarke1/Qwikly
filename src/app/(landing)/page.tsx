@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 import FAQ from "@/components/FAQ";
+import Founder from "@/components/Founder";
 import WhatsAppMock from "@/components/WhatsAppMock";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 
@@ -530,6 +531,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ─── FOUNDER ─── */}
+      <Founder />
 
       {/* ─── FAQ ─── */}
       <FAQ />

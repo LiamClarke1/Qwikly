@@ -83,7 +83,7 @@ export default function FAQ() {
     <section id="faq" className="py-16 bg-bg-light">
       <div className="mx-auto max-w-site px-4 sm:px-6 lg:px-8">
         <SectionHeading
-          title="Questions Worth Asking Before You Start"
+          title="Got questions? We have answers."
           subtitle="Straight answers about how Qwikly works, what it costs, and what to expect from day one."
         />
 
