@@ -15,7 +15,6 @@ import {
   Contact,
   Megaphone,
   Zap,
-  BookOpen,
   Bot,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -46,7 +45,6 @@ const sections: NavSection[] = [
     title: "Assistant",
     items: [
       { href: "/dashboard/setup", label: "Setup", icon: Bot as NavIcon },
-      { href: "/dashboard/knowledge", label: "Knowledge", icon: BookOpen as NavIcon },
     ],
   },
   {

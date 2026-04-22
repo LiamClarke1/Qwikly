@@ -28,28 +28,12 @@ const STEPS: Step[] = [
     isDone: () => true,
   },
   {
-    id: "business",
-    title: "Tell us about your business",
-    description: "Name, trade, hours and services so your assistant sounds like you.",
-    href: "/dashboard/settings?tab=profile",
-    cta: "Add business info",
-    isDone: (c) => !!(c?.business_name && c?.trade),
-  },
-  {
     id: "assistant",
     title: "Connect your digital assistant",
     description: "Point it at your website, drop in any brochures, and we'll teach it your business.",
     href: "/dashboard/setup",
     cta: "Start setup",
     isDone: (c) => !!c?.onboarding_complete || !!c?.system_prompt,
-  },
-  {
-    id: "knowledge",
-    title: "Add answers to common questions",
-    description: "Three to five answers is enough to cover most chats.",
-    href: "/dashboard/knowledge",
-    cta: "Add answers",
-    isDone: (_c, e) => e.kbCount >= 3,
   },
   {
     id: "email",
@@ -96,7 +80,7 @@ export function OnboardingChecklist({
             </div>
             <div className="min-w-0">
               <p className="text-h3 text-fg font-semibold">Get your digital assistant live</p>
-              <p className="text-small text-fg-muted mt-0.5">Six quick steps. Most people finish in 10 minutes.</p>
+              <p className="text-small text-fg-muted mt-0.5">Four quick steps. Most people finish in 10 minutes.</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
