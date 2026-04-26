@@ -209,6 +209,9 @@ function CampaignEditor({
     const { data, error } = await q;
     setSaving(false);
     if (error) return setErr(error.message);
+    if (launch && !scheduleAt) {
+      await fetch(`/api/campaigns/${(data as Campaign).id}/send`, { method: "POST" });
+    }
     onSaved(data as Campaign);
   };
 

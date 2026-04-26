@@ -10,7 +10,7 @@ import Link from "next/link";
 import {
   ChevronRight, ChevronLeft, Check, Loader2, Sparkles,
   Building2, Wrench, DollarSign, Clock, Star, Bot,
-  Globe, Upload, FileText, X, Zap, AlertCircle, ArrowRight, Clock3,
+  Globe, Upload, FileText, X, Zap, AlertCircle, ArrowRight, Clock3, MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -52,6 +52,7 @@ const STEPS = [
   { title: "Availability", subtitle: "When and how you work", icon: Clock },
   { title: "Your Edge", subtitle: "Why customers should choose you", icon: Star },
   { title: "AI Personality", subtitle: "How your assistant speaks to customers", icon: Bot },
+  { title: "WhatsApp", subtitle: "Verify your number to go live", icon: MessageSquare },
 ];
 
 const LOADING_STAGES = [
@@ -70,7 +71,7 @@ const ALLOWED_EXT = [".pdf", ".txt", ".doc", ".docx"];
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type View = "intro" | "loading" | "done" | "wizard";
-type Step = 1 | 2 | 3 | 4 | 5 | 6;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 interface UploadedFile { name: string; base64: string; mediaType: string; size: number; }
 interface AutoFillResult { data: Record<string, string>; filledCount: number; highlights: string[]; }
@@ -640,6 +641,111 @@ function ErrorView({ message, onRetry, onSkip }: { message: string; onRetry: () 
   );
 }
 
+// ─── WhatsApp Verify Step ─────────────────────────────────────────────────────
+
+interface WhatsAppVerifyStepProps {
+  phone: string;
+  clientId: string | number | undefined;
+}
+
+function WhatsAppVerifyStep({ phone, clientId }: WhatsAppVerifyStepProps) {
+  const [sending, setSending] = useState(false);
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const sendCode = async () => {
+    setError(null);
+    setSending(true);
+    const res = await fetch("/api/whatsapp/verify-send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone }),
+    });
+    const j = await res.json();
+    setSending(false);
+    if (!res.ok) return setError(j.error ?? "Failed to send code");
+    setCodeSent(true);
+  };
+
+  const checkCode = async () => {
+    setError(null);
+    setVerifying(true);
+    const res = await fetch("/api/whatsapp/verify-check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, code, client_id: clientId }),
+    });
+    const j = await res.json();
+    setVerifying(false);
+    if (!res.ok) return setError(j.error ?? "Incorrect code");
+    setVerified(true);
+  };
+
+  if (verified) {
+    return (
+      <div className="text-center space-y-4 py-4">
+        <div className="w-14 h-14 rounded-2xl bg-success/20 border border-success/30 flex items-center justify-center mx-auto">
+          <Check className="w-7 h-7 text-success" strokeWidth={2.5} />
+        </div>
+        <h3 className="text-h2 text-fg">Number verified</h3>
+        <p className="text-small text-fg-muted">{phone} is connected. Click Finish setup to go live.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="panel !p-5 space-y-1">
+        <p className="text-small font-semibold text-fg">Your WhatsApp number</p>
+        <p className="text-h2 text-brand num">{phone || "Not set — go back to Step 4"}</p>
+        <p className="text-tiny text-fg-muted">
+          We&apos;ll send a 6-digit code to confirm you own this number.
+          Your customers will message this number and your digital assistant replies automatically.
+        </p>
+      </div>
+
+      {!codeSent ? (
+        <button
+          type="button"
+          disabled={!phone || sending}
+          onClick={sendCode}
+          className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-brand text-white text-small font-semibold hover:bg-brand/90 transition-colors duration-200 cursor-pointer disabled:opacity-40"
+        >
+          {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
+          {sending ? "Sending code..." : "Send verification code"}
+        </button>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-small text-fg-muted">Code sent to {phone}. Enter it below:</p>
+          <WInput
+            value={code}
+            onChange={setCode}
+            placeholder="6-digit code"
+            type="text"
+          />
+          <button
+            type="button"
+            disabled={code.length < 4 || verifying}
+            onClick={checkCode}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-brand text-white text-small font-semibold hover:bg-brand/90 transition-colors duration-200 cursor-pointer disabled:opacity-40"
+          >
+            {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            {verifying ? "Verifying..." : "Confirm code"}
+          </button>
+          <button type="button" onClick={sendCode} className="text-tiny text-brand hover:underline cursor-pointer w-full text-center">
+            Resend code
+          </button>
+        </div>
+      )}
+
+      {error && <p className="text-small text-danger">{error}</p>}
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function SetupPage() {
@@ -908,7 +1014,7 @@ export default function SetupPage() {
         </div>
       </div>
 
-      <form onSubmit={step === 6 ? handleSubmit : (e) => e.preventDefault()}>
+      <form onSubmit={step === 7 ? handleSubmit : (e) => e.preventDefault()}>
         <div className="panel !p-6 md:!p-8 space-y-6">
           <div className="mb-2">
             <h2 className="text-h2 text-fg">Step {step} of {STEPS.length}: {STEPS[step - 1].title}</h2>
@@ -1103,11 +1209,20 @@ export default function SetupPage() {
               <Field label="Things the AI must never say" optional>
                 <WTextarea value={form.ai_never_say} onChange={set("ai_never_say")} placeholder={"- Never mention competitor names\n- Never confirm same-day availability without checking"} rows={3} />
               </Field>
-              {error && (
-                <div className="bg-danger/10 border border-danger/30 rounded-xl px-4 py-3">
-                  <p className="text-danger text-small">{error}</p>
-                </div>
-              )}
+            </div>
+          )}
+
+          {/* ── STEP 7 ── */}
+          {step === 7 && (
+            <WhatsAppVerifyStep
+              phone={form.whatsapp_number}
+              clientId={client?.id}
+            />
+          )}
+
+          {step === 7 && error && (
+            <div className="bg-danger/10 border border-danger/30 rounded-xl px-4 py-3">
+              <p className="text-danger text-small">{error}</p>
             </div>
           )}
         </div>
@@ -1128,7 +1243,7 @@ export default function SetupPage() {
             </button>
           )}
 
-          {step < 6 ? (
+          {step < 7 ? (
             <button type="button" onClick={next}
               className="flex items-center gap-2 px-7 py-3 rounded-xl bg-brand text-white text-small font-semibold hover:bg-brand/90 transition-colors duration-200 cursor-pointer"
             >
