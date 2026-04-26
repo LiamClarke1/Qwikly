@@ -8,7 +8,7 @@
 // );
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
+import { supabaseAdmin } from "@/lib/supabase-server";
 import { sendWhatsAppMessage, interpolate } from "@/lib/twilio-whatsapp";
 
 export async function POST(req: NextRequest) {
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const supabase = createClient();
+  const supabase = supabaseAdmin();
   const now = new Date();
 
   const { data: automations } = await supabase
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
 
           await supabase
             .from("automations")
-            .update({ fire_count: (automation as any).fire_count + 1, last_fired_at: now.toISOString() })
+            .update({ fire_count: (automation.fire_count as number) + 1, last_fired_at: now.toISOString() })
             .eq("id", automation.id);
 
           fired++;
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
 
           await supabase
             .from("automations")
-            .update({ fire_count: (automation as any).fire_count + 1, last_fired_at: now.toISOString() })
+            .update({ fire_count: (automation.fire_count as number) + 1, last_fired_at: now.toISOString() })
             .eq("id", automation.id);
 
           fired++;
@@ -190,7 +190,7 @@ export async function POST(req: NextRequest) {
 
           await supabase
             .from("automations")
-            .update({ fire_count: (automation as any).fire_count + 1, last_fired_at: now.toISOString() })
+            .update({ fire_count: (automation.fire_count as number) + 1, last_fired_at: now.toISOString() })
             .eq("id", automation.id);
 
           fired++;

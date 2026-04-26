@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
+import { supabaseAdmin } from "@/lib/supabase-server";
 import { sendWhatsAppMessage, interpolate } from "@/lib/twilio-whatsapp";
 
 export async function POST(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const supabase = createClient();
+  const supabase = supabaseAdmin();
   const campaignId = params.id;
 
   const { data: campaign, error: campaignErr } = await supabase
