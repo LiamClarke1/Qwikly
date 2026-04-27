@@ -37,8 +37,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!authed) return null;
 
   return (
-    <div className="min-h-screen flex bg-[#111827]">
-      <div className="hidden md:block sticky top-0 h-screen">
+    <div className="h-screen overflow-hidden flex bg-[#111827]">
+      <div className="hidden md:flex h-full shrink-0">
         <Sidebar />
       </div>
 
@@ -59,7 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </>
       )}
 
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
         <Topbar onMenu={() => setOpen(true)} />
         <main className="flex-1 px-4 md:px-7 py-6 md:py-8 max-w-[1400px] w-full mx-auto animate-fade-in">
           {children}

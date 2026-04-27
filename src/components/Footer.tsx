@@ -14,6 +14,11 @@ const productLinks = [
   { label: "Pricing", href: "/pricing" },
 ];
 
+const legalLinks = [
+  { label: "Terms of Service", href: "/legal/terms" },
+  { label: "Privacy Policy", href: "/legal/privacy" },
+];
+
 export default function Footer() {
   return (
     <footer className="relative bg-ink text-paper overflow-hidden grain-dark">
@@ -61,20 +66,38 @@ export default function Footer() {
             </ul>
           </div>
 
-          <div className="md:col-span-3 md:col-start-10">
-            <p className="eyebrow text-paper/50 mb-5">Product</p>
-            <ul className="space-y-3">
-              {productLinks.map((link) => (
-                <li key={link.label}>
-                  <Link
-                    href={link.href}
-                    className="text-paper/80 hover:text-paper transition-colors duration-200 text-base cursor-pointer"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+          <div className="md:col-span-3 md:col-start-10 space-y-10">
+            <div>
+              <p className="eyebrow text-paper/50 mb-5">Product</p>
+              <ul className="space-y-3">
+                {productLinks.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="text-paper/80 hover:text-paper transition-colors duration-200 text-base cursor-pointer"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <p className="eyebrow text-paper/50 mb-5">Legal</p>
+              <ul className="space-y-3">
+                {legalLinks.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="text-paper/80 hover:text-paper transition-colors duration-200 text-base cursor-pointer"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
 

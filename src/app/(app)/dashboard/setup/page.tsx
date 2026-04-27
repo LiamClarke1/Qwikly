@@ -11,6 +11,7 @@ import {
   ChevronRight, ChevronLeft, Check, Loader2, Sparkles,
   Building2, Wrench, DollarSign, Clock, Star, Bot,
   Globe, Upload, FileText, X, Zap, AlertCircle, ArrowRight, Clock3, MessageSquare,
+  Phone, PlusCircle,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -770,6 +771,9 @@ export default function SetupPage() {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [numberChoice, setNumberChoice] = useState<"existing" | "new" | "">(
+    form.whatsapp_number === "new_number_requested" ? "new" : form.whatsapp_number ? "existing" : ""
+  );
 
   const set = (field: keyof FormData) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -1113,9 +1117,90 @@ export default function SetupPage() {
               <Field label="How do customers prefer to confirm?">
                 <Pills value={form.booking_preference} onChange={set("booking_preference")} options={BOOKING_PREF_OPTS} />
               </Field>
-              <Field label="WhatsApp number" hint="Customers message this. Must be active on WhatsApp.">
-                <WInput value={form.whatsapp_number} onChange={set("whatsapp_number")} placeholder="+27 83 123 4567" type="tel" />
-              </Field>
+              <div>
+                <label className="flex items-center gap-2 text-small font-semibold text-fg mb-3">
+                  WhatsApp number
+                </label>
+                <div className="space-y-3">
+                  {/* Option A — existing number */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNumberChoice("existing");
+                      if (form.whatsapp_number === "new_number_requested") set("whatsapp_number")("");
+                    }}
+                    className={cn(
+                      "w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer",
+                      numberChoice === "existing" ? "border-brand bg-brand-soft" : "border-line bg-white/[0.02] hover:border-line-strong"
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0 mt-0.5">
+                          <Phone className="w-4 h-4 text-fg-muted" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-fg text-small">Keep your current number</p>
+                          <p className="text-tiny text-fg-muted mt-1 leading-relaxed">
+                            Your customers already have this number. We move it to Qwikly — same number, but replies are handled automatically. You manage everything from this dashboard.
+                          </p>
+                          <p className="text-tiny text-warning mt-2 leading-relaxed">
+                            Your number will leave the WhatsApp app on your phone. You&apos;ll reply from the Qwikly dashboard instead.
+                          </p>
+                        </div>
+                      </div>
+                      <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5", numberChoice === "existing" ? "border-brand bg-brand" : "border-line")}>
+                        {numberChoice === "existing" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </div>
+                    </div>
+                  </button>
+
+                  {numberChoice === "existing" && (
+                    <WInput value={form.whatsapp_number} onChange={set("whatsapp_number")} placeholder="+27 83 123 4567" type="tel" />
+                  )}
+
+                  {/* Option B — new number */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNumberChoice("new");
+                      set("whatsapp_number")("new_number_requested");
+                    }}
+                    className={cn(
+                      "w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer",
+                      numberChoice === "new" ? "border-brand bg-brand-soft" : "border-line bg-white/[0.02] hover:border-line-strong"
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0 mt-0.5">
+                          <PlusCircle className="w-4 h-4 text-fg-muted" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-fg text-small">Separate business number</p>
+                          <p className="text-tiny text-fg-muted mt-1 leading-relaxed">
+                            Keep your personal WhatsApp as-is. Get a dedicated number for all business enquiries. Recommended if you want to keep personal and business separate.
+                          </p>
+                          <p className="text-tiny text-success mt-2 leading-relaxed">
+                            Clean split — personal stays personal.
+                          </p>
+                        </div>
+                      </div>
+                      <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5", numberChoice === "new" ? "border-brand bg-brand" : "border-line")}>
+                        {numberChoice === "new" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </div>
+                    </div>
+                  </button>
+
+                  {numberChoice === "new" && (
+                    <div className="px-4 py-3 rounded-xl bg-white/[0.03] border border-line">
+                      <p className="text-tiny text-fg-muted leading-relaxed">
+                        We&apos;ll set up a new number for you during onboarding. Continue with setup and we&apos;ll handle it.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
               <Field label="Google Calendar email" optional hint="Bookings go straight into this calendar.">
                 <WInput value={form.google_calendar_email} onChange={set("google_calendar_email")} placeholder="e.g. pete@gmail.com" type="email" />
               </Field>
