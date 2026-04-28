@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
+import CookieBanner from "@/components/CookieBanner";
 import "./globals.css";
 
 const inter = Inter({
@@ -23,6 +24,12 @@ const jetbrains = JetBrains_Mono({
   variable: "--font-jetbrains",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.qwikly.co.za"),
@@ -55,12 +62,21 @@ export const metadata: Metadata = {
     url: "https://www.qwikly.co.za",
     siteName: "Qwikly",
     locale: "en_ZA",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Qwikly — AI receptionist for South African service businesses",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Qwikly | Never Miss a Lead Again",
     description:
       "Replies to every WhatsApp lead in 30 seconds. Books the job. Pay only when the calendar fills.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
@@ -77,6 +93,30 @@ export const metadata: Metadata = {
   },
 };
 
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Qwikly",
+  alternateName: "Clarke Agency",
+  url: "https://www.qwikly.co.za",
+  logo: "https://www.qwikly.co.za/og-image.png",
+  description:
+    "AI receptionist for South African service businesses. Replies to WhatsApp and email leads in 30 seconds, qualifies them, and books jobs.",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Johannesburg",
+    addressCountry: "ZA",
+  },
+  contactPoint: {
+    "@type": "ContactPoint",
+    email: "hello@qwikly.co.za",
+    contactType: "customer support",
+    availableLanguage: "English",
+    areaServed: "ZA",
+  },
+  sameAs: [],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -87,7 +127,16 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${fraunces.variable} ${jetbrains.variable}`}
     >
-      <body className="antialiased bg-paper text-ink">{children}</body>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+      </head>
+      <body className="antialiased bg-paper text-ink">
+        {children}
+        <CookieBanner />
+      </body>
     </html>
   );
 }

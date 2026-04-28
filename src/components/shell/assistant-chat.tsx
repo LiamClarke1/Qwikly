@@ -91,8 +91,8 @@ export function AssistantChat() {
         onClick={() => setOpen(true)}
         aria-label="Open assistant"
         className={cn(
-          "fixed bottom-6 right-6 z-50 group w-13 h-13 rounded-2xl flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-all duration-200 cursor-pointer",
-          "w-12 h-12 bg-[#0D111A] border border-white/[0.1] hover:border-brand/50 hover:shadow-[0_4px_24px_rgba(232,90,44,0.25)]",
+          "fixed right-6 z-50 group w-13 h-13 rounded-2xl flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-all duration-200 cursor-pointer",
+          "w-12 h-12 bg-[#0D111A] border border-white/[0.1] hover:border-brand/50 hover:shadow-[0_4px_24px_rgba(232,90,44,0.25)] [bottom:max(1.5rem,env(safe-area-inset-bottom))]",
           open && "pointer-events-none opacity-0"
         )}
       >
@@ -104,7 +104,7 @@ export function AssistantChat() {
       {open && (
         <div
           className={cn(
-            "fixed bottom-6 right-6 z-50 flex flex-col",
+            "fixed right-6 z-50 flex flex-col [bottom:max(1.5rem,env(safe-area-inset-bottom))]",
             "w-[380px] max-w-[calc(100vw-24px)]",
             "h-[540px] max-h-[calc(100vh-48px)]",
             "rounded-2xl overflow-hidden",

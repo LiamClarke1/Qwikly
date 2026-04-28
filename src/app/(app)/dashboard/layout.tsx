@@ -37,7 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-dvh flex items-center justify-center">
         <div className="flex items-center gap-3 text-fg-muted">
           <div className="w-5 h-5 rounded-full border-2 border-brand/30 border-t-brand animate-spin" />
           <p className="text-small">Loading workspace…</p>
@@ -48,7 +48,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!authed) return null;
 
   return (
-    <div className="h-screen overflow-hidden flex bg-[#111827]">
+    <div className="h-dvh overflow-hidden flex bg-[#111827]">
       <div className="hidden md:flex h-full shrink-0">
         <Sidebar />
       </div>
@@ -56,7 +56,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {open && (
         <>
           <div className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="md:hidden fixed top-0 left-0 z-50 h-screen w-72 max-w-[85vw] overflow-hidden shadow-2xl animate-slide-up">
+          <div className="md:hidden fixed top-0 left-0 z-50 h-dvh w-72 max-w-[85vw] overflow-hidden shadow-2xl animate-slide-up">
             <div className="relative h-full w-full">
               <button
                 onClick={() => setOpen(false)}
