@@ -235,10 +235,10 @@ export default function Home() {
   return (
     <>
       {/* ═══════ 01 · HERO ═══════════════════════════════════════ */}
-      <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden grain">
+      <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 overflow-hidden grain">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           {/* Top meta row */}
-          <div className="flex items-center justify-between text-[0.7rem] text-ink-500 mb-16 md:mb-24 reveal-up">
+          <div className="flex items-center justify-between text-[0.7rem] text-ink-500 mb-10 md:mb-14 reveal-up">
             <div className="eyebrow flex items-center gap-3">
               <span className="inline-block w-2 h-2 rounded-full bg-ember tick" />
               Live · Answering leads now
@@ -250,18 +250,16 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Headline */}
-          <div className="reveal-words visible">
-            <h1 className="display-huge text-ink max-w-[14ch]">
-              Stop losing jobs<br />
-              <span className="italic font-light">to the first reply</span>.
-            </h1>
-          </div>
+          {/* Two-column hero */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
-          {/* Subhead + CTAs */}
-          <div className="mt-12 md:mt-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end reveal-up">
-            <div className="lg:col-span-7">
-              <p className="text-lg md:text-xl text-ink-700 max-w-xl leading-relaxed">
+            {/* Left: headline + subtext + CTAs + bullets */}
+            <div className="reveal-up">
+              <h1 className="display-huge text-ink">
+                Stop losing jobs<br />
+                <span className="italic font-light">to the first reply</span>.
+              </h1>
+              <p className="mt-8 text-lg md:text-xl text-ink-700 leading-relaxed max-w-lg">
                 Qwikly answers your WhatsApp, qualifies the lead, quotes them, and books the
                 job — while you stay on site. You pay only when a real appointment
                 lands in your calendar.
@@ -278,71 +276,27 @@ export default function Home() {
                 No setup fee. No contract. Pay only when a job is booked.
               </p>
               <LiveCounter />
+              <div className="mt-10 space-y-3">
+                {[
+                  "Responds in under 30 seconds, around the clock",
+                  "Speaks in your business voice — not like a chatbot",
+                  "Qualifies leads before they reach your calendar",
+                ].map((point) => (
+                  <div key={point} className="flex items-center gap-3">
+                    <span className="w-4 h-4 rounded-full bg-ember/15 border border-ember/30 flex items-center justify-center shrink-0">
+                      <span className="w-1.5 h-1.5 rounded-full bg-ember" />
+                    </span>
+                    <p className="text-ink-700">{point}</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Right column — live status card */}
-            {STATS_VERIFIED && (
-              <div className="lg:col-span-5 lg:pl-8 lg:border-l lg:border-ink/10">
-                <p className="eyebrow text-ink-500 mb-4">This morning, so far</p>
-                <div className="grid grid-cols-3 gap-5">
-                  <div>
-                    <p className="font-display text-4xl text-ink">
-                      <StatCounter value={17} />
-                    </p>
-                    <p className="text-xs text-ink-500 mt-1">Leads replied</p>
-                  </div>
-                  <div>
-                    <p className="font-display text-4xl text-ink">
-                      <StatCounter value={11} />
-                    </p>
-                    <p className="text-xs text-ink-500 mt-1">Jobs booked</p>
-                  </div>
-                  <div>
-                    <p className="font-display text-4xl text-ember">
-                      R<StatCounter value={48} />k
-                    </p>
-                    <p className="text-xs text-ink-500 mt-1">Revenue captured</p>
-                  </div>
-                </div>
-                <div className="rule mt-6" />
-                <p className="mt-4 text-[0.75rem] text-ink-500 leading-relaxed">
-                  Rolling average across active Qwikly accounts, refreshed at 06:00 SAST.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Hero — animated WhatsApp phone */}
-          <div className="mt-20 md:mt-28 relative reveal-scale">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              <div className="lg:col-span-6 flex justify-center lg:justify-start relative">
-                <div className="animate-phone-float">
-                  <WhatsAppMock />
-                </div>
-                <div className="ember-blob w-[400px] h-[400px] -left-20 -top-10 hidden lg:block" />
-              </div>
-              <div className="lg:col-span-6 space-y-8">
-                <div>
-                  <p className="eyebrow text-ember mb-3">Reply in 30 s</p>
-                  <p className="font-display text-2xl md:text-3xl text-ink leading-tight max-w-md">
-                    It reads the message, asks what you&rsquo;d ask, and{" "}
-                    <em className="italic text-ember">books the slot</em>. The customer never has to wait.
-                  </p>
-                </div>
-                <div className="space-y-4">
-                  {[
-                    "Responds in under 30 seconds, around the clock",
-                    "Speaks in your business voice — not like a chatbot",
-                    "Qualifies leads before they reach your calendar",
-                  ].map((point) => (
-                    <div key={point} className="flex items-start gap-3">
-                      <span className="mt-1.5 w-4 h-4 rounded-full bg-ember/15 border border-ember/30 flex items-center justify-center flex-shrink-0">
-                        <span className="w-1.5 h-1.5 rounded-full bg-ember" />
-                      </span>
-                      <p className="text-ink-700 leading-relaxed">{point}</p>
-                    </div>
-                  ))}
-                </div>
+            {/* Right: phone mock */}
+            <div className="flex justify-center lg:justify-end relative reveal-scale">
+              <div className="ember-blob w-[500px] h-[500px] right-0 top-1/2 -translate-y-1/2 hidden lg:block" />
+              <div className="animate-phone-float relative z-10">
+                <WhatsAppMock />
               </div>
             </div>
           </div>
