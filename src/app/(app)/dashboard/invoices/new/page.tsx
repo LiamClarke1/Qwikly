@@ -111,7 +111,7 @@ function CustomerSearch({ onSelect, vatEnabled }: { onSelect: (c: Customer | nul
               }}
               className="w-full flex items-center gap-2 px-4 py-2.5 text-small text-brand hover:bg-white/[0.03] cursor-pointer border-t border-line"
             >
-              <Plus className="w-3.5 h-3.5" /> Add "{q}" as new customer
+              <Plus className="w-3.5 h-3.5" /> Add &ldquo;{q}&rdquo; as new customer
             </button>
           )}
         </div>
