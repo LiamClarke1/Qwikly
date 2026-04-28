@@ -112,7 +112,7 @@ export async function POST(req: NextRequest) {
     .from("invoices")
     .insert({
       client_id: auth.clientId,
-      status: "draft",
+      status: body.scheduled_send_at ? "scheduled" : "draft",
       customer_id: body.customer_id ?? null,
       customer_name: body.customer_name.trim(),
       customer_mobile: body.customer_mobile ?? null,

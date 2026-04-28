@@ -415,7 +415,11 @@ export default function InvoiceDetailPage() {
             <p className="text-small font-semibold text-fg mb-4">Activity</p>
             <div>
               {invoice.created_at && <TimelineItem event="Created" ts={invoice.created_at} />}
-              {invoice.sent_at && <TimelineItem event="Sent to customer" ts={invoice.sent_at} detail={invoice.delivery_channels?.join(", ")} />}
+              {invoice.sent_at && <TimelineItem event="Sent to customer" ts={invoice.sent_at} detail={
+                invoice.delivery_sent_log?.length
+                  ? invoice.delivery_sent_log.map((l: { channel: string; status: string }) => `${l.channel}: ${l.status}`).join(" · ")
+                  : invoice.delivery_channels?.includes("link") ? "link only" : invoice.delivery_channels?.join(", ")
+              } />}
               {invoice.viewed_at && <TimelineItem event="Viewed by customer" ts={invoice.viewed_at} detail={`${invoice.customer_viewed_count} view${invoice.customer_viewed_count !== 1 ? "s" : ""}`} />}
               {(invoice.payments ?? []).map(p => (
                 <TimelineItem key={p.id} event={`Payment: ${fmt(p.amount_zar)}`} ts={p.paid_at} detail={p.method} />

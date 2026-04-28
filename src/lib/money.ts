@@ -33,7 +33,11 @@ export function commission(paidAmountExVat: number, rate = 0.08): number {
 }
 
 export function fmt(amount: number): string {
-  return "R" + amount.toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const isWhole = Number.isInteger(amount);
+  return "R" + amount.toLocaleString("en-ZA", {
+    minimumFractionDigits: isWhole ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 export function fmtDate(d: string | Date): string {

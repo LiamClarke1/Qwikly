@@ -5,8 +5,8 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Plus, Trash2, Search, User, X, ChevronDown,
-  Send, Save, Clock, Loader2, AlertCircle
+  Plus, Trash2, Search, User, X,
+  Send, Save, Clock, Loader2, AlertCircle, CheckCircle, Copy
 } from "lucide-react";
 import { useClient } from "@/lib/use-client";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,13 @@ import { Input, Textarea, Select, Field } from "@/components/ui/input";
 import { cn } from "@/lib/cn";
 import { fmt, add, multiply, toZar } from "@/lib/money";
 import type { Customer } from "@/lib/invoices/types";
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.qwikly.co.za";
+
+function toLocalDT(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
 
 interface LineItemForm {
   id: string;
@@ -240,6 +247,7 @@ export default function NewInvoicePage() {
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [sentResult, setSentResult] = useState<{ id: string; url: string; scheduled: boolean; scheduledAt?: string } | null>(null);
 
   useEffect(() => {
     if (client) {
@@ -290,7 +298,15 @@ export default function NewInvoicePage() {
   }
 
   function toggleChannel(ch: string) {
-    setChannels(prev => prev.includes(ch) ? prev.filter(c => c !== ch) : [...prev, ch]);
+    if (ch === "link") {
+      // "Link only" is exclusive
+      setChannels(prev => prev.includes("link") ? [] : ["link"]);
+    } else {
+      setChannels(prev => {
+        const without = prev.filter(c => c !== "link");
+        return without.includes(ch) ? without.filter(c => c !== ch) : [...without, ch];
+      });
+    }
   }
 
   function buildPayload(draft = false) {
@@ -342,40 +358,95 @@ export default function NewInvoicePage() {
   async function sendNow() {
     const payload = buildPayload();
     if (!payload) return;
-    if (!payload.customer_mobile && channels.includes("whatsapp")) {
-      setError("WhatsApp channel selected but no mobile number. Add a mobile number or deselect WhatsApp.");
-      return;
-    }
-    if (!payload.customer_email && channels.includes("email")) {
-      setError("Email channel selected but no email address. Add an email or deselect Email.");
-      return;
+    const isScheduled = !!scheduledAt;
+    if (!isScheduled) {
+      if (!payload.customer_mobile && channels.includes("whatsapp")) {
+        setError("WhatsApp selected but no mobile number. Add one or deselect WhatsApp.");
+        return;
+      }
+      if (!payload.customer_email && channels.includes("email")) {
+        setError("Email selected but no email address. Add one or deselect Email.");
+        return;
+      }
     }
     setSending(true);
-    const createRes = await fetch("/api/invoices", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+    const createRes = await fetch("/api/invoices", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
     if (!createRes.ok) {
-      const { error: e } = await createRes.json();
-      setError(e);
+      const { error: e } = await createRes.json().catch(() => ({}));
+      setError(e ?? "Failed to create invoice");
       setSending(false);
       return;
     }
-    const { id } = await createRes.json();
-    const sendRes = await fetch(`/api/invoices/${id}/send`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ channels }),
-    });
-    setSending(false);
-    if (sendRes.ok) {
-      router.push(`/dashboard/invoices/${id}`);
-    } else {
-      router.push(`/dashboard/invoices/${id}`);
+    const created = await createRes.json();
+    const { id, customer_view_token } = created;
+    const url = `${BASE_URL}/i/${customer_view_token}`;
+    if (!isScheduled) {
+      await fetch(`/api/invoices/${id}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channels }),
+      }).catch(() => {});
     }
+    setSending(false);
+    setSentResult({ id, url, scheduled: isScheduled, scheduledAt: scheduledAt || undefined });
   }
 
   if (clientLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-6 h-6 animate-spin text-fg-muted" />
+      </div>
+    );
+  }
+
+  if (sentResult) {
+    const sentChannels = channels.filter(c => c !== "link");
+    return (
+      <div className="animate-fade-in max-w-lg mx-auto mt-8 space-y-5 text-center">
+        <div className="w-14 h-14 rounded-full bg-success/10 border border-success/20 flex items-center justify-center mx-auto">
+          <CheckCircle className="w-7 h-7 text-success" />
+        </div>
+        <div>
+          <h2 className="text-h1 text-fg">{sentResult.scheduled ? "Invoice scheduled!" : "Invoice sent!"}</h2>
+          <p className="text-small text-fg-muted mt-1">
+            {sentResult.scheduled
+              ? `Scheduled for ${new Date(sentResult.scheduledAt!).toLocaleString("en-ZA", { dateStyle: "medium", timeStyle: "short" })}`
+              : sentChannels.length > 0
+                ? `Delivered via ${sentChannels.join(" & ")}`
+                : "Invoice created — share the link below"}
+          </p>
+        </div>
+        <div className="bg-bg-card border border-line rounded-2xl p-5 text-left space-y-3">
+          <p className="text-small font-semibold text-fg">Customer link</p>
+          <div className="flex items-center gap-2">
+            <input
+              readOnly
+              value={sentResult.url}
+              onClick={e => (e.target as HTMLInputElement).select()}
+              className="flex-1 bg-[#111827] border border-line rounded-xl px-3 py-2.5 text-small text-fg-muted font-mono truncate outline-none cursor-text"
+            />
+            <Button size="sm" variant="secondary" onClick={() => navigator.clipboard.writeText(sentResult.url)} icon={<Copy className="w-3.5 h-3.5" />}>
+              Copy
+            </Button>
+          </div>
+          <p className="text-tiny text-fg-subtle">Share this with your customer so they can view and pay the invoice.</p>
+        </div>
+        <div className="flex gap-3 justify-center">
+          <Button variant="secondary" onClick={() => {
+            setSentResult(null);
+            setCustomer(null); setCustomerName(""); setCustomerEmail(""); setCustomerMobile("");
+            setLineItems([newLineItem()]); setNotes(""); setScheduledAt(""); setError("");
+          }}>
+            New invoice
+          </Button>
+          <Button onClick={() => router.push(`/dashboard/invoices/${sentResult.id}`)}>
+            View invoice
+          </Button>
+        </div>
       </div>
     );
   }
@@ -406,8 +477,8 @@ export default function NewInvoicePage() {
           <Button variant="secondary" size="sm" onClick={saveAsDraft} loading={saving} icon={<Save className="w-3.5 h-3.5" />}>
             Save draft
           </Button>
-          <Button size="sm" onClick={sendNow} loading={sending} icon={<Send className="w-3.5 h-3.5" />}>
-            Send now
+          <Button size="sm" onClick={sendNow} loading={sending} icon={scheduledAt ? <Clock className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}>
+            {scheduledAt ? "Schedule" : "Send now"}
           </Button>
         </div>
       </div>
@@ -503,7 +574,7 @@ export default function NewInvoicePage() {
                       onChange={e => updateLineItem(li.id, "unit_price_zar", e.target.value)}
                       placeholder="Price"
                       type="number"
-                      step="0.01"
+                      step="1"
                       className="bg-[#111827] border border-white/10 rounded-xl px-3 py-2 text-small text-fg placeholder:text-fg-faint outline-none focus:border-brand/40 w-full"
                     />
                     <div className="flex items-center justify-end pt-2">
@@ -593,9 +664,37 @@ export default function NewInvoicePage() {
               ))}
             </div>
 
-            <Field label="Schedule send (leave blank to send now)">
-              <Input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} />
-            </Field>
+            <div>
+              <p className="text-small font-medium text-fg mb-2">
+                Schedule send <span className="font-normal text-fg-faint">· leave blank to send now</span>
+              </p>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {[
+                  { label: "Send now", fn: () => "" },
+                  { label: "In 1 hour", fn: () => toLocalDT(new Date(Date.now() + 60 * 60 * 1000)) },
+                  { label: "Tonight 6pm", fn: () => { const d = new Date(); d.setHours(18, 0, 0, 0); if (+d <= Date.now()) d.setDate(d.getDate() + 1); return toLocalDT(d); } },
+                  { label: "Tomorrow 9am", fn: () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); return toLocalDT(d); } },
+                ].map(({ label, fn }) => (
+                  <button key={label} type="button"
+                    onClick={() => setScheduledAt(fn())}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-small font-medium border transition-all cursor-pointer",
+                      (label === "Send now" ? !scheduledAt : false)
+                        ? "bg-brand/10 text-brand border-brand/30"
+                        : "bg-white/[0.03] text-fg-muted border-line hover:border-white/20"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {scheduledAt && (
+                <Input type="datetime-local" value={scheduledAt} onChange={e => setScheduledAt(e.target.value)} />
+              )}
+              {!scheduledAt && (
+                <p className="text-tiny text-fg-muted">Invoice will be sent immediately.</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -614,8 +713,8 @@ export default function NewInvoicePage() {
           <Button variant="secondary" onClick={saveAsDraft} loading={saving} icon={<Save className="w-4 h-4" />}>
             Save as draft
           </Button>
-          <Button onClick={sendNow} loading={sending} icon={<Send className="w-4 h-4" />}>
-            Send invoice
+          <Button onClick={sendNow} loading={sending} icon={scheduledAt ? <Clock className="w-4 h-4" /> : <Send className="w-4 h-4" />}>
+            {scheduledAt ? "Schedule invoice" : "Send invoice"}
           </Button>
         </div>
       </div>

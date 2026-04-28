@@ -14,23 +14,39 @@ export const dynamic = "force-dynamic";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.qwikly.co.za";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const cookieStore = cookies();
-  const auth = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (s) => s.forEach(({ name, value, options }) => cookieStore.set(name, value, options)),
-      },
-    }
-  );
-  const { data: { user } } = await auth.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   const db = supabaseAdmin();
-  const { data: clientRow } = await db.from("clients").select("*").eq("auth_user_id", user.id).maybeSingle();
-  if (!clientRow) return NextResponse.json({ error: "Client not found" }, { status: 404 });
+
+  // Auth: user session OR internal cron key
+  let actorId: string | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let clientRow: any;
+
+  const cronKey = req.headers.get("x-cron-key");
+  if (cronKey && cronKey === process.env.CRON_SECRET) {
+    const { data: invRef } = await db.from("invoices").select("client_id").eq("id", params.id).maybeSingle();
+    if (!invRef) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+    const { data: cr } = await db.from("clients").select("*").eq("id", invRef.client_id).maybeSingle();
+    if (!cr) return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    clientRow = cr;
+  } else {
+    const cookieStore = cookies();
+    const auth = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll: () => cookieStore.getAll(),
+          setAll: (s) => s.forEach(({ name, value, options }) => cookieStore.set(name, value, options)),
+        },
+      }
+    );
+    const { data: { user } } = await auth.auth.getUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    actorId = user.id;
+    const { data: cr } = await db.from("clients").select("*").eq("auth_user_id", user.id).maybeSingle();
+    if (!cr) return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    clientRow = cr;
+  }
 
   if (clientRow.status === "suspended") {
     return NextResponse.json({ error: "Account suspended. Settle your Qwikly balance to resume sending." }, { status: 403 });
@@ -40,7 +56,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     .from("invoices")
     .select("*, invoice_line_items(*)")
     .eq("id", params.id)
-    .eq("client_id", clientRow.id)
+    .eq("client_id", clientRow.id as number)
     .maybeSingle();
 
   if (!invoice) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -144,8 +160,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   }
 
   await db.from("audit_events").insert({
-    actor_id: user.id,
-    actor_type: "user",
+    actor_id: actorId,
+    actor_type: actorId ? "user" : "cron",
     event_type: "invoice.sent",
     entity_type: "invoice",
     entity_id: params.id,
