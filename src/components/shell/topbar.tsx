@@ -45,7 +45,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
     <header className="sticky top-0 z-30 h-16 px-4 md:px-7 border-b border-white/[0.06] bg-[#111827]/95 backdrop-blur-xl flex items-center gap-3 shadow-[0_1px_0_rgba(255,255,255,0.03)]">
       <button
         onClick={onMenu}
-        className="md:hidden h-9 w-9 rounded-lg flex items-center justify-center text-fg-muted hover:text-fg hover:bg-white/[0.04] cursor-pointer"
+        className="hidden h-11 w-11 rounded-xl flex items-center justify-center text-fg-muted hover:text-fg hover:bg-white/[0.04] cursor-pointer"
         aria-label="Open menu"
       >
         <Menu className="w-5 h-5" />
@@ -77,13 +77,13 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
         <span className="hidden sm:inline">{paused ? "AI paused" : "AI on"}</span>
       </button>
 
-      <button className="h-9 w-9 rounded-xl border border-line bg-white/[0.03] flex items-center justify-center text-fg-muted hover:text-fg cursor-pointer relative">
+      <button className="h-11 w-11 rounded-xl border border-line bg-white/[0.03] flex items-center justify-center text-fg-muted hover:text-fg cursor-pointer relative">
         <Bell className="w-4 h-4" />
         <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-brand" />
       </button>
 
       <div className="flex items-center gap-3 pl-2 border-l border-line">
-        <div className="hidden sm:block text-right">
+        <div className="block text-right max-w-[100px] sm:max-w-none">
           <p className="text-small font-semibold text-fg leading-tight">
             {client?.business_name ?? "Welcome"}
           </p>
@@ -92,7 +92,7 @@ export function Topbar({ onMenu }: { onMenu: () => void }) {
         <Avatar name={client?.business_name ?? email} size={32} />
         <button
           onClick={signOut}
-          className="h-9 w-9 rounded-xl flex items-center justify-center text-fg-subtle hover:text-fg hover:bg-white/[0.04] cursor-pointer"
+          className="h-11 w-11 rounded-xl flex items-center justify-center text-fg-subtle hover:text-fg hover:bg-white/[0.04] cursor-pointer"
           title="Sign out"
         >
           <LogOut className="w-4 h-4" />

@@ -349,7 +349,7 @@ export default function EditInvoicePage() {
                 <Field label="Full name">
                   <Input value={customerName} onChange={e => setCustomerName(e.target.value)} />
                 </Field>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Field label="Mobile">
                     <Input value={customerMobile} onChange={e => setCustomerMobile(e.target.value)} placeholder="+27…" />
                   </Field>
@@ -456,7 +456,7 @@ export default function EditInvoicePage() {
         {/* Details */}
         <div className="bg-bg-card border border-line rounded-2xl p-5 space-y-4">
           <p className="text-small font-semibold text-fg">Details</p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Due date">
               <Input type="date" value={dueAt} onChange={e => setDueAt(e.target.value)} />
             </Field>

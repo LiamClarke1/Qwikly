@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
 import { AssistantChat } from "@/components/shell/assistant-chat";
+import { MobileBottomNav } from "@/components/shell/mobile-bottom-nav";
 import { X } from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -72,11 +73,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <div className="flex-1 min-w-0 flex flex-col overflow-y-auto">
         <Topbar onMenu={() => setOpen(true)} />
-        <main className="flex-1 px-4 md:px-7 py-6 md:py-8 max-w-[1400px] w-full mx-auto animate-fade-in">
+        <main className="flex-1 px-4 md:px-7 py-6 md:py-8 pb-24 md:pb-8 max-w-[1400px] w-full mx-auto animate-fade-in">
           {children}
         </main>
       </div>
 
+      <MobileBottomNav onMore={() => setOpen(true)} />
       <AssistantChat />
     </div>
   );
