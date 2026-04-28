@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
 import { AssistantChat } from "@/components/shell/assistant-chat";
 import { MobileBottomNav } from "@/components/shell/mobile-bottom-nav";
+import { FloatingActionButton } from "@/components/shell/fab";
 import { X } from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -79,6 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       <MobileBottomNav onMore={() => setOpen(true)} />
+      <FloatingActionButton />
       <AssistantChat />
     </div>
   );

@@ -29,8 +29,8 @@ interface Lead {
 
 const STAGES = [
   { id: "new", label: "New", tone: "sky" as const, color: "#38BDF8" },
-  { id: "followed_up", label: "Followed up", tone: "warning" as const, color: "#60A5FA" },
-  { id: "booked", label: "Booked", tone: "brand" as const, color: "#3B82F6" },
+  { id: "followed_up", label: "Followed up", tone: "warning" as const, color: "#FBBF24" },
+  { id: "booked", label: "Booked", tone: "brand" as const, color: "#E85A2C" },
   { id: "lost", label: "Lost", tone: "danger" as const, color: "#F87171" },
 ];
 
@@ -160,20 +160,24 @@ export default function LeadsPage() {
 
       {/* Board / Table */}
       {loading ? (
-        <div className="flex gap-3">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-48 flex-1 min-w-[200px]" />)}
+        <div className="flex gap-3 overflow-x-auto pb-2">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-48 shrink-0 w-[220px]" />)}
         </div>
       ) : view === "board" ? (
-        <div className="pb-2">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="pb-2 -mx-1">
+          <div className="flex gap-3 overflow-x-auto pb-3 px-1 lg:grid lg:grid-cols-4 lg:overflow-visible">
             {STAGES.map((s) => (
-              <div key={s.id} className="panel !p-0 flex flex-col" style={{ maxHeight: "calc(100vh - 330px)", minHeight: "200px" }}>
-                <div className="flex items-center justify-between px-3 py-2.5 border-b border-line">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color }} />
-                    <p className="text-small font-semibold text-fg">{s.label}</p>
-                  </div>
-                  <span className="text-tiny text-fg-subtle bg-white/[0.04] px-1.5 py-0.5 rounded-full font-medium">{grouped[s.id]?.length ?? 0}</span>
+              <div
+                key={s.id}
+                className="panel !p-0 flex flex-col shrink-0 w-[260px] sm:w-auto lg:w-auto"
+                style={{ maxHeight: "calc(100vh - 320px)", minHeight: "200px" }}
+              >
+                <div
+                  className="flex items-center justify-between px-3 py-2.5 border-b border-line rounded-t-2xl"
+                  style={{ borderTop: `2px solid ${s.color}` }}
+                >
+                  <p className="text-small font-semibold text-fg">{s.label}</p>
+                  <span className="text-tiny text-fg-subtle bg-white/[0.04] px-1.5 py-0.5 rounded-full font-medium tabular-nums">{grouped[s.id]?.length ?? 0}</span>
                 </div>
                 <div className="flex-1 overflow-y-auto scrollbar-thin p-2 space-y-2">
                   {(grouped[s.id] ?? []).length === 0 ? (
@@ -183,29 +187,20 @@ export default function LeadsPage() {
                       <button
                         key={l.id}
                         onClick={() => setActive(l)}
-                        className="w-full text-left p-3 rounded-xl bg-ink-800/60 border border-line hover:border-line-strong transition-all duration-150 cursor-pointer"
+                        className="w-full text-left p-3 rounded-xl bg-ink-800/60 border border-line hover:border-line-strong hover:shadow-[0_4px_16px_-4px_rgba(0,0,0,0.3)] transition-all duration-150 cursor-pointer group"
                       >
                         <div className="flex items-center gap-2 mb-1.5">
-                          <Avatar name={l.customer_name ?? l.phone_number} size={26} />
+                          <Avatar name={l.customer_name ?? l.phone_number} size={28} />
                           <div className="flex-1 min-w-0">
                             <p className="text-small font-semibold text-fg truncate">{l.customer_name ?? "Unknown"}</p>
                             <p className="text-tiny text-fg-muted truncate">{formatPhone(l.phone_number)}</p>
                           </div>
+                          <ChevronRight className="w-3.5 h-3.5 text-fg-subtle opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                         </div>
                         {(l.job_type || l.area) && (
-                          <p className="text-tiny text-fg-muted mb-2 truncate">{l.job_type ?? ""}{l.job_type && l.area ? " · " : ""}{l.area ?? ""}</p>
+                          <p className="text-tiny text-fg-subtle truncate">{l.job_type ?? ""}{l.job_type && l.area ? " · " : ""}{l.area ?? ""}</p>
                         )}
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-tiny text-fg-subtle num">{timeAgo(l.created_at)}</span>
-                          <select
-                            value={l.status}
-                            onChange={(e) => { e.stopPropagation(); move(l.id, e.target.value); }}
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-[10px] bg-ink-700 border border-line rounded px-1 py-0.5 text-fg-muted cursor-pointer"
-                          >
-                            {STAGES.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-                          </select>
-                        </div>
+                        <p className="text-tiny text-fg-subtle num mt-1.5">{timeAgo(l.created_at)}</p>
                       </button>
                     ))
                   )}
@@ -260,7 +255,7 @@ export default function LeadsPage() {
       {active && (
         <>
           <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setActive(null)} />
-          <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-sm bg-ink-900 border-l border-line overflow-y-auto scrollbar-thin animate-slide-up">
+          <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-sm bg-ink-900 border-l border-line overflow-y-auto scrollbar-thin animate-slide-in-right">
             <div className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-small font-semibold text-fg">Lead details</p>

@@ -13,8 +13,8 @@ import {
   AlertTriangle,
   Plus,
   Send,
-  Bot,
   ChevronRight,
+  Zap,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -110,7 +110,7 @@ export default function OverviewPage() {
     return Math.round((bookingsCount / convoCount) * 100);
   }, [bookingsCount, convoCount]);
 
-  const revenue = bookingsCount * 750;
+  const revenue = bookingsCount * 1800;
   const greeting = useMemo(() => {
     const h = new Date().getHours();
     if (h < 12) return "Good morning";
@@ -146,6 +146,25 @@ export default function OverviewPage() {
 
       {/* Six-step onboarding checklist */}
       {!loading && <OnboardingChecklist client={client} kbCount={kbCount} />}
+
+      {/* Activity summary banner */}
+      {!loading && (bookingsCount > 0 || convoCount > 0) && (
+        <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-brand/[0.06] border border-brand/20">
+          <div className="w-8 h-8 rounded-xl bg-brand/15 flex items-center justify-center shrink-0">
+            <Zap className="w-4 h-4 text-brand" />
+          </div>
+          <p className="text-small text-fg flex-1">
+            <span className="font-semibold text-brand">{convoCount} lead{convoCount !== 1 ? "s" : ""} handled</span>
+            {bookingsCount > 0 && (
+              <> · <span className="font-semibold text-fg">{bookingsCount} booking{bookingsCount !== 1 ? "s" : ""} made</span></>
+            )}
+            {revenue > 0 && (
+              <> · <span className="font-semibold text-fg">R{revenue.toLocaleString()} booked</span></>
+            )}
+            <span className="text-fg-muted"> this month</span>
+          </p>
+        </div>
+      )}
 
       {/* Attention banner */}
       {escalations.length > 0 && (
@@ -209,7 +228,7 @@ export default function OverviewPage() {
           {loading ? (
             <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
           ) : todayBookings.length === 0 ? (
-            <EmptyState icon={CalendarCheck} title="Clear day" description="Use the gap to follow up on open quotes." />
+            <EmptyState icon={CalendarCheck} title="Clear day ahead" description="That'll change once Qwikly books a lead. Follow up on open quotes in the meantime." />
           ) : (
             <div className="space-y-2">
               {todayBookings.slice(0, 5).map((b) => (

@@ -120,12 +120,14 @@ const config: Config = {
       animation: {
         "fade-in": "fadeIn 200ms ease-out",
         "slide-up": "slideUp 250ms cubic-bezier(0.22,1,0.36,1)",
+        "slide-in-right": "slideInRight 280ms cubic-bezier(0.22,1,0.36,1)",
         "pulse-soft": "pulseSoft 2.4s ease-in-out infinite",
         "shimmer": "shimmer 1.6s linear infinite",
       },
       keyframes: {
         fadeIn: { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
         slideUp: { "0%": { opacity: "0", transform: "translateY(8px)" }, "100%": { opacity: "1", transform: "translateY(0)" } },
+        slideInRight: { "0%": { opacity: "0", transform: "translateX(24px)" }, "100%": { opacity: "1", transform: "translateX(0)" } },
         pulseSoft: { "0%,100%": { opacity: "0.6" }, "50%": { opacity: "1" } },
         shimmer: { "0%": { backgroundPosition: "-400px 0" }, "100%": { backgroundPosition: "400px 0" } },
       },
