@@ -252,62 +252,49 @@ export default function Home() {
 
           {/* Headline */}
           <div className="reveal-words visible">
-            <h1 className="display-huge text-ink max-w-[14ch]">
+            <h1 className="display-huge text-ink">
               Stop losing jobs<br />
               <span className="italic font-light">to the first reply</span>.
             </h1>
           </div>
 
           {/* Subhead + CTAs */}
-          <div className="mt-12 md:mt-16 grid grid-cols-1 lg:grid-cols-12 gap-10 items-end reveal-up">
-            <div className="lg:col-span-7">
-              <p className="text-lg md:text-xl text-ink-700 max-w-xl leading-relaxed">
+          <div className="mt-10 md:mt-14 reveal-up">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+              <p className="text-lg md:text-xl text-ink-700 leading-relaxed">
                 Qwikly answers your WhatsApp, qualifies the lead, quotes them, and books the
                 job — while you stay on site. You pay only when a real appointment
                 lands in your calendar.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-4">
-                <CTAButton size="lg" variant="primary" href="/signup">
-                  Start your 7-day trial
-                </CTAButton>
-                <CTAButton size="lg" variant="outline" href="#demo" withArrow={false}>
-                  See it answer a real lead
-                </CTAButton>
-              </div>
-              <p className="mt-4 text-sm text-ink-500">
-                No setup fee. No contract. Pay only when a job is booked.
-              </p>
-              <LiveCounter />
-            </div>
-
-            {/* Right column — live status card */}
-            {STATS_VERIFIED && (
-              <div className="lg:col-span-5 lg:pl-8 lg:border-l lg:border-ink/10">
-                <p className="eyebrow text-ink-500 mb-4">This morning, so far</p>
-                <div className="grid grid-cols-3 gap-5">
-                  <div>
-                    <p className="font-display text-4xl text-ink">
-                      <StatCounter value={17} />
-                    </p>
-                    <p className="text-xs text-ink-500 mt-1">Leads replied</p>
-                  </div>
-                  <div>
-                    <p className="font-display text-4xl text-ink">
-                      <StatCounter value={11} />
-                    </p>
-                    <p className="text-xs text-ink-500 mt-1">Jobs booked</p>
-                  </div>
-                  <div>
-                    <p className="font-display text-4xl text-ember">
-                      R<StatCounter value={48} />k
-                    </p>
-                    <p className="text-xs text-ink-500 mt-1">Revenue captured</p>
-                  </div>
+              <div className="flex flex-col gap-4 lg:items-end lg:text-right">
+                <div className="flex flex-wrap gap-4 lg:justify-end">
+                  <CTAButton size="lg" variant="primary" href="/signup">
+                    Start your 7-day trial
+                  </CTAButton>
+                  <CTAButton size="lg" variant="outline" href="#demo" withArrow={false}>
+                    See it answer a real lead
+                  </CTAButton>
                 </div>
-                <div className="rule mt-6" />
-                <p className="mt-4 text-[0.75rem] text-ink-500 leading-relaxed">
-                  Rolling average across active Qwikly accounts, refreshed at 06:00 SAST.
+                <p className="text-sm text-ink-500">
+                  No setup fee. No contract. Pay only when a job is booked.
                 </p>
+                <LiveCounter />
+              </div>
+            </div>
+            {STATS_VERIFIED && (
+              <div className="mt-10 grid grid-cols-3 gap-8 border-t border-ink/10 pt-8 max-w-lg">
+                <div>
+                  <p className="font-display text-4xl text-ink"><StatCounter value={17} /></p>
+                  <p className="text-xs text-ink-500 mt-1">Leads replied</p>
+                </div>
+                <div>
+                  <p className="font-display text-4xl text-ink"><StatCounter value={11} /></p>
+                  <p className="text-xs text-ink-500 mt-1">Jobs booked</p>
+                </div>
+                <div>
+                  <p className="font-display text-4xl text-ember">R<StatCounter value={48} />k</p>
+                  <p className="text-xs text-ink-500 mt-1">Revenue captured</p>
+                </div>
               </div>
             )}
           </div>
@@ -347,10 +334,13 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Bottom marquee — trades */}
-          <div className="mt-24 overflow-hidden ticker-pause">
-            <div className="rule mb-6 mx-0" />
-            <div className="flex items-center gap-12 ticker-scroll-slow w-max text-ink-700 px-6">
+        </div>
+
+        {/* Bottom marquee — full viewport width, outside max-w container */}
+        <div className="mt-24 ticker-pause">
+          <div className="border-t border-ink/10 mb-6" />
+          <div className="overflow-hidden">
+            <div className="flex items-center gap-12 ticker-scroll-slow w-max text-ink-700 pl-6">
               {[...tradeLines, ...tradeLines].map((t, i) => (
                 <span key={`${t}-${i}`} className="headline-marquee">
                   {t}
@@ -358,11 +348,11 @@ export default function Home() {
                 </span>
               ))}
             </div>
-            <div className="rule mt-6 mx-0" />
-            <p className="eyebrow text-center text-ink-500 mt-6">
-              20+ trades · Built for South African service businesses
-            </p>
           </div>
+          <div className="border-b border-ink/10 mt-6" />
+          <p className="eyebrow text-center text-ink-500 mt-6">
+            20+ trades · Built for South African service businesses
+          </p>
         </div>
       </section>
 
