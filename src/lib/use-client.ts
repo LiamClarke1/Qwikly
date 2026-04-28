@@ -10,6 +10,9 @@ export interface ClientRow {
   owner_name: string | null;
   whatsapp_number: string | null;
   google_calendar_id: string | null;
+  google_access_token?: string | null;
+  google_refresh_token?: string | null;
+  google_token_expiry?: number | null;
   system_prompt: string | null;
   ai_paused?: boolean;
   onboarding_complete?: boolean;
@@ -65,7 +68,20 @@ export function useClient() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.from("clients").select("*").limit(1).maybeSingle();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        if (!cancelled) {
+          setClient(null);
+          setLoading(false);
+        }
+        return;
+      }
+      const { data } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("auth_user_id", user.id)
+        .limit(1)
+        .maybeSingle();
       if (!cancelled) {
         setClient((data as ClientRow) ?? null);
         setLoading(false);

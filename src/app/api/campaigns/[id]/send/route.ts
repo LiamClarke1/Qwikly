@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { sendWhatsAppMessage, interpolate } from "@/lib/twilio-whatsapp";
 
@@ -6,6 +8,27 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Verify session
+  const cookieStore = cookies();
+  const authClient = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll(); },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+  const { data: { user } } = await authClient.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const supabase = supabaseAdmin();
   const campaignId = params.id;
 
@@ -17,6 +40,17 @@ export async function POST(
 
   if (campaignErr || !campaign) {
     return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
+  }
+
+  // Verify campaign's client belongs to this user
+  const { data: ownedClient } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("id", campaign.client_id)
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
+  if (!ownedClient) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   if (campaign.status === "sent") {
@@ -47,10 +81,22 @@ export async function POST(
 
   const { data: contacts } = await contactQuery;
 
-  let sentCount = 0;
+  // Find contacts already successfully sent to in this campaign run.
+  // This makes the endpoint safely resumable — if the function times out
+  // mid-send, re-calling it won't duplicate messages to already-sent contacts.
+  const { data: alreadySent } = await supabase
+    .from("campaign_recipients")
+    .select("contact_id")
+    .eq("campaign_id", campaignId)
+    .eq("status", "sent");
+
+  const alreadySentIds = new Set((alreadySent ?? []).map((r) => r.contact_id).filter(Boolean));
+  const pendingContacts = (contacts ?? []).filter((c) => !alreadySentIds.has(c.id));
+
+  let sentCount = alreadySentIds.size; // count previously sent recipients too
   let failedCount = 0;
 
-  for (const contact of contacts ?? []) {
+  for (const contact of pendingContacts) {
     const message = interpolate(campaign.message_body, {
       name: contact.name ?? "",
       business: client?.business_name ?? "",
@@ -78,14 +124,21 @@ export async function POST(
     }
   }
 
+  // Only mark "sent" when all recipients have been processed (sent or failed).
+  // If this function was cut short by a timeout, status stays "sending" and
+  // can be resumed by re-calling the endpoint.
+  const totalContacts = (contacts ?? []).length;
+  const processedCount = sentCount + failedCount;
+  const allProcessed = processedCount >= totalContacts;
+
   await supabase
     .from("campaigns")
     .update({
-      status: "sent",
-      sent_at: new Date().toISOString(),
+      status: allProcessed ? "sent" : "sending",
+      ...(allProcessed && { sent_at: new Date().toISOString() }),
       sent_count: sentCount,
     })
     .eq("id", campaignId);
 
-  return NextResponse.json({ sent: sentCount, failed: failedCount });
+  return NextResponse.json({ sent: sentCount, failed: failedCount, resumed: alreadySentIds.size > 0 });
 }

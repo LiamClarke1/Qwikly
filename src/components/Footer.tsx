@@ -102,7 +102,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-paper/40">
-          <p className="eyebrow">Built by Clarke Agency · Johannesburg</p>
+          <p className="eyebrow">POPIA compliant · Customer data stays in South Africa</p>
           <p className="eyebrow">&copy; {new Date().getFullYear()} Qwikly. All rights reserved.</p>
         </div>
       </div>

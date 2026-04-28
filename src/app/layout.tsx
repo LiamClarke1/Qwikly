@@ -25,6 +25,9 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  verification: {
+    google: "tczIM2WulV3rRXOHYYDCnONsEPUKckjx-U2WTu5xy2w",
+  },
   title: "Qwikly | Never Miss a Lead Again",
   description:
     "Qwikly replies to every WhatsApp and email lead in 30 seconds, qualifies them, and books the appointment into your Google Calendar. Built for South African service businesses. Pay only when a job is booked.",

@@ -1,11 +1,4 @@
-// Run this in Supabase SQL editor before deploying:
-// CREATE TABLE IF NOT EXISTS automation_logs (
-//   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-//   automation_id uuid NOT NULL,
-//   source_id text NOT NULL,
-//   fired_at timestamptz DEFAULT now(),
-//   UNIQUE(automation_id, source_id)
-// );
+// automation_logs table is created in migration-reliability-fixes.sql
 
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
@@ -73,7 +66,11 @@ export async function POST(req: NextRequest) {
             name: booking.customer_name ?? "",
             business: client?.business_name ?? "",
             time: booking.booking_datetime
-              ? new Date(booking.booking_datetime).toLocaleString()
+              ? new Date(booking.booking_datetime).toLocaleString("en-ZA", {
+              timeZone: "Africa/Johannesburg",
+              weekday: "short", day: "numeric", month: "short",
+              hour: "2-digit", minute: "2-digit",
+            })
               : "",
           });
 
@@ -126,7 +123,11 @@ export async function POST(req: NextRequest) {
             name: booking.customer_name ?? "",
             business: client?.business_name ?? "",
             time: booking.booking_datetime
-              ? new Date(booking.booking_datetime).toLocaleString()
+              ? new Date(booking.booking_datetime).toLocaleString("en-ZA", {
+              timeZone: "Africa/Johannesburg",
+              weekday: "short", day: "numeric", month: "short",
+              hour: "2-digit", minute: "2-digit",
+            })
               : "",
           });
 
@@ -196,8 +197,18 @@ export async function POST(req: NextRequest) {
           fired++;
         }
       }
-    } catch {
-      // continue processing remaining automations on individual failure
+    } catch (err) {
+      console.error("[automations/run] automation failed", {
+        automationId: automation.id,
+        clientId: automation.client_id,
+        triggerType: automation.trigger_type,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      // Increment error counter on the automation row so owners can see failures in the dashboard.
+      await supabase
+        .from("automations")
+        .update({ error_count: ((automation as { error_count?: number }).error_count ?? 0) + 1 })
+        .eq("id", automation.id);
     }
   }
 

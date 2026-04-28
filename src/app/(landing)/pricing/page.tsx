@@ -107,10 +107,10 @@ export default function PricingPage() {
       <section className="relative pb-28 overflow-hidden">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <div className="text-center">
-            <p className="mega-num text-ink leading-none tracking-tight">
+            <p className="mega-num text-ink tracking-tight">
               8<span className="text-ember align-top text-[0.55em] ml-2">%</span>
             </p>
-            <p className="font-display italic text-2xl md:text-3xl text-ink-700 -mt-8 md:-mt-14">
+            <p className="font-display italic text-2xl md:text-3xl text-ink-700 mt-2 md:mt-0">
               of the service price, only when a job is booked.
             </p>
             <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-16">

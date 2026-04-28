@@ -26,6 +26,7 @@ interface Booking {
   area: string | null;
   booking_datetime: string | null;
   status: string;
+  service_price: number | null;
 }
 
 const FILTERS = ["All", "Booked", "Completed", "Cancelled", "No-show"] as const;
@@ -56,7 +57,7 @@ function startOfWeek(d: Date) {
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 7); // 7 → 18
 const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-const BLANK = { customer_name: "", customer_phone: "", job_type: "", area: "", date: "", time: "09:00" };
+const BLANK = { customer_name: "", customer_phone: "", customer_email: "", job_type: "", area: "", date: "", time: "09:00" };
 
 interface GCalEvent {
   id: string | null | undefined;
@@ -82,6 +83,7 @@ export default function BookingsPage() {
   const [search, setSearch] = useState("");
   const [gCalEvents, setGCalEvents] = useState<GCalEvent[]>([]);
   const [calConnected, setCalConnected] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -161,7 +163,9 @@ export default function BookingsPage() {
     total: bookings.length,
     upcoming: bookings.filter((b) => b.booking_datetime && new Date(b.booking_datetime) > new Date() && b.status === "booked").length,
     completed: bookings.filter((b) => b.status === "completed").length,
-    revenue: bookings.filter((b) => b.status === "completed").length * 750,
+    revenue: bookings
+      .filter((b) => b.status === "completed")
+      .reduce((sum, b) => sum + (b.service_price ?? 0), 0),
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -177,6 +181,11 @@ export default function BookingsPage() {
     setShowAdd(true);
   };
 
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const handleAdd = async () => {
     if (!addForm.customer_name.trim() || !addForm.date) return;
     setAddLoading(true);
@@ -184,6 +193,7 @@ export default function BookingsPage() {
     const booking = {
       customer_name: addForm.customer_name,
       customer_phone: addForm.customer_phone || "",
+      customer_email: addForm.customer_email || null,
       job_type: addForm.job_type || null,
       area: addForm.area || null,
       booking_datetime: dt.toISOString(),
@@ -194,14 +204,50 @@ export default function BookingsPage() {
       setBookings((bs) => [data as Booking, ...bs]);
       setShowAdd(false);
       setAddForm(BLANK);
-      // Sync to Google Calendar if connected
+      setWeekStart(startOfWeek(dt));
+
+      // Sync to Google Calendar and send confirmation email — awaited so failures
+      // are surfaced to the user rather than silently dropped.
+      let calFailed = false;
+      let emailFailed = false;
+
       if (client?.id && calConnected) {
-        fetch("/api/calendar/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ clientId: client.id, booking }),
-        }).catch(() => {});
+        try {
+          const r = await fetch("/api/calendar/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ clientId: client.id, booking }),
+          });
+          if (!r.ok) calFailed = true;
+        } catch {
+          calFailed = true;
+        }
       }
+
+      if (addForm.customer_email && client?.id) {
+        try {
+          const r = await fetch("/api/email/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "confirmation", bookingId: data.id, clientId: client.id }),
+          });
+          if (!r.ok) emailFailed = true;
+        } catch {
+          emailFailed = true;
+        }
+      }
+
+      if (calFailed) {
+        showToast("Booking saved. Calendar sync failed — check your Google connection in Settings.");
+      } else if (emailFailed) {
+        showToast("Booking saved. Confirmation email failed to send.");
+      } else if (addForm.customer_email) {
+        showToast(`Booking saved · confirmation sent to ${addForm.customer_email}`);
+      } else {
+        showToast("Booking saved");
+      }
+    } else {
+      showToast("Failed to save booking. Try again.");
     }
     setAddLoading(false);
   };
@@ -509,6 +555,9 @@ export default function BookingsPage() {
               <ModalField label="Phone number">
                 <input value={addForm.customer_phone} onChange={(e) => setAddForm({ ...addForm, customer_phone: e.target.value })} placeholder="+27 82 123 4567" className="w-full h-10 px-3 rounded-xl bg-ink-800 border border-line text-small text-fg placeholder:text-fg-faint outline-none focus:border-brand/50 transition-colors" />
               </ModalField>
+              <ModalField label="Email address">
+                <input type="email" value={addForm.customer_email} onChange={(e) => setAddForm({ ...addForm, customer_email: e.target.value })} placeholder="customer@email.com" className="w-full h-10 px-3 rounded-xl bg-ink-800 border border-line text-small text-fg placeholder:text-fg-faint outline-none focus:border-brand/50 transition-colors" />
+              </ModalField>
               <div className="grid grid-cols-2 gap-3">
                 <ModalField label="Date *">
                   <input type="date" value={addForm.date} onChange={(e) => setAddForm({ ...addForm, date: e.target.value })} className="w-full h-10 px-3 rounded-xl bg-ink-800 border border-line text-small text-fg outline-none focus:border-brand/50 transition-colors" />
@@ -534,6 +583,14 @@ export default function BookingsPage() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl bg-[#0D111A] border border-white/[0.08] shadow-pop text-small text-fg flex items-center gap-2 motion-safe:animate-[fadeIn_150ms_ease-out] whitespace-nowrap">
+          <Check className="w-3.5 h-3.5 text-brand shrink-0" />
+          {toast}
+        </div>
       )}
     </>
   );

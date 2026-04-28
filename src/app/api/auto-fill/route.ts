@@ -4,6 +4,36 @@ import type { MessageParam } from "@anthropic-ai/sdk/resources/messages";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+// ─── Rate limiting ────────────────────────────────────────────────────────────
+
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 60 seconds
+
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+
+  // Clean up expired entries
+  rateLimitMap.forEach((entry, key) => {
+    if (now > entry.resetAt) rateLimitMap.delete(key);
+  });
+
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true; // allowed
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return false; // over limit
+  }
+
+  entry.count += 1;
+  return true; // allowed
+}
+
 // ─── Prompts ──────────────────────────────────────────────────────────────────
 
 const SYSTEM = `You are a business data extraction specialist for South African service businesses. Extract every piece of useful information from the provided content. Return ONLY valid JSON — no markdown, no explanation, just the raw JSON object.`;
@@ -289,6 +319,14 @@ async function runClaude(textContent: string, files: UploadedFile[]): Promise<Re
 // ─── Main handler ─────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { error: "Too many requests, try again later" },
+      { status: 429 }
+    );
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: "AI service not configured." }, { status: 503 });
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import CTAButton from "@/components/CTAButton";
 import FAQ from "@/components/FAQ";
 import WhatsAppMock from "@/components/WhatsAppMock";
@@ -190,6 +190,64 @@ function StatCounter({ value, suffix = "" }: { value: number; suffix?: string })
 }
 
 /* ─────────────────────────────────────────────────────────────
+   PRICING CALCULATOR
+   ───────────────────────────────────────────────────────────── */
+
+function PricingCalculator() {
+  const [rawPrice, setRawPrice] = useState("");
+
+  const result = useMemo(() => {
+    const price = parseFloat(rawPrice.replace(/[^0-9.]/g, ""));
+    if (!price || price <= 0) return null;
+    const fee = Math.min(Math.max(price * 0.08, 150), 5000);
+    const keep = price - fee;
+    return { fee: Math.round(fee), keep: Math.round(keep) };
+  }, [rawPrice]);
+
+  return (
+    <div className="mt-16 mb-4 bg-ink/5 border border-ink/10 rounded-2xl p-6 md:p-8 reveal-up">
+      <p className="eyebrow text-ink-500 mb-2">See what you&rsquo;d pay</p>
+      <p className="font-display text-xl text-ink mb-6">Enter your typical job price</p>
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display text-ink-500">R</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min="0"
+            value={rawPrice}
+            onChange={(e) => setRawPrice(e.target.value)}
+            placeholder="e.g. 2500"
+            className="pl-8 pr-4 py-3 bg-white border border-ink/15 rounded-xl text-ink text-lg font-display w-48 focus:outline-none focus:ring-2 focus:ring-ember/40 focus:border-ember/40 transition-all"
+          />
+        </div>
+        {result ? (
+          <div className="flex flex-wrap gap-6 items-center">
+            <div>
+              <p className="eyebrow text-ink-500">Qwikly fee</p>
+              <p className="font-display text-3xl text-ember mt-0.5">R{result.fee.toLocaleString()}</p>
+            </div>
+            <div className="w-px h-10 bg-ink/10 hidden sm:block" />
+            <div>
+              <p className="eyebrow text-ink-500">You keep</p>
+              <p className="font-display text-3xl text-ink mt-0.5">R{result.keep.toLocaleString()}</p>
+            </div>
+            <div className="w-px h-10 bg-ink/10 hidden sm:block" />
+            <div>
+              <p className="eyebrow text-ink-500">Return multiple</p>
+              <p className="font-display text-3xl text-ink mt-0.5">{Math.round(result.keep / result.fee)}×</p>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-ink-500 italic">Your fee and what you keep will appear here</p>
+        )}
+      </div>
+      <p className="text-xs text-ink-400 mt-4">Min R150 · Max R5,000 per booking · Only charged on confirmed jobs</p>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
    PAGE
    ───────────────────────────────────────────────────────────── */
 
@@ -372,7 +430,7 @@ export default function Home() {
               vanish.”
             </p>
             <CTAButton size="lg" variant="solid" href="/signup">
-              Stop losing those
+              Start your 7-day trial
             </CTAButton>
           </div>
         </div>
@@ -546,7 +604,7 @@ export default function Home() {
             </div>
             <div className="md:col-span-5 flex md:justify-end">
               <CTAButton size="lg" variant="solid" href="/signup">
-                Put it to work
+                Start your 7-day trial
               </CTAButton>
             </div>
           </div>
@@ -601,13 +659,15 @@ export default function Home() {
           </div>
 
           <div className="relative text-center reveal-scale">
-            <p className="mega-num text-ink leading-none tracking-tight">
+            <p className="mega-num text-ink tracking-tight">
               8<span className="text-ember align-top text-[0.55em] ml-2">%</span>
             </p>
-            <p className="font-display italic text-2xl md:text-3xl text-ink-700 -mt-6 md:-mt-10">
+            <p className="font-display italic text-2xl md:text-3xl text-ink-700 mt-2 md:mt-0">
               of the service price, only when a job is booked.
             </p>
           </div>
+
+          <PricingCalculator />
 
           <div className="mt-16 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start reveal-up">
             <div className="lg:col-span-5 space-y-8">
@@ -630,10 +690,13 @@ export default function Home() {
                 </p>
               </div>
               <CTAButton size="lg" variant="primary" href="/signup">
-                Claim your first booking
+                Start your 7-day trial
               </CTAButton>
               <p className="text-xs text-ink-500">
                 7-day trial. Cancels anytime. No card held hostage.
+              </p>
+              <p className="text-xs text-ink-400">
+                POPIA compliant · Your customer data stays in South Africa
               </p>
             </div>
 
