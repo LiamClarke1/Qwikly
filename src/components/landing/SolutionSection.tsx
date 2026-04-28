@@ -15,7 +15,7 @@ const content: Record<Problem, SolutionContent> = {
     body: "When a customer messages your business WhatsApp, Qwikly replies in under 5 seconds. No missed message, no lost job, no chasing them tomorrow morning.",
     bullets: ["Replies in under 30 seconds, 24/7", "Speaks like you, not like a bot", "Books straight into your Google Calendar"],
     conversation: [
-      { sender: "customer", text: "Hi, I need a plumber urgently — burst geyser in Sandton." },
+      { sender: "customer", text: "Hi, I need a plumber urgently. Burst geyser in Sandton." },
       { sender: "ai", text: "Hi! Sorry to hear that. I can get someone out tonight. What's your address and is the mains off?" },
       { sender: "customer", text: "Morningside. Mains is off now." },
       { sender: "ai", text: "Got it. Tech will be there by 10pm. I'll send a confirmation now." },
@@ -29,13 +29,13 @@ const content: Record<Problem, SolutionContent> = {
       { sender: "customer", text: "Do you do aircon servicing? And how much roughly?" },
       { sender: "ai", text: "Yes, we do full services and gas recharges. Service is R950 all-in. Which area are you in?" },
       { sender: "customer", text: "Bryanston. This week if possible." },
-      { sender: "ai", text: "We're in Bryanston on Wednesday. 9am or 2pm — which suits?" },
+      { sender: "ai", text: "We're in Bryanston on Wednesday. 9am or 2pm, which suits?" },
     ],
   },
   "quoting": {
     headline: "Quote a customer before you've put down your tools.",
     body: "Qwikly knows your services and your prices. It quotes the customer, sends a calendar link, and only buzzes you when the job is confirmed and booked.",
-    bullets: ["Quotes based on your exact price list", "Handles negotiation and objections naturally", "Sends the confirmation — you just show up"],
+    bullets: ["Quotes based on your exact price list", "Handles negotiation and objections naturally", "Sends the confirmation. You just show up."],
     conversation: [
       { sender: "customer", text: "How much for weekly pool cleaning in Fourways?" },
       { sender: "ai", text: "Weekly is R650 a month, no contract. For a neglected pool we usually start with a R450 deep clean. Want to lock in this Thursday?" },
@@ -45,7 +45,7 @@ const content: Record<Problem, SolutionContent> = {
   },
   "ghosting": {
     headline: "We chase them so you don't have to.",
-    body: "Follow-ups at 1 hour, 24 hours, 3 days, 7 days. We've seen 1 in 4 silent leads come back when nudged correctly. They didn't ghost you — they got distracted.",
+    body: "Follow-ups at 1 hour, 24 hours, 3 days, 7 days. We've seen 1 in 4 silent leads come back when nudged correctly. They didn't ghost you. They got distracted.",
     bullets: ["Automated follow-ups at 4h, 24h, 2d, 5d", "Dormant-lead revival at 30 days", "Switches to email if WhatsApp goes quiet"],
     conversation: [
       { sender: "customer", text: "Hey, what do you charge for electrical COC?" },

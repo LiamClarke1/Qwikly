@@ -9,7 +9,7 @@ const rows = [
   },
   {
     tech: "Google Calendar API sync with conflict resolution",
-    human: "Books straight into your calendar — no double bookings, ever",
+    human: "Books straight into your calendar. No double bookings, ever.",
   },
   {
     tech: "Automated multi-step follow-up sequences",

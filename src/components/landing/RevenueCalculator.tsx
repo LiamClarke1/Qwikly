@@ -149,7 +149,7 @@ export function RevenueCalculator() {
             <span className="text-5xl num">{monthlyLoss.toLocaleString()}</span>
           </div>
           <p className="mt-3 text-paper/60 text-sm leading-relaxed">
-            to slow replies — {REPLY_LABELS[replyDelay].toLowerCase()} missing the first-reply window on {Math.round(leads * 4 * REPLY_DELAY_MULTIPLIERS[delayKey])} leads a month.
+            to slow replies. {REPLY_LABELS[replyDelay]} missing the first-reply window on {Math.round(leads * 4 * REPLY_DELAY_MULTIPLIERS[delayKey])} leads a month.
           </p>
 
           <div className="rule-light mt-6 mb-6" />
@@ -161,7 +161,7 @@ export function RevenueCalculator() {
 
           <div className="mt-6">
             <CTAButton size="lg" variant="solid" href="/signup" className="w-full justify-center">
-              Start free trial — pay nothing for 7 days
+              Start free trial. Pay nothing for 7 days.
             </CTAButton>
           </div>
         </div>

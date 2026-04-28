@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "How Qwikly Works",
     description:
-      "Connect your WhatsApp. Qwikly replies, qualifies, and books every lead automatically — 24/7.",
+      "Connect your WhatsApp. Qwikly replies, qualifies, and books every lead automatically. 24/7.",
     url: "https://www.qwikly.co.za/how-it-works",
   },
 };

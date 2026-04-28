@@ -23,7 +23,7 @@ const toneMessages: Record<ToneId, DemoMessage[]> = {
     { sender: "customer", text: "Hi, I have a leaking tap in the kitchen. Can someone come tomorrow?", delay: 0 },
     { sender: "ai", text: "Hi! Yes, we can definitely sort that out. Is it a constant drip or does it run when you use the tap?", delay: 1400 },
     { sender: "customer", text: "It's a constant drip. Getting worse.", delay: 2800 },
-    { sender: "ai", text: "That's usually a washer or cartridge — quick fix. What suburb are you in?", delay: 4200 },
+    { sender: "ai", text: "That's usually a washer or cartridge. Quick fix. What suburb are you in?", delay: 4200 },
     { sender: "customer", text: "Midrand.", delay: 5600 },
     { sender: "ai", text: "We're in Midrand tomorrow. I have 9am or 1pm available. Which works for you?", delay: 7000 },
     { sender: "customer", text: "9am please", delay: 8400 },
@@ -33,7 +33,7 @@ const toneMessages: Record<ToneId, DemoMessage[]> = {
     { sender: "customer", text: "Hi, I have a leaking tap in the kitchen. Can someone come tomorrow?", delay: 0 },
     { sender: "ai", text: "Hi. Constant drip or only when you use the tap?", delay: 1400 },
     { sender: "customer", text: "Constant drip.", delay: 2800 },
-    { sender: "ai", text: "Washer or cartridge — straightforward job. Suburb?", delay: 4200 },
+    { sender: "ai", text: "Washer or cartridge. Straightforward job. Suburb?", delay: 4200 },
     { sender: "customer", text: "Midrand.", delay: 5600 },
     { sender: "ai", text: "Midrand: 9am or 1pm tomorrow. Which?", delay: 7000 },
     { sender: "customer", text: "9am", delay: 8400 },
@@ -43,7 +43,7 @@ const toneMessages: Record<ToneId, DemoMessage[]> = {
     { sender: "customer", text: "Hi, I have a leaking tap in the kitchen. Can someone come tomorrow?", delay: 0 },
     { sender: "ai", text: "Good day. Thank you for reaching out. Is the leak continuous or does it occur when the tap is in use?", delay: 1400 },
     { sender: "customer", text: "It's continuous.", delay: 2800 },
-    { sender: "ai", text: "That typically indicates a worn washer or cartridge — a minor repair. May I confirm your suburb?", delay: 4200 },
+    { sender: "ai", text: "That typically indicates a worn washer or cartridge, a minor repair. May I confirm your suburb?", delay: 4200 },
     { sender: "customer", text: "Midrand.", delay: 5600 },
     { sender: "ai", text: "We have availability in Midrand tomorrow at 9:00am or 1:00pm. Which time would suit you?", delay: 7000 },
     { sender: "customer", text: "9am please", delay: 8400 },
@@ -53,9 +53,9 @@ const toneMessages: Record<ToneId, DemoMessage[]> = {
     { sender: "customer", text: "Hi, I have a leaking tap in the kitchen. Can someone come tomorrow?", delay: 0 },
     { sender: "ai", text: "Hey! Sure thing, we can sort that no problem. Is it dripping all the time or just when you turn it on?", delay: 1400 },
     { sender: "customer", text: "All the time. Getting annoying.", delay: 2800 },
-    { sender: "ai", text: "Yeah that's probably just a washer — easy fix honestly. What area are you in?", delay: 4200 },
+    { sender: "ai", text: "Yeah that's probably just a washer. Easy fix honestly. What area are you in?", delay: 4200 },
     { sender: "customer", text: "Midrand.", delay: 5600 },
-    { sender: "ai", text: "Cool, we're in Midrand tomorrow! Morning slot at 9 or afternoon at 1 — which works better for you?", delay: 7000 },
+    { sender: "ai", text: "Cool, we're in Midrand tomorrow! Morning slot at 9 or afternoon at 1, which works better for you?", delay: 7000 },
     { sender: "customer", text: "9am works", delay: 8400 },
     { sender: "ai", text: "Sorted! See you at 9am tomorrow in Midrand. I'll send you a confirmation now and ping you in the morning. What's your name?", delay: 9800 },
   ],
@@ -66,8 +66,8 @@ const otherScenarios: { id: string; label: string; messages: DemoMessage[] }[] =
     id: "after-hours",
     label: "After-hours emergency",
     messages: [
-      { sender: "customer", text: "URGENT — my geyser just burst. It's 11pm. Is anyone available?", delay: 0 },
-      { sender: "ai", text: "Sorry to hear that — turn off the mains water now if you haven't. We have an emergency callout available. Which area?", delay: 1400 },
+      { sender: "customer", text: "URGENT. My geyser just burst. It's 11pm. Is anyone available?", delay: 0 },
+      { sender: "ai", text: "Sorry to hear that. Turn off the mains water now if you haven't. We have an emergency callout available. Which area?", delay: 1400 },
       { sender: "customer", text: "Bryanston. Mains is off.", delay: 2800 },
       { sender: "ai", text: "Good. Our tech can be there in about 45 minutes. Emergency callout is R1,200 + parts. Want me to book it?", delay: 4200 },
       { sender: "customer", text: "Yes please, as soon as possible", delay: 5600 },
@@ -238,7 +238,7 @@ export function DemoPlayer() {
 
         <div className="p-4 bg-ink/4 rounded-xl border border-ink/8">
           <p className="text-xs text-ink-500 leading-relaxed">
-            Your assistant uses <span className="font-semibold text-ink-700">{activeToneLabel}</span> tone — set once during setup, applied to every conversation automatically.
+            Your assistant uses <span className="font-semibold text-ink-700">{activeToneLabel}</span> tone, set once during setup and applied to every conversation automatically.
           </p>
         </div>
       </div>
@@ -252,7 +252,7 @@ export function DemoPlayer() {
               <span className="text-[#00a884] text-xs font-bold">Q</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-medium truncate">Qwikly — {activeToneLabel}</p>
+              <p className="text-white text-sm font-medium truncate">Qwikly · {activeToneLabel}</p>
               <p className="text-[#8696a0] text-[10px]">{playing ? "Replying…" : "online · replies in 30s"}</p>
             </div>
             <div className={cn(
@@ -292,7 +292,7 @@ export function DemoPlayer() {
           {/* Input bar */}
           <div className="bg-[#1f2c34] px-3 py-2.5 flex items-center gap-2">
             <div className="flex-1 bg-[#2a3942] rounded-full px-4 py-2">
-              <span className="text-[#8696a0] text-[11px]">Handled automatically — no input needed</span>
+              <span className="text-[#8696a0] text-[11px]">Handled automatically. No input needed.</span>
             </div>
           </div>
         </div>
