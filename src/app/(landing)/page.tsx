@@ -368,17 +368,28 @@ export default function Home() {
             <em className="italic font-light text-ember">to babysit a phone</em>.
           </h2>
 
-          <div className="mt-16 space-y-4 reveal-stagger">
+          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-px bg-paper/[0.06] rounded-2xl overflow-hidden reveal-stagger">
             {[
-              "Tired of losing weekend jobs because you couldn't get to the phone?",
-              "Customers ghost you because you took 4 hours to reply?",
-              "WhatsApp full of leads you'll reply to later — and never do?",
+              {
+                num: "01",
+                headline: "Missed call. Lost job.",
+                body: "The phone rang at 6pm on a Friday. You were under a sink. The lead called someone else. That job was worth R3,200.",
+              },
+              {
+                num: "02",
+                headline: "Replied 4 hours later.",
+                body: "They wanted you. You took too long. By the time you messaged back, they'd already booked the first guy to reply.",
+              },
+              {
+                num: "03",
+                headline: "WhatsApp full of ghosts.",
+                body: "Leads you meant to follow up. Quotes you never sent. Every unread message is revenue you already lost and don't know it.",
+              },
             ].map((pain) => (
-              <div
-                key={pain}
-                className="px-6 py-5 rounded-2xl border border-ember/25 bg-ember/[0.06]"
-              >
-                <p className="text-paper/90 text-lg leading-relaxed">{pain}</p>
+              <div key={pain.num} className="bg-paper/[0.03] px-7 py-8 flex flex-col gap-4">
+                <span className="font-mono text-xs text-ember/60 tracking-widest">{pain.num}</span>
+                <p className="font-display text-2xl md:text-3xl text-paper leading-tight">{pain.headline}</p>
+                <p className="text-paper/55 text-sm leading-relaxed">{pain.body}</p>
               </div>
             ))}
           </div>
@@ -582,6 +593,40 @@ export default function Home() {
               Start your 7-day trial
             </CTAButton>
             <p className="text-sm text-ink-500">No card. No setup fee. Cancel anytime.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════ INVOICING ══════════════════════════════════════ */}
+      <section className="relative py-24 bg-ink text-paper overflow-hidden grain-dark">
+        <div className="ember-blob w-[400px] h-[400px] bottom-0 left-1/2 -translate-x-1/2 opacity-40" />
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+            <div>
+              <p className="eyebrow text-ember mb-5">Also included — invoicing</p>
+              <h2 className="display-lg text-paper leading-tight">
+                Book it. Invoice it.<br />
+                <em className="italic font-light text-ember">Get paid.</em>
+              </h2>
+              <p className="mt-6 text-paper/65 text-lg leading-relaxed max-w-md">
+                Once a job is booked, Qwikly can generate and send the invoice via WhatsApp the same day. No chasing. No paperwork. Clients pay faster when they get the invoice before the tech leaves the driveway.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              {[
+                { num: "01", title: "Auto-generated on job completion", body: "Invoice created instantly from the booking — line items, your logo, payment details pre-filled." },
+                { num: "02", title: "Sent via WhatsApp or email", body: "Client gets the invoice the same day. No logging into software, no manual send." },
+                { num: "03", title: "Payment status tracked in dashboard", body: "See exactly which jobs are paid, outstanding, or overdue — all in one place." },
+              ].map((item) => (
+                <div key={item.num} className="flex items-start gap-4 p-5 rounded-2xl bg-paper/[0.04] border border-paper/[0.08]">
+                  <span className="font-mono text-xs text-ember/60 tracking-widest shrink-0 mt-0.5">{item.num}</span>
+                  <div>
+                    <p className="font-semibold text-paper text-sm">{item.title}</p>
+                    <p className="text-paper/50 text-sm mt-1 leading-relaxed">{item.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
