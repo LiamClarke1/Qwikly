@@ -2,173 +2,258 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { FileText, ChevronRight, Clock, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+import {
+  FileText, Plus, Filter, Search, ChevronRight,
+  Clock, CheckCircle, AlertTriangle, Send, Eye,
+  XCircle, RefreshCw, MinusCircle, TrendingUp
+} from "lucide-react";
 import { useClient } from "@/lib/use-client";
 import { PageHeader } from "@/components/ui/page";
+import { Button } from "@/components/ui/button";
 import { EmptyState, Skeleton } from "@/components/ui/empty";
 import { cn } from "@/lib/cn";
+import { fmt, fmtDate } from "@/lib/money";
+import { STATUS_LABELS, STATUS_COLORS } from "@/lib/invoices/stateMachine";
+import type { InvoiceStatus } from "@/lib/invoices/types";
 
-interface Invoice {
-  id: string;
-  invoice_number: string;
-  period_start: string;
-  period_end: string;
-  subtotal_zar: number;
-  vat_zar: number;
-  total_zar: number;
-  status: string;
-  sent_at: string | null;
-  due_at: string | null;
-  paid_at: string | null;
-  created_at: string;
-}
+const TABS: Array<{ key: string; label: string }> = [
+  { key: "all",         label: "All" },
+  { key: "draft",       label: "Drafts" },
+  { key: "scheduled",   label: "Scheduled" },
+  { key: "sent",        label: "Sent" },
+  { key: "overdue",     label: "Overdue" },
+  { key: "paid",        label: "Paid" },
+  { key: "cancelled",   label: "Cancelled" },
+];
 
-const STATUS_CONFIG: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  draft:        { label: "Draft",     icon: Clock,          color: "bg-white/5 text-fg-muted border border-line" },
-  sent:         { label: "Sent",      icon: FileText,       color: "bg-brand/10 text-brand border border-brand/20" },
-  paid:         { label: "Paid",      icon: CheckCircle,    color: "bg-success/10 text-success border border-success/20" },
-  overdue:      { label: "Overdue",   icon: AlertTriangle,  color: "bg-warning/10 text-warning border border-warning/20" },
-  written_off:  { label: "Written off", icon: XCircle,      color: "bg-danger/10 text-danger border border-danger/20" },
+const STATUS_ICONS: Partial<Record<InvoiceStatus, React.ElementType>> = {
+  draft:        Clock,
+  scheduled:    Clock,
+  sent:         Send,
+  viewed:       Eye,
+  partial_paid: MinusCircle,
+  paid:         CheckCircle,
+  overdue:      AlertTriangle,
+  cancelled:    XCircle,
+  disputed:     AlertTriangle,
+  written_off:  XCircle,
+  refunded:     RefreshCw,
 };
 
-function fmt(zar: number) {
-  return "R" + zar.toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+interface InvoiceRow {
+  id: string;
+  invoice_number: string | null;
+  status: InvoiceStatus;
+  customer_name: string;
+  customer_mobile: string | null;
+  total_zar: number;
+  amount_paid_zar: number;
+  due_at: string | null;
+  issued_at: string | null;
+  sent_at: string | null;
+  viewed_at: string | null;
+  paid_at: string | null;
+  created_at: string;
+  customer_viewed_count: number;
 }
 
-function fmtDate(d: string) {
-  return new Date(d).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
+interface Stats {
+  invoiced: number;
+  collected: number;
+  outstanding: number;
+  overdue: number;
+  estimated_fee: number;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const cfg = STATUS_CONFIG[status] ?? STATUS_CONFIG.draft;
-  const Icon = cfg.icon;
+function StatusBadge({ status }: { status: InvoiceStatus }) {
+  const Icon = STATUS_ICONS[status] ?? Clock;
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-tiny font-medium px-2.5 py-1 rounded-full border", cfg.color)}>
+    <span className={cn("inline-flex items-center gap-1.5 text-tiny font-medium px-2.5 py-1 rounded-full", STATUS_COLORS[status])}>
       <Icon className="w-3 h-3" />
-      {cfg.label}
+      {STATUS_LABELS[status]}
     </span>
+  );
+}
+
+function StatCard({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
+  return (
+    <div className="bg-bg-card border border-line rounded-2xl p-5">
+      <p className="text-small text-fg-muted mb-1">{label}</p>
+      <p className={cn("text-display-2 font-display", accent ? "text-warning" : "text-fg")}>{value}</p>
+      {sub && <p className="text-tiny text-fg-subtle mt-0.5">{sub}</p>}
+    </div>
   );
 }
 
 export default function InvoicesPage() {
   const { client, loading: clientLoading } = useClient();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("all");
+  const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
+  const [stats, setStats] = useState<Stats>({ invoiced: 0, collected: 0, outstanding: 0, overdue: 0, estimated_fee: 0 });
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
-  // Summary stats
-  const totalPaid    = invoices.filter(i => i.status === "paid").reduce((s, i) => s + i.total_zar, 0);
-  const totalPending = invoices.filter(i => ["sent","overdue"].includes(i.status)).reduce((s, i) => s + i.total_zar, 0);
-  const lastInvoice  = invoices[0] ?? null;
-
-  useEffect(() => {
+  const fetchInvoices = useCallback(async () => {
     if (!client) return;
-    supabase
-      .from("invoices")
-      .select("*")
-      .eq("client_id", client.id)
-      .order("period_end", { ascending: false })
-      .then(({ data }) => {
-        setInvoices(data ?? []);
-        setLoading(false);
-      });
-  }, [client]);
+    setLoading(true);
+    const status = activeTab === "all" ? "" : activeTab;
+    const res = await fetch(`/api/invoices?status=${status}&limit=100`);
+    if (!res.ok) { setLoading(false); return; }
+    const { invoices: data } = await res.json();
+    setInvoices(data ?? []);
 
-  if (clientLoading || loading) {
+    // Compute stats from full dataset
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const thisMonthInvoices = (data as InvoiceRow[]).filter(i => i.created_at >= monthStart);
+    const invoiced = thisMonthInvoices.reduce((s, i) => s + i.total_zar, 0);
+    const collected = thisMonthInvoices.filter(i => ["paid", "partial_paid"].includes(i.status)).reduce((s, i) => s + i.amount_paid_zar, 0);
+    const outstanding = (data as InvoiceRow[]).filter(i => ["sent", "viewed", "partial_paid"].includes(i.status)).reduce((s, i) => s + (i.total_zar - i.amount_paid_zar), 0);
+    const overdue = (data as InvoiceRow[]).filter(i => i.status === "overdue").reduce((s, i) => s + (i.total_zar - i.amount_paid_zar), 0);
+
+    setStats({ invoiced, collected, outstanding, overdue, estimated_fee: collected * 0.08 });
+    setLoading(false);
+  }, [client, activeTab]);
+
+  useEffect(() => { fetchInvoices(); }, [fetchInvoices]);
+
+  const filtered = invoices.filter(i => {
+    if (!search) return true;
+    const q = search.toLowerCase();
     return (
-      <div className="flex-1 overflow-y-auto p-6 lg:p-8 space-y-4">
+      i.customer_name.toLowerCase().includes(q) ||
+      (i.invoice_number ?? "").toLowerCase().includes(q) ||
+      (i.customer_mobile ?? "").includes(q)
+    );
+  });
+
+  if (clientLoading) {
+    return (
+      <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
-        {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+        {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 lg:p-8">
+    <div className="animate-fade-in">
       <PageHeader
-        eyebrow="Billing"
+        eyebrow="Invoicing"
         title="Invoices"
-        description="Weekly commission invoices for jobs booked through Qwikly."
+        description="Send professional invoices to your customers and get paid faster."
+        actions={
+          <Button onClick={() => router.push("/dashboard/invoices/new")} icon={<Plus className="w-4 h-4" />}>
+            New invoice
+          </Button>
+        }
       />
 
-      {/* Summary row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-bg-card border border-line rounded-2xl p-5">
-          <p className="text-small text-fg-muted mb-1">Total paid</p>
-          <p className="text-display-2 text-fg font-display">{fmt(totalPaid)}</p>
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        <StatCard label="This month invoiced" value={fmt(stats.invoiced)} />
+        <StatCard label="Collected" value={fmt(stats.collected)} />
+        <StatCard label="Outstanding" value={fmt(stats.outstanding)} accent={stats.outstanding > 0} />
+        <StatCard label="Overdue" value={fmt(stats.overdue)} accent={stats.overdue > 0} />
+        <StatCard label="Est. Qwikly fee" value={fmt(stats.estimated_fee)} sub="8% of collected" />
+      </div>
+
+      {/* Tabs + Search */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar border border-line rounded-xl p-1 bg-white/[0.02]">
+          {TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                "shrink-0 px-3 py-1.5 rounded-lg text-small font-medium transition-colors cursor-pointer",
+                activeTab === tab.key
+                  ? "bg-white/[0.08] text-fg"
+                  : "text-fg-muted hover:text-fg hover:bg-white/[0.04]"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
-        <div className="bg-bg-card border border-line rounded-2xl p-5">
-          <p className="text-small text-fg-muted mb-1">Outstanding</p>
-          <p className={cn("text-display-2 font-display", totalPending > 0 ? "text-warning" : "text-fg")}>
-            {fmt(totalPending)}
-          </p>
-        </div>
-        <div className="bg-bg-card border border-line rounded-2xl p-5">
-          <p className="text-small text-fg-muted mb-1">Commission rate</p>
-          <p className="text-display-2 text-fg font-display">8%</p>
-          <p className="text-tiny text-fg-subtle mt-0.5">min R150 · max R5,000</p>
+        <div className="relative flex-1 min-w-0 max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-fg-faint pointer-events-none" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by customer or invoice #"
+            className="w-full bg-white/[0.04] border border-line rounded-xl pl-9 pr-4 py-2 text-small text-fg placeholder:text-fg-faint outline-none focus:border-brand/40"
+          />
         </div>
       </div>
 
-      {invoices.length === 0 ? (
+      {/* Table */}
+      {loading ? (
+        <div className="space-y-2">
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
+        </div>
+      ) : filtered.length === 0 ? (
         <EmptyState
           icon={FileText}
-          title="No invoices yet"
-          description="Invoices are generated weekly for completed bookings. Your first invoice will appear after your first billing cycle."
+          title={activeTab === "all" ? "No invoices yet" : `No ${activeTab} invoices`}
+          description={activeTab === "all" ? "Create your first invoice and send it to a customer in under 30 seconds." : undefined}
+          action={activeTab === "all" ? (
+            <Button onClick={() => router.push("/dashboard/invoices/new")} icon={<Plus className="w-4 h-4" />}>Create invoice</Button>
+          ) : undefined}
         />
       ) : (
         <div className="bg-bg-card border border-line rounded-2xl overflow-hidden">
-          <div className="hidden sm:grid grid-cols-[1fr_120px_100px_100px_100px_40px] gap-4 px-5 py-3 border-b border-line">
-            <p className="text-tiny uppercase tracking-wider text-fg-subtle font-semibold">Invoice</p>
-            <p className="text-tiny uppercase tracking-wider text-fg-subtle font-semibold">Period</p>
-            <p className="text-tiny uppercase tracking-wider text-fg-subtle font-semibold text-right">Amount</p>
-            <p className="text-tiny uppercase tracking-wider text-fg-subtle font-semibold">Due</p>
-            <p className="text-tiny uppercase tracking-wider text-fg-subtle font-semibold">Status</p>
-            <span />
+          <div className="hidden md:grid grid-cols-[2fr_1fr_100px_100px_100px_32px] gap-4 px-5 py-3 border-b border-line">
+            {["Customer", "Invoice #", "Amount", "Due", "Status", ""].map((h, i) => (
+              <p key={i} className={cn("text-tiny uppercase tracking-wider text-fg-subtle font-semibold", i >= 2 && i < 5 ? "text-right" : "")}>{h}</p>
+            ))}
           </div>
-
           <div className="divide-y divide-line">
-            {invoices.map((inv) => (
+            {filtered.map(inv => (
               <Link
                 key={inv.id}
                 href={`/dashboard/invoices/${inv.id}`}
-                className="group flex sm:grid sm:grid-cols-[1fr_120px_100px_100px_100px_40px] gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                className="group flex sm:grid md:grid-cols-[2fr_1fr_100px_100px_100px_32px] gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
               >
-                <div>
-                  <p className="text-body font-medium text-fg group-hover:text-brand transition-colors">
-                    {inv.invoice_number || "Draft"}
+                <div className="flex-1 min-w-0">
+                  <p className="text-body font-medium text-fg group-hover:text-brand transition-colors truncate">
+                    {inv.customer_name}
                   </p>
                   <p className="text-tiny text-fg-muted mt-0.5">
-                    {fmtDate(inv.period_start)} – {fmtDate(inv.period_end)}
+                    {inv.sent_at ? `Sent ${fmtDate(inv.sent_at)}` : `Created ${fmtDate(inv.created_at)}`}
+                    {inv.customer_viewed_count > 0 && <span className="ml-2 text-fg-faint">· Viewed {inv.customer_viewed_count}×</span>}
                   </p>
                 </div>
-                <p className="hidden sm:block text-small text-fg-muted">
-                  {fmtDate(inv.period_end)}
+                <p className="hidden md:block text-small text-fg-muted font-mono">
+                  {inv.invoice_number ?? "Draft"}
                 </p>
-                <p className="text-body font-display text-fg text-right">
-                  {fmt(inv.total_zar)}
-                </p>
-                <p className="hidden sm:block text-small text-fg-muted">
+                <div className="hidden md:block text-right">
+                  <p className="text-body font-display text-fg">{fmt(inv.total_zar)}</p>
+                  {inv.amount_paid_zar > 0 && inv.amount_paid_zar < inv.total_zar && (
+                    <p className="text-tiny text-fg-muted">{fmt(inv.amount_paid_zar)} paid</p>
+                  )}
+                </div>
+                <p className="hidden md:block text-small text-fg-muted text-right">
                   {inv.due_at ? fmtDate(inv.due_at) : "—"}
                 </p>
-                <div className="hidden sm:block">
+                <div className="hidden sm:flex justify-end">
                   <StatusBadge status={inv.status} />
                 </div>
-                <ChevronRight className="w-4 h-4 text-fg-subtle group-hover:text-fg-muted transition-colors ml-auto" />
+                <ChevronRight className="w-4 h-4 text-fg-subtle group-hover:text-fg-muted transition-colors ml-auto shrink-0" />
               </Link>
             ))}
           </div>
         </div>
       )}
 
-      <p className="mt-6 text-tiny text-fg-subtle">
-        Invoices are generated every Sunday at 23:59 SAST and sent Monday morning.
-        Payment is debited Wednesday at 10:00. Questions?{" "}
-        <a href="mailto:hello@qwikly.co.za" className="text-brand hover:underline">
-          hello@qwikly.co.za
-        </a>
+      {/* Qwikly fee explainer */}
+      <p className="mt-5 text-tiny text-fg-subtle">
+        Qwikly takes 8% of all collected invoices (ex-VAT), billed on the 1st of each month.{" "}
+        <Link href="/dashboard/billing" className="text-brand hover:underline">View billing history</Link>
       </p>
     </div>
   );

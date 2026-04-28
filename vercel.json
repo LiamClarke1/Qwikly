@@ -5,8 +5,8 @@
       "schedule": "0 8 * * *"
     },
     {
-      "path": "/api/invoices/generate",
-      "schedule": "59 21 * * 0"
+      "path": "/api/invoices/daily",
+      "schedule": "0 7 * * *"
     }
   ]
 }

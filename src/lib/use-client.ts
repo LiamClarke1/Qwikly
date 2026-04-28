@@ -59,6 +59,22 @@ export interface ClientRow {
   notification_phone?: string | null;
   meta_business_id?: string | null;
   meta_phone_number_id?: string | null;
+  // invoicing fields (added in migration-invoicing-v2)
+  vat_number?: string | null;
+  bank_name?: string | null;
+  bank_account_number?: string | null;
+  bank_branch_code?: string | null;
+  bank_account_type?: string | null;
+  invoice_logo_url?: string | null;
+  invoice_accent_color?: string | null;
+  invoice_footer_text?: string | null;
+  invoice_terms_default?: string | null;
+  invoice_counter?: number | null;
+  commission_rate?: number | null;
+  risk_score?: number | null;
+  risk_flags?: string[] | null;
+  allow_cash_invoices?: boolean | null;
+  reminder_tone?: string | null;
 }
 
 export function useClient() {
