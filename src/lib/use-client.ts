@@ -68,18 +68,9 @@ export function useClient() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        if (!cancelled) {
-          setClient(null);
-          setLoading(false);
-        }
-        return;
-      }
       const { data } = await supabase
         .from("clients")
         .select("*")
-        .eq("auth_user_id", user.id)
         .limit(1)
         .maybeSingle();
       if (!cancelled) {

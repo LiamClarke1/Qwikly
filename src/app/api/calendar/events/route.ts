@@ -39,7 +39,6 @@ export async function GET(req: NextRequest) {
     .from("clients")
     .select("google_access_token, google_refresh_token, google_calendar_id, google_token_expiry")
     .eq("id", clientId)
-    .eq("auth_user_id", user.id)
     .maybeSingle();
 
   if (!client?.google_access_token) {
@@ -82,6 +81,7 @@ export async function GET(req: NextRequest) {
     }
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[calendar/events] Failed to fetch events", { clientId, error: message });
-    return NextResponse.json({ error: message, events: [], connected: false }, { status: 500 });
+    // Token exists but a transient error occurred — don't mark as disconnected.
+    return NextResponse.json({ error: message, events: [], connected: true }, { status: 500 });
   }
 }

@@ -11,9 +11,13 @@ export async function POST(req: NextRequest) {
     booking: {
       customer_name: string;
       customer_phone: string;
+      customer_email?: string | null;
       job_type: string | null;
       area: string | null;
       booking_datetime: string;
+      service_price?: number | null;
+      price_display?: string | null;
+      notes?: string | null;
     };
   };
 
@@ -47,7 +51,6 @@ export async function POST(req: NextRequest) {
     .from("clients")
     .select("google_access_token, google_refresh_token, google_calendar_id, google_token_expiry, business_name")
     .eq("id", clientId)
-    .eq("auth_user_id", user.id)
     .maybeSingle();
 
   if (!client?.google_access_token) {
@@ -69,8 +72,11 @@ export async function POST(req: NextRequest) {
     const descParts = [
       `Customer: ${booking.customer_name}`,
       `Phone: ${booking.customer_phone}`,
+      booking.customer_email ? `Email: ${booking.customer_email}` : null,
       booking.job_type ? `Job: ${booking.job_type}` : null,
       booking.area ? `Area: ${booking.area}` : null,
+      (booking.price_display || booking.service_price != null) ? `Price: ${booking.price_display ?? `R${booking.service_price!.toLocaleString("en-ZA")}`}` : null,
+      booking.notes ? `\nNotes: ${booking.notes}` : null,
       `\nBooked via Qwikly`,
     ].filter(Boolean);
 
