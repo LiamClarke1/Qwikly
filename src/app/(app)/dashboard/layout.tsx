@@ -15,9 +15,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!data.session) {
         router.push("/login");
+        return;
+      }
+      // If the user has no clients row they haven't completed setup yet
+      const { data: client } = await supabase
+        .from("clients")
+        .select("id")
+        .limit(1)
+        .maybeSingle();
+      if (!client) {
+        router.push("/dashboard/setup");
         return;
       }
       setAuthed(true);
@@ -46,8 +56,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {open && (
         <>
           <div className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="md:hidden fixed top-0 left-0 z-50 h-screen animate-slide-up">
-            <div className="relative h-full">
+          <div className="md:hidden fixed top-0 left-0 z-50 h-screen w-72 max-w-[85vw] overflow-hidden shadow-2xl animate-slide-up">
+            <div className="relative h-full w-full">
               <button
                 onClick={() => setOpen(false)}
                 className="absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-fg-muted hover:text-fg bg-white/[0.04] cursor-pointer z-10"

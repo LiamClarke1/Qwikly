@@ -64,7 +64,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   };
 
   return (
-    <aside className="h-full w-64 shrink-0 flex flex-col bg-[#0D111A] backdrop-blur-xl border-r border-white/[0.06]">
+    <aside className="h-full w-full md:w-64 shrink-0 flex flex-col bg-[#0D111A] backdrop-blur-xl border-r border-white/[0.06]">
       <div className="px-5 pt-6 pb-5">
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="w-9 h-9 rounded-xl bg-grad-brand flex items-center justify-center shadow-glow">
@@ -118,7 +118,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </nav>
 
-      <div className="p-3 m-3 rounded-2xl bg-grad-mesh border border-line relative overflow-hidden">
+      <div className="hidden md:block p-3 m-3 rounded-2xl bg-grad-mesh border border-line relative overflow-hidden">
         <p className="text-small font-semibold text-fg">Connect WhatsApp</p>
         <p className="text-tiny text-fg-muted mt-1 leading-relaxed">
           Link Meta Business to enable manual replies and broadcasts.
@@ -131,7 +131,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </Link>
       </div>
 
-      <div className="px-3 pb-4">
+      <div className="px-3" style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}>
         <button
           onClick={signOut}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-body font-medium text-fg-muted hover:text-fg hover:bg-white/[0.03] transition-all duration-150 cursor-pointer"
