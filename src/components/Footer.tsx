@@ -1,17 +1,16 @@
 import Link from "next/link";
 
-const navLinks = [
-  { label: "Outcomes", href: "/#outcomes" },
-  { label: "How it works", href: "/#how-it-works" },
-  { label: "Pricing", href: "/#pricing" },
-  { label: "FAQ", href: "/#faq" },
-];
-
 const productLinks = [
   { label: "Start trial", href: "/signup" },
   { label: "Sign in", href: "/login" },
   { label: "How it works", href: "/how-it-works" },
   { label: "Pricing", href: "/pricing" },
+];
+
+const companyLinks = [
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+  { label: "Status", href: "/status" },
 ];
 
 const legalLinks = [
@@ -50,60 +49,68 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="md:col-span-4 md:col-start-6">
-            <p className="eyebrow text-paper/50 mb-5">Navigate</p>
+          <div className="md:col-span-3 md:col-start-6">
+            <p className="eyebrow text-paper/50 mb-5">Product</p>
             <ul className="space-y-3">
-              {navLinks.map((link) => (
+              {productLinks.map((link) => (
                 <li key={link.label}>
-                  <a
+                  <Link
                     href={link.href}
                     className="text-paper/80 hover:text-paper transition-colors duration-200 text-base cursor-pointer"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="md:col-span-3 md:col-start-10 space-y-10">
-            <div>
-              <p className="eyebrow text-paper/50 mb-5">Product</p>
-              <ul className="space-y-3">
-                {productLinks.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-paper/80 hover:text-paper transition-colors duration-200 text-base cursor-pointer"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="md:col-span-2 md:col-start-9">
+            <p className="eyebrow text-paper/50 mb-5">Company</p>
+            <ul className="space-y-3">
+              {companyLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-paper/80 hover:text-paper transition-colors duration-200 text-base cursor-pointer"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-            <div>
-              <p className="eyebrow text-paper/50 mb-5">Legal</p>
-              <ul className="space-y-3">
-                {legalLinks.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-paper/80 hover:text-paper transition-colors duration-200 text-base cursor-pointer"
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="md:col-span-2 md:col-start-11">
+            <p className="eyebrow text-paper/50 mb-5">Legal</p>
+            <ul className="space-y-3">
+              {legalLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-paper/80 hover:text-paper transition-colors duration-200 text-base cursor-pointer"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-paper/40">
-          <p className="eyebrow">POPIA compliant · Customer data stays in South Africa</p>
-          <p className="eyebrow">&copy; {new Date().getFullYear()} Qwikly. All rights reserved.</p>
+        {/* Meta Partner Disclosure */}
+        <div className="mt-10 mb-8 py-6 border-b border-paper/10">
+          <p className="text-xs text-paper/35 leading-relaxed max-w-2xl">
+            Qwikly connects your business to the WhatsApp Business Platform via Meta&rsquo;s official
+            Cloud API. Qwikly is not affiliated with, endorsed by, or a representative of Meta
+            Platforms, Inc. WhatsApp is a trademark of Meta Platforms, Inc. All product names,
+            logos, and brands are property of their respective owners.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-paper/40">
+          <p className="eyebrow">POPIA compliant &middot; Customer data stays in South Africa</p>
+          <p className="eyebrow">&copy; {new Date().getFullYear()} Qwikly (Clarke Agency). All rights reserved.</p>
         </div>
       </div>
     </footer>

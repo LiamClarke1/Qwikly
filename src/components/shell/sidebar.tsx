@@ -16,6 +16,7 @@ import {
   Megaphone,
   Zap,
   Bot,
+  Receipt,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -31,6 +32,7 @@ const sections: NavSection[] = [
       { href: "/dashboard/contacts", label: "Contacts", icon: Contact as NavIcon },
       { href: "/dashboard/leads", label: "Leads", icon: Users as NavIcon },
       { href: "/dashboard/bookings", label: "Bookings", icon: CalendarCheck as NavIcon },
+      { href: "/dashboard/invoices", label: "Invoices", icon: Receipt as NavIcon },
     ],
   },
   {

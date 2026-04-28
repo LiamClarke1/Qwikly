@@ -11,6 +11,8 @@ import { useScrollReveal } from "@/hooks/useScrollReveal";
    OUTCOME DATA — sell outcomes, not features
    ───────────────────────────────────────────────────────────── */
 
+const STATS_VERIFIED = process.env.NEXT_PUBLIC_STATS_VERIFIED === "true";
+
 const outcomes = [
   {
     stat: "R28,000",
@@ -24,14 +26,14 @@ const outcomes = [
     label: "first reply, every time",
     body:
       "Answered before the customer opens a second tab. The lead never reaches your competitor.",
-    attr: "benchmark across 14,000+ conversations",
+    attr: STATS_VERIFIED ? "benchmark across 14,000+ conversations" : "measured reply time",
   },
   {
     stat: "94%",
     label: "of leads qualified",
     body:
       "Pre-screened for location, job type, and urgency before anything hits your calendar.",
-    attr: "Qwikly customer average, Q1 2026",
+    attr: STATS_VERIFIED ? "Qwikly customer average, Q1 2026" : "targeted qualification rate",
   },
   {
     stat: "24 / 7",
@@ -309,34 +311,36 @@ export default function Home() {
             </div>
 
             {/* Right column — live status card */}
-            <div className="lg:col-span-5 lg:pl-8 lg:border-l lg:border-ink/10">
-              <p className="eyebrow text-ink-500 mb-4">This morning, so far</p>
-              <div className="grid grid-cols-3 gap-5">
-                <div>
-                  <p className="font-display text-4xl text-ink">
-                    <StatCounter value={17} />
-                  </p>
-                  <p className="text-xs text-ink-500 mt-1">Leads replied</p>
+            {STATS_VERIFIED && (
+              <div className="lg:col-span-5 lg:pl-8 lg:border-l lg:border-ink/10">
+                <p className="eyebrow text-ink-500 mb-4">This morning, so far</p>
+                <div className="grid grid-cols-3 gap-5">
+                  <div>
+                    <p className="font-display text-4xl text-ink">
+                      <StatCounter value={17} />
+                    </p>
+                    <p className="text-xs text-ink-500 mt-1">Leads replied</p>
+                  </div>
+                  <div>
+                    <p className="font-display text-4xl text-ink">
+                      <StatCounter value={11} />
+                    </p>
+                    <p className="text-xs text-ink-500 mt-1">Jobs booked</p>
+                  </div>
+                  <div>
+                    <p className="font-display text-4xl text-ember">
+                      R<StatCounter value={48} />k
+                    </p>
+                    <p className="text-xs text-ink-500 mt-1">Revenue captured</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-display text-4xl text-ink">
-                    <StatCounter value={11} />
-                  </p>
-                  <p className="text-xs text-ink-500 mt-1">Jobs booked</p>
-                </div>
-                <div>
-                  <p className="font-display text-4xl text-ember">
-                    R<StatCounter value={48} />k
-                  </p>
-                  <p className="text-xs text-ink-500 mt-1">Revenue captured</p>
-                </div>
+                <div className="rule mt-6" />
+                <p className="mt-4 text-[0.75rem] text-ink-500 leading-relaxed">
+                  Rolling average across active Qwikly accounts, refreshed at 06:00
+                  SAST. Every number is a real conversation on a real phone.
+                </p>
               </div>
-              <div className="rule mt-6" />
-              <p className="mt-4 text-[0.75rem] text-ink-500 leading-relaxed">
-                Rolling average across active Qwikly accounts, refreshed at 06:00
-                SAST. Every number is a real conversation on a real phone.
-              </p>
-            </div>
+            )}
           </div>
 
           {/* Hero mocks — editorial collage */}

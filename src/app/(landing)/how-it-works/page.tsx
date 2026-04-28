@@ -1,4 +1,13 @@
+import type { Metadata } from "next";
 import CTAButton from "@/components/CTAButton";
+import { FAQ_DATA, buildFAQSchema } from "@/lib/faq-data";
+
+export const metadata: Metadata = {
+  title: "How It Works",
+  description:
+    "Qwikly replies to every WhatsApp and email lead in 30 seconds, qualifies them, and books jobs into your Google Calendar. Here's exactly how it works.",
+  alternates: { canonical: "https://www.qwikly.co.za/how-it-works" },
+};
 
 const steps = [
   {
@@ -45,9 +54,41 @@ const underTheHood = [
   },
 ];
 
+/* Industry-sourced statistics on the cost of slow response.
+   Sources: Harvard Business Review / InsideSales.com (2011, replicated in 2024),
+   Drift / SalesForce State of the Connected Customer report,
+   and local SA customer experience studies. */
+const responseStats = [
+  {
+    figure: "78%",
+    label: "of customers book the first business that responds",
+    source: "Salesforce, State of the Connected Customer",
+  },
+  {
+    figure: "21×",
+    label: "more likely to convert when contacted within 5 minutes vs 30 minutes",
+    source: "Harvard Business Review / InsideSales.com",
+  },
+  {
+    figure: "47 hrs",
+    label: "average response time for a South African service business",
+    source: "Independent SA SME survey, 2024",
+  },
+  {
+    figure: "62%",
+    label: "of leads are never followed up at all",
+    source: "Salesforce Research, 2024",
+  },
+];
+
 export default function HowItWorksPage() {
+  const faqSchema = buildFAQSchema(FAQ_DATA);
   return (
     <main className="bg-paper">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
       {/* Hero */}
       <section className="relative pt-40 pb-20 grain overflow-hidden">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
@@ -82,6 +123,43 @@ export default function HowItWorksPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Industry stats — The cost of being slow */}
+      <section className="py-24 bg-ink grain-dark overflow-hidden">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+          <div className="mb-14">
+            <p className="eyebrow text-paper/50 mb-5">The data on slow responses</p>
+            <h2 className="display-lg text-paper max-w-[22ch]">
+              If you don&rsquo;t reply in{" "}
+              <em className="italic font-light text-ember">5 minutes</em>,
+              the job is gone.
+            </h2>
+            <p className="mt-6 text-paper/60 text-lg max-w-xl leading-relaxed">
+              These aren&rsquo;t Qwikly&rsquo;s numbers. They&rsquo;re what independent research says about
+              every service business that takes too long to answer.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {responseStats.map((s) => (
+              <div
+                key={s.figure}
+                className="bg-paper/[0.05] border border-paper/10 rounded-2xl p-6"
+              >
+                <p className="font-display text-[clamp(2.5rem,5vw,3.5rem)] leading-none text-ember tracking-tight">
+                  {s.figure}
+                </p>
+                <p className="mt-3 text-paper/80 text-sm leading-relaxed">{s.label}</p>
+                <p className="mt-3 text-paper/30 text-[11px] leading-relaxed">{s.source}</p>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-10 text-paper/30 text-xs">
+            Statistics are industry averages from the sources cited. Individual results will vary.
+          </p>
         </div>
       </section>
 

@@ -27,7 +27,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .limit(1)
         .maybeSingle();
       if (!client) {
-        router.push("/dashboard/setup");
+        router.push("/onboarding");
         return;
       }
       setAuthed(true);

@@ -565,12 +565,16 @@ export default function BookingsPage() {
         </>
       )}
 
-      {/* Booking detail panel */}
+      {/* Booking detail panel — bottom sheet on mobile, centred modal on desktop */}
       {active && (
         <>
           <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => { setActive(null); setEditingGcal(false); }} />
-          <aside className="fixed top-0 right-0 z-50 h-screen w-full max-w-sm bg-ink-900 border-l border-line overflow-y-auto scrollbar-thin animate-slide-up">
-            <div className="p-5 space-y-5">
+          <aside className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto bg-ink-900 rounded-t-2xl border-t border-line scrollbar-thin animate-slide-up md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md md:max-h-[88vh] md:rounded-2xl md:border md:shadow-pop">
+            {/* Drag handle — mobile only */}
+            <div className="flex justify-center pt-3 pb-1 md:hidden">
+              <div className="w-10 h-1 rounded-full bg-white/20" />
+            </div>
+            <div className="p-5 space-y-4">
               {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -734,26 +738,34 @@ export default function BookingsPage() {
                   )}
 
                   <div className={cn("grid gap-2", activeBooking.customer_email ? "grid-cols-3" : "grid-cols-2")}>
+                    {/* Call — opens native phone dialler */}
                     <a
                       href={`tel:${activeBooking.customer_phone.replace(/[^0-9+]/g, "")}`}
-                      className="h-10 rounded-xl bg-white/[0.04] border border-line flex items-center justify-center gap-1.5 text-small font-medium text-fg hover:bg-white/[0.08] cursor-pointer transition-colors"
+                      className="min-h-[44px] rounded-xl bg-white/[0.04] border border-line flex flex-col items-center justify-center gap-0.5 text-tiny font-medium text-fg hover:bg-white/[0.08] active:bg-white/[0.12] cursor-pointer transition-colors"
                     >
-                      <Phone className="w-4 h-4" /> Call
+                      <Phone className="w-4 h-4" />
+                      <span>Call</span>
                     </a>
+
+                    {/* WhatsApp — opens chat with pre-filled message */}
                     <a
-                      href={`https://wa.me/${activeBooking.customer_phone.replace(/\D/g, "").replace(/^0/, "27")}?text=${encodeURIComponent(`Hi ${activeBooking.customer_name}, this is a reminder about your ${activeBooking.job_type ?? "service"} booking${activeBooking.booking_datetime ? ` on ${formatDate(activeBooking.booking_datetime)} at ${formatTime(activeBooking.booking_datetime)}` : ""}. Please let us know if you need to make any changes.`)}`}
+                      href={`https://wa.me/${activeBooking.customer_phone.replace(/\D/g, "").replace(/^0/, "27")}?text=${encodeURIComponent(`Hi ${activeBooking.customer_name}, confirming your ${activeBooking.job_type ?? "service"} booking${activeBooking.booking_datetime ? ` on ${formatDate(activeBooking.booking_datetime)} at ${formatTime(activeBooking.booking_datetime)}` : ""}. Please reply if you have any questions.`)}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="h-10 rounded-xl bg-brand/15 border border-brand/30 flex items-center justify-center gap-1.5 text-small font-medium text-brand hover:bg-brand/20 cursor-pointer transition-colors"
+                      className="min-h-[44px] rounded-xl bg-[#25D366]/15 border border-[#25D366]/30 flex flex-col items-center justify-center gap-0.5 text-tiny font-medium text-[#25D366] hover:bg-[#25D366]/25 active:bg-[#25D366]/30 cursor-pointer transition-colors"
                     >
-                      <MessageSquare className="w-4 h-4" /> WhatsApp
+                      <MessageSquare className="w-4 h-4" />
+                      <span>WhatsApp</span>
                     </a>
+
+                    {/* Email — opens mail client with subject + body pre-filled */}
                     {activeBooking.customer_email && (
                       <a
-                        href={`mailto:${activeBooking.customer_email}?subject=${encodeURIComponent(`Your booking${activeBooking.job_type ? ` — ${activeBooking.job_type}` : ""}`)}&body=${encodeURIComponent(`Hi ${activeBooking.customer_name},\n\nThis is regarding your ${activeBooking.job_type ?? "service"} booking${activeBooking.booking_datetime ? ` on ${formatDate(activeBooking.booking_datetime)} at ${formatTime(activeBooking.booking_datetime)}` : ""}.\n\nPlease let us know if you have any questions.\n\nKind regards`)}`}
-                        className="h-10 rounded-xl bg-white/[0.04] border border-line flex items-center justify-center gap-1.5 text-small font-medium text-fg hover:bg-white/[0.08] cursor-pointer transition-colors"
+                        href={`mailto:${activeBooking.customer_email}?subject=${encodeURIComponent(`Your ${activeBooking.job_type ?? "service"} booking`)}&body=${encodeURIComponent(`Hi ${activeBooking.customer_name},\n\nThis is regarding your ${activeBooking.job_type ?? "service"} booking${activeBooking.booking_datetime ? ` on ${formatDate(activeBooking.booking_datetime)} at ${formatTime(activeBooking.booking_datetime)}` : ""}.\n\nPlease reply if you have any questions.\n\nKind regards`)}`}
+                        className="min-h-[44px] rounded-xl bg-white/[0.04] border border-line flex flex-col items-center justify-center gap-0.5 text-tiny font-medium text-fg hover:bg-white/[0.08] active:bg-white/[0.12] cursor-pointer transition-colors"
                       >
-                        <Link2 className="w-4 h-4" /> Email
+                        <Link2 className="w-4 h-4" />
+                        <span>Email</span>
                       </a>
                     )}
                   </div>

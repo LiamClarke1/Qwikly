@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/dashboard/", "/api/"],
+      disallow: ["/dashboard/", "/admin/", "/onboarding/", "/api/"],
     },
     sitemap: "https://www.qwikly.co.za/sitemap.xml",
   };

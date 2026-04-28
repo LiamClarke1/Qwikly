@@ -1,7 +1,78 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const PUBLIC_PATHS = [
+  "/login",
+  "/signup",
+  "/auth/callback",
+  "/forgot-password",
+  "/reset-password",
+];
+
+const PUBLIC_PREFIXES = [
+  "/",
+  "/how-it-works",
+  "/pricing",
+  "/get-started",
+  "/legal",
+  "/about",
+  "/contact",
+  "/status",
+  "/help",
+  "/og-image",
+  "/api/health",
+];
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  const isPublicPath = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  const isPublicPrefix =
+    pathname === "/" ||
+    PUBLIC_PREFIXES.slice(1).some(
+      (p) => pathname === p || pathname.startsWith(p + "/")
+    );
+
+  if (isPublicPath || isPublicPrefix) {
+    let supabaseResponse = NextResponse.next({ request });
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            );
+            supabaseResponse = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (
+      user &&
+      (pathname === "/login" || pathname === "/signup")
+    ) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
+
+    return supabaseResponse;
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -29,24 +100,9 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const publicPaths = ["/login", "/signup", "/auth/callback"];
-  const isPublic = publicPaths.some((p) =>
-    request.nextUrl.pathname.startsWith(p)
-  );
-
-  const isLandingPath = ["/", "/how-it-works", "/pricing", "/get-started"].some(
-    (p) => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(p + "/")
-  );
-
-  if (!user && !isPublic && !isLandingPath) {
+  if (!user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
-
-  if (user && (request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
@@ -55,6 +111,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|xml|txt)$).*)",
   ],
 };
