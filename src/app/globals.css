@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* iOS Safari viewport fix — 100dvh where supported, 100vh fallback */
+.h-screen { height: 100vh; height: 100dvh; }
+.min-h-screen { min-height: 100vh; min-height: 100dvh; }
+
 /* ────────────────────────────────────────────────────────────── */
 /*  QWIKLY — EDITORIAL SYSTEM                                      */
 /*  Cream canvas · Deep ink · Single ember accent · Fraunces serif */
