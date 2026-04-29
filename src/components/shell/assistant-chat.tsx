@@ -107,7 +107,7 @@ export function AssistantChat() {
           className={cn(
             "fixed z-50 flex flex-col",
             // Mobile: full-width sheet anchored above bottom nav
-            "left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] max-h-[calc(100dvh-8rem)] rounded-t-2xl",
+            "left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] max-h-[55vh] rounded-t-2xl",
             // Desktop: floating card anchored bottom-right
             "md:left-auto md:right-6 md:bottom-auto md:[bottom:max(1.5rem,env(safe-area-inset-bottom))]",
             "md:w-[380px] md:max-h-[calc(100vh-48px)] md:h-[540px] md:rounded-2xl",

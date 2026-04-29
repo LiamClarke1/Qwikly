@@ -15,6 +15,7 @@ import {
   Send,
   ChevronRight,
   Zap,
+  Globe,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -59,6 +60,8 @@ export default function OverviewPage() {
   const [bookingTrend, setBookingTrend] = useState<number[]>([]);
   const [convoTrend, setConvoTrend] = useState<number[]>([]);
   const [kbCount, setKbCount] = useState(0);
+  const [webVisitorsToday, setWebVisitorsToday] = useState(0);
+  const [webChatsToday, setWebChatsToday] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -69,7 +72,7 @@ export default function OverviewPage() {
       const start14 = new Date();
       start14.setDate(start14.getDate() - 13);
 
-      const [bC, cC, esc, today, recC, trendB, trendC, kb] = await Promise.all([
+      const [bC, cC, esc, today, recC, trendB, trendC, kb, webV, webC] = await Promise.all([
         supabase.from("bookings").select("*", { count: "exact", head: true }).gte("created_at", startMonth),
         supabase.from("conversations").select("*", { count: "exact", head: true }).gte("created_at", startMonth),
         supabase.from("conversations").select("*").eq("status", "escalated").order("updated_at", { ascending: false }).limit(3),
@@ -78,10 +81,14 @@ export default function OverviewPage() {
         supabase.from("bookings").select("created_at").gte("created_at", start14.toISOString()),
         supabase.from("conversations").select("created_at").gte("created_at", start14.toISOString()),
         supabase.from("kb_articles").select("*", { count: "exact", head: true }),
+        supabase.from("web_widget_events").select("*", { count: "exact", head: true }).eq("event_type", "widget_loaded").gte("created_at", startDay).lt("created_at", endDay),
+        supabase.from("conversations").select("*", { count: "exact", head: true }).eq("channel", "web_chat").gte("created_at", startDay).lt("created_at", endDay),
       ]);
 
       setBookingsCount(bC.count ?? 0);
       setConvoCount(cC.count ?? 0);
+      setWebVisitorsToday(webV.count ?? 0);
+      setWebChatsToday(webC.count ?? 0);
       setEscalations((esc.data as Convo[]) ?? []);
       setTodayBookings((today.data as Booking[]) ?? []);
       setRecentConvos((recC.data as Convo[]) ?? []);
@@ -124,6 +131,7 @@ export default function OverviewPage() {
     { label: "Conversations", value: convoCount, sub: "this month", trend: convoTrend, color: "#38BDF8", icon: MessageSquare },
     { label: "Conversion", value: `${conversion}%`, sub: "enquiry → booked", trend: bookingTrend, color: "#8B5CF6", icon: TrendingUp },
     { label: "Est. revenue", value: formatZAR(revenue), sub: `${bookingsCount} bookings`, trend: bookingTrend, color: "#22C55E", icon: Sparkles },
+    { label: "Web visitors", value: webVisitorsToday, sub: `${webChatsToday} started a chat`, trend: [], color: "#A855F7", icon: Globe },
   ];
 
   return (

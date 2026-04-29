@@ -21,6 +21,8 @@ const PUBLIC_PREFIXES = [
   "/help",
   "/og-image",
   "/api/health",
+  "/connect-your-website",
+  "/widget",
 ];
 
 export async function middleware(request: NextRequest) {

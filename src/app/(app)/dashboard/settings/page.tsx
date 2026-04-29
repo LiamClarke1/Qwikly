@@ -7,8 +7,10 @@ import { useSearchParams, useRouter } from "next/navigation";
 import {
   Building2, Bot, Clock, Plug, Bell,
   Save, Check, AlertCircle, Calendar, Link2, Link2Off, ExternalLink,
-  Wrench, DollarSign, Star, User, BookOpen, Plus, Search, Trash2, X as XIcon,
+  Wrench, DollarSign, Star, User, BookOpen, Plus, Search, Trash2, X as XIcon, Globe,
 } from "lucide-react";
+import { WebsiteAssistantTab } from "./_components/WebsiteAssistantTab";
+import { ClientRow } from "@/lib/use-client";
 import { useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -29,6 +31,7 @@ const TABS = [
   { id: "hours",         label: "Hours",          icon: Clock      },
   { id: "integrations",  label: "Integrations",   icon: Plug       },
   { id: "notifications", label: "Notifications",  icon: Bell       },
+  { id: "website",       label: "Website",        icon: Globe      },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -206,6 +209,15 @@ export default function SettingsPage() {
               {tab === "hours"         && <HoursTab         client={client} save={save} saving={saving} />}
               {tab === "integrations"  && <IntegrationsTab  client={client} save={save} saving={saving} />}
               {tab === "notifications" && <NotificationsTab client={client} save={save} saving={saving} />}
+              {tab === "website" && (
+                <WebsiteAssistantTab
+                  client={client as unknown as ClientRow}
+                  onSave={async () => {
+                    const { data } = await supabase.from("clients").select("*").limit(1).maybeSingle();
+                    setClient(data as Client);
+                  }}
+                />
+              )}
             </>
           )}
         </div>

@@ -6,9 +6,14 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 
-const navLinks = [
+type NavLink =
+  | { label: string; anchor: string; href?: never }
+  | { label: string; href: string; anchor?: never };
+
+const navLinks: NavLink[] = [
   { label: "Outcomes", anchor: "#outcomes" },
   { label: "How it works", anchor: "#how-it-works" },
+  { label: "For your website", href: "/connect-your-website" },
   { label: "Pricing", anchor: "#pricing" },
   { label: "FAQ", anchor: "#faq" },
 ];
@@ -56,7 +61,7 @@ export default function Navbar() {
             {navLinks.map((link) => (
               <a
                 key={link.label}
-                href={getHref(link.anchor)}
+                href={"href" in link && link.href ? link.href : getHref(link.anchor ?? "")}
                 className="text-ink-700 hover:text-ink transition-colors duration-200 text-[0.9rem] cursor-pointer"
               >
                 {link.label}
@@ -98,7 +103,7 @@ export default function Navbar() {
           {navLinks.map((link) => (
             <a
               key={link.label}
-              href={getHref(link.anchor)}
+              href={"href" in link && link.href ? link.href : getHref(link.anchor ?? "")}
               onClick={() => setMobileOpen(false)}
               className="block text-ink-700 hover:text-ink transition-colors duration-200 text-base font-medium cursor-pointer"
             >

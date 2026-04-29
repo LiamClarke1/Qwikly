@@ -20,6 +20,7 @@ import {
   Loader2,
   Inbox,
   Mail,
+  ChevronLeft,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Avatar } from "@/components/ui/avatar";
@@ -34,7 +35,7 @@ interface Convo {
   id: string;
   customer_name: string | null;
   customer_phone: string;
-  channel?: "whatsapp" | "email" | null;
+  channel?: "whatsapp" | "email" | "web_chat" | null;
   status: "active" | "completed" | "escalated";
   ai_paused?: boolean;
   notes?: string | null;
@@ -56,6 +57,7 @@ const FILTERS = [
   { id: "all", label: "All" },
   { id: "whatsapp", label: "WhatsApp" },
   { id: "email", label: "Email" },
+  { id: "web_chat", label: "Web" },
   { id: "needs", label: "Needs reply" },
   { id: "active", label: "Active" },
   { id: "escalated", label: "Escalated" },
@@ -116,7 +118,10 @@ export default function ConversationsPage() {
       );
       setConvos(enriched);
       setLoading(false);
-      if (!activeId && enriched.length) setActiveId(enriched[0].id);
+      // Desktop: auto-select first conversation when URL has no id
+      if (!activeId && enriched.length && typeof window !== "undefined" && window.innerWidth >= 1024) {
+        setActiveId(enriched[0].id);
+      }
     })();
   }, []);
 
@@ -146,6 +151,7 @@ export default function ConversationsPage() {
     let list = convos;
     if (filter === "whatsapp") list = list.filter((c) => !c.channel || c.channel === "whatsapp");
     else if (filter === "email") list = list.filter((c) => c.channel === "email");
+    else if (filter === "web_chat") list = list.filter((c) => c.channel === "web_chat");
     else if (filter === "needs") list = list.filter((c) => c.status === "escalated" || c.ai_paused);
     else if (filter !== "all") list = list.filter((c) => c.status === filter);
     if (search.trim()) {
@@ -164,6 +170,7 @@ export default function ConversationsPage() {
     all: convos.length,
     whatsapp: convos.filter((c) => !c.channel || c.channel === "whatsapp").length,
     email: convos.filter((c) => c.channel === "email").length,
+    web_chat: convos.filter((c) => c.channel === "web_chat").length,
     needs: convos.filter((c) => c.status === "escalated" || c.ai_paused).length,
     active: convos.filter((c) => c.status === "active").length,
     escalated: convos.filter((c) => c.status === "escalated").length,
@@ -216,9 +223,9 @@ export default function ConversationsPage() {
         description="Every chat, every channel. Reply manually whenever you want to step in."
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_260px] gap-3 h-[calc(100vh-200px)] min-h-[560px]">
-        {/* List pane */}
-        <div className="panel flex flex-col overflow-hidden !p-0">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_260px] gap-3 lg:h-[calc(100vh-200px)] lg:min-h-[560px]">
+        {/* List pane — hidden on mobile when a conversation is open */}
+        <div className={cn("panel flex flex-col overflow-hidden !p-0 min-h-[calc(100dvh-200px)] lg:min-h-0", active && "hidden lg:flex")}>
           {/* Search */}
           <div className="px-3 pt-3 pb-2 border-b border-line space-y-2">
             <div className="flex items-center gap-2 h-8 px-3 rounded-lg bg-ink-800 border border-line">
@@ -288,6 +295,8 @@ export default function ConversationsPage() {
                         <div className="flex items-center gap-1 mt-1">
                           {c.channel === "email"
                             ? <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 font-medium"><Mail className="w-2.5 h-2.5" /> Email</span>
+                            : c.channel === "web_chat"
+                            ? <span className="inline-flex items-center gap-0.5 text-[10px] text-purple-400 font-medium"><Inbox className="w-2.5 h-2.5" /> Web</span>
                             : <span className="inline-flex items-center gap-0.5 text-[10px] text-[#00a884] font-medium"><MessageSquare className="w-2.5 h-2.5" /> WhatsApp</span>
                           }
                           {c.ai_paused && <Badge tone="warning">Manual</Badge>}
@@ -304,14 +313,22 @@ export default function ConversationsPage() {
           </div>
         </div>
 
-        {/* Transcript pane */}
-        <div className="panel flex flex-col overflow-hidden !p-0">
+        {/* Transcript pane — hidden on mobile when no conversation is selected */}
+        <div className={cn("panel flex flex-col overflow-hidden !p-0 min-h-[calc(100dvh-200px)] lg:min-h-0", !active && "hidden lg:flex")}>
           {!active ? (
             <div className="flex-1 flex items-center justify-center">
               <EmptyState icon={MessageSquare} title="Select a conversation" description="Choose one from the list to read and reply." />
             </div>
           ) : (
             <>
+              {/* Mobile back button */}
+              <button
+                className="lg:hidden flex items-center gap-1.5 px-4 py-2.5 border-b border-line text-fg-muted hover:text-fg text-small cursor-pointer w-full"
+                onClick={() => { setActiveId(null); router.replace("/dashboard/conversations", { scroll: false }); }}
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Back to inbox
+              </button>
               {/* Header */}
               <div className="px-4 py-2.5 border-b border-line flex items-center gap-2.5">
                 <Avatar name={active.customer_name ?? active.customer_phone} size={32} />

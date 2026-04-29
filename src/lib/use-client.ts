@@ -75,29 +75,41 @@ export interface ClientRow {
   risk_flags?: string[] | null;
   allow_cash_invoices?: boolean | null;
   reminder_tone?: string | null;
+  // website widget fields
+  web_widget_enabled?: boolean | null;
+  web_widget_domain?: string | null;
+  web_widget_color?: string | null;
+  web_widget_greeting?: string | null;
+  web_widget_position?: "bottom-right" | "bottom-left" | null;
+  web_widget_launcher_label?: string | null;
+  web_widget_status?: "pending" | "verified" | "disconnected" | null;
+  web_widget_verified_at?: string | null;
+  web_widget_last_seen_at?: string | null;
+  web_widget_domain_whitelist?: string | null;
+  onboarding_step?: number | null;
+  onboarding_completed_at?: string | null;
+  working_hours?: Record<string, [string, string] | null> | null;
+  after_hours_mode?: "book_next_available" | "closed_message" | "always_open" | null;
 }
 
 export function useClient() {
   const [client, setClient] = useState<ClientRow | null>(null);
   const [loading, setLoading] = useState(true);
 
+  async function load() {
+    const { data } = await supabase
+      .from("clients")
+      .select("*")
+      .limit(1)
+      .maybeSingle();
+    setClient((data as ClientRow) ?? null);
+    setLoading(false);
+  }
+
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from("clients")
-        .select("*")
-        .limit(1)
-        .maybeSingle();
-      if (!cancelled) {
-        setClient((data as ClientRow) ?? null);
-        setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { client, loading, setClient };
+  return { client, loading, setClient, refresh: load };
 }

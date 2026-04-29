@@ -12,6 +12,7 @@ import { DemoPlayer } from "@/components/landing/DemoPlayer";
 import { RevenueCalculator } from "@/components/landing/RevenueCalculator";
 import { LiveActivityStrip } from "@/components/landing/LiveActivityStrip";
 import { LiveCounter } from "@/components/landing/LiveCounter";
+import { ConnectYourWebsiteSection } from "@/components/landing/ConnectYourWebsiteSection";
 
 /* ─────────────────────────────────────────────────────────────
    DATA
@@ -695,6 +696,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ═══════ CONNECT YOUR WEBSITE ════════════════════════════ */}
+      <ConnectYourWebsiteSection />
 
       {/* ═══════ PRICING ═════════════════════════════════════════ */}
       <section

@@ -15,8 +15,8 @@
   html {
     scroll-behavior: smooth;
     overflow-x: clip;
-    /* Paint the root cream so any overscan, rubber-band, or compositor gap
-       during fast scroll never flashes white. */
+    /* Prevent iOS rubber-band bounce from flashing the root background. */
+    overscroll-behavior: none;
     background-color: #F4EEE4;
     color: #0E0E0C;
   }
