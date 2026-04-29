@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { Home, MessageSquare, CalendarCheck, Settings, Sparkles, LogOut, Rocket, Receipt, BookOpen } from "lucide-react";
+import { Home, MessageSquare, CalendarCheck, Settings, Sparkles, LogOut, Rocket, Receipt, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 type NavIcon = React.ComponentType<{ className?: string }>;
@@ -14,7 +14,7 @@ const NAV: NavItem[] = [
   { href: "/dashboard/conversations", label: "Chats",     icon: MessageSquare as NavIcon },
   { href: "/dashboard/bookings",      label: "Calendar",  icon: CalendarCheck as NavIcon },
   { href: "/dashboard/invoices",      label: "Money",     icon: Receipt as NavIcon },
-  { href: "/dashboard/knowledge",     label: "Knowledge", icon: BookOpen as NavIcon },
+  { href: "/admin/clients",            label: "CRM",       icon: Users as NavIcon },
   { href: "/dashboard/settings",      label: "Settings",  icon: Settings as NavIcon },
   { href: "/dashboard/setup",         label: "Setup",     icon: Rocket as NavIcon },
 ];

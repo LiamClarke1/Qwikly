@@ -86,50 +86,48 @@ export function AssistantChat() {
 
   return (
     <>
-      {/* Trigger button */}
+      {/* Trigger button — always dark regardless of page theme */}
       <button
         onClick={() => setOpen(true)}
         aria-label="Open assistant"
         className={cn(
-          "fixed right-4 md:right-6 z-40 group w-12 h-12 rounded-2xl flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.5)] transition-all duration-200 cursor-pointer",
-          "bg-[#0D111A] border border-white/[0.1] hover:border-brand/50 hover:shadow-[0_4px_24px_rgba(232,90,44,0.25)]",
+          "fixed right-4 md:right-6 z-40 group w-12 h-12 rounded-2xl flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-all duration-200 cursor-pointer",
+          "bg-[#0D111A] border border-white/[0.12] hover:border-[#E85A2C]/50 hover:shadow-[0_4px_24px_rgba(232,90,44,0.25)]",
           "bottom-[calc(3.75rem+env(safe-area-inset-bottom))] md:[bottom:max(1.5rem,env(safe-area-inset-bottom))]",
           open && "pointer-events-none opacity-0"
         )}
       >
-        <MessageSquare className="w-5 h-5 text-fg-muted group-hover:text-brand transition-colors duration-200" />
-        <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-brand border-2 border-[#111827]" />
+        <MessageSquare className="w-5 h-5 text-slate-300 group-hover:text-[#E85A2C] transition-colors duration-200" />
+        <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#E85A2C] border-2 border-[#0D111A]" />
       </button>
 
-      {/* Panel */}
+      {/* Panel — always rendered with explicit dark palette so it looks right in light AND dark mode */}
       {open && (
         <div
           className={cn(
             "fixed z-50 flex flex-col",
-            // Mobile: full-width sheet anchored above bottom nav
             "left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] max-h-[55vh] rounded-t-2xl",
-            // Desktop: floating card anchored bottom-right
             "md:left-auto md:right-6 md:bottom-auto md:[bottom:max(1.5rem,env(safe-area-inset-bottom))]",
             "md:w-[380px] md:max-h-[calc(100vh-48px)] md:h-[540px] md:rounded-2xl",
             "overflow-hidden",
-            "bg-[#080C14] border border-white/[0.07]",
+            "bg-[#080C14] border border-white/[0.08]",
             "shadow-[0_24px_64px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.03)]",
             "motion-safe:animate-[slideUp_180ms_ease-out]"
           )}
         >
           {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.06] shrink-0">
-            <div className="w-7 h-7 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center shrink-0">
-              <Zap className="w-3.5 h-3.5 text-brand" strokeWidth={2.5} />
+          <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.07] shrink-0">
+            <div className="w-7 h-7 rounded-lg bg-[#E85A2C]/10 border border-[#E85A2C]/20 flex items-center justify-center shrink-0">
+              <Zap className="w-3.5 h-3.5 text-[#E85A2C]" strokeWidth={2.5} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-small font-semibold text-fg leading-none">Platform Assistant</p>
-              <p className="text-tiny text-fg-subtle mt-0.5">Qwikly · Always on</p>
+              <p className="text-[13px] font-semibold text-white leading-none">Platform Assistant</p>
+              <p className="text-[11px] text-slate-400 mt-0.5">Qwikly · Always on</p>
             </div>
             <button
               onClick={() => setOpen(false)}
               aria-label="Close assistant"
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-fg-subtle hover:text-fg hover:bg-white/[0.05] transition-all duration-150 cursor-pointer"
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all duration-150 cursor-pointer"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -147,10 +145,10 @@ export function AssistantChat() {
               >
                 <div
                   className={cn(
-                    "max-w-[82%] px-3.5 py-2.5 text-small leading-relaxed whitespace-pre-wrap",
+                    "max-w-[82%] px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap",
                     m.role === "user"
-                      ? "bg-brand text-white rounded-2xl rounded-br-md"
-                      : "bg-white/[0.05] text-fg rounded-2xl rounded-bl-md border border-white/[0.04]"
+                      ? "bg-[#E85A2C] text-white rounded-2xl rounded-br-md"
+                      : "bg-white/[0.07] text-slate-100 rounded-2xl rounded-bl-md border border-white/[0.06]"
                   )}
                 >
                   {m.content}
@@ -160,22 +158,21 @@ export function AssistantChat() {
 
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-white/[0.05] border border-white/[0.04] rounded-2xl rounded-bl-md px-3.5 py-3 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-fg-subtle motion-safe:animate-[bounce_1.2s_ease-in-out_infinite_0ms]" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-fg-subtle motion-safe:animate-[bounce_1.2s_ease-in-out_infinite_200ms]" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-fg-subtle motion-safe:animate-[bounce_1.2s_ease-in-out_infinite_400ms]" />
+                <div className="bg-white/[0.07] border border-white/[0.06] rounded-2xl rounded-bl-md px-3.5 py-3 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 motion-safe:animate-[bounce_1.2s_ease-in-out_infinite_0ms]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 motion-safe:animate-[bounce_1.2s_ease-in-out_infinite_200ms]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-400 motion-safe:animate-[bounce_1.2s_ease-in-out_infinite_400ms]" />
                 </div>
               </div>
             )}
 
-            {/* Starter prompts */}
             {showStarters && (
               <div className="pt-2 grid grid-cols-1 gap-1.5">
                 {STARTER_PROMPTS.map((p) => (
                   <button
                     key={p}
                     onClick={() => send(p)}
-                    className="w-full text-left px-3.5 py-2.5 rounded-xl text-small text-fg-muted hover:text-fg bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.04] hover:border-white/[0.08] transition-all duration-150 cursor-pointer"
+                    className="w-full text-left px-3.5 py-2.5 rounded-xl text-[13px] text-slate-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.05] hover:border-white/[0.10] transition-all duration-150 cursor-pointer"
                   >
                     {p}
                   </button>
@@ -187,8 +184,8 @@ export function AssistantChat() {
           </div>
 
           {/* Input */}
-          <div className="px-3 pb-3 pt-2 border-t border-white/[0.06] shrink-0">
-            <div className="flex items-end gap-2 bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 focus-within:border-brand/30 transition-colors duration-150">
+          <div className="px-3 pb-3 pt-2 border-t border-white/[0.07] shrink-0">
+            <div className="flex items-end gap-2 bg-white/[0.05] border border-white/[0.09] rounded-xl px-3.5 py-2.5 focus-within:border-[#E85A2C]/40 transition-colors duration-150">
               <textarea
                 ref={inputRef}
                 value={input}
@@ -201,19 +198,19 @@ export function AssistantChat() {
                 placeholder="Ask anything…"
                 disabled={loading}
                 rows={1}
-                className="flex-1 bg-transparent outline-none text-small text-fg placeholder:text-fg-faint resize-none leading-relaxed disabled:opacity-50 min-h-[20px]"
+                className="flex-1 bg-transparent outline-none text-[13px] text-white placeholder:text-slate-500 resize-none leading-relaxed disabled:opacity-50 min-h-[20px]"
                 style={{ height: "20px" }}
               />
               <button
                 onClick={() => send()}
                 disabled={!input.trim() || loading}
                 aria-label="Send message"
-                className="w-7 h-7 rounded-lg bg-brand flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-85 transition-opacity duration-150 cursor-pointer shrink-0 mb-0.5"
+                className="w-7 h-7 rounded-lg bg-[#E85A2C] flex items-center justify-center text-white disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-85 transition-opacity duration-150 cursor-pointer shrink-0 mb-0.5"
               >
                 <ArrowUp className="w-3.5 h-3.5" strokeWidth={2.5} />
               </button>
             </div>
-            <p className="text-tiny text-fg-subtle text-center mt-2">Enter to send · Shift+Enter for new line</p>
+            <p className="text-[11px] text-slate-500 text-center mt-2">Enter to send · Shift+Enter for new line</p>
           </div>
         </div>
       )}
