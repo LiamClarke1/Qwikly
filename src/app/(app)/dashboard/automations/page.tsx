@@ -460,8 +460,9 @@ function AutomationEditor({
   return (
     <>
       <div onClick={onClose} className="fixed inset-0 z-40 bg-black/60 animate-fade-in" />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto pointer-events-none">
-        <Card className="w-full max-w-xl my-8 pointer-events-auto animate-slide-up">
+      <div className="fixed inset-0 z-50 overflow-y-auto pointer-events-none">
+        <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+        <Card className="w-full max-w-xl pointer-events-auto animate-slide-up">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-h2 text-fg">{initial ? "Edit automation" : "Custom automation"}</h2>
             <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] cursor-pointer">
@@ -590,6 +591,7 @@ function AutomationEditor({
             </Button>
           </div>
         </Card>
+        </div>
       </div>
     </>
   );
