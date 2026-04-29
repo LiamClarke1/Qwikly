@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageSquare, CalendarCheck, Settings, Receipt } from "lucide-react";
+import { Home, MessageSquare, CalendarCheck, Settings, BookOpen } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const TABS = [
-  { href: "/dashboard",               label: "Home",     icon: Home },
-  { href: "/dashboard/conversations", label: "Chats",    icon: MessageSquare },
-  { href: "/dashboard/bookings",      label: "Calendar", icon: CalendarCheck },
-  { href: "/dashboard/invoices",      label: "Money",    icon: Receipt },
-  { href: "/dashboard/settings",      label: "Settings", icon: Settings },
+  { href: "/dashboard",               label: "Home",      icon: Home },
+  { href: "/dashboard/conversations", label: "Chats",     icon: MessageSquare },
+  { href: "/dashboard/bookings",      label: "Calendar",  icon: CalendarCheck },
+  { href: "/dashboard/knowledge",     label: "Knowledge", icon: BookOpen },
+  { href: "/dashboard/settings",      label: "Settings",  icon: Settings },
 ];
 
 export function MobileBottomNav() {
