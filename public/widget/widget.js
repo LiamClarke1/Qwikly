@@ -22,7 +22,7 @@
   }
 
   var conversationId = sessionStorage.getItem("qwikly_cid") || null;
-  var history = [];
+  var chatHistory = [];
   var branding = null;
   var panelOpen = false;
   var sending = false;
@@ -238,7 +238,7 @@
     inp.value = "";
     inp.style.height = "";
     addMsg("usr", text);
-    history.push({ role: "user", content: text });
+    chatHistory.push({ role: "user", content: text });
 
     sending = true;
     setInputEnabled(false);
@@ -250,7 +250,7 @@
       body: JSON.stringify({
         client_id: CLIENT_ID,
         message: text,
-        history: history.slice(0, -1),
+        history: chatHistory.slice(0, -1),
         visitor_id: visitorId,
         page_url: location.href,
         conversation_id: conversationId,
@@ -263,7 +263,7 @@
         setInputEnabled(true);
         if (!data) {
           addMsg("bot", "Ja, something went wrong. Try again or WhatsApp us directly.");
-          history.push({ role: "assistant", content: "Something went wrong." });
+          chatHistory.push({ role: "assistant", content: "Something went wrong." });
           return;
         }
         if (data.conversation_id && !conversationId) {
@@ -271,7 +271,7 @@
           sessionStorage.setItem("qwikly_cid", conversationId);
         }
         addMsg("bot", data.reply);
-        history.push({ role: "assistant", content: data.reply });
+        chatHistory.push({ role: "assistant", content: data.reply });
         // Only focus input on desktop — on mobile this pops the keyboard unexpectedly
         if (!isMobile) {
           var inputEl = shadow.getElementById("qw-inp");
@@ -283,7 +283,7 @@
         sending = false;
         setInputEnabled(true);
         addMsg("bot", "Something went wrong, please try again.");
-        history.push({ role: "assistant", content: "Something went wrong." });
+        chatHistory.push({ role: "assistant", content: "Something went wrong." });
       });
   }
 
@@ -302,7 +302,7 @@
         ? branding.greeting.replace(/\{name\}/g, "").replace(/\{business\}/g, biz()).trim()
         : "Hey. What trade you in?";
       addMsg("bot", greeting);
-      history.push({ role: "assistant", content: greeting });
+      chatHistory.push({ role: "assistant", content: greeting });
       setInputEnabled(true);
       // Don't auto-focus on mobile — prevents keyboard covering the new message
       if (!isMobile) {
