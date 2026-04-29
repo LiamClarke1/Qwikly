@@ -66,7 +66,7 @@ export async function POST(
       .eq("id", conversationId);
 
     const channel = convo.channel ?? "whatsapp";
-    let deliveryResult: { channel: string; sent: boolean; error?: string } = {
+    const deliveryResult: { channel: string; sent: boolean; error?: string } = {
       channel,
       sent: false,
     };
