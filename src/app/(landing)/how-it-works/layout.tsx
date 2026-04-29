@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "Qwikly connects to your WhatsApp number, replies to every lead in 30 seconds, qualifies the job, and books it straight into your Google Calendar. Here's how.",
+    "Qwikly connects to your WhatsApp and email, replies to every lead in 30 seconds, qualifies the job, and books it straight into your Google Calendar. Here's how.",
   alternates: { canonical: "https://www.qwikly.co.za/how-it-works" },
   openGraph: {
     title: "How Qwikly Works",
