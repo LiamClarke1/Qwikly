@@ -262,9 +262,7 @@ export default function Home() {
           <div className="mt-10 md:mt-14 reveal-up">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
               <p className="text-lg md:text-xl text-ink-700 leading-relaxed">
-                Qwikly answers your WhatsApp, qualifies the lead, quotes them, and books the
-                job — while you stay on site. You pay only when a real appointment
-                lands in your calendar.
+                Qwikly answers your WhatsApp and email, qualifies the lead, quotes them, books the job, and sends the invoice. All while you stay on site. You pay only when a real appointment lands in your calendar.
               </p>
               <div className="flex flex-col gap-4 lg:items-end lg:text-right">
                 <div className="flex flex-wrap gap-4 lg:justify-end">
@@ -319,7 +317,7 @@ export default function Home() {
                 <div className="space-y-4">
                   {[
                     "Responds in under 30 seconds, around the clock",
-                    "Speaks in your business voice — not like a chatbot",
+                    "Speaks in your business voice, not like a chatbot",
                     "Qualifies leads before they reach your calendar",
                   ].map((point) => (
                     <div key={point} className="flex items-start gap-3">
@@ -548,7 +546,7 @@ export default function Home() {
             </div>
             <div className="md:col-span-7 md:col-start-6 md:pt-6">
               <p className="text-lg text-ink-700 leading-relaxed reveal-up">
-                Qwikly doesn&rsquo;t bolt a bot onto your WhatsApp. It learns your services, your pricing, your service area, the way you speak — and then works a full sales cycle, start to finish, without you touching it.
+                Qwikly doesn&rsquo;t bolt a bot onto your WhatsApp. It learns your services, your pricing, your service area, the way you speak, and then works a full sales cycle, start to finish, without you touching it.
               </p>
             </div>
           </div>
@@ -603,20 +601,20 @@ export default function Home() {
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
             <div>
-              <p className="eyebrow text-ember mb-5">Also included — invoicing</p>
+              <p className="eyebrow text-ember mb-5">Also included: invoicing</p>
               <h2 className="display-lg text-paper leading-tight">
                 Book it. Invoice it.<br />
                 <em className="italic font-light text-ember">Get paid.</em>
               </h2>
               <p className="mt-6 text-paper/65 text-lg leading-relaxed max-w-md">
-                Once a job is booked, Qwikly can generate and send the invoice via WhatsApp the same day. No chasing. No paperwork. Clients pay faster when they get the invoice before the tech leaves the driveway.
+                Once a job is booked, Qwikly generates and sends the invoice via WhatsApp or email the same day. No chasing. No paperwork. Clients pay faster when they get the invoice before the tech even leaves the driveway.
               </p>
             </div>
             <div className="grid grid-cols-1 gap-4">
               {[
-                { num: "01", title: "Auto-generated on job completion", body: "Invoice created instantly from the booking — line items, your logo, payment details pre-filled." },
+                { num: "01", title: "Auto-generated on job completion", body: "Invoice created instantly from the booking. Line items, your logo, payment details, all pre-filled." },
                 { num: "02", title: "Sent via WhatsApp or email", body: "Client gets the invoice the same day. No logging into software, no manual send." },
-                { num: "03", title: "Payment status tracked in dashboard", body: "See exactly which jobs are paid, outstanding, or overdue — all in one place." },
+                { num: "03", title: "Payment status tracked in dashboard", body: "See exactly which jobs are paid, outstanding, or overdue. All in one place." },
               ].map((item) => (
                 <div key={item.num} className="flex items-start gap-4 p-5 rounded-2xl bg-paper/[0.04] border border-paper/[0.08]">
                   <span className="font-mono text-xs text-ember/60 tracking-widest shrink-0 mt-0.5">{item.num}</span>
@@ -676,7 +674,7 @@ export default function Home() {
             </div>
             <div className="md:col-span-7 md:pt-4 reveal-up">
               <p className="text-lg text-ink-700 leading-relaxed">
-                Three inputs. One number you&rsquo;ve probably never calculated. Most tradespeople are surprised — and then angry that they waited this long to fix it.
+                Three inputs. One number you&rsquo;ve probably never calculated. Most tradespeople are surprised, and then angry that they waited this long to fix it.
               </p>
             </div>
           </div>
