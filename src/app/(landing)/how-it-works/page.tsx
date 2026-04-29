@@ -14,7 +14,7 @@ const steps = [
     stamp: "i.",
     title: "A lead messages your business.",
     body:
-      "A customer messages via WhatsApp or email. Maybe a burst geyser at 2 a.m. Maybe a quote request on a Saturday morning. Doesn't matter when or how they reach out. Qwikly is always on.",
+      "A customer messages via WhatsApp, email, or your website chat. Maybe a burst geyser at 2 a.m. Maybe a quote request on a Saturday morning. Doesn't matter when or how they reach out. Qwikly is always on.",
   },
   {
     stamp: "ii.",
@@ -113,7 +113,11 @@ export default function HowItWorksPage() {
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 text-ember" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
               <span className="text-xs font-semibold text-ember">Email</span>
             </div>
-            <span className="text-xs text-ink-400 pl-1">Both channels, one system.</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 text-blue-500" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+              <span className="text-xs font-semibold text-blue-500">Website Chat</span>
+            </div>
+            <span className="text-xs text-ink-400 pl-1">All three channels, one system.</span>
           </div>
         </div>
       </section>

@@ -13,6 +13,7 @@ import { RevenueCalculator } from "@/components/landing/RevenueCalculator";
 import { LiveActivityStrip } from "@/components/landing/LiveActivityStrip";
 import { LiveCounter } from "@/components/landing/LiveCounter";
 import { ConnectYourWebsiteSection } from "@/components/landing/ConnectYourWebsiteSection";
+import { WebsiteAssistantSection } from "@/components/landing/WebsiteAssistantSection";
 
 /* ─────────────────────────────────────────────────────────────
    DATA
@@ -102,8 +103,8 @@ const testimonials = [
 ];
 
 const pricingIncludes = [
-  "30-second WhatsApp & email response",
-  "Handles email and WhatsApp in one place",
+  "30-second reply on WhatsApp, email & website chat",
+  "Website chat widget — one line of code to install",
   "Automated follow-ups at 4h, 24h, 2d, 5d",
   "No-show rebooking within minutes",
   "Quote follow-up sequences",
@@ -263,7 +264,7 @@ export default function Home() {
           <div className="mt-10 md:mt-14 reveal-up">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
               <p className="text-lg md:text-xl text-ink-700 leading-relaxed">
-                Qwikly answers your WhatsApp and email, qualifies the lead, quotes them, books the job, and sends the invoice. All while you stay on site. You pay only when a real appointment lands in your calendar.
+                Qwikly answers your WhatsApp, email, and website chat, qualifies the lead, quotes them, books the job, and sends the invoice. All while you stay on site. You pay only when a real appointment lands in your calendar.
               </p>
               <div className="flex flex-col gap-4 lg:items-end lg:text-right">
                 <div className="flex flex-wrap gap-4 lg:justify-end">
@@ -559,7 +560,11 @@ export default function Home() {
                   <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 text-ember" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
                   <span className="text-xs font-semibold text-ember">Email</span>
                 </div>
-                <span className="text-xs text-ink-400">Both channels handled automatically.</span>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 text-blue-500" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+                  <span className="text-xs font-semibold text-blue-500">Website Chat</span>
+                </div>
+                <span className="text-xs text-ink-400">All three channels handled automatically.</span>
               </div>
             </div>
           </div>
@@ -607,6 +612,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ═══════ WEBSITE DIGITAL ASSISTANT ══════════════════════ */}
+      <WebsiteAssistantSection />
 
       {/* ═══════ INVOICING ══════════════════════════════════════ */}
       <section className="relative py-24 bg-ink text-paper overflow-hidden grain-dark">
