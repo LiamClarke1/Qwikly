@@ -349,13 +349,13 @@
   }
 
   (function () {
-    var origPush = history.pushState.bind(history);
-    history.pushState = function (state, title, url) {
+    var origPush = window.history.pushState.bind(window.history);
+    window.history.pushState = function (state, title, url) {
       origPush(state, title, url);
       checkRoute();
     };
-    var origReplace = history.replaceState.bind(history);
-    history.replaceState = function (state, title, url) {
+    var origReplace = window.history.replaceState.bind(window.history);
+    window.history.replaceState = function (state, title, url) {
       origReplace(state, title, url);
       checkRoute();
     };
