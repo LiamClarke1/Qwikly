@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Script from "next/script";
+import WidgetLoader from "@/components/WidgetLoader";
 
 export default function LandingLayout({
   children,
@@ -12,9 +12,7 @@ export default function LandingLayout({
       <Navbar />
       <main>{children}</main>
       <Footer />
-      {/* Set widget config as globals before the script loads */}
-      <script dangerouslySetInnerHTML={{ __html: 'window.__QW_CLIENT="1";window.__QW_API="/api";' }} />
-      <Script src="/widget/widget.js" strategy="afterInteractive" />
+      <WidgetLoader />
     </div>
   );
 }
