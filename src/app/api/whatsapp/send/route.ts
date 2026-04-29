@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     // Verify the conversation belongs to a client owned by this user
     const { data: convo } = await db
       .from("conversations")
-      .select("client_id, customer_phone")
+      .select("client_id, customer_phone, channel")
       .eq("id", conversation_id)
       .single();
     if (!convo) {
@@ -70,7 +70,10 @@ export async function POST(req: NextRequest) {
       .update({ updated_at: new Date().toISOString() })
       .eq("id", conversation_id);
 
-    await sendWhatsAppMessage(convo.customer_phone, message);
+    // Web chat conversations don't have a real phone number — just log the message, no WhatsApp send
+    if (convo.channel !== "web_chat") {
+      await sendWhatsAppMessage(convo.customer_phone, message);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

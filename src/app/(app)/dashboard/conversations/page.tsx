@@ -131,6 +131,7 @@ export default function ConversationsPage() {
   const [savingNote, setSavingNote] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showClearAll, setShowClearAll] = useState(false);
   const [clearingAll, setClearingAll] = useState(false);
 
@@ -351,6 +352,7 @@ export default function ConversationsPage() {
 
   const deleteConvo = async (id: string) => {
     setDeleting(true);
+    setDeleteError(null);
     try {
       const r = await fetch(`/api/conversations/${id}`, { method: "DELETE" });
       if (r.ok) {
@@ -359,7 +361,12 @@ export default function ConversationsPage() {
           setActiveId(null);
           router.replace("/dashboard/conversations", { scroll: false });
         }
+      } else {
+        const j = await r.json().catch(() => ({}));
+        setDeleteError(j.error ?? `Delete failed (${r.status})`);
       }
+    } catch {
+      setDeleteError("Network error — could not delete.");
     } finally {
       setDeleting(false);
       setDeleteId(null);
@@ -368,13 +375,19 @@ export default function ConversationsPage() {
 
   const clearAll = async () => {
     setClearingAll(true);
+    setDeleteError(null);
     try {
       const r = await fetch("/api/conversations", { method: "DELETE" });
       if (r.ok) {
         setConvos([]);
         setActiveId(null);
         router.replace("/dashboard/conversations", { scroll: false });
+      } else {
+        const j = await r.json().catch(() => ({}));
+        setDeleteError(j.error ?? `Delete failed (${r.status})`);
       }
+    } catch {
+      setDeleteError("Network error — could not delete.");
     } finally {
       setClearingAll(false);
       setShowClearAll(false);
@@ -399,6 +412,15 @@ export default function ConversationsPage() {
           ) : undefined
         }
       />
+
+      {/* Delete error banner */}
+      {deleteError && (
+        <div className="flex items-center gap-2.5 px-4 py-2.5 mb-3 rounded-xl bg-danger/8 border border-danger/20">
+          <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
+          <p className="text-small text-danger flex-1">{deleteError}</p>
+          <button onClick={() => setDeleteError(null)} className="text-danger/60 hover:text-danger cursor-pointer"><X className="w-3.5 h-3.5" /></button>
+        </div>
+      )}
 
       {/* Clear all modal */}
       {showClearAll && (
