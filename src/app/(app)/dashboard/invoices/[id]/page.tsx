@@ -240,7 +240,7 @@ export default function InvoiceDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Main invoice */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-bg-card border border-line rounded-2xl overflow-hidden">
+          <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
             {/* Invoice header */}
             <div className="px-6 py-5 border-b border-line">
               <div className="grid grid-cols-2 gap-6">
@@ -331,7 +331,7 @@ export default function InvoiceDetailPage() {
 
           {/* Payments */}
           {(invoice.payments ?? []).length > 0 && (
-            <div className="bg-bg-card border border-line rounded-2xl overflow-hidden">
+            <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
               <p className="px-5 py-3.5 text-small font-semibold text-fg border-b border-line">Payments</p>
               {invoice.payments.map(p => (
                 <div key={p.id} className="px-5 py-3.5 flex items-center justify-between border-b border-line/50 last:border-0">
@@ -346,7 +346,7 @@ export default function InvoiceDetailPage() {
           )}
 
           {/* Internal notes */}
-          <div className="bg-bg-card border border-line rounded-2xl overflow-hidden">
+          <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
             <p className="px-5 py-3.5 text-small font-semibold text-fg border-b border-line">Internal notes</p>
             <div className="p-5">
               <textarea
@@ -365,7 +365,7 @@ export default function InvoiceDetailPage() {
         {/* Sidebar */}
         <div className="space-y-4">
           {/* Public link */}
-          <div className="bg-bg-card border border-line rounded-2xl p-5">
+          <div className="bg-surface-card border border-line rounded-2xl p-5">
             <p className="text-small font-semibold text-fg mb-3">Customer link</p>
             <p className="text-tiny text-fg-muted mb-3 break-all">{BASE_URL}/i/{invoice.customer_view_token.slice(0, 8)}…</p>
             <div className="flex gap-2">
@@ -384,7 +384,7 @@ export default function InvoiceDetailPage() {
           </div>
 
           {/* Actions */}
-          <div className="bg-bg-card border border-line rounded-2xl p-5 space-y-2">
+          <div className="bg-surface-card border border-line rounded-2xl p-5 space-y-2">
             <p className="text-small font-semibold text-fg mb-3">Actions</p>
             {canPay && (
               <Button variant="secondary" size="sm" onClick={() => setShowPayModal(true)} icon={<DollarSign className="w-3.5 h-3.5" />} className="w-full justify-start">
@@ -411,7 +411,7 @@ export default function InvoiceDetailPage() {
           </div>
 
           {/* Timeline */}
-          <div className="bg-bg-card border border-line rounded-2xl p-5">
+          <div className="bg-surface-card border border-line rounded-2xl p-5">
             <p className="text-small font-semibold text-fg mb-4">Activity</p>
             <div>
               {invoice.created_at && <TimelineItem event="Created" ts={invoice.created_at} />}

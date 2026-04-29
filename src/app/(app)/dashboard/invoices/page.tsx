@@ -80,7 +80,7 @@ function StatusBadge({ status }: { status: InvoiceStatus }) {
 
 function StatCard({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
   return (
-    <div className="bg-bg-card border border-line rounded-2xl p-5">
+    <div className="bg-surface-card border border-[var(--border)] rounded-2xl p-5">
       <p className="text-small text-fg-muted mb-1">{label}</p>
       <p className={cn("text-display-2 font-display", accent ? "text-warning" : "text-fg")}>{value}</p>
       {sub && <p className="text-tiny text-fg-subtle mt-0.5">{sub}</p>}
@@ -164,7 +164,7 @@ export default function InvoicesPage() {
 
       {/* Tabs + Search */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar border border-line rounded-xl p-1 bg-white/[0.02]">
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar border border-[var(--border)] rounded-xl p-1 bg-surface-input">
           {TABS.map(tab => (
             <button
               key={tab.key}
@@ -172,8 +172,8 @@ export default function InvoicesPage() {
               className={cn(
                 "shrink-0 px-3 py-1.5 rounded-lg text-small font-medium transition-colors cursor-pointer",
                 activeTab === tab.key
-                  ? "bg-white/[0.08] text-fg"
-                  : "text-fg-muted hover:text-fg hover:bg-white/[0.04]"
+                  ? "bg-surface-active text-fg"
+                  : "text-fg-muted hover:text-fg hover:bg-surface-hover"
               )}
             >
               {tab.label}
@@ -186,7 +186,7 @@ export default function InvoicesPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by customer or invoice #"
-            className="w-full bg-white/[0.04] border border-line rounded-xl pl-9 pr-4 py-2 text-small text-fg placeholder:text-fg-faint outline-none focus:border-brand/40"
+            className="w-full bg-surface-input border border-[var(--border)] rounded-xl pl-9 pr-4 py-2 text-small text-fg placeholder:text-fg-faint outline-none focus:border-ember/40"
           />
         </div>
       </div>
@@ -206,21 +206,21 @@ export default function InvoicesPage() {
           ) : undefined}
         />
       ) : (
-        <div className="bg-bg-card border border-line rounded-2xl overflow-hidden">
-          <div className="hidden md:grid grid-cols-[2fr_1fr_100px_100px_100px_32px] gap-4 px-5 py-3 border-b border-line">
+        <div className="bg-surface-card border border-[var(--border)] rounded-2xl overflow-hidden">
+          <div className="hidden md:grid grid-cols-[2fr_1fr_100px_100px_100px_32px] gap-4 px-5 py-3 border-b border-[var(--border)]">
             {["Customer", "Invoice #", "Amount", "Due", "Status", ""].map((h, i) => (
               <p key={i} className={cn("text-tiny uppercase tracking-wider text-fg-subtle font-semibold", i >= 2 && i < 5 ? "text-right" : "")}>{h}</p>
             ))}
           </div>
-          <div className="divide-y divide-line">
+          <div className="divide-y divide-[var(--border)]">
             {filtered.map(inv => (
               <Link
                 key={inv.id}
                 href={`/dashboard/invoices/${inv.id}`}
-                className="group flex sm:grid md:grid-cols-[2fr_1fr_100px_100px_100px_32px] gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors cursor-pointer"
+                className="group flex sm:grid md:grid-cols-[2fr_1fr_100px_100px_100px_32px] gap-4 items-center px-5 py-4 hover:bg-surface-hover transition-colors cursor-pointer"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-body font-medium text-fg group-hover:text-brand transition-colors truncate">
+                  <p className="text-body font-medium text-fg group-hover:text-ember transition-colors truncate">
                     {inv.customer_name}
                   </p>
                   <p className="text-tiny text-fg-muted mt-0.5">
@@ -253,7 +253,7 @@ export default function InvoicesPage() {
       {/* Qwikly fee explainer */}
       <p className="mt-5 text-tiny text-fg-subtle">
         Qwikly takes 8% of all collected invoices (ex-VAT), billed on the 1st of each month.{" "}
-        <Link href="/dashboard/billing" className="text-brand hover:underline">View billing history</Link>
+        <Link href="/dashboard/billing" className="text-ember hover:underline">View billing history</Link>
       </p>
     </div>
   );

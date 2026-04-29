@@ -420,7 +420,7 @@ export default function NewInvoicePage() {
                 : "Invoice created — share the link below"}
           </p>
         </div>
-        <div className="bg-bg-card border border-line rounded-2xl p-5 text-left space-y-3">
+        <div className="bg-surface-card border border-line rounded-2xl p-5 text-left space-y-3">
           <p className="text-small font-semibold text-fg">Customer link</p>
           <div className="flex items-center gap-2">
             <input
@@ -494,7 +494,7 @@ export default function NewInvoicePage() {
         {/* Left: form */}
         <div className="space-y-5">
           {/* Customer */}
-          <div className="bg-bg-card border border-line rounded-2xl p-5">
+          <div className="bg-surface-card border border-line rounded-2xl p-5">
             <p className="text-small font-semibold text-fg mb-4">Customer</p>
             <div className="space-y-3">
               <Field label="Search or create customer">
@@ -536,7 +536,7 @@ export default function NewInvoicePage() {
           </div>
 
           {/* Line items */}
-          <div className="bg-bg-card border border-line rounded-2xl p-5">
+          <div className="bg-surface-card border border-line rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
               <p className="text-small font-semibold text-fg">Line items</p>
               {client?.vat_number && (
@@ -616,7 +616,7 @@ export default function NewInvoicePage() {
           </div>
 
           {/* Invoice details */}
-          <div className="bg-bg-card border border-line rounded-2xl p-5 space-y-4">
+          <div className="bg-surface-card border border-line rounded-2xl p-5 space-y-4">
             <p className="text-small font-semibold text-fg">Details</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Due date">
@@ -641,7 +641,7 @@ export default function NewInvoicePage() {
           </div>
 
           {/* Send options */}
-          <div className="bg-bg-card border border-line rounded-2xl p-5 space-y-4">
+          <div className="bg-surface-card border border-line rounded-2xl p-5 space-y-4">
             <p className="text-small font-semibold text-fg">Send via</p>
             <div className="flex gap-3 flex-wrap">
               {[

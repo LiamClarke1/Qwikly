@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function LeadsRedirect() {
+export default function ChatsRedirect() {
   redirect("/dashboard/conversations");
 }

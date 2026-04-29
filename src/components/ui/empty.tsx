@@ -21,7 +21,7 @@ export function EmptyState({
       )}
     >
       {Icon && (
-        <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-line flex items-center justify-center mb-4">
+        <div className="w-12 h-12 rounded-2xl bg-surface-input border border-[var(--border)] flex items-center justify-center mb-4">
           <Icon className="w-5 h-5 text-fg-muted" />
         </div>
       )}
@@ -38,7 +38,7 @@ export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "rounded-lg bg-white/[0.04] animate-pulse-soft",
+        "rounded-lg bg-surface-input animate-pulse-soft",
         className
       )}
     />

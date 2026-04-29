@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -58,11 +59,20 @@ const config: Config = {
           DEFAULT: "rgba(255,255,255,0.03)",
           hover: "rgba(255,255,255,0.05)",
         },
+        // ── THEME-AWARE SURFACE TOKENS ───────────────────────────
+        surface: {
+          DEFAULT: "var(--surface)",
+          card:    "var(--surface-card)",
+          input:   "var(--surface-input)",
+          hover:   "var(--surface-hover)",
+          active:  "var(--surface-active)",
+        },
+        // ── THEME-AWARE TEXT TOKENS ──────────────────────────────
         fg: {
-          DEFAULT: "#F4F4F5",
-          muted: "#9CA3AF",
-          subtle: "#6B7280",
-          faint: "#4B5563",
+          DEFAULT: "var(--text-primary)",
+          muted:   "var(--text-muted)",
+          subtle:  "var(--text-subtle)",
+          faint:   "var(--text-faint)",
         },
         brand: {
           DEFAULT: "#E85A2C",

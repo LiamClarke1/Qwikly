@@ -14,13 +14,17 @@ import {
   Play,
   StickyNote,
   Phone,
+  Mail,
   Sparkles,
   CheckCheck,
-  AlertTriangle,
   Loader2,
   Inbox,
-  Mail,
   ChevronLeft,
+  Globe,
+  Trash2,
+  AlertTriangle,
+  MoreVertical,
+  X,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Avatar } from "@/components/ui/avatar";
@@ -35,6 +39,7 @@ interface Convo {
   id: string;
   customer_name: string | null;
   customer_phone: string;
+  customer_email?: string | null;
   channel?: "whatsapp" | "email" | "web_chat" | null;
   status: "active" | "completed" | "escalated";
   ai_paused?: boolean;
@@ -53,26 +58,32 @@ interface Message {
   created_at: string;
 }
 
-const FILTERS = [
-  { id: "all", label: "All" },
-  { id: "whatsapp", label: "WhatsApp" },
-  { id: "email", label: "Email" },
-  { id: "web_chat", label: "Web" },
-  { id: "needs", label: "Needs reply" },
-  { id: "active", label: "Active" },
-  { id: "escalated", label: "Escalated" },
-  { id: "completed", label: "Done" },
-] as const;
-type FilterId = (typeof FILTERS)[number]["id"];
-
 const TEMPLATES = [
-  { title: "On my way", body: "Hi! I'm on my way and should be with you in about 20 minutes.", channel: "whatsapp" },
-  { title: "Quote ready", body: "Hey, I've put a quote together for you. Want me to WhatsApp it through?", channel: "whatsapp" },
-  { title: "Confirm appt", body: "Just confirming our appointment. Reply YES to lock it in or suggest a new time.", channel: "both" },
-  { title: "Follow up", body: "Hi, following up on your enquiry. Still keen for me to come through?", channel: "both" },
-  { title: "Email quote", body: "Hi, thanks for your enquiry. I've attached a quote for you to review. Please reply if you'd like to go ahead or have any questions.", channel: "email" },
-  { title: "Email confirm", body: "Hi, just confirming your appointment. Please reply to confirm or let me know if you need to reschedule.", channel: "email" },
+  { title: "On my way", body: "Hi! I'm on my way and should be with you in about 20 minutes." },
+  { title: "Quote ready", body: "Hey, I've put a quote together for you. Want me to WhatsApp it through?" },
+  { title: "Confirm appt", body: "Just confirming our appointment. Reply YES to lock it in or suggest a new time." },
+  { title: "Follow up", body: "Hi, following up on your enquiry. Still keen for me to come through?" },
+  { title: "Email quote", body: "Hi, thanks for your enquiry. I've attached a quote for you to review. Please reply if you'd like to go ahead or have any questions." },
+  { title: "Email confirm", body: "Hi, just confirming your appointment. Please reply to confirm or let me know if you need to reschedule." },
 ];
+
+function channelLabel(channel?: string | null) {
+  if (channel === "web_chat") return "Website";
+  if (channel === "email") return "Email";
+  return "WhatsApp";
+}
+
+function ChannelIcon({ channel, className }: { channel?: string | null; className?: string }) {
+  if (channel === "web_chat") return <Globe className={cn("w-2.5 h-2.5", className)} />;
+  if (channel === "email") return <Mail className={cn("w-2.5 h-2.5", className)} />;
+  return <MessageSquare className={cn("w-2.5 h-2.5", className)} />;
+}
+
+function channelColor(channel?: string | null) {
+  if (channel === "web_chat") return "text-violet-600";
+  if (channel === "email") return "text-sky-600";
+  return "text-[#128c7e]";
+}
 
 export default function ConversationsPage() {
   const router = useRouter();
@@ -83,7 +94,7 @@ export default function ConversationsPage() {
   const [activeId, setActiveId] = useState<string | null>(initialId);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMsgs, setLoadingMsgs] = useState(false);
-  const [filter, setFilter] = useState<FilterId>("all");
+  const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [composerText, setComposerText] = useState("");
   const [sending, setSending] = useState(false);
@@ -91,6 +102,10 @@ export default function ConversationsPage() {
   const [showNotes, setShowNotes] = useState(false);
   const [noteDraft, setNoteDraft] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [showClearAll, setShowClearAll] = useState(false);
+  const [clearingAll, setClearingAll] = useState(false);
   const transcriptRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -118,7 +133,6 @@ export default function ConversationsPage() {
       );
       setConvos(enriched);
       setLoading(false);
-      // Desktop: auto-select first conversation when URL has no id
       if (!activeId && enriched.length && typeof window !== "undefined" && window.innerWidth >= 1024) {
         setActiveId(enriched[0].id);
       }
@@ -147,35 +161,49 @@ export default function ConversationsPage() {
 
   const active = useMemo(() => convos.find((c) => c.id === activeId) ?? null, [convos, activeId]);
 
+  // Build dynamic channel filter chips, auto-sorted by count
+  const channelCounts = useMemo(() => ({
+    web_chat: convos.filter((c) => c.channel === "web_chat").length,
+    whatsapp: convos.filter((c) => c.channel === "whatsapp" || !c.channel).length,
+    email: convos.filter((c) => c.channel === "email").length,
+  }), [convos]);
+
+  const dynamicFilters = useMemo(() => {
+    const channels = [
+      { id: "web", label: "Website", count: channelCounts.web_chat },
+      { id: "whatsapp", label: "WhatsApp", count: channelCounts.whatsapp },
+      { id: "email", label: "Email", count: channelCounts.email },
+    ]
+      .filter((f) => f.count > 0)
+      .sort((a, b) => b.count - a.count);
+
+    return [
+      { id: "all", label: "All", count: convos.length },
+      ...channels,
+      { id: "needs", label: "Needs me", count: convos.filter((c) => c.status === "escalated" || c.ai_paused).length },
+      { id: "done", label: "Done", count: convos.filter((c) => c.status === "completed").length },
+    ];
+  }, [convos, channelCounts]);
+
   const filtered = useMemo(() => {
     let list = convos;
-    if (filter === "whatsapp") list = list.filter((c) => !c.channel || c.channel === "whatsapp");
+    if (filter === "web")       list = list.filter((c) => c.channel === "web_chat");
+    else if (filter === "whatsapp") list = list.filter((c) => c.channel === "whatsapp" || !c.channel);
     else if (filter === "email") list = list.filter((c) => c.channel === "email");
-    else if (filter === "web_chat") list = list.filter((c) => c.channel === "web_chat");
     else if (filter === "needs") list = list.filter((c) => c.status === "escalated" || c.ai_paused);
-    else if (filter !== "all") list = list.filter((c) => c.status === filter);
+    else if (filter === "done")  list = list.filter((c) => c.status === "completed");
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
         (c) =>
           (c.customer_name ?? "").toLowerCase().includes(q) ||
           c.customer_phone.includes(q) ||
+          (c.customer_email ?? "").toLowerCase().includes(q) ||
           (c.last_message ?? "").toLowerCase().includes(q)
       );
     }
     return list;
   }, [convos, filter, search]);
-
-  const counts = useMemo(() => ({
-    all: convos.length,
-    whatsapp: convos.filter((c) => !c.channel || c.channel === "whatsapp").length,
-    email: convos.filter((c) => c.channel === "email").length,
-    web_chat: convos.filter((c) => c.channel === "web_chat").length,
-    needs: convos.filter((c) => c.status === "escalated" || c.ai_paused).length,
-    active: convos.filter((c) => c.status === "active").length,
-    escalated: convos.filter((c) => c.status === "escalated").length,
-    completed: convos.filter((c) => c.status === "completed").length,
-  }), [convos]);
 
   const handleSend = async (e: FormEvent) => {
     e.preventDefault();
@@ -183,11 +211,21 @@ export default function ConversationsPage() {
     setSending(true);
     const body = composerText.trim();
     setComposerText("");
-    const optimistic: Message = { id: `tmp-${Date.now()}`, conversation_id: active.id, role: "owner", content: body, created_at: new Date().toISOString() };
+    const optimistic: Message = {
+      id: `tmp-${Date.now()}`,
+      conversation_id: active.id,
+      role: "owner",
+      content: body,
+      created_at: new Date().toISOString(),
+    };
     setMessages((m) => [...m, optimistic]);
     setTimeout(() => transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: "smooth" }), 30);
     try {
-      const r = await fetch("/api/whatsapp/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ conversation_id: active.id, content: body }) });
+      const r = await fetch("/api/whatsapp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversation_id: active.id, content: body }),
+      });
       const j = await r.json();
       if (!r.ok || j.error) console.error(j);
     } finally {
@@ -216,42 +254,118 @@ export default function ConversationsPage() {
     setSavingNote(false);
   };
 
+  const deleteConvo = async (id: string) => {
+    setDeleting(true);
+    try {
+      const r = await fetch(`/api/conversations/${id}`, { method: "DELETE" });
+      if (r.ok) {
+        setConvos((cs) => cs.filter((c) => c.id !== id));
+        if (activeId === id) {
+          setActiveId(null);
+          router.replace("/dashboard/conversations", { scroll: false });
+        }
+      }
+    } finally {
+      setDeleting(false);
+      setDeleteId(null);
+    }
+  };
+
+  const clearAll = async () => {
+    setClearingAll(true);
+    try {
+      const r = await fetch("/api/conversations", { method: "DELETE" });
+      if (r.ok) {
+        setConvos([]);
+        setActiveId(null);
+        router.replace("/dashboard/conversations", { scroll: false });
+      }
+    } finally {
+      setClearingAll(false);
+      setShowClearAll(false);
+    }
+  };
+
   return (
     <>
       <PageHeader
-        title="Inbox"
-        description="Every chat, every channel. Reply manually whenever you want to step in."
+        title="Chats"
+        description="Every customer conversation, every channel."
+        actions={
+          convos.length > 0 ? (
+            <Button
+              variant="danger"
+              size="sm"
+              icon={<Trash2 className="w-3.5 h-3.5" />}
+              onClick={() => setShowClearAll(true)}
+            >
+              Clear all
+            </Button>
+          ) : undefined
+        }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_260px] gap-3 lg:h-[calc(100vh-200px)] lg:min-h-[560px]">
-        {/* List pane — hidden on mobile when a conversation is open */}
+      {/* Clear all confirmation modal */}
+      {showClearAll && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={() => setShowClearAll(false)} />
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-full max-w-sm bg-surface-card border border-[var(--border)] rounded-2xl shadow-pop p-6 animate-slide-up">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-danger/10 border border-danger/20 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-danger" />
+              </div>
+              <div>
+                <p className="text-small font-semibold text-fg">Delete all conversations?</p>
+                <p className="text-small text-fg-muted mt-1">This permanently deletes all {convos.length} conversations and their messages. This cannot be undone.</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="secondary" className="flex-1" onClick={() => setShowClearAll(false)}>Cancel</Button>
+              <Button variant="danger" className="flex-1" loading={clearingAll} onClick={clearAll}>Delete all</Button>
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] xl:grid-cols-[300px_1fr_280px] gap-3 lg:h-[calc(100vh-200px)] lg:min-h-[560px]">
+
+        {/* ── LEFT: List pane ── */}
         <div className={cn("panel flex flex-col overflow-hidden !p-0 min-h-[calc(100dvh-200px)] lg:min-h-0", active && "hidden lg:flex")}>
+
           {/* Search */}
-          <div className="px-3 pt-3 pb-2 border-b border-line space-y-2">
-            <div className="flex items-center gap-2 h-8 px-3 rounded-lg bg-ink-800 border border-line">
+          <div className="px-3 pt-3 pb-2.5 border-b border-[var(--border)] space-y-2">
+            <div className="flex items-center gap-2 h-8 px-3 rounded-lg bg-surface-input border border-[var(--border)]">
               <Search className="w-3.5 h-3.5 text-fg-subtle shrink-0" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search…"
+                placeholder="Search name, phone, email…"
                 className="bg-transparent outline-none text-tiny text-fg placeholder:text-fg-faint flex-1"
               />
+              {search && (
+                <button onClick={() => setSearch("")} className="text-fg-faint hover:text-fg-muted cursor-pointer">
+                  <X className="w-3 h-3" />
+                </button>
+              )}
             </div>
-            {/* Filter chips — scrollable row */}
+
+            {/* Dynamic filter chips — auto-sorted by channel count */}
             <div className="flex gap-1 overflow-x-auto scrollbar-none pb-0.5">
-              {FILTERS.map((f) => (
+              {dynamicFilters.map((f) => (
                 <button
                   key={f.id}
                   onClick={() => setFilter(f.id)}
                   className={cn(
                     "shrink-0 px-2.5 h-6 rounded-md text-[11px] font-semibold cursor-pointer transition-colors duration-150 flex items-center gap-1",
-                    filter === f.id ? "bg-brand text-white" : "bg-white/[0.04] text-fg-muted hover:text-fg hover:bg-white/[0.07]"
+                    filter === f.id
+                      ? "bg-ember text-paper"
+                      : "bg-surface-input text-fg-muted hover:text-fg hover:bg-surface-hover"
                   )}
                 >
                   {f.label}
-                  {counts[f.id] > 0 && (
+                  {f.count > 0 && (
                     <span className={cn("text-[10px] font-medium px-1 rounded", filter === f.id ? "bg-white/20" : "text-fg-faint")}>
-                      {counts[f.id]}
+                      {f.count}
                     </span>
                   )}
                 </button>
@@ -265,80 +379,79 @@ export default function ConversationsPage() {
               <div className="p-3 space-y-1.5">
                 {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14" />)}
               </div>
+            ) : filtered.length === 0 && filter === "all" && !search ? (
+              <EmptyState
+                icon={MessageSquare}
+                title="No conversations yet"
+                description="When customers message through WhatsApp, email, or your website chat, they'll appear here."
+              />
             ) : filtered.length === 0 ? (
-              <EmptyState icon={Inbox} title="No conversations" description="Try a different filter." />
+              <EmptyState icon={Inbox} title="Nothing here" description="Try a different filter or search." />
             ) : (
               <ul>
                 {filtered.map((c) => (
-                  <li key={c.id}>
-                    <button
-                      onClick={() => {
-                        setActiveId(c.id);
-                        router.replace(`/dashboard/conversations?id=${c.id}`, { scroll: false });
-                      }}
-                      className={cn(
-                        "w-full text-left px-3 py-2.5 border-l-2 cursor-pointer transition-colors duration-100 flex gap-2.5",
-                        activeId === c.id ? "bg-white/[0.04] border-brand" : "border-transparent hover:bg-white/[0.02]"
-                      )}
-                    >
-                      <Avatar name={c.customer_name ?? c.customer_phone} size={32} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2 mb-0.5">
-                          <p className="text-small font-semibold text-fg truncate">
-                            {c.customer_name ?? formatPhone(c.customer_phone)}
-                          </p>
-                          <span className="text-[10px] text-fg-subtle shrink-0 num">
-                            {timeAgo(c.last_message_time ?? c.updated_at)}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-fg-muted truncate leading-snug">{c.last_message ?? "No messages yet"}</p>
-                        <div className="flex items-center gap-1 mt-1">
-                          {c.channel === "email"
-                            ? <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 font-medium"><Mail className="w-2.5 h-2.5" /> Email</span>
-                            : c.channel === "web_chat"
-                            ? <span className="inline-flex items-center gap-0.5 text-[10px] text-purple-400 font-medium"><Inbox className="w-2.5 h-2.5" /> Web</span>
-                            : <span className="inline-flex items-center gap-0.5 text-[10px] text-[#00a884] font-medium"><MessageSquare className="w-2.5 h-2.5" /> WhatsApp</span>
-                          }
-                          {c.ai_paused && <Badge tone="warning">Manual</Badge>}
-                          {c.status === "escalated" && <Badge tone="warning" dot>Escalated</Badge>}
-                          {c.status === "active" && !c.ai_paused && <Badge tone="brand" dot>Active</Badge>}
-                          {c.status === "completed" && <Badge tone="neutral"><CheckCheck className="w-3 h-3 mr-0.5" />Done</Badge>}
-                        </div>
-                      </div>
-                    </button>
-                  </li>
+                  <ConvoRow
+                    key={c.id}
+                    c={c}
+                    isActive={activeId === c.id}
+                    confirmDelete={deleteId === c.id}
+                    deleting={deleting && deleteId === c.id}
+                    onSelect={() => {
+                      setActiveId(c.id);
+                      router.replace(`/dashboard/conversations?id=${c.id}`, { scroll: false });
+                    }}
+                    onDeleteRequest={() => setDeleteId(c.id)}
+                    onDeleteCancel={() => setDeleteId(null)}
+                    onDeleteConfirm={() => deleteConvo(c.id)}
+                  />
                 ))}
               </ul>
             )}
           </div>
         </div>
 
-        {/* Transcript pane — hidden on mobile when no conversation is selected */}
+        {/* ── MIDDLE: Transcript pane ── */}
         <div className={cn("panel flex flex-col overflow-hidden !p-0 min-h-[calc(100dvh-200px)] lg:min-h-0", !active && "hidden lg:flex")}>
           {!active ? (
             <div className="flex-1 flex items-center justify-center">
-              <EmptyState icon={MessageSquare} title="Select a conversation" description="Choose one from the list to read and reply." />
+              <EmptyState
+                icon={MessageSquare}
+                title="Select a conversation"
+                description="Choose one from the list to read and reply."
+              />
             </div>
           ) : (
             <>
-              {/* Mobile back button */}
+              {/* Mobile back */}
               <button
-                className="lg:hidden flex items-center gap-1.5 px-4 py-2.5 border-b border-line text-fg-muted hover:text-fg text-small cursor-pointer w-full"
+                className="lg:hidden flex items-center gap-1.5 px-4 py-2.5 border-b border-[var(--border)] text-fg-muted hover:text-fg text-small cursor-pointer w-full"
                 onClick={() => { setActiveId(null); router.replace("/dashboard/conversations", { scroll: false }); }}
               >
                 <ChevronLeft className="w-4 h-4" />
                 Back to inbox
               </button>
+
               {/* Header */}
-              <div className="px-4 py-2.5 border-b border-line flex items-center gap-2.5">
-                <Avatar name={active.customer_name ?? active.customer_phone} size={32} />
+              <div className="px-4 py-2.5 border-b border-[var(--border)] flex items-center gap-2.5 bg-surface-card">
+                <Avatar name={active.customer_name ?? active.customer_phone} size={34} />
                 <div className="flex-1 min-w-0">
                   <p className="text-small font-semibold text-fg truncate">
                     {active.customer_name ?? formatPhone(active.customer_phone)}
                   </p>
-                  <p className="text-[10px] text-fg-muted flex items-center gap-1">
-                    <Phone className="w-2.5 h-2.5" /> {formatPhone(active.customer_phone)}
-                  </p>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span className={cn("inline-flex items-center gap-0.5 text-[10px] font-medium", channelColor(active.channel))}>
+                      <ChannelIcon channel={active.channel} />
+                      {channelLabel(active.channel)}
+                    </span>
+                    <span className="text-[10px] text-fg-faint">·</span>
+                    <span className="text-[10px] text-fg-muted">{formatPhone(active.customer_phone)}</span>
+                    {active.customer_email && (
+                      <>
+                        <span className="text-[10px] text-fg-faint">·</span>
+                        <span className="text-[10px] text-fg-muted truncate max-w-[140px]">{active.customer_email}</span>
+                      </>
+                    )}
+                  </div>
                 </div>
                 <Button
                   variant={active.ai_paused ? "secondary" : "outline"}
@@ -351,24 +464,46 @@ export default function ConversationsPage() {
                 <button
                   onClick={() => setShowNotes((s) => !s)}
                   title="Notes"
-                  className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer", showNotes ? "text-brand bg-brand/10" : "text-fg-subtle hover:text-fg hover:bg-white/[0.04]")}
+                  className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-colors cursor-pointer", showNotes ? "text-ember bg-ember/10" : "text-fg-subtle hover:text-fg hover:bg-surface-hover")}
                 >
                   <StickyNote className="w-4 h-4" />
                 </button>
                 <select
                   value={active.status}
                   onChange={(e) => updateStatus(e.target.value as Convo["status"])}
-                  className="h-7 text-[11px] font-semibold rounded-lg bg-ink-800 border border-line-strong text-fg px-2 cursor-pointer"
+                  className="h-7 text-[11px] font-semibold rounded-lg bg-surface-input border border-[var(--border-strong)] text-fg px-2 cursor-pointer outline-none"
                 >
-                  <option value="active">Active</option>
-                  <option value="escalated">Escalated</option>
-                  <option value="completed">Completed</option>
+                  <option value="active">Replied</option>
+                  <option value="escalated">Needs me</option>
+                  <option value="completed">Done</option>
                 </select>
+                {/* Delete conversation */}
+                {deleteId === active.id ? (
+                  <div className="flex items-center gap-1.5 pl-1">
+                    <span className="text-[11px] text-danger font-medium">Delete?</span>
+                    <button onClick={() => setDeleteId(null)} className="text-[11px] text-fg-muted hover:text-fg cursor-pointer">Cancel</button>
+                    <button
+                      onClick={() => deleteConvo(active.id)}
+                      disabled={deleting}
+                      className="text-[11px] font-semibold text-danger hover:text-danger/80 cursor-pointer disabled:opacity-50"
+                    >
+                      {deleting ? "…" : "Yes"}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setDeleteId(active.id)}
+                    title="Delete conversation"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-fg-subtle hover:text-danger hover:bg-danger/10 cursor-pointer transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
               </div>
 
-              {/* Notes */}
+              {/* Private notes */}
               {showNotes && (
-                <div className="px-4 py-2.5 border-b border-line bg-warning/[0.06]">
+                <div className="px-4 py-2.5 border-b border-[var(--border)] bg-warning/[0.06]">
                   <div className="flex items-center justify-between mb-1.5">
                     <p className="text-[10px] uppercase tracking-wider font-semibold text-warning">Private notes</p>
                     <button onClick={saveNote} disabled={savingNote} className="text-[11px] font-semibold text-warning hover:underline cursor-pointer disabled:opacity-50">
@@ -385,12 +520,22 @@ export default function ConversationsPage() {
                 </div>
               )}
 
-              {/* Messages */}
-              <div ref={transcriptRef} className="flex-1 overflow-y-auto scrollbar-thin px-4 py-4 space-y-2.5 bg-ink-950">
+              {/* Message transcript */}
+              <div ref={transcriptRef} className="flex-1 overflow-y-auto scrollbar-thin px-4 py-4 space-y-2.5 bg-surface">
                 {loadingMsgs ? (
                   <div className="space-y-2.5">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-2/3" />)}</div>
                 ) : messages.length === 0 ? (
-                  <EmptyState icon={MessageSquare} title="No messages yet" description="Type below to start the conversation." />
+                  <div className="flex flex-col items-center justify-center h-full py-12 text-center">
+                    <div className="w-12 h-12 rounded-2xl bg-surface-input border border-[var(--border)] flex items-center justify-center mb-3">
+                      <MessageSquare className="w-5 h-5 text-fg-muted" />
+                    </div>
+                    <p className="text-small font-semibold text-fg">No messages yet</p>
+                    <p className="text-tiny text-fg-muted mt-1 max-w-xs">
+                      {active.channel === "web_chat"
+                        ? "This visitor opened your website chat but hasn't sent a message yet."
+                        : "No messages have been sent in this conversation yet. Type below to start."}
+                    </p>
+                  </div>
                 ) : (
                   messages.map((m, i) => {
                     const isCustomer = m.role === "customer";
@@ -408,17 +553,17 @@ export default function ConversationsPage() {
                         <div
                           className={cn(
                             "max-w-[72%] px-3 py-2 rounded-2xl text-small leading-relaxed",
-                            isCustomer && "bg-ink-700 text-fg rounded-bl-sm",
-                            isAI && "bg-ink-600 border border-line text-fg rounded-br-sm",
-                            isOwner && "bg-brand text-white rounded-br-sm"
+                            isCustomer && "bg-surface-input text-fg rounded-bl-sm",
+                            isAI && "bg-surface-card border border-[var(--border)] text-fg rounded-br-sm",
+                            isOwner && "bg-ember text-paper rounded-br-sm"
                           )}
                         >
                           {!grouped && (
-                            <p className="text-[10px] font-semibold opacity-70 mb-0.5 flex items-center gap-1">
+                            <p className="text-[10px] font-semibold opacity-60 mb-0.5 flex items-center gap-1">
                               {isAI && <Bot className="w-2.5 h-2.5" />}
                               {isOwner && <Sparkles className="w-2.5 h-2.5" />}
                               {isCustomer && <User className="w-2.5 h-2.5" />}
-                              {isAI ? "Assistant" : isOwner ? "You" : (active.customer_name ?? initials(active.customer_name ?? "C"))}
+                              {isAI ? "Qwikly" : isOwner ? "You" : (active.customer_name ?? initials(active.customer_name ?? "C"))}
                             </p>
                           )}
                           <p className="whitespace-pre-wrap break-words">{m.content}</p>
@@ -433,7 +578,7 @@ export default function ConversationsPage() {
               </div>
 
               {/* Composer */}
-              <form onSubmit={handleSend} className="border-t border-line p-2.5 bg-ink-900">
+              <form onSubmit={handleSend} className="border-t border-[var(--border)] p-2.5 bg-surface-card">
                 {showTemplates && (
                   <div className="mb-2 flex flex-wrap gap-1.5">
                     {TEMPLATES.map((t) => (
@@ -441,18 +586,18 @@ export default function ConversationsPage() {
                         key={t.title}
                         type="button"
                         onClick={() => { setComposerText(t.body); setShowTemplates(false); }}
-                        className="text-[11px] px-2 py-1 rounded-lg bg-white/[0.04] border border-line text-fg-muted hover:text-fg hover:border-line-strong cursor-pointer"
+                        className="text-[11px] px-2 py-1 rounded-lg bg-surface-input border border-[var(--border)] text-fg-muted hover:text-fg hover:border-[var(--border-strong)] cursor-pointer"
                       >
                         {t.title}
                       </button>
                     ))}
                   </div>
                 )}
-                <div className="flex items-end gap-2 bg-ink-800 border border-line-strong rounded-xl p-1.5 focus-within:border-brand/50">
+                <div className="flex items-end gap-2 bg-surface-input border border-[var(--border-strong)] rounded-xl p-1.5 focus-within:border-ember/50 transition-colors">
                   <button
                     type="button"
                     onClick={() => setShowTemplates((s) => !s)}
-                    className="h-8 w-8 rounded-lg flex items-center justify-center text-fg-subtle hover:text-fg hover:bg-white/[0.04] cursor-pointer shrink-0"
+                    className={cn("h-8 w-8 rounded-lg flex items-center justify-center cursor-pointer shrink-0 transition-colors", showTemplates ? "text-ember bg-ember/10" : "text-fg-subtle hover:text-fg hover:bg-surface-hover")}
                     title="Saved replies"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
@@ -466,7 +611,7 @@ export default function ConversationsPage() {
                         handleSend(e as unknown as FormEvent);
                       }
                     }}
-                    placeholder={active.ai_paused ? "Type your reply…" : "Type to take over, or let the AI continue…"}
+                    placeholder={active.ai_paused ? "Type your reply…" : "Type to take over, or let the digital assistant continue…"}
                     rows={1}
                     className="flex-1 bg-transparent outline-none text-small text-fg placeholder:text-fg-faint resize-none max-h-28 leading-relaxed py-1.5"
                     style={{ minHeight: "32px" }}
@@ -474,60 +619,244 @@ export default function ConversationsPage() {
                   <button
                     type="submit"
                     disabled={!composerText.trim() || sending}
-                    className="h-8 w-8 rounded-lg bg-brand text-white flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0 hover:bg-brand-hover transition-colors"
+                    className="h-8 w-8 rounded-lg bg-ember text-paper flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shrink-0 hover:bg-ember-deep transition-colors"
                     title="Send (⌘↵)"
                   >
                     {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                   </button>
                 </div>
-                <p className="text-[10px] text-fg-subtle mt-1 px-1">Via WhatsApp · ⌘↵ to send</p>
+                <p className="text-[10px] text-fg-subtle mt-1 px-1">
+                  {active.channel === "email" ? "Via Email" : active.channel === "web_chat" ? "Via Website chat" : "Via WhatsApp"} · ⌘↵ to send
+                </p>
               </form>
             </>
           )}
         </div>
 
-        {/* Profile pane */}
+        {/* ── RIGHT: Customer profile pane ── */}
         {active && (
           <div className="panel hidden xl:flex flex-col overflow-hidden !p-0">
-            <div className="p-4 border-b border-line text-center">
-              <Avatar name={active.customer_name ?? active.customer_phone} size={52} className="mx-auto mb-2" />
-              <p className="text-small font-semibold text-fg">{active.customer_name ?? "Unknown"}</p>
-              <p className="text-[11px] text-fg-muted mt-0.5">{formatPhone(active.customer_phone)}</p>
-              <div className="mt-3 flex justify-center gap-2">
-                <a href={`tel:${active.customer_phone.replace(/[^0-9+]/g, "")}`} className="h-8 px-3 rounded-lg bg-white/[0.04] border border-line text-[11px] font-medium text-fg hover:bg-white/[0.08] cursor-pointer flex items-center gap-1.5">
+            {/* Customer identity */}
+            <div className="p-5 border-b border-[var(--border)]">
+              <div className="flex flex-col items-center text-center mb-4">
+                <Avatar name={active.customer_name ?? active.customer_phone} size={56} className="mb-3" />
+                <p className="text-small font-semibold text-fg leading-snug">
+                  {active.customer_name ?? "Unknown visitor"}
+                </p>
+                {active.customer_name && (
+                  <p className="text-[11px] text-fg-muted mt-0.5">
+                    {active.channel === "web_chat" ? "Website visitor" : active.channel === "email" ? "Email contact" : "WhatsApp contact"}
+                  </p>
+                )}
+              </div>
+
+              {/* Contact action buttons */}
+              <div className="flex gap-2">
+                <a
+                  href={`tel:${active.customer_phone.replace(/[^0-9+]/g, "")}`}
+                  className="flex-1 h-8 rounded-lg bg-surface-input border border-[var(--border)] text-[11px] font-medium text-fg hover:bg-surface-hover cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
+                >
                   <Phone className="w-3 h-3" /> Call
                 </a>
-                <a href={`https://wa.me/${active.customer_phone.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer" className="h-8 px-3 rounded-lg bg-brand/15 border border-brand/30 text-[11px] font-medium text-brand hover:bg-brand/20 cursor-pointer flex items-center gap-1.5">
-                  <MessageSquare className="w-3 h-3" /> WhatsApp
-                </a>
+                {active.channel === "email" && active.customer_email ? (
+                  <a
+                    href={`mailto:${active.customer_email}`}
+                    className="flex-1 h-8 rounded-lg bg-sky-500/10 border border-sky-500/25 text-[11px] font-medium text-sky-600 hover:bg-sky-500/20 cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <Mail className="w-3 h-3" /> Email
+                  </a>
+                ) : (
+                  <a
+                    href={`https://wa.me/${active.customer_phone.replace(/[^0-9]/g, "")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex-1 h-8 rounded-lg bg-ember/10 border border-ember/25 text-[11px] font-medium text-ember hover:bg-ember/20 cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <MessageSquare className="w-3 h-3" /> WhatsApp
+                  </a>
+                )}
               </div>
             </div>
+
+            {/* Info rows */}
             <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-4">
+
+              {/* Phone */}
+              <InfoRow label="Phone">
+                <a href={`tel:${active.customer_phone.replace(/[^0-9+]/g, "")}`} className="text-small text-fg num hover:text-ember transition-colors">
+                  {formatPhone(active.customer_phone)}
+                </a>
+              </InfoRow>
+
+              {/* Email */}
+              {active.customer_email && (
+                <InfoRow label="Email">
+                  <a href={`mailto:${active.customer_email}`} className="text-small text-fg hover:text-ember transition-colors break-all">
+                    {active.customer_email}
+                  </a>
+                </InfoRow>
+              )}
+
+              {/* Channel */}
+              <InfoRow label="Channel">
+                <span className={cn("inline-flex items-center gap-1 text-small font-medium", channelColor(active.channel))}>
+                  <ChannelIcon channel={active.channel} className="w-3 h-3" />
+                  {channelLabel(active.channel)}
+                </span>
+              </InfoRow>
+
+              {/* Status */}
               <InfoRow label="Status">
                 <div className="flex flex-wrap gap-1">
-                  <Badge tone={active.status === "active" ? "brand" : active.status === "escalated" ? "warning" : "neutral"} dot>{active.status}</Badge>
-                  {active.ai_paused && <Badge tone="warning">AI paused</Badge>}
+                  <Badge
+                    tone={active.status === "active" ? "brand" : active.status === "escalated" ? "warning" : "neutral"}
+                    dot
+                  >
+                    {active.status === "active" ? "Replied" : active.status === "escalated" ? "Needs me" : "Done"}
+                  </Badge>
+                  {active.ai_paused && <Badge tone="warning">Manual reply</Badge>}
                 </div>
               </InfoRow>
+
+              {/* First contact */}
               <InfoRow label="First contact">
                 <p className="text-small text-fg num">{formatDateTime(active.created_at)}</p>
               </InfoRow>
+
+              {/* Last active */}
               <InfoRow label="Last active">
                 <p className="text-small text-fg num">{formatDateTime(active.updated_at)}</p>
               </InfoRow>
+
+              {/* Messages */}
               <InfoRow label="Messages">
-                <p className="text-small text-fg num">{messages.length}</p>
+                <p className="text-small text-fg num">
+                  {messages.length === 0 ? "None yet" : messages.length}
+                </p>
               </InfoRow>
+
+              {/* Notes */}
               {active.notes && (
                 <InfoRow label="Notes">
-                  <p className="text-small text-fg whitespace-pre-wrap">{active.notes}</p>
+                  <p className="text-small text-fg whitespace-pre-wrap leading-relaxed">{active.notes}</p>
                 </InfoRow>
               )}
+
+              {/* Danger zone: delete */}
+              <div className="pt-3 mt-2 border-t border-[var(--border)]">
+                {deleteId === active.id ? (
+                  <div className="p-3 rounded-xl bg-danger/5 border border-danger/20">
+                    <p className="text-[11px] text-fg-muted mb-2">Delete this conversation and all its messages?</p>
+                    <div className="flex gap-2">
+                      <button onClick={() => setDeleteId(null)} className="flex-1 h-7 text-[11px] font-medium rounded-lg bg-surface-input border border-[var(--border)] text-fg-muted hover:text-fg cursor-pointer transition-colors">
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => deleteConvo(active.id)}
+                        disabled={deleting}
+                        className="flex-1 h-7 text-[11px] font-semibold rounded-lg bg-danger/15 border border-danger/25 text-danger hover:bg-danger/25 cursor-pointer transition-colors disabled:opacity-50"
+                      >
+                        {deleting ? "Deleting…" : "Delete"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setDeleteId(active.id)}
+                    className="w-full h-8 rounded-lg bg-danger/8 border border-danger/20 flex items-center justify-center gap-1.5 text-[11px] font-medium text-danger hover:bg-danger/15 cursor-pointer transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" /> Delete conversation
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
       </div>
     </>
+  );
+}
+
+// ── Conversation list row (extracted for clarity) ──────────────────────────
+
+function ConvoRow({
+  c,
+  isActive,
+  confirmDelete,
+  deleting,
+  onSelect,
+  onDeleteRequest,
+  onDeleteCancel,
+  onDeleteConfirm,
+}: {
+  c: Convo;
+  isActive: boolean;
+  confirmDelete: boolean;
+  deleting: boolean;
+  onSelect: () => void;
+  onDeleteRequest: () => void;
+  onDeleteCancel: () => void;
+  onDeleteConfirm: () => void;
+}) {
+  return (
+    <li className="group">
+      {confirmDelete ? (
+        <div className="flex items-center gap-2 px-3 py-2.5 bg-danger/5 border-l-2 border-danger">
+          <AlertTriangle className="w-3.5 h-3.5 text-danger shrink-0" />
+          <p className="text-tiny text-fg flex-1 truncate">Delete <strong>{c.customer_name ?? formatPhone(c.customer_phone)}</strong>?</p>
+          <button onClick={onDeleteCancel} className="text-[10px] text-fg-muted hover:text-fg cursor-pointer px-1.5 py-0.5 rounded">Cancel</button>
+          <button
+            onClick={onDeleteConfirm}
+            disabled={deleting}
+            className="text-[10px] font-semibold text-danger hover:text-danger/80 cursor-pointer px-1.5 py-0.5 rounded bg-danger/10 disabled:opacity-50"
+          >
+            {deleting ? "…" : "Delete"}
+          </button>
+        </div>
+      ) : (
+        <div className={cn("flex gap-2.5 px-3 py-2.5 border-l-2 transition-colors duration-100", isActive ? "bg-surface-hover border-ember" : "border-transparent hover:bg-surface-hover")}>
+          <button className="flex-1 min-w-0 flex gap-2.5 text-left cursor-pointer" onClick={onSelect}>
+            <Avatar name={c.customer_name ?? c.customer_phone} size={32} className="shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2 mb-0.5">
+                <p className="text-small font-semibold text-fg truncate">
+                  {c.customer_name ?? formatPhone(c.customer_phone)}
+                </p>
+                <span className="text-[10px] text-fg-subtle shrink-0 num">
+                  {timeAgo(c.last_message_time ?? c.updated_at)}
+                </span>
+              </div>
+              <p className="text-[11px] text-fg-muted truncate leading-snug">
+                {c.last_message
+                  ? c.last_message
+                  : c.channel === "web_chat"
+                  ? "Opened chat — no message sent"
+                  : "No messages yet"}
+              </p>
+              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                <span className={cn("inline-flex items-center gap-0.5 text-[10px] font-medium", channelColor(c.channel))}>
+                  <ChannelIcon channel={c.channel} />
+                  {channelLabel(c.channel)}
+                </span>
+                {c.customer_email && (
+                  <span className="text-[10px] text-fg-faint truncate max-w-[80px]">{c.customer_email}</span>
+                )}
+                {(c.status === "escalated" || c.ai_paused) && <Badge tone="warning" dot>Needs me</Badge>}
+                {c.status === "completed" && <Badge tone="neutral"><CheckCheck className="w-3 h-3 mr-0.5" />Done</Badge>}
+              </div>
+            </div>
+          </button>
+          {/* Trash on hover */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onDeleteRequest(); }}
+            title="Delete"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-fg-faint opacity-0 group-hover:opacity-100 hover:text-danger hover:bg-danger/10 cursor-pointer transition-all shrink-0 mt-0.5"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+    </li>
   );
 }
 

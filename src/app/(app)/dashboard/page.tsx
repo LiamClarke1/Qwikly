@@ -4,7 +4,10 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { CalendarCheck, MessageSquare, AlertTriangle, ArrowRight } from "lucide-react";
+import {
+  CalendarCheck, MessageSquare, AlertTriangle, ArrowRight,
+  TrendingUp, Plus, Receipt, Clock, CheckCircle2, Zap,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
 import { useUser } from "@/lib/use-user";
@@ -28,8 +31,42 @@ interface Convo {
   updated_at: string;
 }
 
-function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("rounded-xl bg-white/[0.04] animate-pulse", className)} />;
+function SkeletonCard({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "rounded-2xl bg-ink/[0.05] border border-ink/[0.08] animate-pulse",
+        className
+      )}
+    />
+  );
+}
+
+function KpiCard({
+  label, value, sub, icon: Icon, color, loading,
+}: {
+  label: string;
+  value: string | number;
+  sub: string;
+  icon: React.ElementType;
+  color: string;
+  loading?: boolean;
+}) {
+  if (loading) return <SkeletonCard className="h-28" />;
+  return (
+    <div className="relative rounded-2xl bg-white border border-ink/[0.08] p-4 overflow-hidden shadow-[0_1px_4px_rgba(14,14,12,0.06)]">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-ink/[0.06] to-transparent" />
+      <div
+        className="w-9 h-9 rounded-xl flex items-center justify-center mb-3"
+        style={{ background: `${color}18`, color }}
+      >
+        <Icon className="w-4 h-4" />
+      </div>
+      <p className="text-2xl font-bold text-ink num leading-none">{value}</p>
+      <p className="text-tiny font-medium text-ink-600 mt-1.5">{label}</p>
+      <p className="text-tiny text-ink-400 mt-0.5">{sub}</p>
+    </div>
+  );
 }
 
 export default function HomePage() {
@@ -37,9 +74,13 @@ export default function HomePage() {
   const { firstName } = useUser();
   const [loading, setLoading] = useState(true);
   const [bookingsWeek, setBookingsWeek] = useState(0);
-  const [revenueWeek, setRevenueWeek] = useState(0);
+  const [chatsToday, setChatsToday] = useState(0);
+  const [invoicedMonth, setInvoicedMonth] = useState(0);
+  const [overdueAmount, setOverdueAmount] = useState(0);
+  const [paidMonth, setPaidMonth] = useState(0);
   const [escalations, setEscalations] = useState<Convo[]>([]);
   const [todayBookings, setTodayBookings] = useState<Booking[]>([]);
+  const [recentConvos, setRecentConvos] = useState<Convo[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -47,263 +88,397 @@ export default function HomePage() {
       const startWeek = new Date(now);
       startWeek.setDate(now.getDate() - now.getDay());
       startWeek.setHours(0, 0, 0, 0);
+      const startMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const startDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const endDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
 
-      const [bWeek, esc, today] = await Promise.all([
-        supabase
-          .from("bookings")
-          .select("*", { count: "exact", head: false })
-          .gte("created_at", startWeek.toISOString()),
-        supabase
-          .from("conversations")
-          .select("id,customer_name,customer_phone,status,updated_at")
-          .eq("status", "escalated")
-          .order("updated_at", { ascending: false })
-          .limit(3),
-        supabase
-          .from("bookings")
-          .select("id,customer_name,job_type,area,booking_datetime,status")
-          .gte("booking_datetime", startDay)
-          .lt("booking_datetime", endDay)
-          .order("booking_datetime"),
+      const [bWeek, esc, today, invoicesMonth, recentChats, todayConvos] = await Promise.all([
+        supabase.from("bookings").select("*", { count: "exact", head: false }).gte("created_at", startWeek.toISOString()),
+        supabase.from("conversations").select("id,customer_name,customer_phone,status,updated_at").eq("status", "escalated").order("updated_at", { ascending: false }).limit(3),
+        supabase.from("bookings").select("id,customer_name,job_type,area,booking_datetime,status").gte("booking_datetime", startDay).lt("booking_datetime", endDay).order("booking_datetime"),
+        supabase.from("invoices").select("total_amount,status").gte("created_at", startMonth),
+        supabase.from("conversations").select("id,customer_name,customer_phone,status,updated_at").order("updated_at", { ascending: false }).limit(5),
+        supabase.from("conversations").select("id", { count: "exact", head: true }).gte("created_at", startDay),
       ]);
 
-      const weekCount = bWeek.count ?? (bWeek.data?.length ?? 0);
-      setBookingsWeek(weekCount);
-      setRevenueWeek(weekCount * 1800);
+      setBookingsWeek(bWeek.count ?? (bWeek.data?.length ?? 0));
       setEscalations((esc.data as Convo[]) ?? []);
       setTodayBookings((today.data as Booking[]) ?? []);
+      setRecentConvos((recentChats.data as Convo[]) ?? []);
+      setChatsToday(todayConvos.count ?? 0);
+
+      const invRows = (invoicesMonth.data ?? []) as { total_amount: number; status: string }[];
+      const invoiced = invRows.reduce((s, r) => s + (r.total_amount ?? 0), 0);
+      const paid = invRows.filter((r) => r.status === "paid").reduce((s, r) => s + (r.total_amount ?? 0), 0);
+      setInvoicedMonth(invoiced);
+      setPaidMonth(paid);
+
+      const { data: overdueRows } = await supabase.from("invoices").select("total_amount").eq("status", "overdue");
+      setOverdueAmount(((overdueRows ?? []) as { total_amount: number }[]).reduce((s, r) => s + (r.total_amount ?? 0), 0));
+
       setLoading(false);
     })();
   }, []);
 
   const greeting = useMemo(() => {
     const h = new Date().getHours();
-    if (h < 12) return "Morning";
-    if (h < 17) return "Afternoon";
-    return "Evening";
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
   }, []);
 
   const name = firstName || client?.owner_name?.split(" ")[0] || "";
 
-  // "Needs you" items — only real escalations + setup nudges, max 3
-  const needsYou = useMemo(() => {
-    return escalations.slice(0, 3).map((c) => ({
-      id: c.id,
-      text: `Review Qwikly's reply to ${c.customer_name ?? c.customer_phone}`,
-      href: `/dashboard/conversations?id=${c.id}`,
-      age: timeAgo(c.updated_at),
-    }));
-  }, [escalations]);
-
-  return (
-    <div className="max-w-2xl mx-auto space-y-8">
-
-      {/* Greeting */}
-      <div>
-        <p className="text-fg text-2xl font-semibold leading-snug">
-          {greeting}{name ? `, ${name}` : ""}.
-        </p>
-        {client?.business_name && (
-          <p className="text-fg-muted text-small mt-0.5">{client.business_name}</p>
-        )}
-      </div>
-
-      {/* Hero number */}
-      {loading ? (
-        <Skeleton className="h-24" />
-      ) : (
-        <div className="rounded-2xl bg-white/[0.03] border border-white/[0.07] px-6 py-5">
-          {bookingsWeek === 0 ? (
-            <div className="flex items-start gap-3">
-              <span className="mt-1 w-2 h-2 rounded-full bg-brand animate-pulse shrink-0" />
-              <div>
-                <p className="text-fg text-small font-medium">Quiet so far this week.</p>
-                <p className="text-fg-muted text-small mt-0.5">Qwikly is on and watching your messages.</p>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <p className="text-fg text-3xl font-bold num leading-none">
-                {bookingsWeek} appointment{bookingsWeek !== 1 ? "s" : ""} booked this week
-              </p>
-              <p className="text-fg-muted text-small mt-2">
-                {formatZAR(revenueWeek)} in estimated work
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Needs you */}
-      {!loading && needsYou.length > 0 && (
-        <div>
-          <p className="text-tiny uppercase tracking-wider font-semibold text-fg-subtle mb-3">
-            Needs you
-          </p>
-          <div className="space-y-2">
-            {needsYou.map((item) => (
-              <Link
-                key={item.id}
-                href={item.href}
-                className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-warning/[0.06] border border-warning/20 hover:border-warning/40 transition-colors duration-150 cursor-pointer group"
-              >
-                <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-small text-fg font-medium truncate">{item.text}</p>
-                  <p className="text-tiny text-fg-muted">{item.age}</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-fg-subtle group-hover:text-fg transition-colors duration-150 shrink-0" />
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Today's jobs */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-tiny uppercase tracking-wider font-semibold text-fg-subtle">
-            Today
-          </p>
-          <Link href="/dashboard/bookings" className="text-tiny text-brand hover:underline font-medium">
-            All appointments
-          </Link>
-        </div>
-
-        {loading ? (
-          <div className="space-y-2">
-            {[0, 1, 2].map((i) => <Skeleton key={i} className="h-14" />)}
-          </div>
-        ) : todayBookings.length === 0 ? (
-          <div className="flex items-start gap-3 px-4 py-4 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-            <CalendarCheck className="w-4 h-4 text-fg-subtle mt-0.5 shrink-0" />
-            <p className="text-small text-fg-muted">Nothing on for today.</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {todayBookings.slice(0, 5).map((b) => (
-              <Link
-                key={b.id}
-                href="/dashboard/bookings"
-                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:border-white/[0.10] transition-colors duration-150 cursor-pointer"
-              >
-                <div className="w-14 shrink-0 text-right">
-                  <p className="text-small font-bold text-fg num">{formatTime(b.booking_datetime)}</p>
-                </div>
-                <div className="w-px h-8 bg-white/[0.08] shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-small font-semibold text-fg truncate">{b.customer_name}</p>
-                  <p className="text-tiny text-fg-muted truncate">
-                    {b.job_type ?? "Service"}{b.area ? ` · ${b.area}` : ""}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Recent chats preview */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-tiny uppercase tracking-wider font-semibold text-fg-subtle">
-            Recent chats
-          </p>
-          <Link href="/dashboard/conversations" className="text-tiny text-brand hover:underline font-medium">
-            All chats
-          </Link>
-        </div>
-        <RecentChats />
-      </div>
-
-      {/* See this month link */}
-      <div className="pb-4 text-center">
-        <Link
-          href="/dashboard/analytics"
-          className="text-tiny text-fg-subtle hover:text-fg-muted transition-colors duration-150"
-        >
-          See this month&apos;s numbers
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function RecentChats() {
-  const [convos, setConvos] = useState<Convo[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from("conversations")
-        .select("id,customer_name,customer_phone,status,updated_at")
-        .order("updated_at", { ascending: false })
-        .limit(4);
-      setConvos((data as Convo[]) ?? []);
-      setLoading(false);
-    })();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="space-y-2">
-        {[0, 1, 2].map((i) => <div key={i} className="h-12 rounded-xl bg-white/[0.04] animate-pulse" />)}
-      </div>
-    );
-  }
-
-  if (convos.length === 0) {
-    return (
-      <div className="flex items-start gap-3 px-4 py-4 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-        <MessageSquare className="w-4 h-4 text-fg-subtle mt-0.5 shrink-0" />
-        <p className="text-small text-fg-muted">
-          No customer chats yet. As soon as someone messages your business, they&apos;ll show up here.
-        </p>
-      </div>
-    );
-  }
-
+  const statusColor: Record<string, string> = {
+    active: "text-ember",
+    new: "text-blue-600",
+    escalated: "text-warning",
+    booked: "text-green-700",
+    closed: "text-ink-400",
+    completed: "text-ink-400",
+  };
   const statusLabel: Record<string, string> = {
     active: "Replied",
     new: "New",
     escalated: "Needs you",
     booked: "Booked",
     closed: "Done",
-  };
-
-  const statusColor: Record<string, string> = {
-    active: "text-brand",
-    new: "text-sky-400",
-    escalated: "text-warning",
-    booked: "text-green-400",
-    closed: "text-fg-subtle",
+    completed: "Done",
   };
 
   return (
-    <div className="space-y-1">
-      {convos.map((c) => (
-        <Link
-          key={c.id}
-          href={`/dashboard/conversations?id=${c.id}`}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-white/[0.04] transition-colors duration-150 cursor-pointer group"
-        >
-          <div className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center shrink-0 text-small font-semibold text-fg-muted">
-            {(c.customer_name ?? c.customer_phone).charAt(0).toUpperCase()}
+    <div className="space-y-5 animate-fade-in">
+
+      {/* ── Header ─────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pt-1">
+        <div>
+          <div className="flex items-center gap-2 mb-2.5">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/[0.10] border border-green-500/20 text-tiny font-semibold text-green-700">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              Qwikly is live
+            </span>
+            {escalations.length > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning/[0.10] border border-warning/20 text-tiny font-semibold text-warning">
+                <AlertTriangle className="w-3 h-3" />
+                {escalations.length} need{escalations.length === 1 ? "s" : ""} you
+              </span>
+            )}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-small font-semibold text-fg truncate">
-              {c.customer_name ?? c.customer_phone}
-            </p>
-            <p className="text-tiny text-fg-muted">{timeAgo(c.updated_at)}</p>
+          <h1 className="text-2xl font-bold text-ink leading-tight tracking-tight">
+            {greeting}{name ? `, ${name}` : ""}.
+          </h1>
+          {client?.business_name && (
+            <p className="text-small text-ink-500 mt-0.5">{client.business_name}</p>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/dashboard/invoices/new"
+            className="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-xl bg-white border border-ink/[0.12] text-small font-medium text-ink-600 hover:text-ink hover:border-ink/[0.22] transition-all duration-150 cursor-pointer"
+          >
+            <Receipt className="w-3.5 h-3.5" />
+            New invoice
+          </Link>
+          <Link
+            href="/dashboard/bookings"
+            className="inline-flex items-center gap-1.5 px-3.5 h-9 rounded-xl bg-ember text-paper text-small font-medium hover:bg-ember-deep transition-colors duration-150 cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            New booking
+          </Link>
+        </div>
+      </div>
+
+      {/* ── KPI row ─────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiCard
+          label="Bookings this week" value={bookingsWeek} sub="from enquiries"
+          icon={CalendarCheck} color="#3B82F6" loading={loading}
+        />
+        <KpiCard
+          label="Chats today" value={chatsToday} sub="handled by Qwikly"
+          icon={MessageSquare} color="#E85A2C" loading={loading}
+        />
+        <KpiCard
+          label="Invoiced this month" value={formatZAR(invoicedMonth)} sub={`${formatZAR(paidMonth)} collected`}
+          icon={TrendingUp} color="#A855F7" loading={loading}
+        />
+        <KpiCard
+          label="Overdue" value={formatZAR(overdueAmount)} sub={overdueAmount > 0 ? "needs follow-up" : "all clear"}
+          icon={Receipt} color={overdueAmount > 0 ? "#C8941A" : "#22C55E"} loading={loading}
+        />
+      </div>
+
+      {/* ── Main grid ───────────────────────────────────────────── */}
+      <div className="grid lg:grid-cols-3 gap-4">
+
+        {/* Left column */}
+        <div className="lg:col-span-2 space-y-4">
+
+          {/* Today's schedule */}
+          <div className="rounded-2xl bg-white border border-ink/[0.08] overflow-hidden shadow-[0_1px_4px_rgba(14,14,12,0.05)]">
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-ink/[0.06]">
+              <div>
+                <h2 className="text-h3 text-ink font-semibold">Today&apos;s schedule</h2>
+                <p className="text-tiny text-ink-400 mt-0.5">
+                  {new Date().toLocaleDateString("en-ZA", { weekday: "long", month: "long", day: "numeric" })}
+                </p>
+              </div>
+              <Link
+                href="/dashboard/bookings"
+                className="text-tiny font-medium text-ember hover:underline cursor-pointer"
+              >
+                All appointments
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="p-5 space-y-3">
+                {[0, 1, 2].map((i) => <SkeletonCard key={i} className="h-14" />)}
+              </div>
+            ) : todayBookings.length === 0 ? (
+              <div className="flex items-center gap-3 px-5 py-6">
+                <div className="w-9 h-9 rounded-xl bg-ink/[0.05] flex items-center justify-center shrink-0">
+                  <CalendarCheck className="w-4 h-4 text-ink-400" />
+                </div>
+                <div>
+                  <p className="text-small font-medium text-ink">Nothing booked for today</p>
+                  <p className="text-tiny text-ink-400 mt-0.5">Qwikly is watching for new enquiries</p>
+                </div>
+              </div>
+            ) : (
+              <div className="divide-y divide-ink/[0.05]">
+                {todayBookings.slice(0, 6).map((b) => (
+                  <Link
+                    key={b.id}
+                    href="/dashboard/bookings"
+                    className="flex items-center gap-4 px-5 py-4 hover:bg-ink/[0.02] transition-colors duration-150 cursor-pointer group"
+                  >
+                    <div className="shrink-0 text-center w-12">
+                      <p className="text-small font-bold text-ink num leading-none">
+                        {formatTime(b.booking_datetime)}
+                      </p>
+                    </div>
+                    <div className="w-px h-8 bg-ink/[0.10] shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-small font-semibold text-ink truncate">{b.customer_name}</p>
+                      <p className="text-tiny text-ink-400 truncate">
+                        {b.job_type ?? "Service"}{b.area ? ` · ${b.area}` : ""}
+                      </p>
+                    </div>
+                    <span
+                      className={cn(
+                        "shrink-0 px-2.5 py-1 rounded-lg text-tiny font-semibold",
+                        b.status === "confirmed"
+                          ? "bg-green-500/10 text-green-700 border border-green-500/20"
+                          : "bg-ink/[0.05] text-ink-500 border border-ink/[0.08]"
+                      )}
+                    >
+                      {b.status === "confirmed" ? "Confirmed" : b.status}
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5 text-ink-300 group-hover:text-ink-500 transition-colors shrink-0" />
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-          <span className={cn("text-tiny font-semibold shrink-0", statusColor[c.status] ?? "text-fg-subtle")}>
-            {statusLabel[c.status] ?? c.status}
-          </span>
-        </Link>
-      ))}
+
+          {/* Recent chats */}
+          <div className="rounded-2xl bg-white border border-ink/[0.08] overflow-hidden shadow-[0_1px_4px_rgba(14,14,12,0.05)]">
+            <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-ink/[0.06]">
+              <div>
+                <h2 className="text-h3 text-ink font-semibold">Recent chats</h2>
+                <p className="text-tiny text-ink-400 mt-0.5">Latest customer conversations</p>
+              </div>
+              <Link
+                href="/dashboard/conversations"
+                className="text-tiny font-medium text-ember hover:underline cursor-pointer"
+              >
+                All chats
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="p-5 space-y-3">
+                {[0, 1, 2, 3].map((i) => <SkeletonCard key={i} className="h-12" />)}
+              </div>
+            ) : recentConvos.length === 0 ? (
+              <div className="flex items-center gap-3 px-5 py-6">
+                <div className="w-9 h-9 rounded-xl bg-ink/[0.05] flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-4 h-4 text-ink-400" />
+                </div>
+                <div>
+                  <p className="text-small font-medium text-ink">No chats yet</p>
+                  <p className="text-tiny text-ink-400 mt-0.5">
+                    As soon as someone messages your business, they&apos;ll appear here.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="divide-y divide-ink/[0.05]">
+                {recentConvos.map((c) => (
+                  <Link
+                    key={c.id}
+                    href={`/dashboard/conversations?id=${c.id}`}
+                    className="flex items-center gap-3 px-5 py-3.5 hover:bg-ink/[0.02] transition-colors duration-150 cursor-pointer group"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-ink/[0.07] border border-ink/[0.08] flex items-center justify-center shrink-0 text-small font-semibold text-ink-500">
+                      {(c.customer_name ?? c.customer_phone).charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-small font-semibold text-ink truncate">
+                        {c.customer_name ?? c.customer_phone}
+                      </p>
+                      <p className="text-tiny text-ink-400">{timeAgo(c.updated_at)}</p>
+                    </div>
+                    <span className={cn("text-tiny font-semibold shrink-0", statusColor[c.status] ?? "text-ink-400")}>
+                      {statusLabel[c.status] ?? c.status}
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5 text-ink-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right column */}
+        <div className="space-y-4">
+
+          {/* Needs attention */}
+          {!loading && escalations.length > 0 && (
+            <div className="rounded-2xl bg-white border border-warning/25 overflow-hidden shadow-[0_1px_4px_rgba(14,14,12,0.05)]">
+              <div className="px-5 pt-5 pb-4 border-b border-warning/[0.14]">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-6 h-6 rounded-lg bg-warning/10 flex items-center justify-center">
+                    <AlertTriangle className="w-3.5 h-3.5 text-warning" />
+                  </div>
+                  <h2 className="text-h3 text-ink font-semibold">Needs your attention</h2>
+                </div>
+                <p className="text-tiny text-ink-400">
+                  {escalations.length} conversation{escalations.length !== 1 ? "s" : ""} waiting for you
+                </p>
+              </div>
+              <div className="divide-y divide-ink/[0.05]">
+                {escalations.map((c) => (
+                  <Link
+                    key={c.id}
+                    href={`/dashboard/conversations?id=${c.id}`}
+                    className="flex items-center gap-3 px-5 py-4 hover:bg-warning/[0.04] transition-colors duration-150 cursor-pointer group"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-warning/10 border border-warning/20 flex items-center justify-center shrink-0 text-small font-semibold text-warning">
+                      {(c.customer_name ?? c.customer_phone).charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-small font-semibold text-ink truncate">
+                        {c.customer_name ?? c.customer_phone}
+                      </p>
+                      <p className="text-tiny text-ink-400">{timeAgo(c.updated_at)}</p>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-warning/60 group-hover:text-warning transition-colors shrink-0" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Money snapshot */}
+          {!loading && (
+            <div className="rounded-2xl bg-white border border-ink/[0.08] overflow-hidden shadow-[0_1px_4px_rgba(14,14,12,0.05)]">
+              <div className="px-5 pt-5 pb-4 border-b border-ink/[0.06]">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-h3 text-ink font-semibold">Money this month</h2>
+                  <Link
+                    href="/dashboard/invoices"
+                    className="text-tiny font-medium text-ember hover:underline cursor-pointer"
+                  >
+                    View all
+                  </Link>
+                </div>
+              </div>
+              <div className="p-5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-ink/[0.06] flex items-center justify-center">
+                      <TrendingUp className="w-3.5 h-3.5 text-ink-400" />
+                    </div>
+                    <p className="text-small text-ink-500">Invoiced</p>
+                  </div>
+                  <p className="text-small font-bold text-ink num">{formatZAR(invoicedMonth)}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-green-500/10 flex items-center justify-center">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                    </div>
+                    <p className="text-small text-ink-500">Collected</p>
+                  </div>
+                  <p className="text-small font-bold text-green-700 num">{formatZAR(paidMonth)}</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className={cn("flex items-center gap-2.5")}>
+                    <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", overdueAmount > 0 ? "bg-warning/10" : "bg-ink/[0.04]")}>
+                      <Clock className={cn("w-3.5 h-3.5", overdueAmount > 0 ? "text-warning" : "text-ink-300")} />
+                    </div>
+                    <p className="text-small text-ink-500">Overdue</p>
+                  </div>
+                  <p className={cn("text-small font-bold num", overdueAmount > 0 ? "text-warning" : "text-ink-400")}>
+                    {formatZAR(overdueAmount)}
+                  </p>
+                </div>
+
+                {invoicedMonth > 0 && (
+                  <div className="pt-1">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-tiny text-ink-400">Collected vs invoiced</p>
+                      <p className="text-tiny font-semibold text-ink num">
+                        {Math.round((paidMonth / invoicedMonth) * 100)}%
+                      </p>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-ink/[0.08] overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-green-500 transition-all duration-700"
+                        style={{ width: `${Math.min(100, Math.round((paidMonth / invoicedMonth) * 100))}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Quick shortcuts */}
+          {!loading && (
+            <div className="rounded-2xl bg-white border border-ink/[0.08] p-5 shadow-[0_1px_4px_rgba(14,14,12,0.05)]">
+              <h2 className="text-h3 text-ink font-semibold mb-4">Quick actions</h2>
+              <div className="space-y-2">
+                {[
+                  { href: "/dashboard/conversations", icon: MessageSquare, label: "View all chats",   color: "#E85A2C" },
+                  { href: "/dashboard/bookings",      icon: CalendarCheck,  label: "Manage bookings", color: "#3B82F6" },
+                  { href: "/dashboard/invoices/new",  icon: Receipt,        label: "Create invoice",  color: "#A855F7" },
+                  { href: "/dashboard/settings",      icon: Zap,            label: "Configure Qwikly", color: "#22C55E" },
+                ].map(({ href, icon: Icon, label, color }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-ink/[0.03] transition-colors duration-150 cursor-pointer group"
+                  >
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ background: `${color}18`, color }}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="text-small text-ink-500 group-hover:text-ink transition-colors flex-1">{label}</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-ink-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

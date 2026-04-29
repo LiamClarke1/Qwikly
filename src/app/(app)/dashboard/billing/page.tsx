@@ -90,22 +90,22 @@ export default function BillingPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <div className="bg-bg-card border border-line rounded-2xl p-5">
+        <div className="bg-surface-card border border-line rounded-2xl p-5">
           <p className="text-small text-fg-muted mb-1">This month invoiced</p>
           <p className="text-display-2 font-display text-fg">{fmt(stats.thisMonthInvoiced)}</p>
           <p className="text-tiny text-fg-subtle mt-0.5">by your customers</p>
         </div>
-        <div className="bg-bg-card border border-line rounded-2xl p-5">
+        <div className="bg-surface-card border border-line rounded-2xl p-5">
           <p className="text-small text-fg-muted mb-1">Current period fee</p>
           <p className="text-display-2 font-display text-brand">{fmt(stats.openCommission)}</p>
           <p className="text-tiny text-fg-subtle mt-0.5">accruing, due 1st</p>
         </div>
-        <div className="bg-bg-card border border-line rounded-2xl p-5">
+        <div className="bg-surface-card border border-line rounded-2xl p-5">
           <p className="text-small text-fg-muted mb-1">Lifetime invoiced</p>
           <p className="text-display-2 font-display text-fg">{fmt(stats.lifetimeInvoiced)}</p>
           <p className="text-tiny text-fg-subtle mt-0.5">total Qwikly fees</p>
         </div>
-        <div className="bg-bg-card border border-line rounded-2xl p-5">
+        <div className="bg-surface-card border border-line rounded-2xl p-5">
           <p className="text-small text-fg-muted mb-1">Lifetime paid</p>
           <p className="text-display-2 font-display text-fg">{fmt(stats.lifetimePaid)}</p>
           <p className="text-tiny text-fg-subtle mt-0.5">fees settled</p>
@@ -138,7 +138,7 @@ export default function BillingPage() {
           description="Your first billing period will appear here after your first month on Qwikly."
         />
       ) : (
-        <div className="bg-bg-card border border-line rounded-2xl overflow-hidden">
+        <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
           <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_120px_32px] gap-4 px-5 py-3 border-b border-line">
             {["Period", "Invoiced", "Collected", "Fee (8%)", "Status", ""].map((h, i) => (
               <p key={i} className={cn("text-tiny uppercase tracking-wider text-fg-subtle font-semibold", i >= 1 && i < 5 ? "text-right" : "")}>{h}</p>

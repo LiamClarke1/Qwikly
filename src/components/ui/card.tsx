@@ -10,14 +10,14 @@ export function Card({ className, padded = true, glow, children, ...rest }: Card
   return (
     <div
       className={cn(
-        "panel relative overflow-hidden",
+        "relative overflow-hidden rounded-[14px] bg-surface-card border border-[var(--border)] shadow-[var(--shadow-sm)]",
         padded && "p-5",
         glow && "shadow-glow",
         className
       )}
       {...rest}
     >
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--border-strong)] to-transparent pointer-events-none" />
       {children}
     </div>
   );

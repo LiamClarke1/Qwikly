@@ -21,17 +21,9 @@ import { PageHeader } from "@/components/ui/page";
 import { cn } from "@/lib/cn";
 
 const TABS = [
-  { id: "account",       label: "Account",        icon: User       },
-  { id: "profile",       label: "Business",       icon: Building2  },
-  { id: "services",      label: "Services",       icon: Wrench     },
-  { id: "pricing",       label: "Pricing",        icon: DollarSign },
-  { id: "edge",          label: "Your edge",      icon: Star       },
-  { id: "ai",            label: "AI knowledge",   icon: Bot        },
-  { id: "knowledge",     label: "Q&A",            icon: BookOpen   },
-  { id: "hours",         label: "Hours",          icon: Clock      },
-  { id: "integrations",  label: "Integrations",   icon: Plug       },
-  { id: "notifications", label: "Notifications",  icon: Bell       },
-  { id: "website",       label: "Website",        icon: Globe      },
+  { id: "business",   label: "You & your business",    icon: Building2 },
+  { id: "assistant",  label: "How Qwikly answers",      icon: Bot       },
+  { id: "account",    label: "Account & billing",       icon: Plug      },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -107,7 +99,7 @@ interface Client {
 export default function SettingsPage() {
   const sp = useSearchParams();
   const router = useRouter();
-  const initial = (sp.get("tab") as TabId) || "profile";
+  const initial = (sp.get("tab") as TabId) || "business";
   const [tab, setTab] = useState<TabId>(initial);
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
@@ -126,10 +118,10 @@ export default function SettingsPage() {
     const cal = sp.get("cal");
     if (cal === "connected") {
       showToast("Google Calendar connected");
-      router.replace("/dashboard/settings?tab=integrations");
+      router.replace("/dashboard/settings?tab=account");
     } else if (cal === "error") {
       showToast("Failed to connect Google Calendar", "danger");
-      router.replace("/dashboard/settings?tab=integrations");
+      router.replace("/dashboard/settings?tab=account");
     }
   }, [sp]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -155,7 +147,7 @@ export default function SettingsPage() {
     <>
       <PageHeader
         title="Settings"
-        description="Tweak how Qwikly represents your business and notifies you."
+        description="Everything Qwikly needs to sound like you and work the way you do."
       />
 
       {toast && (
@@ -180,11 +172,11 @@ export default function SettingsPage() {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-small font-medium cursor-pointer transition-colors duration-150",
                   tab === t.id
-                    ? "bg-white/[0.06] text-fg shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
-                    : "text-fg-muted hover:text-fg hover:bg-white/[0.03]"
+                    ? "bg-surface-active text-fg shadow-[inset_0_0_0_1px_var(--border-strong)]"
+                    : "text-fg-muted hover:text-fg hover:bg-surface-hover"
                 )}
               >
-                <Icon className={cn("w-4 h-4", tab === t.id ? "text-brand" : "text-fg-subtle")} />
+                <Icon className={cn("w-4 h-4", tab === t.id ? "text-ember" : "text-fg-subtle")} />
                 {t.label}
               </button>
             );
@@ -192,31 +184,42 @@ export default function SettingsPage() {
         </nav>
 
         <div className="min-w-0">
-          {tab === "account" ? (
-            <AccountTab showToast={showToast} />
-          ) : loading ? (
-            <Card><p className="text-fg-muted text-small">Loading workspace…</p></Card>
-          ) : !client ? (
+          {loading ? (
+            <Card><p className="text-fg-muted text-small">Loading…</p></Card>
+          ) : !client && tab !== "account" ? (
             <Card><p className="text-fg-muted text-small">No client found for your account.</p></Card>
           ) : (
             <>
-              {tab === "profile"       && <ProfileTab       client={client} save={save} saving={saving} />}
-              {tab === "services"      && <ServicesTab      client={client} save={save} saving={saving} />}
-              {tab === "pricing"       && <PricingTab       client={client} save={save} saving={saving} />}
-              {tab === "edge"          && <EdgeTab          client={client} save={save} saving={saving} />}
-              {tab === "ai"            && <AITab            client={client} save={save} saving={saving} />}
-              {tab === "knowledge"     && <KnowledgeTab     clientId={client.id} />}
-              {tab === "hours"         && <HoursTab         client={client} save={save} saving={saving} />}
-              {tab === "integrations"  && <IntegrationsTab  client={client} save={save} saving={saving} />}
-              {tab === "notifications" && <NotificationsTab client={client} save={save} saving={saving} />}
-              {tab === "website" && (
-                <WebsiteAssistantTab
-                  client={client as unknown as ClientRow}
-                  onSave={async () => {
-                    const { data } = await supabase.from("clients").select("*").limit(1).maybeSingle();
-                    setClient(data as Client);
-                  }}
-                />
+              {tab === "business" && client && (
+                <div className="space-y-8">
+                  <AccountTab showToast={showToast} />
+                  <ProfileTab   client={client} save={save} saving={saving} />
+                  <ServicesTab  client={client} save={save} saving={saving} />
+                  <PricingTab   client={client} save={save} saving={saving} />
+                  <EdgeTab      client={client} save={save} saving={saving} />
+                </div>
+              )}
+              {tab === "assistant" && client && (
+                <div className="space-y-8">
+                  <AITab    client={client} save={save} saving={saving} />
+                  <HoursTab client={client} save={save} saving={saving} />
+                </div>
+              )}
+              {tab === "account" && (
+                <div className="space-y-8">
+                  {client && <IntegrationsTab  client={client} save={save} saving={saving} />}
+                  {client && <NotificationsTab client={client} save={save} saving={saving} />}
+                  {client && (
+                    <WebsiteAssistantTab
+                      client={client as unknown as ClientRow}
+                      onSave={async () => {
+                        const { data } = await supabase.from("clients").select("*").limit(1).maybeSingle();
+                        setClient(data as Client);
+                      }}
+                    />
+                  )}
+                  {client && <KnowledgeTab clientId={client.id} />}
+                </div>
               )}
             </>
           )}
@@ -682,13 +685,13 @@ function HoursTab({ client, save, saving }: { client: Client; save: (p: Partial<
         {DAYS.map((d) => {
           const open = !!hours[d];
           return (
-            <div key={d} className="grid grid-cols-[80px_80px_1fr_1fr] gap-3 items-center py-2 border-b border-line last:border-0">
+            <div key={d} className="grid grid-cols-[80px_80px_1fr_1fr] gap-3 items-center py-2 border-b border-[var(--border)] last:border-0">
               <p className="text-body text-fg capitalize font-medium">{d}</p>
               <button
                 onClick={() => toggle(d)}
                 className={cn(
                   "h-7 px-2.5 rounded-lg text-tiny font-semibold cursor-pointer",
-                  open ? "bg-brand-soft text-brand border border-brand/30" : "bg-white/[0.04] text-fg-muted border border-line"
+                  open ? "bg-ember/10 text-ember border border-ember/30" : "bg-surface-input text-fg-muted border border-[var(--border)]"
                 )}
               >
                 {open ? "Open" : "Closed"}
@@ -766,8 +769,8 @@ function IntegrationsTab({ client, save, saving }: { client: Client; save: (p: P
         />
         {calConnected ? (
           <div className="space-y-4">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-brand/[0.06] border border-brand/20">
-              <Calendar className="w-4 h-4 text-brand shrink-0" />
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-ember/[0.06] border border-ember/20">
+              <Calendar className="w-4 h-4 text-ember shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-small font-medium text-fg">Calendar connected</p>
                 <p className="text-tiny text-fg-muted truncate">{client.google_calendar_id ?? "Google Calendar"}</p>
@@ -776,7 +779,7 @@ function IntegrationsTab({ client, save, saving }: { client: Client; save: (p: P
                 href="https://calendar.google.com"
                 target="_blank"
                 rel="noreferrer"
-                className="text-tiny text-brand hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-tiny text-ember hover:underline flex items-center gap-1 cursor-pointer"
               >
                 Open <ExternalLink className="w-3 h-3" />
               </a>
@@ -801,7 +804,7 @@ function IntegrationsTab({ client, save, saving }: { client: Client; save: (p: P
             <p className="text-small text-fg-muted leading-relaxed">
               Connect your Google Calendar so every booking is synced automatically.
             </p>
-            <div className="px-4 py-3 rounded-xl bg-white/[0.03] border border-line space-y-1.5">
+            <div className="px-4 py-3 rounded-xl bg-surface-input border border-[var(--border)] space-y-1.5">
               <p className="text-tiny font-semibold text-fg">What gets connected</p>
               {[
                 "New bookings are added to your calendar as events",
@@ -887,12 +890,12 @@ function KnowledgeTab({ clientId }: { clientId: string }) {
       {loadingK ? (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-20 rounded-xl bg-white/[0.03] animate-pulse" />
+            <div key={i} className="h-20 rounded-xl bg-surface-input animate-pulse" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <Card className="!p-8 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mx-auto mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-surface-input border border-[var(--border)] flex items-center justify-center mx-auto mb-4">
             <BookOpen className="w-5 h-5 text-fg-muted" />
           </div>
           <p className="text-body font-semibold text-fg">{articles.length === 0 ? "No answers yet" : "No matches"}</p>
@@ -908,12 +911,12 @@ function KnowledgeTab({ clientId }: { clientId: string }) {
           )}
         </Card>
       ) : (
-        <div className="divide-y divide-line rounded-2xl border border-white/[0.06] bg-[#0D111A] overflow-hidden">
+        <div className="divide-y divide-[var(--border)] rounded-2xl border border-[var(--border)] bg-surface-card overflow-hidden">
           {filtered.map((a) => (
             <div
               key={a.id}
               onClick={() => setEditing(a)}
-              className="p-5 hover:bg-white/[0.02] cursor-pointer transition-colors"
+              className="p-5 hover:bg-surface-hover cursor-pointer transition-colors"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
@@ -989,7 +992,7 @@ function KbEditor({
         <Card className="w-full max-w-xl my-8 pointer-events-auto animate-slide-up">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-h2 text-fg">{initial ? "Edit answer" : "Add answer"}</h2>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] cursor-pointer">
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-hover cursor-pointer">
               <XIcon className="w-4 h-4 text-fg-muted" />
             </button>
           </div>
@@ -1002,7 +1005,7 @@ function KbEditor({
             </Field>
             {err && <p className="text-small text-danger">{err}</p>}
           </div>
-          <div className="flex justify-end gap-2 mt-6 pt-5 border-t border-white/[0.06]">
+          <div className="flex justify-end gap-2 mt-6 pt-5 border-t border-[var(--border)]">
             <Button variant="ghost" onClick={onClose}>Cancel</Button>
             <Button variant="primary" loading={savingK} icon={<Check className="w-4 h-4" />} onClick={save}>Save</Button>
           </div>

@@ -183,7 +183,7 @@ export default function BillingPeriodPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="lg:col-span-2 space-y-4">
           {/* Period summary card */}
-          <div className="bg-bg-card border border-line rounded-2xl overflow-hidden">
+          <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
             <p className="px-5 py-3.5 text-small font-semibold text-fg border-b border-line">Period summary</p>
             <div className="p-5 space-y-3">
               <div className="flex justify-between items-center py-2 border-b border-line/50">
@@ -221,7 +221,7 @@ export default function BillingPeriodPage() {
 
           {/* Invoices that generated commission */}
           {(period.invoices_summary ?? []).length > 0 && (
-            <div className="bg-bg-card border border-line rounded-2xl overflow-hidden">
+            <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
               <p className="px-5 py-3.5 text-small font-semibold text-fg border-b border-line">Invoices included</p>
               <div className="divide-y divide-line/50">
                 {period.invoices_summary.map(inv => (
@@ -247,7 +247,7 @@ export default function BillingPeriodPage() {
         <div className="space-y-4">
           {/* Billing invoice */}
           {billingInvoice && (
-            <div className="bg-bg-card border border-line rounded-2xl p-5">
+            <div className="bg-surface-card border border-line rounded-2xl p-5">
               <p className="text-small font-semibold text-fg mb-3">Your billing invoice</p>
               <p className="text-tiny text-fg-muted mb-1">Invoice #</p>
               <p className="text-small text-fg font-mono mb-3">{billingInvoice.invoice_number ?? "Pending"}</p>
@@ -273,7 +273,7 @@ export default function BillingPeriodPage() {
           )}
 
           {/* Payment dates */}
-          <div className="bg-bg-card border border-line rounded-2xl p-5">
+          <div className="bg-surface-card border border-line rounded-2xl p-5">
             <p className="text-small font-semibold text-fg mb-3">Key dates</p>
             <div className="space-y-2.5">
               <div>
@@ -302,7 +302,7 @@ export default function BillingPeriodPage() {
           </div>
 
           {/* Support */}
-          <div className="bg-bg-card border border-line rounded-2xl p-4">
+          <div className="bg-surface-card border border-line rounded-2xl p-4">
             <p className="text-tiny text-fg-muted mb-2">Questions about this charge?</p>
             <a href="mailto:billing@qwikly.co.za" className="text-small text-brand hover:underline flex items-center gap-1.5">
               <ExternalLink className="w-3.5 h-3.5" />

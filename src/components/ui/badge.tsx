@@ -3,13 +3,13 @@ import { cn } from "@/lib/cn";
 type Tone = "neutral" | "brand" | "violet" | "sky" | "success" | "danger" | "warning";
 
 const tones: Record<Tone, string> = {
-  neutral: "bg-white/[0.06] text-fg-muted border border-line",
-  brand: "bg-brand-soft text-brand border border-brand/20",
-  violet: "bg-violet-soft text-violet border border-violet/20",
-  sky: "bg-sky-soft text-sky border border-sky/20",
-  success: "bg-success-soft text-success border border-success/20",
-  danger: "bg-danger-soft text-danger border border-danger/20",
-  warning: "bg-warning-soft text-warning border border-warning/20",
+  neutral: "bg-surface-input text-fg-muted border border-[var(--border-strong)]",
+  brand:   "bg-ember/10 text-ember border border-ember/20",
+  violet:  "bg-violet-500/10 text-violet-600 border border-violet-500/20",
+  sky:     "bg-sky-500/10 text-sky-600 border border-sky-500/20",
+  success: "bg-green-500/10 text-green-700 border border-green-500/20",
+  danger:  "bg-red-500/10 text-red-600 border border-red-500/20",
+  warning: "bg-warning/10 text-warning border border-warning/20",
 };
 
 export function Badge({

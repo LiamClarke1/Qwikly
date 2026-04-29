@@ -11,6 +11,50 @@
 /*  Cream canvas · Deep ink · Single ember accent · Fraunces serif */
 /* ────────────────────────────────────────────────────────────── */
 
+/* ────────────────────────────────────────────────────────────── */
+/*  THEME TOKENS                                                    */
+/*  CSS custom properties — swap .dark on any ancestor to switch.   */
+/* ────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Surfaces */
+  --surface:       #F4EEE4;
+  --surface-card:  #FFFFFF;
+  --surface-input: #EDE5D8;
+  --surface-hover: rgba(14,14,12,0.03);
+  --surface-active: rgba(14,14,12,0.06);
+  /* Borders */
+  --border:        rgba(14,14,12,0.08);
+  --border-strong: rgba(14,14,12,0.14);
+  /* Text */
+  --text-primary: #0E0E0C;
+  --text-muted:   #6A6A63;
+  --text-subtle:  #8F8F86;
+  --text-faint:   #B5B5AC;
+  /* Shadows */
+  --shadow-sm:    0 1px 4px rgba(14,14,12,0.06);
+  --shadow-md:    0 4px 16px rgba(14,14,12,0.10);
+  --shadow-pop:   0 24px 60px -20px rgba(14,14,12,0.22);
+}
+
+/* Dark mode — applied to the dashboard shell root via JS */
+.dark {
+  --surface:       #111827;
+  --surface-card:  #0D111A;
+  --surface-input: #1A2236;
+  --surface-hover: rgba(255,255,255,0.03);
+  --surface-active: rgba(255,255,255,0.06);
+  --border:        rgba(255,255,255,0.06);
+  --border-strong: rgba(255,255,255,0.10);
+  --text-primary: #F4F4F5;
+  --text-muted:   #9CA3AF;
+  --text-subtle:  #6B7280;
+  --text-faint:   #4B5563;
+  --shadow-sm:    0 1px 4px rgba(0,0,0,0.4);
+  --shadow-md:    0 4px 16px rgba(0,0,0,0.5);
+  --shadow-pop:   0 24px 60px -20px rgba(0,0,0,0.6);
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -148,23 +192,24 @@
     background-size: 100% 100%;
   }
 
-  /* Dashboard legacy compat */
+  /* Dashboard legacy compat — now theme-aware */
   .glass-card {
-    @apply bg-slate-900/60 backdrop-blur-sm border border-slate-800/50 rounded-xl;
+    background: var(--surface-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    backdrop-blur: 12px;
   }
   .panel {
-    background: #1c2233;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--surface-card);
+    border: 1px solid var(--border);
     border-radius: 14px;
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.05) inset,
-      0 2px 8px rgba(0, 0, 0, 0.35);
+    box-shadow: var(--shadow-sm);
   }
   .panel-strong {
-    background: #222a3e;
-    border: 1px solid rgba(255, 255, 255, 0.11);
+    background: var(--surface-input);
+    border: 1px solid var(--border-strong);
     border-radius: 14px;
-    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+    box-shadow: var(--shadow-sm);
   }
 }
 

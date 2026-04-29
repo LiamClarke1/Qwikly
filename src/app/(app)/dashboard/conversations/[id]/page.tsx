@@ -9,9 +9,9 @@ import { supabase } from "@/lib/supabase";
 import type { Conversation, Message, Booking } from "@/lib/types";
 
 const STATUS_BADGE: Record<Conversation["status"], string> = {
-  active: "bg-green-500/10 text-green-400 border border-green-500/20",
-  completed: "bg-slate-500/10 text-slate-400 border border-slate-500/20",
-  escalated: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
+  active: "bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/20",
+  completed: "bg-ink/[0.06] text-fg-muted border border-ink/[0.12]",
+  escalated: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20",
 };
 
 export default function ConversationDetailPage() {
@@ -73,15 +73,15 @@ export default function ConversationDetailPage() {
   if (loading) {
     return (
       <div className="p-6 max-w-3xl mx-auto space-y-4">
-        <div className="h-5 w-48 bg-slate-800 rounded animate-pulse" />
-        <div className="h-8 w-64 bg-slate-800 rounded animate-pulse" />
+        <div className="h-5 w-48 bg-ink/[0.08] rounded animate-pulse" />
+        <div className="h-8 w-64 bg-ink/[0.08] rounded animate-pulse" />
         <div className="space-y-3 mt-8">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
               className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}
             >
-              <div className="h-16 w-2/3 bg-slate-800 rounded-xl animate-pulse" />
+              <div className="h-16 w-2/3 bg-ink/[0.08] rounded-xl animate-pulse" />
             </div>
           ))}
         </div>
@@ -94,12 +94,12 @@ export default function ConversationDetailPage() {
       <div className="p-6 max-w-3xl mx-auto">
         <Link
           href="/dashboard/conversations"
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm mb-6"
+          className="inline-flex items-center gap-2 text-fg-muted hover:text-fg transition-colors text-sm mb-6"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to conversations
         </Link>
-        <p className="text-slate-400 text-center py-16">
+        <p className="text-fg-subtle text-center py-16">
           Conversation not found.
         </p>
       </div>
@@ -111,7 +111,7 @@ export default function ConversationDetailPage() {
       {/* Back link */}
       <Link
         href="/dashboard/conversations"
-        className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm mb-6"
+        className="inline-flex items-center gap-2 text-fg-muted hover:text-fg transition-colors text-sm mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to conversations
@@ -119,7 +119,7 @@ export default function ConversationDetailPage() {
 
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <h1 className="text-2xl font-bold text-white">
+        <h1 className="text-2xl font-bold text-fg">
           {conversation.customer_name || conversation.customer_phone}
         </h1>
         <span
@@ -127,7 +127,7 @@ export default function ConversationDetailPage() {
         >
           {conversation.status}
         </span>
-        <span className="text-slate-500 text-sm ml-auto">
+        <span className="text-fg-subtle text-sm ml-auto">
           Started {format(new Date(conversation.created_at), "d MMM yyyy, HH:mm")}
         </span>
       </div>
@@ -135,10 +135,10 @@ export default function ConversationDetailPage() {
       {/* Message Thread */}
       <div
         ref={scrollRef}
-        className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent"
+        className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-ink/20 scrollbar-track-transparent"
       >
         {messages.length === 0 ? (
-          <p className="text-slate-500 text-sm text-center py-12">
+          <p className="text-fg-subtle text-sm text-center py-12">
             No messages in this conversation.
           </p>
         ) : (
@@ -152,14 +152,14 @@ export default function ConversationDetailPage() {
                 <div
                   className={`max-w-[75%] rounded-xl px-4 py-3 ${
                     isAssistant
-                      ? "bg-blue-600/20 border border-blue-500/30"
-                      : "bg-slate-800"
+                      ? "bg-brand/10 border border-brand/25"
+                      : "bg-surface-input border border-[var(--border)]"
                   }`}
                 >
-                  <p className="text-sm text-slate-200 whitespace-pre-wrap">
+                  <p className="text-sm text-fg whitespace-pre-wrap">
                     {msg.content}
                   </p>
-                  <p className="text-xs text-slate-500 mt-1.5">
+                  <p className="text-xs text-fg-subtle mt-1.5">
                     {format(new Date(msg.created_at), "HH:mm")}
                   </p>
                 </div>
@@ -171,16 +171,16 @@ export default function ConversationDetailPage() {
 
       {/* Linked Booking */}
       {booking && (
-        <div className="mt-6 bg-slate-900/60 border border-slate-800/50 rounded-xl p-4">
+        <div className="mt-6 bg-surface-card border border-[var(--border)] rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-green-500/10">
-              <CalendarCheck className="w-5 h-5 text-green-400" />
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-success/10">
+              <CalendarCheck className="w-5 h-5 text-success" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white">
+              <p className="text-sm font-semibold text-fg">
                 Booking confirmed
               </p>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-fg-muted mt-0.5">
                 {booking.customer_name} &middot; {booking.job_type} &middot;{" "}
                 {booking.booking_datetime ? format(new Date(booking.booking_datetime), "d MMM yyyy, HH:mm") : "TBC"}
               </p>

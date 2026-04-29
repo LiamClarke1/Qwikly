@@ -4,7 +4,7 @@ import { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttr
 import { cn } from "@/lib/cn";
 
 const baseInput =
-  "w-full bg-[#111827] border border-white/[0.10] rounded-xl px-4 py-2.5 text-body text-fg placeholder:text-fg-faint outline-none focus:border-brand/50 focus:ring-2 focus:ring-brand/10 transition-colors duration-150 hover:border-white/[0.18]";
+  "w-full bg-surface-input border border-[var(--border)] rounded-xl px-4 py-2.5 text-body text-fg placeholder:text-fg-faint outline-none focus:border-ember/40 focus:ring-2 focus:ring-ember/10 transition-colors duration-150 hover:border-[var(--border-strong)]";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   function Input({ className, ...rest }, ref) {
@@ -32,7 +32,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectHTMLAttributes<HTMLSel
         className={cn(baseInput, "cursor-pointer appearance-none pr-10", className)}
         style={{
           backgroundImage:
-            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>\")",
+            "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236A6A63' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>\")",
           backgroundRepeat: "no-repeat",
           backgroundPosition: "right 14px center",
         }}
