@@ -24,7 +24,7 @@ export async function GET() {
 
   const db = supabaseAdmin();
   const [clientsRes, invoicesRes, periodsRes, disputesRes] = await Promise.all([
-    db.from("clients").select("id, status, risk_score"),
+    db.from("clients").select("id, onboarding_complete, risk_score"),
     db.from("invoices").select("total_zar, amount_paid_zar, qwikly_commission_zar, status"),
     db.from("qwikly_billing_periods").select("commission_zar, status, period_start").order("period_start", { ascending: false }).limit(50),
     db.from("disputes").select("id").eq("status", "open"),
@@ -39,7 +39,7 @@ export async function GET() {
 
   return NextResponse.json({
     total_clients: clients.length,
-    active_clients: clients.filter(c => c.status === "active").length,
+    active_clients: clients.filter(c => c.onboarding_complete === true).length,
     high_risk_clients: clients.filter(c => (c.risk_score ?? 0) >= 70).length,
     total_invoices_sent: invoices.length,
     total_paid_zar: invoices.reduce((s, i) => s + (i.amount_paid_zar ?? 0), 0),

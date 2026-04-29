@@ -23,17 +23,17 @@ interface ClientRow {
 
 function StatusBadge({ status, onboarding }: { status: string | null; onboarding: boolean | null }) {
   if (status === "verified") return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-medium">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-medium">
       <CheckCircle2 className="w-3 h-3" /> Live
     </span>
   );
   if (onboarding) return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[11px] font-medium">
-      <Clock className="w-3 h-3" /> Pending
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-medium">
+      <Clock className="w-3 h-3" /> Active
     </span>
   );
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 text-fg-faint text-[11px] font-medium">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-[11px] font-medium">
       <AlertCircle className="w-3 h-3" /> Setup
     </span>
   );
@@ -63,41 +63,41 @@ export default function AdminClientsPage() {
   }, [clients, query]);
 
   return (
-    <div className="animate-fade-in">
+    <div>
       <div className="mb-6">
-        <p className="text-small text-brand font-medium mb-1">Admin</p>
-        <h1 className="text-h1 text-fg">Clients</h1>
-        <p className="text-small text-fg-muted mt-1">{clients.length} businesses onboarded</p>
+        <p className="text-[13px] text-[#E85A2C] font-semibold mb-1">Admin</p>
+        <h1 className="text-[28px] font-bold text-slate-900 leading-tight">Clients</h1>
+        <p className="text-[13px] text-slate-500 mt-1">{clients.length} businesses onboarded</p>
       </div>
 
       <div className="relative mb-5 max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
           placeholder="Search clients…"
-          className="w-full pl-10 pr-4 py-2 rounded-xl border border-line bg-bg-card text-small text-fg placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-brand/40"
+          className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#E85A2C]/20 focus:border-[#E85A2C]/40"
         />
       </div>
 
       {loading ? (
         <div className="space-y-2">
           {[0,1,2,3,4].map(i => (
-            <div key={i} className="h-16 rounded-2xl bg-white/[0.03] border border-line animate-pulse" />
+            <div key={i} className="h-16 rounded-2xl bg-slate-100 border border-slate-200 animate-pulse" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-fg-muted text-small">
+        <div className="text-center py-16 text-slate-400 text-[13px]">
           {clients.length === 0 ? "No clients yet." : "No matches."}
         </div>
       ) : (
-        <div className="rounded-2xl border border-line bg-bg-card overflow-hidden">
+        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
           {/* Header */}
-          <div className="grid grid-cols-[1fr_120px_100px_100px_40px] gap-4 px-5 py-3 border-b border-line">
-            <p className="text-tiny uppercase tracking-widest text-fg-faint font-semibold">Business</p>
-            <p className="text-tiny uppercase tracking-widest text-fg-faint font-semibold">Status</p>
-            <p className="text-tiny uppercase tracking-widest text-fg-faint font-semibold text-right">Convos</p>
-            <p className="text-tiny uppercase tracking-widest text-fg-faint font-semibold text-right">Last active</p>
+          <div className="grid grid-cols-[1fr_120px_100px_100px_40px] gap-4 px-5 py-3 border-b border-slate-100 bg-slate-50">
+            <p className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Business</p>
+            <p className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Status</p>
+            <p className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold text-right">Convos</p>
+            <p className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold text-right">Last active</p>
             <span />
           </div>
 
@@ -105,14 +105,14 @@ export default function AdminClientsPage() {
             <Link
               key={c.id}
               href={`/admin/clients/${c.id}`}
-              className={`grid grid-cols-[1fr_120px_100px_100px_40px] gap-4 items-center px-5 py-4 hover:bg-white/[0.02] transition-colors cursor-pointer group ${i > 0 ? "border-t border-line" : ""}`}
+              className={`grid grid-cols-[1fr_120px_100px_100px_40px] gap-4 items-center px-5 py-4 hover:bg-slate-50 transition-colors cursor-pointer group ${i > 0 ? "border-t border-slate-100" : ""}`}
             >
               <div className="min-w-0">
-                <p className="text-small font-semibold text-fg truncate">{c.business_name ?? "Unnamed"}</p>
+                <p className="text-[13px] font-semibold text-slate-800 truncate">{c.business_name ?? "Unnamed"}</p>
                 <div className="flex items-center gap-2 mt-0.5">
-                  {c.trade && <p className="text-tiny text-fg-muted truncate">{c.trade}</p>}
+                  {c.trade && <p className="text-[12px] text-slate-500 truncate">{c.trade}</p>}
                   {c.web_widget_domain && (
-                    <span className="flex items-center gap-1 text-tiny text-fg-faint">
+                    <span className="flex items-center gap-1 text-[11px] text-slate-400">
                       <Globe className="w-3 h-3" />
                       {c.web_widget_domain}
                     </span>
@@ -124,16 +124,16 @@ export default function AdminClientsPage() {
                 <StatusBadge status={c.web_widget_status} onboarding={c.onboarding_complete} />
               </div>
 
-              <div className="flex items-center justify-end gap-1 text-small text-fg-muted">
+              <div className="flex items-center justify-end gap-1 text-[13px] text-slate-500">
                 <MessageSquare className="w-3.5 h-3.5" />
                 {c.conversation_count.toLocaleString()}
               </div>
 
-              <p className="text-tiny text-fg-faint text-right">
+              <p className="text-[12px] text-slate-400 text-right">
                 {c.last_activity ? timeAgo(c.last_activity) : "—"}
               </p>
 
-              <ChevronRight className="w-4 h-4 text-fg-faint group-hover:text-brand transition-colors" />
+              <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#E85A2C] transition-colors" />
             </Link>
           ))}
         </div>
