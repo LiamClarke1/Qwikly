@@ -36,9 +36,9 @@ ALTER TABLE clients ADD COLUMN IF NOT EXISTS after_hours_mode TEXT DEFAULT 'book
 
 CREATE TABLE IF NOT EXISTS web_widget_events (
   id BIGSERIAL PRIMARY KEY,
-  client_id TEXT REFERENCES clients(id),
+  client_id BIGINT REFERENCES clients(id),
   visitor_id TEXT,
-  conversation_id TEXT REFERENCES conversations(id),
+  conversation_id BIGINT REFERENCES conversations(id),
   event_type TEXT NOT NULL CHECK (event_type IN (
     'widget_loaded', 'launcher_opened', 'intake_started',
     'intake_submitted', 'first_message', 'slot_proposed',
