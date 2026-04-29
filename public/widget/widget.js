@@ -52,6 +52,8 @@
     ".msg{max-width:86%;padding:10px 14px;border-radius:18px;font-size:13px;line-height:1.6;word-break:break-word;animation:" + (prefersReduced ? "none" : "fadeUp .2s ease") + "}",
     "@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}",
     ".bot{background:#F3F4F6;color:#1F2937;border-radius:18px 18px 18px 4px;align-self:flex-start}",
+    ".bot a{color:#2563EB;text-decoration:underline;word-break:break-all;cursor:pointer}",
+    ".bot a:hover{color:#1D4ED8}",
     ".usr{background:var(--qc,#E85A2C);color:#fff;border-radius:18px 18px 4px 18px;align-self:flex-end}",
     ".typing{display:flex;gap:5px;align-items:center;padding:12px 14px;background:#F3F4F6;border-radius:18px 18px 18px 4px;align-self:flex-start;width:52px}",
     ".dot{width:6px;height:6px;border-radius:50%;background:#9CA3AF;animation:" + (prefersReduced ? "none" : "blink 1.3s ease-in-out infinite") + "}",
@@ -108,12 +110,34 @@
 
   function msgs() { return shadow.getElementById("qw-msgs"); }
 
+  var URL_RE = /(https?:\/\/[^\s<>"]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.(?:co\.za|com|org|net|io|app)(?:\/[^\s<>"]*)?)/g;
+
+  function textToNodes(text) {
+    var nodes = [];
+    var last = 0;
+    var m;
+    URL_RE.lastIndex = 0;
+    while ((m = URL_RE.exec(text)) !== null) {
+      if (m.index > last) nodes.push(document.createTextNode(text.slice(last, m.index)));
+      var a = document.createElement("a");
+      a.href = m[0].startsWith("http") ? m[0] : "https://" + m[0];
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = m[0];
+      nodes.push(a);
+      last = URL_RE.lastIndex;
+    }
+    if (last < text.length) nodes.push(document.createTextNode(text.slice(last)));
+    return nodes;
+  }
+
   function addMsg(cls, text, animate) {
     var m = msgs();
     if (!m) return;
     var div = document.createElement("div");
     div.className = "msg " + cls + (animate !== false ? " new" : "");
-    div.textContent = text;
+    var nodes = textToNodes(text);
+    for (var i = 0; i < nodes.length; i++) div.appendChild(nodes[i]);
     m.appendChild(div);
     m.scrollTop = m.scrollHeight;
   }
