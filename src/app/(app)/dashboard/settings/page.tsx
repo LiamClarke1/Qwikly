@@ -54,7 +54,7 @@ interface Client {
   google_calendar_id: string | null;
   system_prompt: string | null;
   hours: Hours | null;
-  service_areas: string[] | null;
+  address: string | null;
   faq: { q: string; a: string }[] | null;
   tone: string | null;
   notification_email: string | null;
@@ -523,7 +523,7 @@ function EdgeTab({ client, save, saving }: { client: Client; save: (p: Partial<C
 
 function AITab({ client, save, saving }: { client: Client; save: (p: Partial<Client>) => void; saving: boolean }) {
   const [tone, setTone] = useState(client.tone ?? "");
-  const [areas, setAreas] = useState((client.service_areas ?? []).join(", "));
+  const [areas, setAreas] = useState(client.address ?? "");
   const [prompt, setPrompt] = useState(client.system_prompt ?? "");
   const [faq, setFaq] = useState<{ q: string; a: string }[]>(client.faq ?? []);
   const [personality, setPersonality] = useState({
@@ -544,7 +544,7 @@ function AITab({ client, save, saving }: { client: Client; save: (p: Partial<Cli
   const handleSave = () => save({
     tone,
     system_prompt: prompt,
-    service_areas: areas.split(",").map((s) => s.trim()).filter(Boolean),
+    address: areas.trim() || null,
     faq,
     ...personality,
   });

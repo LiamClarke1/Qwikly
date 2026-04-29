@@ -34,7 +34,7 @@ export default function StepTest({ client, onAdvance, onBack }: Props) {
             "Click the widget launcher in the preview below.",
             "Enter 'Sarah' as a name and any SA mobile number.",
             "Describe a job like a real customer would, e.g. 'My geyser is leaking.'",
-            "Pick a time slot when the AI offers one.",
+            "Pick a time slot when your digital assistant offers one.",
           ].map((step, i) => (
             <li key={i} className="flex gap-3 text-fg-muted text-sm">
               <span className="text-brand font-mono font-bold shrink-0">{i + 1}.</span>

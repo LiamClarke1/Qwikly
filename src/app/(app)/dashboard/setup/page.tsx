@@ -848,7 +848,7 @@ export default function SetupPage() {
       trade: form.trade.toLowerCase(),
       whatsapp_number: form.whatsapp_number,
       google_calendar_id: form.google_calendar_email,
-      service_areas: form.areas.split(",").map((s) => s.trim()).filter(Boolean),
+      address: form.areas.trim() || null,
       system_prompt: buildSystemPrompt(form),
       years_in_business: form.years_in_business,
       certifications: form.certifications,

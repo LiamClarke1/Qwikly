@@ -81,7 +81,7 @@ export default function StepHours({ client, onAdvance, onBack }: Props) {
     <div className="pt-10 max-w-xl">
       <h1 className="text-display-1 font-semibold text-fg mb-2">When are you available?</h1>
       <p className="text-fg-muted text-body mb-8">
-        Set your working hours. The AI will offer booking slots within these times.
+        Set your working hours. Your digital assistant will only offer booking slots within these times.
       </p>
 
       {error && (

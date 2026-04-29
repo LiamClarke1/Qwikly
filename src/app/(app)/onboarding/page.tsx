@@ -252,7 +252,7 @@ export default function OnboardingPage() {
           business_name: data.business_name ?? "",
           owner_name: data.owner_name ?? "",
           trade: data.trade ?? "",
-          areas: Array.isArray(data.service_areas) ? data.service_areas.join(", ") : "",
+          areas: data.address ?? "",
           services_offered: data.services_offered ?? "",
           services_excluded: data.services_excluded ?? "",
           callout_fee: data.callout_fee ?? "",
@@ -347,7 +347,7 @@ export default function OnboardingPage() {
           business_name: form.business_name.trim(),
           owner_name: form.owner_name.trim() || null,
           trade: form.trade.toLowerCase(),
-          service_areas: form.areas.split(",").map((s) => s.trim()).filter(Boolean),
+          address: form.areas.trim() || null,
         };
       } else if (step.id === "services") {
         if (!form.services_offered.trim()) { setError("Please list at least one service."); setSaving(false); return; }

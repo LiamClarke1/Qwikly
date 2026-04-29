@@ -29,7 +29,7 @@ export default function StepCalendar({ client, onAdvance, onBack }: Props) {
     <div className="pt-10 max-w-lg">
       <h1 className="text-display-1 font-semibold text-fg mb-2">Where should bookings go?</h1>
       <p className="text-fg-muted text-body mb-8">
-        Connect your Google Calendar so the AI can offer real available slots and confirm bookings automatically.
+        Connect your Google Calendar so your digital assistant can offer real available slots and confirm bookings automatically.
       </p>
 
       {isConnected ? (
@@ -53,7 +53,7 @@ export default function StepCalendar({ client, onAdvance, onBack }: Props) {
           <div className="flex items-start gap-2.5 p-4 rounded-xl bg-warning/5 border border-warning/20 mb-6">
             <AlertTriangle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
             <p className="text-fg-muted text-sm">
-              Your AI won&rsquo;t be able to book jobs until you connect a calendar.
+              Your digital assistant won&rsquo;t be able to book jobs until you connect a calendar.
               You can complete this step later in Settings.
             </p>
           </div>

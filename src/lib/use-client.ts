@@ -51,12 +51,14 @@ export interface ClientRow {
   ai_never_say?: string | null;
   ai_sign_off?: string | null;
   // existing settings fields
-  service_areas?: string[] | null;
+  address?: string | null;
   faq?: { q: string; a: string }[] | null;
   tone?: string | null;
   hours?: Record<string, [string, string] | null> | null;
   notification_email?: string | null;
   notification_phone?: string | null;
+  billing_email?: string | null;
+  client_email?: string | null;
   meta_business_id?: string | null;
   meta_phone_number_id?: string | null;
   // invoicing fields (added in migration-invoicing-v2)

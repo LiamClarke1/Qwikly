@@ -4,12 +4,12 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { ClientRow } from "@/lib/use-client";
 import { Loader2 } from "lucide-react";
-import { Input, Textarea, Select, Field } from "@/components/ui/input";
+import { Input, Select, Field } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const TRADES = [
   "Electrician", "Plumber", "Roofer", "Solar Installer", "Pest Control",
-  "Aircon", "Pool Cleaning", "Landscaper", "Garage Door", "Security",
+  "Aircon", "Pool Cleaning", "Landscaper", "Garage Door", "Security", "Other",
 ];
 
 interface Props {
@@ -24,7 +24,7 @@ export default function StepBusiness({ client, onAdvance }: Props) {
     business_name: client.business_name ?? "",
     trade: client.trade ?? "",
     owner_name: client.owner_name ?? "",
-    areas: (client.service_areas ?? []).join(", "),
+    address: client.address ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,14 +32,13 @@ export default function StepBusiness({ client, onAdvance }: Props) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.business_name.trim()) { setError("Business name is required."); return; }
-    if (!form.trade) { setError("Please select your trade."); return; }
     setSaving(true);
     setError(null);
     const { error: dbErr } = await supabase.from("clients").update({
       business_name: form.business_name.trim(),
-      trade: form.trade.toLowerCase(),
+      trade: form.trade ? form.trade.toLowerCase() : null,
       owner_name: form.owner_name.trim() || null,
-      service_areas: form.areas.split(",").map((s) => s.trim()).filter(Boolean),
+      address: form.address.trim() || null,
     }).eq("id", client.id);
     setSaving(false);
     if (dbErr) { setError(dbErr.message); return; }
@@ -49,10 +48,10 @@ export default function StepBusiness({ client, onAdvance }: Props) {
   return (
     <div className="pt-10 max-w-lg">
       <h1 className="text-display-1 font-semibold text-fg mb-2">
-        Let&rsquo;s get your AI assistant live in about 10 minutes.
+        Let&rsquo;s get your digital assistant live in about 10 minutes.
       </h1>
-      <p className="text-fg-muted text-body mb-8">
-        Tell us about your business so we can set up the right assistant for you.
+      <p className="text-fg-muted text-body mb-2">
+        Tell us about your business. Everything here can be edited later in Settings.
       </p>
 
       {error && (
@@ -61,7 +60,7 @@ export default function StepBusiness({ client, onAdvance }: Props) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5 mt-6">
         <Field label="Business name">
           <Input
             value={form.business_name}
@@ -70,7 +69,7 @@ export default function StepBusiness({ client, onAdvance }: Props) {
           />
         </Field>
 
-        <Field label="Your trade">
+        <Field label="Your trade" hint="Don't see yours? Pick the closest one — you can change it later.">
           <Select
             value={form.trade}
             onChange={(e) => setForm((f) => ({ ...f, trade: e.target.value }))}
@@ -82,25 +81,25 @@ export default function StepBusiness({ client, onAdvance }: Props) {
           </Select>
         </Field>
 
-        <Field label="Your name">
+        <Field label="Your name" hint="Optional — your digital assistant will use this to introduce you.">
           <Input
             value={form.owner_name}
             onChange={(e) => setForm((f) => ({ ...f, owner_name: e.target.value }))}
-            placeholder="John"
+            placeholder="Johan"
           />
         </Field>
 
-        <Field label="City / service area" hint="Comma-separated, e.g. Johannesburg, Sandton, Midrand">
+        <Field label="City / service area" hint="Comma-separated, e.g. Johannesburg, Sandton, Midrand. Optional.">
           <Input
-            value={form.areas}
-            onChange={(e) => setForm((f) => ({ ...f, areas: e.target.value }))}
+            value={form.address}
+            onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
             placeholder="Johannesburg, Sandton, Midrand"
           />
         </Field>
 
         <div className="pt-4">
           <Button type="submit" disabled={saving} className="w-full justify-center">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Continue →"}
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save & continue →"}
           </Button>
         </div>
       </form>
