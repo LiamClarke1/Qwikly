@@ -97,8 +97,8 @@
     // ── Mobile ──
     // Cap height so it never fills the whole screen. 16px input already prevents zoom.
     "@media(max-width:600px){" +
-      "#launcher{bottom:16px;right:16px;padding:11px 18px;font-size:13px}" +
-      "#panel{left:8px;right:8px;width:auto;bottom:72px;height:min(62vh,500px);max-height:calc(100dvh - 100px);border-radius:18px}" +
+      "#launcher{bottom:max(16px,calc(env(safe-area-inset-bottom) + 12px));right:max(16px,calc(env(safe-area-inset-right) + 8px));padding:11px 18px;font-size:13px}" +
+      "#panel{left:8px;right:8px;width:auto;bottom:max(72px,calc(env(safe-area-inset-bottom) + 68px));height:min(62vh,500px);max-height:calc(100dvh - 100px);border-radius:18px}" +
     "}",
   ].join("");
   shadow.appendChild(style);

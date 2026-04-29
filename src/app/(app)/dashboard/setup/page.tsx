@@ -11,8 +11,9 @@ import {
   ChevronRight, ChevronLeft, Check, Loader2, Sparkles,
   Building2, Wrench, DollarSign, Clock, Star, Bot,
   Globe, Upload, FileText, X, Zap, AlertCircle, ArrowRight, Clock3, MessageSquare,
-  Phone, PlusCircle,
+  Phone, PlusCircle, Mail,
 } from "lucide-react";
+import { ClientRow } from "@/lib/use-client";
 import { cn } from "@/lib/cn";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -71,7 +72,7 @@ const ALLOWED_EXT = [".pdf", ".txt", ".doc", ".docx"];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type View = "intro" | "loading" | "done" | "wizard";
+type View = "overview" | "intro" | "loading" | "done" | "wizard";
 type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 interface UploadedFile { name: string; base64: string; mediaType: string; size: number; }
@@ -263,6 +264,267 @@ function StyleCard({ opt, selected, onSelect }: { opt: typeof RESPONSE_STYLE_OPT
       </div>
       <p className="text-tiny text-fg-muted leading-relaxed">{opt.description}</p>
     </button>
+  );
+}
+
+// ─── Inline WhatsApp Connect ──────────────────────────────────────────────────
+
+function InlineWhatsAppConnect({ clientId }: { clientId: string | undefined }) {
+  const [phone, setPhone] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState("");
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const sendCode = async () => {
+    setError(null);
+    setSending(true);
+    const res = await fetch("/api/whatsapp/verify-send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone }),
+    });
+    const j = await res.json();
+    setSending(false);
+    if (!res.ok) return setError(j.error ?? "Failed to send code");
+    setCodeSent(true);
+  };
+
+  const checkCode = async () => {
+    setError(null);
+    setVerifying(true);
+    const res = await fetch("/api/whatsapp/verify-check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, code, client_id: clientId }),
+    });
+    const j = await res.json();
+    setVerifying(false);
+    if (!res.ok) return setError(j.error ?? "Incorrect code");
+    setVerified(true);
+  };
+
+  if (verified) {
+    return (
+      <div className="text-center space-y-3 py-2">
+        <div className="w-12 h-12 rounded-2xl bg-success/15 border border-success/25 flex items-center justify-center mx-auto">
+          <Check className="w-6 h-6 text-success" strokeWidth={2.5} />
+        </div>
+        <div>
+          <p className="font-semibold text-fg">{phone} connected</p>
+          <p className="text-tiny text-fg-muted mt-0.5">Refresh the page to see updated status.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {!codeSent ? (
+        <>
+          <div>
+            <p className="text-small font-semibold text-fg mb-1.5">Your WhatsApp number</p>
+            <p className="text-tiny text-fg-muted mb-3">
+              Customers will message this number. Your digital assistant replies automatically.
+            </p>
+            <WInput value={phone} onChange={setPhone} placeholder="+27 83 123 4567" type="tel" />
+          </div>
+          <button
+            type="button"
+            disabled={!phone.trim() || sending}
+            onClick={sendCode}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-brand text-white text-small font-semibold hover:bg-brand/90 transition-colors duration-200 cursor-pointer disabled:opacity-40"
+          >
+            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
+            {sending ? "Sending code..." : "Send verification code"}
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="text-small text-fg-muted">Code sent to {phone}. Enter it below:</p>
+          <WInput value={code} onChange={setCode} placeholder="6-digit code" type="text" />
+          <button
+            type="button"
+            disabled={code.length < 4 || verifying}
+            onClick={checkCode}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-brand text-white text-small font-semibold hover:bg-brand/90 transition-colors duration-200 cursor-pointer disabled:opacity-40"
+          >
+            {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            {verifying ? "Verifying..." : "Confirm code"}
+          </button>
+          <button type="button" onClick={sendCode} className="text-tiny text-brand hover:underline cursor-pointer w-full text-center">
+            Resend code
+          </button>
+        </>
+      )}
+      {error && <p className="text-small text-danger">{error}</p>}
+    </div>
+  );
+}
+
+// ─── Overview View ────────────────────────────────────────────────────────────
+
+function OverviewView({
+  client,
+  onSetupAssistant,
+  onGoToWizard,
+}: {
+  client: ClientRow | null;
+  onSetupAssistant: () => void;
+  onGoToWizard: (step: Step) => void;
+}) {
+  const isConfigured = !!(client?.system_prompt || client?.onboarding_complete);
+  const hasWhatsApp = !!(client?.whatsapp_number && client.whatsapp_number !== "new_number_requested");
+  const hasWebWidget = !!client?.web_widget_enabled;
+  const [waOpen, setWaOpen] = useState(false);
+
+  return (
+    <div className="max-w-2xl space-y-10">
+
+      {/* ── Section 1: Digital assistant ── */}
+      <section>
+        <div className="flex items-center gap-2.5 mb-4">
+          <span className="w-0.5 h-5 bg-brand rounded-full block shrink-0" />
+          <h2 className="text-h2 text-fg">Set up your digital assistant</h2>
+        </div>
+        <div className="panel !p-6">
+          {isConfigured ? (
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-success/15 border border-success/20 flex items-center justify-center shrink-0">
+                <Check className="w-5 h-5 text-success" strokeWidth={2.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-fg">{client?.business_name || "Your assistant"}</p>
+                <p className="text-tiny text-fg-muted mt-0.5">
+                  {[client?.trade, "Configured and ready"].filter(Boolean).join(" · ")}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onSetupAssistant}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-line text-small text-fg-muted font-medium hover:text-fg hover:border-line-strong transition-all duration-150 cursor-pointer shrink-0"
+              >
+                Edit
+              </button>
+            </div>
+          ) : (
+            <div className="text-center py-4 space-y-5">
+              <div className="w-14 h-14 rounded-2xl bg-brand/10 border border-brand/15 flex items-center justify-center mx-auto">
+                <Bot className="w-7 h-7 text-brand" />
+              </div>
+              <div>
+                <p className="text-base font-semibold text-fg">Tell your assistant about your business</p>
+                <p className="text-small text-fg-muted mt-1.5 leading-relaxed max-w-sm mx-auto">
+                  Add your services, pricing, and hours so your digital assistant can handle customer enquiries automatically.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={onSetupAssistant}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-brand text-white text-small font-semibold hover:bg-brand/90 transition-colors duration-200 cursor-pointer"
+              >
+                <Zap className="w-4 h-4" />
+                Set up now
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Section 2: Channels ── */}
+      <section>
+        <div className="flex items-center gap-2.5 mb-4">
+          <span className="w-0.5 h-5 bg-brand rounded-full block shrink-0" />
+          <h2 className="text-h2 text-fg">Connect your channels</h2>
+        </div>
+        <div className="space-y-3">
+
+          {/* WhatsApp */}
+          <div className="panel !p-5">
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                hasWhatsApp ? "bg-success/12 border border-success/20" : "bg-white/[0.05] border border-line"
+              )}>
+                <MessageSquare className={cn("w-5 h-5", hasWhatsApp ? "text-success" : "text-fg-muted")} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-fg text-small">WhatsApp</p>
+                <p className="text-tiny text-fg-muted mt-0.5">
+                  {hasWhatsApp ? client!.whatsapp_number! : "Not connected"}
+                </p>
+              </div>
+              {hasWhatsApp ? (
+                <span className="flex items-center gap-1.5 text-tiny text-success font-semibold shrink-0">
+                  <Check className="w-3.5 h-3.5" />
+                  Connected
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setWaOpen((o) => !o)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand text-white text-tiny font-semibold hover:bg-brand/90 transition-colors duration-150 cursor-pointer shrink-0"
+                >
+                  Connect
+                  <ChevronRight className={cn("w-3.5 h-3.5 transition-transform duration-200", waOpen && "rotate-90")} />
+                </button>
+              )}
+            </div>
+            {waOpen && !hasWhatsApp && (
+              <div className="mt-5 pt-5 border-t border-line">
+                <InlineWhatsAppConnect clientId={client?.id} />
+              </div>
+            )}
+          </div>
+
+          {/* Email */}
+          <div className="panel !p-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-line flex items-center justify-center shrink-0">
+              <Mail className="w-5 h-5 text-fg-muted" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-fg text-small">Email</p>
+              <p className="text-tiny text-fg-muted mt-0.5">Reply to customer emails automatically</p>
+            </div>
+            <span className="text-tiny text-fg-subtle bg-white/[0.04] border border-line rounded-lg px-2.5 py-1 shrink-0">
+              Coming soon
+            </span>
+          </div>
+
+          {/* Website Chat */}
+          <Link
+            href="/dashboard/settings"
+            className="panel !p-5 flex items-center gap-4 hover:border-brand/25 hover:bg-white/[0.03] transition-all duration-150 cursor-pointer group block"
+          >
+            <div className={cn(
+              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+              hasWebWidget ? "bg-success/12 border border-success/20" : "bg-white/[0.05] border border-line"
+            )}>
+              <Globe className={cn("w-5 h-5", hasWebWidget ? "text-success" : "text-fg-muted group-hover:text-brand transition-colors duration-150")} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-fg text-small">Website chat</p>
+              <p className="text-tiny text-fg-muted mt-0.5">
+                {hasWebWidget
+                  ? (client?.web_widget_domain || "Chat widget active")
+                  : "Add a chat widget to your website"}
+              </p>
+            </div>
+            {hasWebWidget ? (
+              <span className="flex items-center gap-1.5 text-tiny text-success font-semibold shrink-0">
+                <Check className="w-3.5 h-3.5" />
+                Active
+              </span>
+            ) : (
+              <ChevronRight className="w-4 h-4 text-fg-subtle group-hover:text-brand transition-colors duration-150 shrink-0" />
+            )}
+          </Link>
+
+        </div>
+      </section>
+    </div>
   );
 }
 
@@ -753,7 +1015,7 @@ export default function SetupPage() {
   const router = useRouter();
   const { client } = useClient();
 
-  const [view, setView] = useState<View>("intro");
+  const [view, setView] = useState<View>("overview");
   const [step, setStep] = useState<Step>(1);
   const [loadingStage, setLoadingStage] = useState(LOADING_STAGES[0].msg);
   const [loadingPct, setLoadingPct] = useState(0);
@@ -903,17 +1165,31 @@ export default function SetupPage() {
   const progressPct = view === "wizard" ? ((step - 1) / (STEPS.length - 1)) * 100 : 0;
 
   // ── Non-wizard views ──
+  if (view === "overview") {
+    return (
+      <div className="px-1 sm:px-0">
+        <OverviewView
+          client={client}
+          onSetupAssistant={() => setView("intro")}
+          onGoToWizard={(s) => { setStep(s); setView("wizard"); }}
+        />
+      </div>
+    );
+  }
+
   if (view === "intro") {
     return (
       <div className="max-w-lg mx-auto px-1 sm:px-0">
-        {/* Skip banner */}
+        {/* Banner */}
         <div className="flex items-center justify-between mb-5 px-1">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-grad-brand flex items-center justify-center shrink-0">
-              <Sparkles className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-            </div>
-            <span className="text-small font-semibold text-fg truncate">Connect your AI assistant</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => setView("overview")}
+            className="flex items-center gap-1.5 text-tiny text-fg-muted hover:text-fg transition-colors duration-150 cursor-pointer"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Back
+          </button>
           <Link
             href="/dashboard"
             className="flex items-center gap-1.5 shrink-0 ml-3 px-3 py-1.5 rounded-lg border border-line text-tiny text-fg-muted hover:text-fg hover:border-line-strong transition-all duration-150 cursor-pointer"
@@ -1321,10 +1597,10 @@ export default function SetupPage() {
               <ChevronLeft className="w-4 h-4" /> Back
             </button>
           ) : (
-            <button type="button" onClick={() => setView("intro")}
+            <button type="button" onClick={() => setView("overview")}
               className="flex items-center gap-2 px-5 py-3 rounded-xl border border-line text-fg-muted text-small font-medium hover:text-fg hover:border-line-strong transition-all duration-200 cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" /> Back to start
+              <ChevronLeft className="w-4 h-4" /> Back
             </button>
           )}
 

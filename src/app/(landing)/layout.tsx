@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import Script from "next/script";
 
 export default function LandingLayout({
   children,
@@ -11,12 +12,12 @@ export default function LandingLayout({
       <Navbar />
       <main>{children}</main>
       <Footer />
-      {/* Qwikly eats its own cooking — relative /api works on localhost + production */}
-      <script
+      {/* next/script preserves data-* attributes and handles deferred loading correctly */}
+      <Script
         src="/widget/widget.js"
         data-client="1"
         data-api="/api"
-        defer
+        strategy="afterInteractive"
       />
     </div>
   );
