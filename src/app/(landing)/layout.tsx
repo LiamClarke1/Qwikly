@@ -12,13 +12,9 @@ export default function LandingLayout({
       <Navbar />
       <main>{children}</main>
       <Footer />
-      {/* next/script preserves data-* attributes and handles deferred loading correctly */}
-      <Script
-        src="/widget/widget.js"
-        data-client="1"
-        data-api="/api"
-        strategy="afterInteractive"
-      />
+      {/* Set widget config as globals before the script loads */}
+      <script dangerouslySetInnerHTML={{ __html: 'window.__QW_CLIENT="1";window.__QW_API="/api";' }} />
+      <Script src="/widget/widget.js" strategy="afterInteractive" />
     </div>
   );
 }
