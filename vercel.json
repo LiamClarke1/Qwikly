@@ -7,6 +7,14 @@
     {
       "path": "/api/invoices/daily",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/crm-stats-aggregate",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/crm-reports-monthly",
+      "schedule": "0 6 1 * *"
     }
   ]
 }
