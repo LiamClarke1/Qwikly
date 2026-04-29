@@ -7,7 +7,7 @@
   var CLIENT_ID = script.getAttribute("data-client");
   if (!CLIENT_ID) return;
 
-  var API_BASE = "https://web.qwikly.co.za";
+  var API_BASE = script.getAttribute("data-api") || "https://web.qwikly.co.za";
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var TRANSITION = prefersReduced ? "none" : "transform 0.2s ease, opacity 0.2s ease";
   var MICRO = prefersReduced ? "none" : "all 0.15s ease";
@@ -237,8 +237,14 @@
   function connectWs() {
     if (!wsToken || !conversationId) return;
     if (ws && ws.readyState < 2) return; // already open or connecting
-    var wsUrl = API_BASE.replace(/^https/, "wss").replace(/^http/, "ws") + "/web/chat/" + conversationId;
-    ws = new WebSocket(wsUrl);
+    var wsUrl = API_BASE.replace(/^https?/, function(p) { return p === "https" ? "wss" : "ws"; }) + "/web/chat/" + conversationId;
+    var receivedMessage = false;
+    try {
+      ws = new WebSocket(wsUrl);
+    } catch (_) {
+      showOfflineConfirmation();
+      return;
+    }
     ws.onopen = function () {
       reconnectDelay = 1000;
       ws.send(JSON.stringify({ type: "auth", token: wsToken }));
@@ -247,17 +253,34 @@
       try {
         var msg = JSON.parse(e.data);
         removeTyping();
+        receivedMessage = true;
         if (msg.type === "message" || msg.type === "reply") {
           appendMsg("bot", msg.content);
         }
       } catch (_) {}
     };
+    ws.onerror = function () { showOfflineConfirmation(); };
     ws.onclose = function () {
+      if (!receivedMessage && state === "chat") {
+        showOfflineConfirmation();
+        return;
+      }
       if (state === "chat") {
         reconnectTimer = setTimeout(connectWs, Math.min(reconnectDelay, 30000));
         reconnectDelay = Math.min(reconnectDelay * 2, 30000);
       }
     };
+  }
+
+  function showOfflineConfirmation() {
+    removeTyping();
+    var msgs = q("qw-msgs");
+    if (!msgs || msgs.querySelector(".qw-offline")) return;
+    var div = document.createElement("div");
+    div.className = "msg bot qw-offline";
+    div.textContent = "Thanks! We've received your details and will be in touch shortly.";
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
   }
 
   function openPanel() {

@@ -21,6 +21,7 @@ const PUBLIC_PREFIXES = [
   "/help",
   "/og-image",
   "/api/health",
+  "/api/web",
   "/connect-your-website",
   "/widget",
 ];
