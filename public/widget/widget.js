@@ -328,8 +328,43 @@
     }).catch(function () {});
   }
 
+  // ── Route guard (Next.js SPA navigation) ──────────────────
+  // When Next.js navigates client-side from a landing page into the app,
+  // the script stays alive in the DOM. Destroy the widget on any app route.
+  function isAppRoute(path) {
+    return /^\/(dashboard|onboarding|admin|login|reset-password|sign-in)/.test(path);
+  }
+
+  function destroy() {
+    if (host && host.parentNode) {
+      host.parentNode.removeChild(host);
+    }
+  }
+
+  function checkRoute() {
+    if (isAppRoute(window.location.pathname)) {
+      destroy();
+    }
+  }
+
+  (function () {
+    var origPush = history.pushState.bind(history);
+    history.pushState = function (state, title, url) {
+      origPush(state, title, url);
+      checkRoute();
+    };
+    var origReplace = history.replaceState.bind(history);
+    history.replaceState = function (state, title, url) {
+      origReplace(state, title, url);
+      checkRoute();
+    };
+  })();
+  window.addEventListener("popstate", checkRoute);
+
   // ── Init ───────────────────────────────────────────────────
   function init() {
+    checkRoute();
+    if (!host.parentNode) return; // already destroyed (landed on an app route)
     renderLauncher();
     fetch(API_BASE + "/web/branding/" + CLIENT_ID)
       .then(function (r) { return r.ok ? r.json() : null; })
