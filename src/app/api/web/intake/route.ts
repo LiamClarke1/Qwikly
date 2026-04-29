@@ -37,8 +37,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_json" }, { status: 400, headers: CORS });
   }
 
-  const { client_id, name, phone, visitor_id, page_url, referrer, utm_source, utm_medium, utm_campaign } = body;
-  // email and first_message accepted but not yet stored in a dedicated column
+  const { client_id, name, phone, email, visitor_id, page_url, referrer, utm_source, utm_medium, utm_campaign } = body;
 
   if (!client_id || !name || !phone) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400, headers: CORS });
@@ -51,6 +50,7 @@ export async function POST(req: NextRequest) {
       client_id: Number(client_id),
       customer_name: name,
       customer_phone: phone,
+      customer_email: email || null,
       channel: "web_chat",
       status: "active",
       visitor_id,
