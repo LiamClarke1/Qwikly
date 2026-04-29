@@ -92,6 +92,11 @@
       launcher.classList.add("bl");
       panel.classList.add("bl");
     }
+    // Update panel header if already open
+    var nameEl = shadow.getElementById("qw-name");
+    var avEl = shadow.getElementById("qw-av");
+    if (nameEl) nameEl.textContent = biz();
+    if (avEl) avEl.textContent = biz().charAt(0).toUpperCase();
   }
 
   function renderLauncher() {
@@ -142,9 +147,9 @@
     var initial = biz().charAt(0).toUpperCase();
     panel.innerHTML =
       '<div class="hd">' +
-        '<div class="hd-av">' + initial + "</div>" +
+        '<div class="hd-av" id="qw-av">' + initial + "</div>" +
         '<div class="hd-info">' +
-          '<div class="hd-name">' + biz() + "</div>" +
+          '<div class="hd-name" id="qw-name">' + biz() + "</div>" +
           '<div class="hd-sub">Digital assistant · Online</div>' +
         "</div>" +
         '<button class="close" id="qw-x" aria-label="Close">×</button>' +
