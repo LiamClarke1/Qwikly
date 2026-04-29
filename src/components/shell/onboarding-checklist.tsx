@@ -51,6 +51,14 @@ const STEPS: Step[] = [
     cta: "Connect WhatsApp",
     isDone: (c) => !!(c?.meta_phone_number_id),
   },
+  {
+    id: "website",
+    title: "Add your website assistant",
+    description: "Embed one line of code — visitors get an instant reply, 24/7.",
+    href: "/onboarding/website",
+    cta: "Set up now",
+    isDone: (c) => !!(c?.web_widget_status === "verified" || c?.onboarding_completed_at),
+  },
 ];
 
 export function OnboardingChecklist({
@@ -80,7 +88,7 @@ export function OnboardingChecklist({
             </div>
             <div className="min-w-0">
               <p className="text-h3 text-fg font-semibold">Get your digital assistant live</p>
-              <p className="text-small text-fg-muted mt-0.5">Four quick steps. Most people finish in 10 minutes.</p>
+              <p className="text-small text-fg-muted mt-0.5">Five quick steps. Most people finish in 15 minutes.</p>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -173,7 +181,7 @@ export function OnboardingChecklist({
         {done === total - 1 && (
           <div className="mt-4 p-4 rounded-xl bg-brand/10 border border-brand/30 flex items-start gap-3">
             <Sparkles className="w-4 h-4 text-brand shrink-0 mt-0.5" />
-            <p className="text-small text-fg"><span className="font-semibold">One step to go.</span> Once WhatsApp is connected, your digital assistant starts replying instantly.</p>
+            <p className="text-small text-fg"><span className="font-semibold">One step to go.</span> Add your website assistant to capture leads directly from your site, 24/7.</p>
           </div>
         )}
       </div>
