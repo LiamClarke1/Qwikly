@@ -21,6 +21,8 @@ export async function POST(req: NextRequest) {
     client_id?: string;
     name?: string;
     phone?: string;
+    email?: string;
+    first_message?: string;
     visitor_id?: string;
     page_url?: string;
     referrer?: string;
@@ -36,6 +38,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { client_id, name, phone, visitor_id, page_url, referrer, utm_source, utm_medium, utm_campaign } = body;
+  // email and first_message accepted but not yet stored in a dedicated column
 
   if (!client_id || !name || !phone) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400, headers: CORS });
