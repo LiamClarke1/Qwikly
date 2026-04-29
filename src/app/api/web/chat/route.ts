@@ -285,6 +285,18 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ── Inject KB articles ─────────────────────────────────────
+  const { data: kbArticles } = await supabaseAdmin
+    .from("kb_articles")
+    .select("title, body")
+    .eq("client_id", Number(client_id))
+    .eq("is_active", true)
+    .limit(25);
+  if (kbArticles && kbArticles.length > 0) {
+    const kbBlock = kbArticles.map((a: { title: string; body: string }) => `Q: ${a.title}\nA: ${a.body}`).join("\n\n");
+    systemPrompt = systemPrompt + "\n\n## Knowledge Base\n\nUse the following information to answer specific questions accurately. Do not recite it unprompted — only use it when directly relevant to what the visitor asks.\n\n" + kbBlock;
+  }
+
   // ── Get or create conversation ─────────────────────────────
   let convoId: string | null = existingCid ?? null;
   if (!convoId) {

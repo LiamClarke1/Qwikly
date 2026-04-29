@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, FileText, ShieldAlert, Receipt, MessageSquare } from "lucide-react";
+import { LayoutDashboard, FileText, ShieldAlert, Receipt, MessageSquare, Users } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const NAV = [
-  { href: "/admin",          label: "Overview",  icon: LayoutDashboard },
+  { href: "/admin",           label: "Overview",  icon: LayoutDashboard },
+  { href: "/admin/clients",   label: "Clients",   icon: Users },
   { href: "/admin/invoicing", label: "Invoicing", icon: FileText },
   { href: "/admin/risk",      label: "Risk",      icon: ShieldAlert },
   { href: "/admin/billing",   label: "Billing",   icon: Receipt },
