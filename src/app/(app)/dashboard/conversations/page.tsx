@@ -27,6 +27,8 @@ import {
   RotateCcw,
   Zap,
   Target,
+  GripVertical,
+  Pencil,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Avatar } from "@/components/ui/avatar";
@@ -134,6 +136,10 @@ export default function ConversationsPage() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showClearAll, setShowClearAll] = useState(false);
   const [clearingAll, setClearingAll] = useState(false);
+  const [channelOrder, setChannelOrder] = useState<string[]>(["web", "whatsapp", "email"]);
+  const [dragOverChannel, setDragOverChannel] = useState<string | null>(null);
+  const [contactDraft, setContactDraft] = useState<{ phone: string; email: string } | null>(null);
+  const [savingContact, setSavingContact] = useState(false);
 
   // AI analysis
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
@@ -141,6 +147,11 @@ export default function ConversationsPage() {
   const analysisCache = useRef<Record<string, Analysis>>({});
 
   const transcriptRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    try { const s = localStorage.getItem("qw_ch_order"); if (s) setChannelOrder(JSON.parse(s)); } catch {}
+  }, []);
 
   // ── Load conversation list ────────────────────────────────────────────────
   useEffect(() => {
@@ -222,6 +233,7 @@ export default function ConversationsPage() {
     setMessages([]);
     setAnalysis(null);
     setSendError(null);
+    setContactDraft(null);
 
     (async () => {
       const { data } = await supabase
@@ -254,21 +266,22 @@ export default function ConversationsPage() {
   }), [convos]);
 
   const dynamicFilters = useMemo(() => {
-    const channels = [
+    const defs = [
       { id: "web", label: "Website", count: channelCounts.web_chat },
       { id: "whatsapp", label: "WhatsApp", count: channelCounts.whatsapp },
       { id: "email", label: "Email", count: channelCounts.email },
-    ]
-      .filter((f) => f.count > 0)
-      .sort((a, b) => b.count - a.count);
-
+    ];
+    const orderedChannels = channelOrder
+      .map(id => defs.find(c => c.id === id))
+      .filter((c): c is { id: string; label: string; count: number } => !!c && c.count > 0);
+    defs.filter(c => !channelOrder.includes(c.id) && c.count > 0).forEach(c => orderedChannels.push(c));
     return [
       { id: "all", label: "All", count: convos.length },
-      ...channels,
+      ...orderedChannels,
       { id: "needs", label: "Needs me", count: convos.filter((c) => c.status === "escalated" || c.ai_paused).length },
       { id: "done", label: "Done", count: convos.filter((c) => c.status === "completed").length },
     ];
-  }, [convos, channelCounts]);
+  }, [convos, channelCounts, channelOrder]);
 
   const filtered = useMemo(() => {
     let list = convos;
@@ -394,6 +407,34 @@ export default function ConversationsPage() {
     }
   };
 
+  const reorderChannel = (fromId: string, toId: string) => {
+    if (fromId === toId) return;
+    setChannelOrder(prev => {
+      const next = [...prev];
+      const from = next.indexOf(fromId);
+      const to = next.indexOf(toId);
+      if (from === -1 || to === -1) return prev;
+      next.splice(from, 1);
+      next.splice(to, 0, fromId);
+      try { localStorage.setItem("qw_ch_order", JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
+
+  const saveContact = async () => {
+    if (!active || !contactDraft) return;
+    setSavingContact(true);
+    const updates: Record<string, string> = {};
+    if (contactDraft.phone.trim()) updates.customer_phone = contactDraft.phone.trim();
+    if (contactDraft.email.trim()) updates.customer_email = contactDraft.email.trim();
+    if (Object.keys(updates).length) {
+      await supabase.from("conversations").update(updates).eq("id", active.id);
+      setConvos(cs => cs.map(c => c.id === active.id ? { ...c, ...updates } : c));
+    }
+    setContactDraft(null);
+    setSavingContact(false);
+  };
+
   return (
     <>
       <PageHeader
@@ -466,27 +507,39 @@ export default function ConversationsPage() {
               )}
             </div>
 
-            {/* Dynamic filter chips — auto-sorted by channel count */}
+            {/* Filter chips — drag channel chips to reorder */}
             <div className="flex gap-1 overflow-x-auto scrollbar-none pb-0.5">
-              {dynamicFilters.map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => setFilter(f.id)}
-                  className={cn(
-                    "shrink-0 px-2.5 h-6 rounded-md text-[11px] font-semibold cursor-pointer transition-colors duration-150 flex items-center gap-1",
-                    filter === f.id
-                      ? "bg-ember text-paper"
-                      : "bg-surface-input text-fg-muted hover:text-fg hover:bg-surface-hover"
-                  )}
-                >
-                  {f.label}
-                  {f.count > 0 && (
-                    <span className={cn("text-[10px] font-medium px-1 rounded", filter === f.id ? "bg-white/20" : "text-fg-faint")}>
-                      {f.count}
-                    </span>
-                  )}
-                </button>
-              ))}
+              {dynamicFilters.map((f) => {
+                const isDraggable = !["all", "needs", "done"].includes(f.id);
+                return (
+                  <button
+                    key={f.id}
+                    draggable={isDraggable}
+                    onDragStart={isDraggable ? () => { dragRef.current = f.id; } : undefined}
+                    onDragOver={isDraggable ? (e) => { e.preventDefault(); setDragOverChannel(f.id); } : undefined}
+                    onDragLeave={isDraggable ? () => setDragOverChannel(null) : undefined}
+                    onDrop={isDraggable ? (e) => { e.preventDefault(); setDragOverChannel(null); if (dragRef.current) reorderChannel(dragRef.current, f.id); } : undefined}
+                    onDragEnd={isDraggable ? () => { dragRef.current = null; setDragOverChannel(null); } : undefined}
+                    onClick={() => setFilter(f.id)}
+                    className={cn(
+                      "shrink-0 px-2 h-6 rounded-md text-[11px] font-semibold transition-colors duration-150 flex items-center gap-0.5",
+                      isDraggable ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
+                      isDraggable && dragOverChannel === f.id && filter !== f.id && "ring-1 ring-ember/40",
+                      filter === f.id
+                        ? "bg-ember text-paper"
+                        : "bg-surface-input text-fg-muted hover:text-fg hover:bg-surface-hover"
+                    )}
+                  >
+                    {isDraggable && <GripVertical className="w-2.5 h-2.5 opacity-30 shrink-0" />}
+                    {f.label}
+                    {f.count > 0 && (
+                      <span className={cn("text-[10px] font-medium px-1 rounded", filter === f.id ? "bg-white/20" : "text-fg-faint")}>
+                        {f.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -637,7 +690,7 @@ export default function ConversationsPage() {
               )}
 
               {/* Message transcript */}
-              <div ref={transcriptRef} className="flex-1 overflow-y-auto scrollbar-thin px-4 py-4 space-y-2.5 bg-surface">
+              <div ref={transcriptRef} className="flex-1 overflow-y-auto scrollbar-thin px-3 py-3 space-y-1.5 bg-surface">
                 {loadingMsgs ? (
                   <div className="space-y-2.5">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-2/3" />)}</div>
                 ) : messages.length === 0 ? (
@@ -668,7 +721,7 @@ export default function ConversationsPage() {
                         ) : null}
                         <div
                           className={cn(
-                            "max-w-[72%] px-3 py-2 rounded-2xl text-small leading-relaxed",
+                            "max-w-[75%] px-2.5 py-1.5 rounded-xl text-[12px] leading-relaxed",
                             isCustomer && "bg-surface-input text-fg rounded-bl-sm",
                             isAI && "bg-surface-card border border-[var(--border)] text-fg rounded-br-sm",
                             isOwner && "bg-ember text-paper rounded-br-sm"
@@ -768,230 +821,188 @@ export default function ConversationsPage() {
         {active && (
           <div className="panel hidden xl:flex flex-col overflow-hidden !p-0">
 
-            {/* Customer identity */}
-            <div className="p-5 border-b border-[var(--border)] shrink-0">
-              <div className="flex flex-col items-center text-center mb-4">
-                <Avatar name={active.customer_name ?? active.customer_phone} size={56} className="mb-3" />
-                <p className="text-small font-semibold text-fg leading-snug">
-                  {active.customer_name ?? "Unknown visitor"}
-                </p>
-                <p className="text-[11px] text-fg-muted mt-0.5">
-                  {active.channel === "web_chat" ? "Website visitor" : active.channel === "email" ? "Email contact" : "WhatsApp contact"}
-                </p>
+            {/* Identity + quick actions */}
+            <div className="px-3 py-2.5 border-b border-[var(--border)] shrink-0">
+              <div className="flex items-center gap-2 mb-2">
+                <Avatar name={active.customer_name ?? active.customer_phone} size={32} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-semibold text-fg truncate">
+                    {active.customer_name ?? "Unknown visitor"}
+                  </p>
+                  <p className="text-[10px] text-fg-muted">
+                    {active.channel === "web_chat" ? "Website visitor" : active.channel === "email" ? "Email contact" : "WhatsApp contact"}
+                  </p>
+                </div>
+                <div className="flex gap-1 shrink-0">
+                  <a href={`tel:${active.customer_phone.replace(/[^0-9+]/g, "")}`}
+                    className="h-6 px-2 rounded-md bg-surface-input border border-[var(--border)] text-[10px] font-medium text-fg hover:bg-surface-hover cursor-pointer flex items-center gap-1 transition-colors">
+                    <Phone className="w-2.5 h-2.5" />Call
+                  </a>
+                  {active.channel === "email" && active.customer_email ? (
+                    <a href={`mailto:${active.customer_email}`}
+                      className="h-6 px-2 rounded-md bg-sky-500/10 border border-sky-500/25 text-[10px] font-medium text-sky-600 hover:bg-sky-500/20 cursor-pointer flex items-center gap-1 transition-colors">
+                      <Mail className="w-2.5 h-2.5" />Email
+                    </a>
+                  ) : (
+                    <a href={`https://wa.me/${active.customer_phone.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer"
+                      className="h-6 px-2 rounded-md bg-ember/10 border border-ember/25 text-[10px] font-medium text-ember hover:bg-ember/20 cursor-pointer flex items-center gap-1 transition-colors">
+                      <MessageSquare className="w-2.5 h-2.5" />WA
+                    </a>
+                  )}
+                </div>
               </div>
-
-              {/* Contact action buttons */}
-              <div className="flex gap-2">
-                <a
-                  href={`tel:${active.customer_phone.replace(/[^0-9+]/g, "")}`}
-                  className="flex-1 h-8 rounded-lg bg-surface-input border border-[var(--border)] text-[11px] font-medium text-fg hover:bg-surface-hover cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <Phone className="w-3 h-3" /> Call
-                </a>
-                {active.channel === "email" && active.customer_email ? (
-                  <a
-                    href={`mailto:${active.customer_email}`}
-                    className="flex-1 h-8 rounded-lg bg-sky-500/10 border border-sky-500/25 text-[11px] font-medium text-sky-600 hover:bg-sky-500/20 cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
-                  >
-                    <Mail className="w-3 h-3" /> Email
-                  </a>
-                ) : (
-                  <a
-                    href={`https://wa.me/${active.customer_phone.replace(/[^0-9]/g, "")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex-1 h-8 rounded-lg bg-ember/10 border border-ember/25 text-[11px] font-medium text-ember hover:bg-ember/20 cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
-                  >
-                    <MessageSquare className="w-3 h-3" /> WhatsApp
-                  </a>
-                )}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Badge tone={active.status === "active" ? "brand" : active.status === "escalated" ? "warning" : "neutral"} dot>
+                  {active.status === "active" ? "Replied" : active.status === "escalated" ? "Needs me" : "Done"}
+                </Badge>
+                {active.ai_paused && <Badge tone="warning">Manual</Badge>}
+                <span className={cn("inline-flex items-center gap-0.5 text-[10px] font-medium ml-auto", channelColor(active.channel))}>
+                  <ChannelIcon channel={active.channel} className="w-2.5 h-2.5" />
+                  {channelLabel(active.channel)}
+                </span>
               </div>
             </div>
 
-            {/* ── AI Lead Intelligence ── */}
-            <div className="border-b border-[var(--border)] px-4 py-3 shrink-0">
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center gap-1.5">
-                  <Zap className="w-3 h-3 text-ember" />
-                  <p className="text-[10px] uppercase tracking-wider font-semibold text-fg-subtle">Lead Intelligence</p>
-                </div>
-                {!loadingAnalysis && messages.length > 0 && (
+            {/* Contact capture */}
+            <div className="px-3 py-2 border-b border-[var(--border)] shrink-0">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[10px] uppercase tracking-wider font-semibold text-fg-subtle">Contact</p>
+                {!contactDraft && (
                   <button
-                    onClick={refreshAnalysis}
-                    title="Re-analyse conversation"
-                    className="w-5 h-5 flex items-center justify-center rounded text-fg-faint hover:text-fg-muted cursor-pointer transition-colors"
+                    onClick={() => setContactDraft({
+                      phone: isRealPhone(active.customer_phone) ? active.customer_phone : "",
+                      email: active.customer_email ?? "",
+                    })}
+                    className="flex items-center gap-0.5 text-[10px] text-ember hover:underline cursor-pointer"
                   >
-                    <RotateCcw className="w-3 h-3" />
+                    <Pencil className="w-2.5 h-2.5" />
+                    {isRealPhone(active.customer_phone) || active.customer_email ? "Edit" : "Capture"}
                   </button>
                 )}
               </div>
-
-              {loadingAnalysis ? (
-                <div className="space-y-2 py-0.5">
-                  <div className="flex items-center justify-between">
-                    <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-5 w-20" />
+              {contactDraft ? (
+                <div className="space-y-1.5">
+                  <input
+                    value={contactDraft.phone}
+                    onChange={e => setContactDraft({ ...contactDraft, phone: e.target.value })}
+                    placeholder="+27 81 234 5678"
+                    className="w-full h-7 px-2 text-[11px] bg-surface-input border border-[var(--border)] rounded-lg outline-none focus:border-ember/50 transition-colors"
+                  />
+                  <input
+                    value={contactDraft.email}
+                    onChange={e => setContactDraft({ ...contactDraft, email: e.target.value })}
+                    placeholder="email@example.com"
+                    className="w-full h-7 px-2 text-[11px] bg-surface-input border border-[var(--border)] rounded-lg outline-none focus:border-ember/50 transition-colors"
+                  />
+                  <div className="flex gap-1.5">
+                    <button onClick={saveContact} disabled={savingContact}
+                      className="flex-1 h-6 text-[10px] font-semibold rounded-md bg-ember text-paper hover:bg-ember/90 cursor-pointer transition-colors disabled:opacity-50">
+                      {savingContact ? "Saving…" : "Save"}
+                    </button>
+                    <button onClick={() => setContactDraft(null)}
+                      className="flex-1 h-6 text-[10px] font-medium rounded-md bg-surface-input border border-[var(--border)] text-fg-muted hover:text-fg cursor-pointer transition-colors">
+                      Cancel
+                    </button>
                   </div>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Phone className="w-2.5 h-2.5 text-fg-subtle shrink-0" />
+                    {isRealPhone(active.customer_phone) ? (
+                      <a href={`tel:${active.customer_phone.replace(/[^0-9+]/g, "")}`}
+                        className="text-[11px] text-fg num hover:text-ember transition-colors truncate">
+                        {formatPhone(active.customer_phone)}
+                      </a>
+                    ) : (
+                      <span className="text-[11px] text-fg-faint italic">No phone — tap Capture</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Mail className="w-2.5 h-2.5 text-fg-subtle shrink-0" />
+                    {active.customer_email ? (
+                      <a href={`mailto:${active.customer_email}`}
+                        className="text-[11px] text-fg hover:text-ember transition-colors truncate">
+                        {active.customer_email}
+                      </a>
+                    ) : (
+                      <span className="text-[11px] text-fg-faint italic">No email — tap Capture</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Lead Intelligence — compact, no scroll */}
+            <div className="px-3 py-2 border-b border-[var(--border)] shrink-0">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-1">
+                  <Zap className="w-2.5 h-2.5 text-ember" />
+                  <p className="text-[10px] uppercase tracking-wider font-semibold text-fg-subtle">Lead Intelligence</p>
+                </div>
+                {!loadingAnalysis && messages.length > 0 && (
+                  <button onClick={refreshAnalysis} title="Re-analyse"
+                    className="w-4 h-4 flex items-center justify-center text-fg-faint hover:text-fg-muted cursor-pointer transition-colors">
+                    <RotateCcw className="w-2.5 h-2.5" />
+                  </button>
+                )}
+              </div>
+              {loadingAnalysis ? (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between"><Skeleton className="h-3 w-12" /><Skeleton className="h-4 w-16" /></div>
                   <Skeleton className="h-3 w-full" />
                   <Skeleton className="h-3 w-4/5" />
-                  <Skeleton className="h-3 w-3/5" />
+                  <Skeleton className="h-8 w-full rounded-lg" />
                 </div>
               ) : analysis ? (
-                <div className="space-y-3">
-
-                  {/* Lead status */}
+                <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] text-fg-faint font-medium">Status</p>
                     <Badge tone={LEAD_STATUS_TONE[analysis.lead_status] ?? "neutral"}>
                       {LEAD_STATUS_LABEL[analysis.lead_status] ?? analysis.lead_status}
                     </Badge>
                   </div>
-
-                  {/* What they want */}
                   {analysis.intent && (
-                    <div>
-                      <p className="text-[10px] text-fg-faint font-medium mb-1">What they want</p>
-                      <p className="text-[11px] text-fg leading-relaxed">{analysis.intent}</p>
-                    </div>
+                    <p className="text-[11px] text-fg leading-relaxed line-clamp-2">{analysis.intent}</p>
                   )}
-
-                  {/* Requirements */}
-                  {analysis.requirements?.length > 0 && (
-                    <div>
-                      <p className="text-[10px] text-fg-faint font-medium mb-1">Requirements</p>
-                      <ul className="space-y-1">
-                        {analysis.requirements.map((req, i) => (
-                          <li key={i} className="flex gap-1.5 items-start">
-                            <span className="w-1 h-1 rounded-full bg-ember mt-[5px] shrink-0" />
-                            <span className="text-[11px] text-fg leading-relaxed">{req}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Concerns */}
-                  {analysis.concerns?.length > 0 && (
-                    <div>
-                      <p className="text-[10px] text-fg-faint font-medium mb-1">Concerns</p>
-                      <ul className="space-y-1">
-                        {analysis.concerns.map((concern, i) => (
-                          <li key={i} className="flex gap-1.5 items-start">
-                            <span className="w-1 h-1 rounded-full bg-warning mt-[5px] shrink-0" />
-                            <span className="text-[11px] text-fg leading-relaxed">{concern}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Next action */}
+                  {analysis.concerns?.slice(0, 2).map((concern, i) => (
+                    <p key={i} className="text-[10px] text-fg-muted leading-relaxed flex gap-1 items-start">
+                      <span className="text-warning mt-[3px] shrink-0">·</span>{concern}
+                    </p>
+                  ))}
                   {analysis.next_action && (
-                    <div className="bg-ember/5 border border-ember/15 rounded-xl p-2.5">
+                    <div className="bg-ember/5 border border-ember/15 rounded-lg p-2">
                       <div className="flex items-center gap-1 mb-0.5">
-                        <Target className="w-2.5 h-2.5 text-ember" />
-                        <p className="text-[10px] text-ember font-semibold">Next action</p>
+                        <Target className="w-2.5 h-2.5 text-ember shrink-0" />
+                        <span className="text-[10px] text-ember font-semibold">Next action</span>
                       </div>
                       <p className="text-[11px] text-fg leading-relaxed">{analysis.next_action}</p>
                     </div>
                   )}
                 </div>
               ) : messages.length === 0 ? (
-                <p className="text-[11px] text-fg-faint py-1">No messages to analyse yet.</p>
+                <p className="text-[11px] text-fg-faint">No messages to analyse yet.</p>
               ) : (
-                <p className="text-[11px] text-fg-faint py-1">Analysis unavailable.</p>
+                <p className="text-[11px] text-fg-faint">Analysis unavailable.</p>
               )}
             </div>
 
-            {/* ── Raw info rows ── */}
-            <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-4">
-
-              <InfoRow label="Phone">
-                <a href={`tel:${active.customer_phone.replace(/[^0-9+]/g, "")}`} className="text-small text-fg num hover:text-ember transition-colors">
-                  {formatPhone(active.customer_phone)}
-                </a>
-              </InfoRow>
-
-              {active.customer_email && (
-                <InfoRow label="Email">
-                  <a href={`mailto:${active.customer_email}`} className="text-small text-fg hover:text-ember transition-colors break-all">
-                    {active.customer_email}
-                  </a>
-                </InfoRow>
-              )}
-
-              <InfoRow label="Channel">
-                <span className={cn("inline-flex items-center gap-1 text-small font-medium", channelColor(active.channel))}>
-                  <ChannelIcon channel={active.channel} className="w-3 h-3" />
-                  {channelLabel(active.channel)}
-                </span>
-              </InfoRow>
-
-              <InfoRow label="Status">
-                <div className="flex flex-wrap gap-1">
-                  <Badge
-                    tone={active.status === "active" ? "brand" : active.status === "escalated" ? "warning" : "neutral"}
-                    dot
-                  >
-                    {active.status === "active" ? "Replied" : active.status === "escalated" ? "Needs me" : "Done"}
-                  </Badge>
-                  {active.ai_paused && <Badge tone="warning">Manual reply</Badge>}
-                </div>
-              </InfoRow>
-
-              <InfoRow label="First contact">
-                <p className="text-small text-fg num">{formatDateTime(active.created_at)}</p>
-              </InfoRow>
-
-              <InfoRow label="Last active">
-                <p className="text-small text-fg num">{formatDateTime(active.updated_at)}</p>
-              </InfoRow>
-
-              <InfoRow label="Messages">
-                <p className="text-small text-fg num">
-                  {messages.length === 0 ? "None yet" : messages.length}
-                </p>
-              </InfoRow>
-
-              {active.notes && (
-                <InfoRow label="Notes">
-                  <p className="text-small text-fg whitespace-pre-wrap leading-relaxed">{active.notes}</p>
-                </InfoRow>
-              )}
-
-              {/* Danger zone */}
-              <div className="pt-3 mt-2 border-t border-[var(--border)]">
-                {deleteId === active.id ? (
-                  <div className="p-3 rounded-xl bg-danger/5 border border-danger/20">
-                    <p className="text-[11px] text-fg-muted mb-2">Delete this conversation and all its messages?</p>
-                    <div className="flex gap-2">
-                      <button onClick={() => setDeleteId(null)} className="flex-1 h-7 text-[11px] font-medium rounded-lg bg-surface-input border border-[var(--border)] text-fg-muted hover:text-fg cursor-pointer transition-colors">
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => deleteConvo(active.id)}
-                        disabled={deleting}
-                        className="flex-1 h-7 text-[11px] font-semibold rounded-lg bg-danger/15 border border-danger/25 text-danger hover:bg-danger/25 cursor-pointer transition-colors disabled:opacity-50"
-                      >
-                        {deleting ? "Deleting…" : "Delete"}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setDeleteId(active.id)}
-                    className="w-full h-8 rounded-lg bg-danger/8 border border-danger/20 flex items-center justify-center gap-1.5 text-[11px] font-medium text-danger hover:bg-danger/15 cursor-pointer transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Delete conversation
-                  </button>
-                )}
+            {/* Notes */}
+            {active.notes && (
+              <div className="px-3 py-2 shrink-0">
+                <p className="text-[10px] uppercase tracking-wider font-semibold text-fg-subtle mb-1">Notes</p>
+                <p className="text-[11px] text-fg-muted leading-relaxed line-clamp-3">{active.notes}</p>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
     </>
   );
+}
+
+function isRealPhone(phone: string) {
+  return /^[+\d][\d\s().-]{7,}$/.test(phone);
 }
 
 // ── Conversation list row ────────────────────────────────────────────────────
