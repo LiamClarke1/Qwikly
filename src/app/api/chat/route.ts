@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
         c.close();
       },
     });
-    return new Response(err, { headers: { "Content-Type": "text/event-stream", ...CORS } });
+    return new Response(err, { status: 403, headers: { "Content-Type": "text/event-stream", ...CORS } });
   }
 
   // Lazy embed any un-embedded KB articles for this tenant
@@ -188,10 +188,11 @@ export async function POST(req: NextRequest) {
               content: fullReply,
               retrieved_sources: retrievedSources.length > 0 ? retrievedSources : null,
             });
-            await db
-              .from("conversations")
-              .update({ updated_at: new Date().toISOString() })
-              .eq("id", convoId);
+            // Detect lead capture: assistant acknowledged contact details or booking
+            const leadPattern = /\b(noted your|contact you|get back to you|book you in|appointment|reach out|your details|i've saved|we'll call|your number|your email)\b/i;
+            const leadUpdate: Record<string, unknown> = { updated_at: new Date().toISOString() };
+            if (leadPattern.test(fullReply)) leadUpdate.lead_captured = true;
+            await db.from("conversations").update(leadUpdate).eq("id", convoId);
           }
         } catch (persistErr) {
           console.error("Persist error:", persistErr);
