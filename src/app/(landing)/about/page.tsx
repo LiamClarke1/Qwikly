@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Qwikly is a South African AI receptionist built for trades businesses. Learn who we are, why we built this, and how we operate.",
+    "Qwikly is a South African digital assistant built for trades businesses. Learn who we are, why we built this, and how we operate.",
   alternates: { canonical: "https://www.qwikly.co.za/about" },
 };
 
@@ -101,7 +101,7 @@ export default function AboutPage() {
                   <span className="eyebrow text-ink-500 w-28 shrink-0">Email</span>
                   <a
                     href="mailto:hello@qwikly.co.za"
-                    className="text-ember hover:underline transition-colors"
+                    className="text-ember underline transition-colors"
                   >
                     hello@qwikly.co.za
                   </a>
@@ -133,7 +133,7 @@ export default function AboutPage() {
                     href="https://www.whatsapp.com/legal/business-policy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-ember hover:underline transition-colors"
+                    className="text-ember underline transition-colors"
                   >
                     WhatsApp Business Policy
                   </a>{" "}
@@ -142,7 +142,7 @@ export default function AboutPage() {
                     href="https://www.whatsapp.com/legal/commerce-policy"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-ember hover:underline transition-colors"
+                    className="text-ember underline transition-colors"
                   >
                     Commerce Policy
                   </a>
@@ -165,14 +165,14 @@ export default function AboutPage() {
                   under POPIA. All personal information we process is described in our{" "}
                   <Link
                     href="/legal/privacy"
-                    className="text-ember hover:underline transition-colors"
+                    className="text-ember underline transition-colors"
                   >
                     Privacy Policy
                   </Link>
                   . If you have a question about your data or want to make a data request, email{" "}
                   <a
                     href="mailto:liamclarke21@outlook.com"
-                    className="text-ember hover:underline transition-colors"
+                    className="text-ember underline transition-colors"
                   >
                     liamclarke21@outlook.com
                   </a>

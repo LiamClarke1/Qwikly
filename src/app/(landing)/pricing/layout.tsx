@@ -17,9 +17,9 @@ export const metadata: Metadata = {
 const productSchema = {
   "@context": "https://schema.org",
   "@type": "Product",
-  name: "Qwikly AI Receptionist",
+  name: "Qwikly Digital Assistant",
   description:
-    "AI-powered lead response and booking system for South African service businesses. Replies to WhatsApp and email leads in 30 seconds, qualifies them, and books appointments.",
+    "Automated lead response and booking system for South African service businesses. Replies to WhatsApp and email leads in 30 seconds, qualifies them, and books appointments.",
   brand: { "@type": "Brand", name: "Qwikly" },
   offers: {
     "@type": "Offer",

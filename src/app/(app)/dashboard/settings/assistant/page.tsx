@@ -117,7 +117,7 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader title="Personality" description="How should your AI come across to customers?" />
+        <CardHeader title="Personality" description="How should your digital assistant come across to customers?" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Overall tone">
             <Select value={tone} onChange={(e) => setTone(e.target.value)}>
@@ -128,7 +128,7 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
               <option value="warm">Warm &amp; helpful</option>
             </Select>
           </Field>
-          <Field label="AI tone (detailed)">
+          <Field label="Assistant tone (detailed)">
             <Input value={personality.ai_tone} onChange={setp("ai_tone")} placeholder="e.g. Confident but approachable" />
           </Field>
           <Field label="Language / dialect">
@@ -156,7 +156,7 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
       </Card>
 
       <Card>
-        <CardHeader title="Escalation rules" description="When should the AI hand off to you?" />
+        <CardHeader title="Escalation rules" description="When should your assistant hand off to you?" />
         <div className="space-y-4">
           <Field label="Auto-escalation triggers">
             <Select value={personality.ai_escalation_triggers} onChange={setp("ai_escalation_triggers")}>
@@ -197,7 +197,7 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
       <Card>
         <CardHeader
           title="FAQ"
-          description="Common questions and the exact answers your AI should give."
+          description="Common questions and the exact answers your assistant should give."
           action={<Button variant="secondary" size="sm" onClick={() => setFaq([...faq, { q: "", a: "" }])}>Add FAQ</Button>}
         />
         <div className="space-y-3">
@@ -219,12 +219,12 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
       </Card>
 
       <Card>
-        <CardHeader title="Full system prompt" description="Advanced: the raw instructions your AI runs on." />
+        <CardHeader title="Full system prompt" description="Advanced: the raw instructions your assistant runs on." />
         <Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={16} placeholder="Your business setup answers will appear here after completing setup." />
       </Card>
 
       <div className="flex justify-end">
-        <Button loading={saving} icon={<Save className="w-4 h-4" />} onClick={handleSave}>Update AI knowledge</Button>
+        <Button loading={saving} icon={<Save className="w-4 h-4" />} onClick={handleSave}>Update assistant knowledge</Button>
       </div>
     </div>
   );
@@ -242,7 +242,7 @@ function HoursCard({ client, save, saving }: { client: Client; save: (p: Partial
 
   return (
     <Card>
-      <CardHeader title="Working hours" description="When can the AI book customers in?" />
+      <CardHeader title="Working hours" description="When can your assistant book customers in?" />
       <div className="space-y-2">
         {DAYS.map((d) => {
           const open = !!hours[d];

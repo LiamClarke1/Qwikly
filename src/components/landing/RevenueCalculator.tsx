@@ -15,9 +15,9 @@ const REPLY_LABELS = ["Never", "Sometimes", "Often", "Always"];
 const REPLY_VALUES = ["never", "sometimes", "often", "always"];
 
 function Slider({
-  min, max, step = 1, value, onChange, formatValue,
+  min, max, step = 1, value, onChange, formatValue, label,
 }: {
-  min: number; max: number; step?: number; value: number; onChange: (v: number) => void; formatValue?: (v: number) => string;
+  min: number; max: number; step?: number; value: number; onChange: (v: number) => void; formatValue?: (v: number) => string; label?: string;
 }) {
   const pct = ((value - min) / (max - min)) * 100;
   return (
@@ -29,6 +29,7 @@ function Slider({
         step={step}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
+        aria-label={label ?? (formatValue ? `Value: ${formatValue(value)}` : `Value: ${value}`)}
         className="w-full h-2 appearance-none rounded-full cursor-pointer"
         style={{
           background: `linear-gradient(to right, #E85A2C ${pct}%, rgba(14,14,12,0.12) ${pct}%)`,
@@ -86,7 +87,7 @@ export function RevenueCalculator() {
             <label className="text-sm font-medium text-ink">WhatsApp & email leads per week</label>
             <span className="eyebrow text-ember">{leads}</span>
           </div>
-          <Slider min={5} max={100} value={leads} onChange={setLeads} />
+          <Slider min={5} max={100} value={leads} onChange={setLeads} label="WhatsApp and email leads per week" />
         </div>
 
         <div>
@@ -101,6 +102,7 @@ export function RevenueCalculator() {
             value={jobValue}
             onChange={setJobValue}
             formatValue={(v) => `R${(v / 1000).toFixed(0)}k`}
+            label="Average job value in Rand"
           />
         </div>
 

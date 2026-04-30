@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
 
   if (done) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6 bg-background">
+      <main className="min-h-screen flex items-center justify-center px-6 bg-background">
         <div className="w-full max-w-md text-center space-y-6">
           <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle className="w-8 h-8 text-success" />
@@ -53,12 +53,12 @@ export default function ForgotPasswordPage() {
             Back to Sign In
           </Link>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-background">
+    <main className="min-h-screen flex items-center justify-center px-6 bg-background">
       <div className="w-full max-w-md">
         <div className="mb-8">
           <a href="/" className="font-heading text-2xl font-bold text-white hover:text-blue-400 transition-colors duration-200 cursor-pointer">
@@ -109,6 +109,6 @@ export default function ForgotPasswordPage() {
           </Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

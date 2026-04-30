@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | Qwikly",
+  title: "Terms of Service",
   description:
     "Terms of Service for Qwikly, the automated WhatsApp response platform for South African service businesses.",
 };
@@ -181,7 +181,7 @@ export default function TermsPage() {
                   contacting{" "}
                   <a
                     href="mailto:liamclarke21@outlook.com"
-                    className="text-ember hover:underline transition-colors"
+                    className="text-ember underline transition-colors"
                   >
                     liamclarke21@outlook.com
                   </a>
@@ -223,7 +223,7 @@ export default function TermsPage() {
                   Service and will implement reasonable technical and organisational measures to protect
                   personal information against unauthorised access, loss, or destruction. Full details of
                   our data practices are set out in our{" "}
-                  <Link href="/legal/privacy" className="text-ember hover:underline transition-colors">
+                  <Link href="/legal/privacy" className="text-ember underline transition-colors">
                     Privacy Policy
                   </Link>
                   .
@@ -234,7 +234,7 @@ export default function TermsPage() {
                   to{" "}
                   <a
                     href="mailto:liamclarke21@outlook.com"
-                    className="text-ember hover:underline transition-colors"
+                    className="text-ember underline transition-colors"
                   >
                     liamclarke21@outlook.com
                   </a>
@@ -358,7 +358,7 @@ export default function TermsPage() {
                   You may terminate your account at any time by contacting us at{" "}
                   <a
                     href="mailto:liamclarke21@outlook.com"
-                    className="text-ember hover:underline transition-colors"
+                    className="text-ember underline transition-colors"
                   >
                     liamclarke21@outlook.com
                   </a>
@@ -511,7 +511,7 @@ export default function TermsPage() {
                     <span className="eyebrow text-ink-500 mr-3">Email</span>
                     <a
                       href="mailto:liamclarke21@outlook.com"
-                      className="text-ember hover:underline transition-colors"
+                      className="text-ember underline transition-colors"
                     >
                       liamclarke21@outlook.com
                     </a>
@@ -520,7 +520,7 @@ export default function TermsPage() {
                     <span className="eyebrow text-ink-500 mr-3">Also</span>
                     <a
                       href="mailto:hello@qwikly.co.za"
-                      className="text-ember hover:underline transition-colors"
+                      className="text-ember underline transition-colors"
                     >
                       hello@qwikly.co.za
                     </a>
@@ -529,7 +529,7 @@ export default function TermsPage() {
 
                 <p className="text-sm text-ink-500 pt-4">
                   Also see our{" "}
-                  <Link href="/legal/privacy" className="text-ember hover:underline transition-colors">
+                  <Link href="/legal/privacy" className="text-ember underline transition-colors">
                     Privacy Policy
                   </Link>
                   .

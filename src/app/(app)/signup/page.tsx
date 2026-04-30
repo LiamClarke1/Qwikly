@@ -112,7 +112,7 @@ export default function SignupPage() {
 
   if (done) {
     return (
-      <div className="min-h-screen [min-height:100dvh] flex items-center justify-center px-6 bg-[#07080B]">
+      <main className="min-h-screen [min-height:100dvh] flex items-center justify-center px-6 bg-[#07080B]">
         <div className="w-full max-w-md text-center space-y-6">
           <div className="w-16 h-16 bg-success/10 border border-success/20 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle className="w-8 h-8 text-success" />
@@ -132,12 +132,12 @@ export default function SignupPage() {
             Go to Sign In
           </Link>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen [min-height:100dvh] flex bg-[#07080B]">
+    <main className="min-h-screen [min-height:100dvh] flex bg-[#07080B]">
       {/* Left panel */}
       <div className="hidden lg:flex lg:w-[45%] shrink-0 flex-col justify-between p-12 bg-[#0D111A] border-r border-white/[0.06] relative overflow-hidden">
         <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full bg-brand/[0.08] blur-3xl pointer-events-none" />
@@ -312,6 +312,6 @@ export default function SignupPage() {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

@@ -15,7 +15,7 @@ const allFeatures = [
   "Reminders 24h and 1h before each job",
   "Multi-channel (WhatsApp + email)",
   "Client dashboard with conversation transcripts",
-  "Trade-specific AI training",
+  "Business-specific training",
   "7-day free trial",
 ];
 
@@ -88,7 +88,7 @@ export default function PricingPage() {
   }, [calcPrice]);
 
   return (
-    <main className="bg-paper">
+    <div className="bg-paper">
       {/* ─── HERO — giant 8% ─── */}
       <section className="relative pt-36 pb-16 md:pt-44 grain overflow-hidden">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
@@ -406,6 +406,6 @@ export default function PricingPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

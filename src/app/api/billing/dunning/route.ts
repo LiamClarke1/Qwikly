@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       await db.from("clients").update({ ai_paused: true }).eq("id", clientId);
       if (clientRow.whatsapp_number) {
         sendWhatsAppMessage(clientRow.whatsapp_number as string,
-          `URGENT: Your Qwikly commission is ${daysOverdue} days overdue. Your AI receptionist has also been paused. Pay now to restore: ${billingUrl}`
+          `URGENT: Your Qwikly commission is ${daysOverdue} days overdue. Your digital assistant has also been paused. Pay now to restore: ${billingUrl}`
         ).catch(() => {});
       }
       results.push({ billing_invoice_id: bill.id, days_overdue: daysOverdue, action: "ai_paused" });

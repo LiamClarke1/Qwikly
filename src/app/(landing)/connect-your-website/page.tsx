@@ -4,9 +4,15 @@ import { ArrowRight, Code, Calendar, Zap } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 
 export const metadata: Metadata = {
-  title: "Connect Your Website | Qwikly — AI booking on your own site",
+  title: "Connect Your Website | Book Leads Directly From Your Site",
   description:
-    "Paste one line of code into your Wix, Squarespace, or WordPress site. Qwikly's AI answers visitors in 30 seconds, qualifies leads, and books into your Google Calendar automatically.",
+    "Paste one line of code into your Wix, Squarespace, or WordPress site. Qwikly's digital assistant answers visitors in 30 seconds, qualifies leads, and books into your Google Calendar automatically.",
+  openGraph: {
+    title: "Connect Your Website | Qwikly",
+    description: "Qwikly's digital assistant answers visitors in 30 seconds, qualifies them, and books the job.",
+    url: "https://www.qwikly.co.za/connect-your-website",
+    type: "website",
+  },
 };
 
 const HOW_STEPS = [
@@ -19,7 +25,7 @@ const HOW_STEPS = [
   {
     Icon: Zap,
     num: "02",
-    title: "The AI answers your visitors",
+    title: "Your digital assistant answers visitors",
     body: "Qualifies the job, asks for area and timing, pre-screens before anything reaches your calendar.",
   },
   {
@@ -53,7 +59,7 @@ const FAQS = [
 
 export default function ConnectYourWebsitePage() {
   return (
-    <main className="bg-paper text-ink">
+    <div className="bg-paper text-ink">
       {/* ── Hero ────────────────────────────────────────────────────── */}
       <section className="pt-36 pb-24 px-6">
         <div className="max-w-site mx-auto max-w-3xl">
@@ -67,7 +73,7 @@ export default function ConnectYourWebsitePage() {
             <span className="text-ember">Now your replies don&rsquo;t either.</span>
           </h1>
           <p className="text-ink-500 text-xl leading-relaxed mb-10 max-w-2xl">
-            Connect your existing website to a Qwikly AI assistant. Visitors get answers in 30 seconds,
+            Connect your existing website to a Qwikly digital assistant. Visitors get answers in 30 seconds,
             jobs get qualified, bookings go straight into your calendar — even at 11 pm.
           </p>
           <div className="flex flex-wrap gap-4 items-center">
@@ -194,6 +200,6 @@ export default function ConnectYourWebsitePage() {
           </CTAButton>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

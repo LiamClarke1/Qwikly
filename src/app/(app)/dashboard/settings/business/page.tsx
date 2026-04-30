@@ -113,9 +113,9 @@ function BrandCard({ client, save }: { client: Client; save: (p: Partial<Client>
     if (file.size > 2 * 1024 * 1024) return;
     setLogoUploading(true);
     const path = `logos/${client.id}/${Date.now()}.${file.name.split(".").pop()}`;
-    const { error: upErr } = await supabase.storage.from("public").upload(path, file, { upsert: true });
+    const { error: upErr } = await supabase.storage.from("media").upload(path, file, { upsert: true });
     if (upErr) { setLogoUploading(false); return; }
-    const { data: { publicUrl } } = supabase.storage.from("public").getPublicUrl(path);
+    const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
     await supabase.from("clients").update({ invoice_logo_url: publicUrl }).eq("id", client.id);
     setLogoUrl(publicUrl);
     setLogoUploading(false);
@@ -219,7 +219,7 @@ function ProfileCard({ client, save }: { client: Client; save: (p: Partial<Clien
 
   return (
     <Card>
-      <CardHeader title="Business profile" description="Basic info your AI uses when chatting with customers." />
+      <CardHeader title="Business profile" description="Basic info your assistant uses when chatting with customers." />
       <form
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
         onSubmit={async (e: FormEvent) => { e.preventDefault(); setSaving(true); await save(form as Partial<Client>); setSaving(false); }}
@@ -240,7 +240,7 @@ function ProfileCard({ client, save }: { client: Client; save: (p: Partial<Clien
           </Field>
         </div>
         <div className="md:col-span-2">
-          <Field label="Brands / products used" hint="Brands you work with so the AI can mention them confidently.">
+          <Field label="Brands / products used" hint="Brands you work with so your assistant can mention them confidently.">
             <Input value={form.brands_used} onChange={set("brands_used")} placeholder="e.g. Schneider Electric, Crabtree, ABB" />
           </Field>
         </div>
@@ -272,12 +272,12 @@ function ServicesCard({ client, save }: { client: Client; save: (p: Partial<Clie
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader title="What you do" description="The AI uses this to qualify leads and answer service questions." />
+        <CardHeader title="What you do" description="Your assistant uses this to qualify leads and answer service questions." />
         <div className="space-y-4">
           <Field label="Services offered" hint="List everything you do, one per line or comma-separated.">
             <Textarea value={form.services_offered} onChange={set("services_offered")} rows={4} placeholder="e.g. DB upgrades, fault finding, COC certificates" />
           </Field>
-          <Field label="Services you don't do" hint="The AI will politely decline these.">
+          <Field label="Services you don't do" hint="Your assistant will politely decline these.">
             <Textarea value={form.services_excluded} onChange={set("services_excluded")} rows={3} placeholder="e.g. Solar installations, industrial work" />
           </Field>
         </div>
@@ -297,7 +297,7 @@ function ServicesCard({ client, save }: { client: Client; save: (p: Partial<Clie
               <option value="">Select preference</option>
               <option value="whatsapp">WhatsApp first</option>
               <option value="call">Phone call</option>
-              <option value="ai">AI books directly</option>
+              <option value="ai">Assistant books directly</option>
             </Select>
           </Field>
           <Field label="Expected response time">
@@ -353,7 +353,7 @@ function PricingCard({ client, save }: { client: Client; save: (p: Partial<Clien
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader title="How you charge" description="The AI uses this to answer pricing questions without committing to quotes." />
+        <CardHeader title="How you charge" description="Your assistant uses this to answer pricing questions without committing to quotes." />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Charge type">
             <Select value={form.charge_type} onChange={set("charge_type")}>
@@ -432,7 +432,7 @@ function EdgeCard({ client, save }: { client: Client; save: (p: Partial<Client>)
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader title="What makes you different" description="The AI leads with these when convincing a customer to book." />
+        <CardHeader title="What makes you different" description="Your assistant leads with these when convincing a customer to book." />
         <div className="space-y-4">
           <Field label="Unique selling point" hint="What do you do better than competitors?">
             <Textarea value={form.unique_selling_point} onChange={set("unique_selling_point")} rows={3} placeholder="e.g. Same-day callouts, 10-year warranty, ECSA registered" />
@@ -444,7 +444,7 @@ function EdgeCard({ client, save }: { client: Client; save: (p: Partial<Client>)
       </Card>
 
       <Card>
-        <CardHeader title="Handle objections" description="Teach the AI how to respond when customers push back." />
+        <CardHeader title="Handle objections" description="Teach your assistant how to respond when customers push back." />
         <div className="space-y-4">
           <Field label="Questions customers often ask">
             <Textarea value={form.common_questions} onChange={set("common_questions")} rows={4} placeholder={"e.g.\nDo you work weekends?\nHow long does a DB upgrade take?"} />

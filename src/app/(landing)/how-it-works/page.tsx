@@ -40,7 +40,7 @@ const underTheHood = [
   {
     title: "Trade-specific intelligence",
     body:
-      "The AI is trained on your specific trade. It knows what questions an electrician gets vs a plumber. It knows your service areas, your price ranges, your FAQ.",
+      "Your digital assistant is trained on your specific trade. It knows what questions an electrician gets vs a plumber. It knows your service areas, your price ranges, your FAQ.",
   },
   {
     title: "Instant notifications",
@@ -50,7 +50,7 @@ const underTheHood = [
   {
     title: "Full conversation log",
     body:
-      "Every exchange is recorded. See exactly what the AI said, how it qualified the lead, and why it booked, or didn't.",
+      "Every exchange is recorded. See exactly what your assistant said, how it qualified the lead, and why it booked, or didn't.",
   },
 ];
 
@@ -84,7 +84,7 @@ const responseStats = [
 export default function HowItWorksPage() {
   const faqSchema = buildFAQSchema(FAQ_DATA);
   return (
-    <main className="bg-paper">
+    <div className="bg-paper">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
@@ -132,9 +132,9 @@ export default function HowItWorksPage() {
                   <span className="step-stamp">{s.stamp}</span>
                   <span className="eyebrow text-ink-500">Step</span>
                 </div>
-                <h3 className="font-display text-2xl md:text-3xl text-ink leading-tight">
+                <h2 className="font-display text-2xl md:text-3xl text-ink leading-tight">
                   {s.title}
-                </h3>
+                </h2>
                 <p className="mt-4 text-ink-700 leading-relaxed">{s.body}</p>
               </div>
             ))}
@@ -231,6 +231,6 @@ export default function HowItWorksPage() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

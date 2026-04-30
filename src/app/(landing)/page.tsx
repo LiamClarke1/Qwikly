@@ -64,7 +64,7 @@ const howSteps = [
   {
     stamp: "ii.",
     title: "Qwikly replies in 30 seconds.",
-    body: "Not a chatbot script. A real conversation. It asks the right qualifying questions: job type, area, and urgency. In the voice of your business.",
+    body: "Not a generic script. A real conversation. It asks the right qualifying questions: job type, area, and urgency. In the voice of your business.",
   },
   {
     stamp: "iii.",
@@ -319,7 +319,7 @@ export default function Home() {
                 <div className="space-y-4">
                   {[
                     "Responds in under 30 seconds, around the clock",
-                    "Speaks in your business voice, not like a chatbot",
+                    "Speaks in your business voice, not like a generic auto-reply",
                     "Qualifies leads before they reach your calendar",
                   ].map((point) => (
                     <div key={point} className="flex items-start gap-3">

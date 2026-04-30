@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Qwikly",
+  title: "Privacy Policy",
   description:
     "Privacy Policy for Qwikly. How we collect, use, and protect your data under POPIA and GDPR.",
 };
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
                   Contact for all data-related enquiries:{" "}
                   <a
                     href="mailto:liamclarke21@outlook.com"
-                    className="text-ember hover:underline transition-colors"
+                    className="text-ember underline transition-colors"
                   >
                     liamclarke21@outlook.com
                   </a>
@@ -295,7 +295,7 @@ export default function PrivacyPage() {
                   To exercise any of these rights, contact us at{" "}
                   <a
                     href="mailto:liamclarke21@outlook.com"
-                    className="text-ember hover:underline transition-colors"
+                    className="text-ember underline transition-colors"
                   >
                     liamclarke21@outlook.com
                   </a>
@@ -385,7 +385,7 @@ export default function PrivacyPage() {
                   contact us immediately at{" "}
                   <a
                     href="mailto:liamclarke21@outlook.com"
-                    className="text-ember hover:underline transition-colors"
+                    className="text-ember underline transition-colors"
                   >
                     liamclarke21@outlook.com
                   </a>
@@ -459,7 +459,7 @@ export default function PrivacyPage() {
                     <span className="eyebrow text-ink-500 mr-3">Email</span>
                     <a
                       href="mailto:liamclarke21@outlook.com"
-                      className="text-ember hover:underline transition-colors"
+                      className="text-ember underline transition-colors"
                     >
                       liamclarke21@outlook.com
                     </a>
@@ -468,7 +468,7 @@ export default function PrivacyPage() {
                     <span className="eyebrow text-ink-500 mr-3">Also</span>
                     <a
                       href="mailto:hello@qwikly.co.za"
-                      className="text-ember hover:underline transition-colors"
+                      className="text-ember underline transition-colors"
                     >
                       hello@qwikly.co.za
                     </a>
@@ -480,7 +480,7 @@ export default function PrivacyPage() {
                 </p>
                 <p className="text-sm text-ink-500">
                   Also see our{" "}
-                  <Link href="/legal/terms" className="text-ember hover:underline transition-colors">
+                  <Link href="/legal/terms" className="text-ember underline transition-colors">
                     Terms of Service
                   </Link>
                   .

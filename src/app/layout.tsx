@@ -45,13 +45,13 @@ export const metadata: Metadata = {
     "Qwikly replies to every WhatsApp and email lead in 30 seconds, qualifies them, and books the job into your calendar. Built for South African service businesses. Pay only when a job is booked — 8% per booking, R150 min, R5,000 cap.",
   keywords: [
     "WhatsApp lead response South Africa",
-    "AI booking system South Africa",
+    "digital booking system South Africa",
     "automated WhatsApp reply",
     "lead follow-up automation",
     "service business booking software",
     "electrician booking software",
     "plumber booking software",
-    "AI assistant for tradespeople",
+    "digital assistant for tradespeople",
     "never miss a lead",
     "WhatsApp booking South Africa",
   ],
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Qwikly — AI receptionist for South African service businesses",
+        alt: "Qwikly — digital assistant for South African service businesses",
       },
     ],
   },
@@ -102,7 +102,7 @@ const organizationSchema = {
   url: "https://www.qwikly.co.za",
   logo: "https://www.qwikly.co.za/og-image.png",
   description:
-    "AI receptionist for South African service businesses. Replies to WhatsApp and email leads in 30 seconds, qualifies them, and books jobs.",
+    "Digital assistant for South African service businesses. Replies to WhatsApp and email leads in 30 seconds, qualifies them, and books jobs.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Johannesburg",

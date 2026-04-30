@@ -111,9 +111,9 @@ function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger"
     const { data: { user: u } } = await supabase.auth.getUser();
     if (!u) { setPhotoUploading(false); return; }
     const path = `avatars/${u.id}/${Date.now()}.${file.name.split(".").pop()}`;
-    const { error: upErr } = await supabase.storage.from("public").upload(path, file, { upsert: true });
+    const { error: upErr } = await supabase.storage.from("media").upload(path, file, { upsert: true });
     if (upErr) { show(upErr.message, "danger"); setPhotoUploading(false); return; }
-    const { data: { publicUrl } } = supabase.storage.from("public").getPublicUrl(path);
+    const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
     await supabase.auth.updateUser({ data: { avatar_url: publicUrl } });
     setPhotoUrl(publicUrl);
     setPhotoUploading(false);

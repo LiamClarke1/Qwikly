@@ -47,7 +47,7 @@ export default function CookieBanner() {
       <p className="text-sm text-paper/90 leading-relaxed mb-4">
         We use cookies to keep you signed in and improve the platform. We don&rsquo;t use advertising
         cookies.{" "}
-        <Link href="/legal/privacy" className="text-ember hover:underline transition-colors">
+        <Link href="/legal/privacy" className="text-ember underline transition-colors">
           Privacy Policy
         </Link>
         .

@@ -154,19 +154,19 @@ const empty: FormData = {
 const STEPS = [
   { title: "Your Business", subtitle: "Who you are and where you operate" },
   { title: "Your Services", subtitle: "What you do and what you don't" },
-  { title: "Pricing & Payment", subtitle: "Help the AI quote accurately" },
+  { title: "Pricing & Payment", subtitle: "Help your assistant quote accurately" },
   { title: "Availability & Booking", subtitle: "When and how you work" },
   { title: "Your Edge", subtitle: "Why customers should choose you" },
-  { title: "AI Personality", subtitle: "How your assistant speaks to customers" },
+  { title: "Assistant Personality", subtitle: "How your assistant speaks to customers" },
 ];
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
-function Label({ children, optional }: { children: React.ReactNode; optional?: boolean }) {
+function Label({ children, optional, htmlFor }: { children: React.ReactNode; optional?: boolean; htmlFor?: string }) {
   return (
-    <label className="flex items-center gap-2 text-sm font-semibold text-text-dark mb-1.5">
+    <label htmlFor={htmlFor} className="flex items-center gap-2 text-sm font-semibold text-text-dark mb-1.5">
       {children}
       {optional && <span className="text-xs font-normal text-text-muted-dark">(optional)</span>}
     </label>
@@ -177,10 +177,10 @@ function Hint({ children }: { children: React.ReactNode }) {
   return <p className="text-xs text-text-muted-dark mt-1.5 leading-relaxed">{children}</p>;
 }
 
-function Field({ label, hint, optional, children }: { label: string; hint?: string; optional?: boolean; children: React.ReactNode }) {
+function Field({ label, hint, optional, children, fieldId }: { label: string; hint?: string; optional?: boolean; children: React.ReactNode; fieldId?: string }) {
   return (
     <div>
-      <Label optional={optional}>{label}</Label>
+      <Label optional={optional} htmlFor={fieldId}>{label}</Label>
       {children}
       {hint && <Hint>{hint}</Hint>}
     </div>
@@ -211,11 +211,12 @@ function Textarea({ value, onChange, placeholder, rows = 4 }: {
   );
 }
 
-function SelectField({ value, onChange, options, placeholder }: {
-  value: string; onChange: (v: string) => void; options: string[]; placeholder?: string;
+function SelectField({ value, onChange, options, placeholder, id }: {
+  value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; id?: string;
 }) {
   return (
     <select
+      id={id}
       value={value} onChange={(e) => onChange(e.target.value)}
       className="w-full border border-border-light rounded-xl px-4 py-3 text-text-dark bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors duration-200 cursor-pointer text-sm"
     >
@@ -502,7 +503,7 @@ ${f.ai_never_say || "Not specified"}
           </div>
           <h1 className="text-3xl font-bold text-text-dark mb-4">You&apos;re in.</h1>
           <p className="text-text-muted-dark text-lg leading-relaxed mb-6">
-            Your AI assistant will be live within 24–48 hours. We&apos;ll confirm on WhatsApp once it&apos;s ready.
+            Your digital assistant will be live within 24–48 hours. We&apos;ll confirm on WhatsApp once it&apos;s ready.
           </p>
           <p className="text-sm text-text-muted-dark">
             Make sure your WhatsApp number ({form.whatsapp_number}) is active and receiving messages.
@@ -523,9 +524,9 @@ ${f.ai_never_say || "Not specified"}
           <span className="inline-block bg-accent/10 text-accent text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
             Free 7-Day Trial. No card required.
           </span>
-          <h1 className="text-3xl font-bold text-text-dark mb-2">Set up your AI assistant</h1>
+          <h1 className="text-3xl font-bold text-text-dark mb-2">Set up your digital assistant</h1>
           <p className="text-text-muted-dark text-sm">
-            The more detail you give, the smarter your AI responds. Takes about 5 minutes.
+            The more detail you give, the better your assistant responds. Takes about 5 minutes.
           </p>
         </div>
 
@@ -537,7 +538,7 @@ ${f.ai_never_say || "Not specified"}
             </div>
             <div>
               <p className="font-bold text-text-dark text-sm">Auto-fill from your website</p>
-              <p className="text-xs text-text-muted-dark">AI reads your site and fills the form for you instantly</p>
+              <p className="text-xs text-text-muted-dark">Your assistant reads your site and fills the form for you instantly</p>
             </div>
           </div>
 
@@ -595,7 +596,7 @@ ${f.ai_never_say || "Not specified"}
               <textarea
                 value={pastedText}
                 onChange={(e) => setPastedText(e.target.value)}
-                placeholder="Paste anything here: your price list, services from your website, a Word document, old brochure text. The AI will extract and fill the form for you."
+                placeholder="Paste anything here: your price list, services from your website, a Word document, old brochure text. Your assistant will extract and fill the form for you."
                 rows={5}
                 className="w-full border border-border-light rounded-xl px-4 py-3 text-sm text-text-dark bg-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-colors duration-200 placeholder:text-gray-400 resize-none mb-2"
               />
@@ -660,7 +661,7 @@ ${f.ai_never_say || "Not specified"}
 
             {/* ── STEP 1: Business ── */}
             {step === 1 && <>
-              <Field label="Business name" hint="The AI will use this name when greeting customers and signing off messages.">
+              <Field label="Business name" hint="Your assistant will use this name when greeting customers and signing off messages.">
                 <Input value={form.business_name} onChange={set("business_name")} placeholder="e.g. Pete's Plumbing" />
               </Field>
 
@@ -668,13 +669,13 @@ ${f.ai_never_say || "Not specified"}
                 <Input value={form.owner_name} onChange={set("owner_name")} placeholder="e.g. Pete Jacobs" />
               </Field>
 
-              <Field label="What type of work do you do?">
-                <SelectField value={form.trade} onChange={set("trade")} options={TRADES} placeholder="Select your trade" />
+              <Field label="What type of work do you do?" fieldId="field-trade">
+                <SelectField value={form.trade} onChange={set("trade")} options={TRADES} placeholder="Select your trade" id="field-trade" />
               </Field>
 
               <Field
                 label="Which cities and suburbs do you cover?"
-                hint="List every area you're willing to travel to. The AI will automatically decline enquiries from outside these areas. No more wasted time quoting jobs you won't take."
+                hint="List every area you're willing to travel to. Your assistant will automatically decline enquiries from outside these areas. No more wasted time quoting jobs you won't take."
               >
                 <Input value={form.areas} onChange={set("areas")} placeholder="e.g. Sandton, Midrand, Fourways, Randburg, Centurion, Roodepoort" />
               </Field>
@@ -686,7 +687,7 @@ ${f.ai_never_say || "Not specified"}
               <Field
                 label="Licences, certifications, or registrations you hold"
                 optional
-                hint="Customers frequently ask 'are you certified?' before booking. The AI will mention these proactively to build trust and close the deal faster."
+                hint="Customers frequently ask 'are you certified?' before booking. Your assistant will mention these proactively to build trust and close the deal faster."
               >
                 <Textarea
                   value={form.certifications}
@@ -699,12 +700,12 @@ ${f.ai_never_say || "Not specified"}
               <Field
                 label="Brands or products you install or recommend"
                 optional
-                hint="When customers ask 'what brand do you use?' or 'do you use quality parts?', the AI will answer with this."
+                hint="When customers ask 'what brand do you use?' or 'do you use quality parts?', your assistant will answer with this."
               >
                 <Input value={form.brands_used} onChange={set("brands_used")} placeholder="e.g. Defy, Bosch, Crabtree, Legrand, Franke, Geberit" />
               </Field>
 
-              <Field label="How many people in your team?" optional hint="Helps the AI explain your capacity when customers ask how quickly you can come out.">
+              <Field label="How many people in your team?" optional hint="Helps your assistant explain your capacity when customers ask how quickly you can come out.">
                 <Input value={form.team_size} onChange={set("team_size")} placeholder="e.g. Just me, or a team of 4 qualified technicians" />
               </Field>
             </>}
@@ -713,7 +714,7 @@ ${f.ai_never_say || "Not specified"}
             {step === 2 && <>
               <Field
                 label="List every service you offer"
-                hint="This is your AI's full menu. It can only offer what's listed here. Add everything, even the small stuff. One service per line."
+                hint="This is your assistant's full menu. It can only offer what's listed here. Add everything, even the small stuff. One service per line."
               >
                 <Textarea
                   value={form.services_offered}
@@ -726,7 +727,7 @@ ${f.ai_never_say || "Not specified"}
               <Field
                 label="What jobs do you NOT take on?"
                 optional
-                hint="Very important. This stops the AI from accidentally quoting or promising work you don't do. No wasted time quoting, no disappointed clients."
+                hint="Very important. This stops your assistant from accidentally quoting or promising work you don't do. No wasted time quoting, no disappointed clients."
               >
                 <Textarea
                   value={form.services_excluded}
@@ -736,7 +737,7 @@ ${f.ai_never_say || "Not specified"}
                 />
               </Field>
 
-              <Field label="Do you do emergency or after-hours callouts?" hint="The AI will offer this option to customers when they have urgent situations.">
+              <Field label="Do you do emergency or after-hours callouts?" hint="Your assistant will offer this option to customers when they have urgent situations.">
                 <RadioPills value={form.after_hours} onChange={set("after_hours")} options={AFTER_HOURS_OPTS} />
               </Field>
 
@@ -767,7 +768,7 @@ ${f.ai_never_say || "Not specified"}
 
               <Field
                 label="Example jobs with approximate prices"
-                hint={`The AI uses these to give realistic ranges. It always says "from R..." so you're covered on variation. Give 5–10 examples.`}
+                hint={`Your assistant uses these to give realistic ranges. It always says "from R..." so you're covered on variation. Give 5–10 examples.`}
               >
                 <Textarea
                   value={form.example_prices}
@@ -821,7 +822,7 @@ ${f.ai_never_say || "Not specified"}
 
             {/* ── STEP 4: Availability ── */}
             {step === 4 && <>
-              <Field label="Your working hours" hint="The AI will only offer booking slots within these hours.">
+              <Field label="Your working hours" hint="Your assistant will only offer booking slots within these hours.">
                 <Input
                   value={form.working_hours}
                   onChange={set("working_hours")}
@@ -832,7 +833,7 @@ ${f.ai_never_say || "Not specified"}
               <Field
                 label="How far in advance can customers book?"
                 optional
-                hint="Helps the AI set realistic expectations. If you're often booked up, say so."
+                hint="Helps your assistant set realistic expectations. If you're often booked up, say so."
               >
                 <Input
                   value={form.booking_lead_time}
@@ -844,7 +845,7 @@ ${f.ai_never_say || "Not specified"}
               <Field
                 label="After a booking is confirmed, how quickly do you personally follow up?"
                 optional
-                hint="The AI confirms the booking instantly. This is how fast you call or message the customer yourself."
+                hint="Your assistant confirms the booking instantly. This is how fast you call or message the customer yourself."
               >
                 <Input
                   value={form.response_time}
@@ -866,7 +867,7 @@ ${f.ai_never_say || "Not specified"}
 
               <Field
                 label="Your Google Calendar email address"
-                hint="Every booking the AI makes will automatically appear in this calendar. Must be the Gmail address linked to Google Calendar."
+                hint="Every booking your assistant makes will automatically appear in this calendar. Must be the Gmail address linked to Google Calendar."
               >
                 <Input value={form.google_calendar_email} onChange={set("google_calendar_email")} placeholder="e.g. pete@gmail.com" type="email" />
               </Field>
@@ -876,7 +877,7 @@ ${f.ai_never_say || "Not specified"}
             {step === 5 && <>
               <Field
                 label="Why should a customer choose you over the next guy?"
-                hint="Be honest and specific. Generic answers like 'great service' don't work. The AI uses this when customers say 'let me think about it' or are comparing multiple businesses."
+                hint="Be honest and specific. Generic answers like 'great service' don't work. Your assistant uses this when customers say 'let me think about it' or are comparing multiple businesses."
               >
                 <Textarea
                   value={form.unique_selling_point}
@@ -889,7 +890,7 @@ ${f.ai_never_say || "Not specified"}
               <Field
                 label="Do you offer any guarantees or warranties?"
                 optional
-                hint="Customers worried about quality love guarantees. The AI will bring these up when customers seem hesitant."
+                hint="Customers worried about quality love guarantees. Your assistant will bring these up when customers seem hesitant."
               >
                 <Textarea
                   value={form.guarantees}
@@ -902,7 +903,7 @@ ${f.ai_never_say || "Not specified"}
               <Field
                 label="What questions do customers almost always ask you?"
                 optional
-                hint="The AI will answer these instantly so they never slow down a booking. Think about the last 10 enquiries you got."
+                hint="Your assistant will answer these instantly so they never slow down a booking. Think about the last 10 enquiries you got."
               >
                 <Textarea
                   value={form.common_questions}
@@ -915,7 +916,7 @@ ${f.ai_never_say || "Not specified"}
               <Field
                 label="What do customers say when they don't book, and how do you handle it?"
                 optional
-                hint="This trains the AI to handle objections without losing the sale. Think about the excuses you hear most."
+                hint="This trains your assistant to handle objections without losing the sale. Think about the excuses you hear most."
               >
                 <Textarea
                   value={form.common_objections}
@@ -930,7 +931,7 @@ ${f.ai_never_say || "Not specified"}
             {step === 6 && <>
               <div>
                 <Label>Tone of voice</Label>
-                <p className="text-xs text-text-muted-dark mb-3">How should your AI assistant sound when talking to customers?</p>
+                <p className="text-xs text-text-muted-dark mb-3">How should your digital assistant sound when talking to customers?</p>
                 <div className="space-y-3">
                   {TONE_OPTS.map((opt) => (
                     <ToneCard
@@ -944,7 +945,7 @@ ${f.ai_never_say || "Not specified"}
               </div>
 
               <div>
-                <Label>Language your AI replies in</Label>
+                <Label>Language your assistant replies in</Label>
                 <Hint>Most SA businesses choose English only or match the customer&apos;s language.</Hint>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {LANGUAGE_OPTS.map((o) => (
@@ -979,7 +980,7 @@ ${f.ai_never_say || "Not specified"}
               <Field
                 label="Opening message for new customers"
                 optional
-                hint="The first thing your AI says when someone messages for the first time. Keep it warm and human. This is their first impression."
+                hint="The first thing your assistant says when someone messages for the first time. Keep it warm and human. This is their first impression."
               >
                 <Textarea
                   value={form.ai_greeting}
@@ -990,16 +991,16 @@ ${f.ai_never_say || "Not specified"}
               </Field>
 
               <Field
-                label="What name should the AI sign off with?"
+                label="What name should your assistant sign off with?"
                 optional
-                hint={`e.g. "Team at Pete's Plumbing" or "Pete's Plumbing AI" or just "Pete's Plumbing"`}
+                hint={`e.g. "Team at Pete's Plumbing" or "Pete's Plumbing" or just your first name`}
               >
                 <Input value={form.ai_sign_off} onChange={set("ai_sign_off")} placeholder="e.g. Team at Pete's Plumbing" />
               </Field>
 
               <div>
-                <Label optional>When should the AI hand off to you (the human)?</Label>
-                <Hint>Select all that apply. The AI will say: &quot;Let me get someone from the team to give you a call.&quot;</Hint>
+                <Label optional>When should your assistant hand off to you (the human)?</Label>
+                <Hint>Select all that apply. Your assistant will say: &quot;Let me get someone from the team to give you a call.&quot;</Hint>
                 <div className="flex flex-col gap-2 mt-2">
                   {ESCALATION_OPTS.map((o) => {
                     const selected = form.ai_escalation_triggers.includes(o);
@@ -1040,7 +1041,7 @@ ${f.ai_never_say || "Not specified"}
               )}
 
               <Field
-                label="How should the AI handle unhappy or angry customers?"
+                label="How should your assistant handle unhappy or angry customers?"
                 optional
               >
                 <Textarea
@@ -1051,7 +1052,7 @@ ${f.ai_never_say || "Not specified"}
                 />
               </Field>
 
-              <Field label="Rules the AI must always follow" optional hint="Specific behaviours you want the AI to do every single time.">
+              <Field label="Rules your assistant must always follow" optional hint="Specific behaviours you want your assistant to do every single time.">
                 <Textarea
                   value={form.ai_always_do}
                   onChange={set("ai_always_do")}
@@ -1060,7 +1061,7 @@ ${f.ai_never_say || "Not specified"}
                 />
               </Field>
 
-              <Field label="Things the AI must never say or promise" optional hint="Hard limits. The AI will avoid these in every conversation.">
+              <Field label="Things your assistant must never say or promise" optional hint="Hard limits. Your assistant will avoid these in every conversation.">
                 <Textarea
                   value={form.ai_never_say}
                   onChange={set("ai_never_say")}
@@ -1112,7 +1113,7 @@ ${f.ai_never_say || "Not specified"}
         </form>
 
         <p className="text-center text-xs text-text-muted-dark mt-6">
-          Your details are stored securely and used only to configure your AI assistant.
+          Your details are stored securely and used only to configure your digital assistant.
         </p>
       </div>
     </div>

@@ -23,13 +23,15 @@ export async function POST(req: NextRequest) {
 
   // Signature verification (Yoco uses HMAC-SHA256)
   const webhookSecret = process.env.YOCO_WEBHOOK_SECRET;
-  if (webhookSecret) {
-    const { createHmac } = await import("crypto");
-    const expected = createHmac("sha256", webhookSecret).update(rawBody).digest("hex");
-    if (signature !== expected) {
-      console.error("Yoco webhook signature mismatch");
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-    }
+  if (!webhookSecret) {
+    console.error("YOCO_WEBHOOK_SECRET is not configured — rejecting webhook");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+  }
+  const { createHmac } = await import("crypto");
+  const expected = createHmac("sha256", webhookSecret).update(rawBody).digest("hex");
+  if (signature !== expected) {
+    console.error("Yoco webhook signature mismatch");
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
   let event: Record<string, unknown>;

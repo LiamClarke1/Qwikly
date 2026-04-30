@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { supabaseAdmin } from "@/lib/supabase-server";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "System Status",
-  description: "Live status of Qwikly services: web app, AI messaging, WhatsApp, calendar sync.",
+  description: "Live status of Qwikly services: web app, assistant messaging, WhatsApp, calendar sync.",
   alternates: { canonical: "https://www.qwikly.co.za/status" },
 };
 
@@ -12,7 +15,6 @@ interface Service {
   name: string;
   description: string;
   status: ServiceStatus;
-  uptimePct: number;
 }
 
 const STATUS_CONFIG: Record<
@@ -41,59 +43,53 @@ const STATUS_CONFIG: Record<
   },
 };
 
-const SERVICES: Service[] = [
-  {
-    name: "Web Application",
-    description: "Dashboard and public site",
-    status: "operational",
-    uptimePct: 99.9,
-  },
-  {
-    name: "AI Messaging",
-    description: "WhatsApp lead qualification and booking",
-    status: "operational",
-    uptimePct: 99.8,
-  },
-  {
-    name: "WhatsApp Delivery",
-    description: "Twilio message delivery layer",
-    status: "operational",
-    uptimePct: 99.7,
-  },
-  {
-    name: "Calendar Sync",
-    description: "Google Calendar integration",
-    status: "operational",
-    uptimePct: 99.5,
-  },
-  {
-    name: "Email Delivery",
-    description: "Booking confirmations and notifications",
-    status: "operational",
-    uptimePct: 99.9,
-  },
-];
+async function getServices(): Promise<Service[]> {
+  const checks: Record<string, boolean> = {};
 
-function UptimeBar({ pct }: { pct: number }) {
-  const segments = 90;
-  const filledCount = Math.round((pct / 100) * segments);
+  try {
+    const db = supabaseAdmin();
+    const { error } = await db.from("clients").select("id").limit(1);
+    checks.database = !error;
+  } catch {
+    checks.database = false;
+  }
 
-  return (
-    <div className="flex gap-px mt-3" role="img" aria-label={`${pct}% uptime last 90 days`}>
-      {Array.from({ length: segments }).map((_, i) => (
-        <div
-          key={i}
-          className={`h-6 flex-1 rounded-[2px] ${
-            i < filledCount ? "bg-green-400" : "bg-red-300"
-          }`}
-        />
-      ))}
-    </div>
-  );
+  checks.whatsapp = !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN);
+  checks.email = !!process.env.RESEND_API_KEY;
+  checks.messaging = !!process.env.ANTHROPIC_API_KEY;
+
+  return [
+    {
+      name: "Web Application",
+      description: "Dashboard and public site",
+      status: checks.database ? "operational" : "degraded",
+    },
+    {
+      name: "Assistant Messaging",
+      description: "WhatsApp lead qualification and booking",
+      status: checks.messaging && checks.whatsapp ? "operational" : "outage",
+    },
+    {
+      name: "WhatsApp Delivery",
+      description: "Twilio message delivery layer",
+      status: checks.whatsapp ? "operational" : "outage",
+    },
+    {
+      name: "Calendar Sync",
+      description: "Google Calendar integration",
+      status: "operational",
+    },
+    {
+      name: "Email Delivery",
+      description: "Booking confirmations and notifications",
+      status: checks.email ? "operational" : "outage",
+    },
+  ];
 }
 
-export default function StatusPage() {
-  const allOperational = SERVICES.every((s) => s.status === "operational");
+export default async function StatusPage() {
+  const services = await getServices();
+  const allOperational = services.every((s) => s.status === "operational");
 
   return (
     <div className="bg-paper min-h-screen">
@@ -114,11 +110,11 @@ export default function StatusPage() {
             )}
           </h1>
           <p className="text-ink-500 text-sm mb-16">
-            Last updated: {new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })} SAST
+            Last checked: {new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })} SAST
           </p>
 
           <div className="space-y-4">
-            {SERVICES.map((svc) => {
+            {services.map((svc) => {
               const cfg = STATUS_CONFIG[svc.status];
               return (
                 <div
@@ -144,12 +140,6 @@ export default function StatusPage() {
                       {cfg.label}
                     </span>
                   </div>
-                  <UptimeBar pct={svc.uptimePct} />
-                  <div className="flex justify-between mt-1 text-[10px] text-ink-400">
-                    <span>90 days ago</span>
-                    <span>{svc.uptimePct}% uptime</span>
-                    <span>Today</span>
-                  </div>
                 </div>
               );
             })}
@@ -164,7 +154,7 @@ export default function StatusPage() {
             For urgent issues, email{" "}
             <a
               href="mailto:hello@qwikly.co.za"
-              className="text-ember hover:underline transition-colors"
+              className="text-ember underline transition-colors"
             >
               hello@qwikly.co.za
             </a>

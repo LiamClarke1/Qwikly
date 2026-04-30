@@ -77,7 +77,7 @@ export default function DangerZonePage() {
                 "Contacts and their full history",
                 "Bookings and calendar events",
                 "Invoices and payment records",
-                "Settings, AI config, and knowledge base",
+                "Settings, assistant config, and knowledge base",
               ].map((item) => (
                 <p key={item} className="text-tiny text-fg-muted flex items-center gap-2">
                   <Check className="w-3 h-3 text-success shrink-0" /> {item}

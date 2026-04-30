@@ -50,10 +50,10 @@ const ESCALATION_OPTS = [
 const STEPS = [
   { title: "Your Business", subtitle: "Who you are and where you operate", icon: Building2 },
   { title: "Your Services", subtitle: "What you do and what you don't", icon: Wrench },
-  { title: "Pricing & Payment", subtitle: "Help the AI quote accurately", icon: DollarSign },
+  { title: "Pricing & Payment", subtitle: "Help your assistant quote accurately", icon: DollarSign },
   { title: "Availability", subtitle: "When and how you work", icon: Clock },
   { title: "Your Edge", subtitle: "Why customers should choose you", icon: Star },
-  { title: "AI Personality", subtitle: "How your assistant speaks to customers", icon: Bot },
+  { title: "Assistant Personality", subtitle: "How your assistant speaks to customers", icon: Bot },
   { title: "WhatsApp", subtitle: "Verify your number to go live", icon: MessageSquare },
 ];
 
@@ -62,7 +62,7 @@ const LOADING_STAGES = [
   { msg: "Reading your services and pricing...", pct: 30 },
   { msg: "Extracting certifications and USPs...", pct: 52 },
   { msg: "Analysing availability and booking rules...", pct: 70 },
-  { msg: "Building your AI profile...", pct: 88 },
+  { msg: "Building your assistant profile...", pct: 88 },
   { msg: "Almost done...", pct: 96 },
 ];
 
@@ -736,7 +736,7 @@ function IntroView({
             <p className="text-tiny text-fg-muted mt-0.5">Start here if you don&apos;t have a website, or fill these in and use auto-fill to complete the rest.</p>
           </div>
 
-          <Field label="Business name" hint="The AI uses this name when greeting customers.">
+          <Field label="Business name" hint="Your assistant uses this name when greeting customers.">
             <WInput value={form.business_name} onChange={set("business_name")} placeholder="e.g. Pete's Plumbing" />
           </Field>
           <Field label="Your name" optional hint="So we know who to contact.">
@@ -745,13 +745,13 @@ function IntroView({
           <Field label="Type of work">
             <WSelect value={form.trade} onChange={set("trade")} options={TRADES} placeholder="Select your trade" />
           </Field>
-          <Field label="Cities and suburbs you cover" hint="The AI declines jobs outside these areas automatically.">
+          <Field label="Cities and suburbs you cover" hint="Your assistant declines jobs outside these areas automatically.">
             <WInput value={form.areas} onChange={set("areas")} placeholder="e.g. Sandton, Midrand, Fourways, Randburg" />
           </Field>
           <Field label="Years in business" optional>
             <WInput value={form.years_in_business} onChange={set("years_in_business")} placeholder="e.g. 8 years" />
           </Field>
-          <Field label="Licences & certifications" optional hint="The AI mentions these proactively to build trust.">
+          <Field label="Licences & certifications" optional hint="Your assistant mentions these proactively to build trust.">
             <WTextarea value={form.certifications} onChange={set("certifications")} placeholder={"One per line:\n- Wireman's licence\n- NHBRC registered"} rows={3} />
           </Field>
           <Field label="Brands or products you use" optional>
@@ -1256,7 +1256,7 @@ export default function SetupPage() {
             <div className="min-w-0">
               <h1 className="text-h1 text-fg leading-tight">Connect your digital assistant</h1>
               <p className="text-small text-fg-muted mt-0.5">
-                {autoFillResult ? "Review what we found. Edit anything." : "The more detail, the smarter your AI."}
+                {autoFillResult ? "Review what we found. Edit anything." : "The more detail, the smarter your assistant."}
               </p>
             </div>
           </div>
@@ -1304,7 +1304,7 @@ export default function SetupPage() {
           {/* ── STEP 1 ── */}
           {step === 1 && (
             <div className="space-y-5">
-              <Field label="Business name" hint="The AI uses this name when greeting customers.">
+              <Field label="Business name" hint="Your assistant uses this name when greeting customers.">
                 <WInput value={form.business_name} onChange={set("business_name")} placeholder="e.g. Pete's Plumbing" />
               </Field>
               <Field label="Your name" optional hint="So we know who to contact.">
@@ -1313,13 +1313,13 @@ export default function SetupPage() {
               <Field label="Type of work">
                 <WSelect value={form.trade} onChange={set("trade")} options={TRADES} placeholder="Select your trade" />
               </Field>
-              <Field label="Cities and suburbs you cover" hint="The AI declines jobs outside these areas automatically.">
+              <Field label="Cities and suburbs you cover" hint="Your assistant declines jobs outside these areas automatically.">
                 <WInput value={form.areas} onChange={set("areas")} placeholder="e.g. Sandton, Midrand, Fourways, Randburg" />
               </Field>
               <Field label="Years in business" optional>
                 <WInput value={form.years_in_business} onChange={set("years_in_business")} placeholder="e.g. 8 years" />
               </Field>
-              <Field label="Licences & certifications" optional hint="The AI mentions these proactively to build trust.">
+              <Field label="Licences & certifications" optional hint="Your assistant mentions these proactively to build trust.">
                 <WTextarea value={form.certifications} onChange={set("certifications")} placeholder={"One per line:\n- Wireman's licence\n- NHBRC registered"} rows={3} />
               </Field>
               <Field label="Brands or products you use" optional>
@@ -1334,10 +1334,10 @@ export default function SetupPage() {
           {/* ── STEP 2 ── */}
           {step === 2 && (
             <div className="space-y-5">
-              <Field label="Every service you offer" hint="One per line. This is your AI's full menu.">
+              <Field label="Every service you offer" hint="One per line. This is your assistant's full menu.">
                 <WTextarea value={form.services_offered} onChange={set("services_offered")} placeholder={"- Geyser replacement\n- DB board upgrade\n- Certificate of Compliance\n- Solar installation"} rows={8} />
               </Field>
-              <Field label="Jobs you don't take on" optional hint="Prevents the AI from promising work you won't do.">
+              <Field label="Jobs you don't take on" optional hint="Prevents your assistant from promising work you won't do.">
                 <WTextarea value={form.services_excluded} onChange={set("services_excluded")} placeholder={"- No aircon work\n- No 3-phase industrial\n- No jobs outside Gauteng"} rows={4} />
               </Field>
               <Field label="Emergency or after-hours callouts?">
@@ -1360,7 +1360,7 @@ export default function SetupPage() {
               <Field label="Call-out fee" optional>
                 <WInput value={form.callout_fee} onChange={set("callout_fee")} placeholder="e.g. R450, waived if you proceed" />
               </Field>
-              <Field label="Example jobs with prices" hint="Give 5–10 real examples so the AI can quote accurately.">
+              <Field label="Example jobs with prices" hint="Give 5–10 real examples so your assistant can quote accurately.">
                 <WTextarea value={form.example_prices} onChange={set("example_prices")} placeholder={"- Tap washer: R350\n- Geyser replacement 150L: from R3,500\n- DB board upgrade: from R5,500"} rows={7} />
               </Field>
               <Field label="Minimum job value" optional>
@@ -1381,7 +1381,7 @@ export default function SetupPage() {
           {/* ── STEP 4 ── */}
           {step === 4 && (
             <div className="space-y-5">
-              <Field label="Working hours" hint="The AI only offers booking slots within these hours.">
+              <Field label="Working hours" hint="Your assistant only offers booking slots within these hours.">
                 <WInput value={form.working_hours} onChange={set("working_hours")} placeholder="e.g. Mon–Fri 7am–5pm, Sat 8am–1pm" />
               </Field>
               <Field label="How far in advance can customers book?" optional>
@@ -1486,13 +1486,13 @@ export default function SetupPage() {
           {/* ── STEP 5 ── */}
           {step === 5 && (
             <div className="space-y-5">
-              <Field label="Why should a customer choose you?" hint="The AI uses this when customers say 'let me think about it'.">
+              <Field label="Why should a customer choose you?" hint="Your assistant uses this when customers say 'let me think about it'.">
                 <WTextarea value={form.unique_selling_point} onChange={set("unique_selling_point")} placeholder={"- 12 years certified\n- No hidden fees\n- 1-year workmanship guarantee\n- We arrive on time or call ahead"} rows={5} />
               </Field>
               <Field label="Guarantees or warranties" optional>
                 <WTextarea value={form.guarantees} onChange={set("guarantees")} placeholder={"- 1-year workmanship guarantee\n- Free callback within 30 days for same fault"} rows={3} />
               </Field>
-              <Field label="Questions customers always ask" optional hint="The AI answers these instantly.">
+              <Field label="Questions customers always ask" optional hint="Your assistant answers these instantly.">
                 <WTextarea value={form.common_questions} onChange={set("common_questions")} placeholder={"- Do you issue COC certificates?\n- Do you work weekends?\n- Are you fully certified?"} rows={5} />
               </Field>
               <Field label="Common objections and how to handle them" optional>
@@ -1531,15 +1531,15 @@ export default function SetupPage() {
                   ))}
                 </div>
               </div>
-              <Field label="Opening message for new customers" optional hint="The first thing your AI says. Keep it warm and human.">
+              <Field label="Opening message for new customers" optional hint="The first thing your assistant says. Keep it warm and human.">
                 <WTextarea value={form.ai_greeting} onChange={set("ai_greeting")} placeholder="e.g. Hi there! Thanks for reaching out to Pete's Plumbing. How can I help you today?" rows={2} />
               </Field>
-              <Field label="AI sign-off name" optional>
+              <Field label="Assistant sign-off name" optional>
                 <WInput value={form.ai_sign_off} onChange={set("ai_sign_off")} placeholder="e.g. Team at Pete's Plumbing" />
               </Field>
               <div>
                 <label className="flex items-center gap-2 text-small font-semibold text-fg mb-1.5">
-                  When should the AI hand off to you?
+                  When should your assistant hand off to you?
                   <span className="text-tiny font-normal text-fg-muted">(optional)</span>
                 </label>
                 <p className="text-tiny text-fg-muted mb-2">Select all that apply.</p>
@@ -1564,10 +1564,10 @@ export default function SetupPage() {
               <Field label="Handle unhappy customers" optional>
                 <WTextarea value={form.ai_unhappy_customer} onChange={set("ai_unhappy_customer")} placeholder="e.g. Acknowledge frustration, apologise, offer to have owner call back within 1 hour." rows={3} />
               </Field>
-              <Field label="Rules the AI must always follow" optional>
+              <Field label="Rules your assistant must always follow" optional>
                 <WTextarea value={form.ai_always_do} onChange={set("ai_always_do")} placeholder={"- Always mention our 1-year guarantee\n- Always ask which area before quoting"} rows={3} />
               </Field>
-              <Field label="Things the AI must never say" optional>
+              <Field label="Things your assistant must never say" optional>
                 <WTextarea value={form.ai_never_say} onChange={set("ai_never_say")} placeholder={"- Never mention competitor names\n- Never confirm same-day availability without checking"} rows={3} />
               </Field>
             </div>
