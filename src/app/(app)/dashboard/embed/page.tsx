@@ -15,7 +15,7 @@ function SkeletonLine({ className }: { className?: string }) {
 export default function EmbedPage() {
   const { client, loading } = useClient();
 
-  const publicKey = client?.id ?? "";
+  const publicKey = client?.public_key ?? "";
   const tenantName = client?.business_name ?? "Your business";
 
   return (

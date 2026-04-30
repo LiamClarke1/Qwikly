@@ -102,6 +102,7 @@ export interface ClientRow {
   delete_requested_at?: string | null;
   ga_measurement_id?: string | null;
   meta_pixel_id?: string | null;
+  public_key?: string | null;
 }
 
 export function useClient() {
