@@ -20,6 +20,8 @@
   var conversationId = sessionStorage.getItem("qwikly_cid") || null;
   var branding = null;
   var panelOpen = false;
+  var panelBuilt = false;
+  var greeted = false;
   var sending = false;
   var vpListener = null;
 
@@ -72,6 +74,7 @@
     ".sndbtn svg{pointer-events:none}",
     ".ft{text-align:center;padding:6px;font-size:10px;color:#CBD5E1;border-top:1px solid #F8FAFC;background:#fff;flex-shrink:0}",
     "@media(max-width:600px){#launcher{bottom:max(16px,calc(env(safe-area-inset-bottom) + 12px));right:max(16px,calc(env(safe-area-inset-right) + 8px));padding:11px 18px;font-size:13px}#panel{left:8px;right:8px;width:auto;bottom:max(72px,calc(env(safe-area-inset-bottom) + 68px));height:auto;max-height:60vh;border-radius:18px;transition:none}}",
+    "@media(prefers-color-scheme:dark){#panel{background:#1e293b}.bot{background:#334155;color:#f1f5f9}.bot a{color:#60a5fa}.msgs{background:#1e293b}.cin{background:#1e293b;border-top-color:#334155}.cinp{background:#0f172a;border-color:#334155;color:#f1f5f9}.cinp::placeholder{color:#64748b}.ft{background:#1e293b;color:#475569;border-top-color:#334155}}",
   ].join("");
   shadow.appendChild(style);
 
@@ -224,11 +227,12 @@
         var lines = buffer.split("\n");
         buffer = lines.pop() || "";
 
+        var done = false;
         for (var i = 0; i < lines.length; i++) {
           var line = lines[i];
           if (!line.startsWith("data: ")) continue;
           var payload = line.slice(6);
-          if (payload === "[DONE]") break;
+          if (payload === "[DONE]") { done = true; break; }
           try {
             var parsed = JSON.parse(payload);
             if (parsed.delta) {
@@ -244,6 +248,7 @@
             }
           } catch (e) {}
         }
+        if (done) break;
       }
     } catch (err) {
       removeTyping();
@@ -266,22 +271,29 @@
 
   function openPanel() {
     if (panelOpen) return;
-    panelOpen = true; buildPanel(); panel.classList.add("open");
+    panelOpen = true;
+    if (!panelBuilt) { buildPanel(); panelBuilt = true; }
+    panel.classList.add("open");
     if (isMobile && window.visualViewport) {
       vpListener = adjustForKeyboard;
       window.visualViewport.addEventListener("resize", vpListener);
       window.visualViewport.addEventListener("scroll", vpListener);
     }
-    setInputEnabled(false); showTyping();
-    setTimeout(function () {
-      removeTyping();
-      var greeting = branding && branding.greeting
-        ? branding.greeting.replace(/\{name\}/g, "").replace(/\{business\}/g, biz()).trim()
-        : "Hi! How can we help you today?";
-      addMsg("bot", greeting);
-      setInputEnabled(true);
+    if (!greeted) {
+      setInputEnabled(false); showTyping();
+      setTimeout(function () {
+        removeTyping();
+        var greeting = branding && branding.greeting
+          ? branding.greeting.replace(/\{name\}/g, "").replace(/\{business\}/g, biz()).trim()
+          : "Hi! How can we help you today?";
+        addMsg("bot", greeting);
+        greeted = true;
+        setInputEnabled(true);
+        if (!isMobile) { var inp = shadow.getElementById("qw-inp"); if (inp) inp.focus(); }
+      }, 600);
+    } else {
       if (!isMobile) { var inp = shadow.getElementById("qw-inp"); if (inp) inp.focus(); }
-    }, 600);
+    }
     fireEvent("launcher_opened");
   }
 

@@ -1,7 +1,9 @@
 import { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
-  const key = req.nextUrl.searchParams.get("key") ?? "";
+  const rawKey = req.nextUrl.searchParams.get("key") ?? "";
+  // Strict whitelist: qw_pk_ keys only contain alphanumerics, underscores, hyphens
+  const key = rawKey.replace(/[^a-zA-Z0-9_\-]/g, "");
   const origin = req.nextUrl.origin;
 
   const html = `<!DOCTYPE html>
@@ -29,6 +31,9 @@ export async function GET(req: NextRequest) {
 </html>`;
 
   return new Response(html, {
-    headers: { "Content-Type": "text/html; charset=utf-8" },
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "X-Frame-Options": "SAMEORIGIN",
+    },
   });
 }
