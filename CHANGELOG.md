@@ -52,9 +52,39 @@ All three use the same `automation_logs` idempotency pattern as the existing tri
 - When the Claude API call throws, the handler now sends a generic fallback WhatsApp message to the customer, logs it to `messages_log`, and marks the conversation as `escalated` so the business owner sees it in the "needs attention" panel.
 - If even the fallback send fails, it still returns `200 OK` to Twilio (preventing retries) without throwing.
 
+### Fixed: 27 "AI" brand language violations in customer-facing copy
+
+Multiple files across `/src/app/(landing)/` and `/src/app/(app)/dashboard/settings/`
+
+- Replaced all user-facing instances of "AI assistant", "AI Personality", "AI receptionist", "AI-powered", and "the AI" with "digital assistant", "your assistant", or "Assistant Personality".
+- Affected pages: `get-started`, `pricing`, `how-it-works`, `about`, `status`, and `settings/danger-zone`.
+- Internal variable names (`ai_tone`, `ai_language`, etc.) and code comments unchanged — only user-visible strings were updated.
+
+### Fixed: Yoco webhook accepts unsigned requests when secret not configured
+
+`/api/webhooks/yoco/route.ts`
+
+- Changed `if (webhookSecret) { ... }` guard to `if (!webhookSecret) return 500` — signature verification is now mandatory, not optional. Previously, a missing `YOCO_WEBHOOK_SECRET` env var caused all Yoco webhooks to be accepted without signature verification, allowing forged payment events to mark invoices as paid.
+- **Action required:** Add `YOCO_WEBHOOK_SECRET` to Vercel env vars (get from app.yoco.com → Developers → Webhooks).
+
+### Fixed: /status page showed hardcoded fake uptime data
+
+`/src/app/(landing)/status/page.tsx`
+
+- Rewrote as an async Server Component that performs real health checks at request time: Supabase DB connectivity, Twilio env var presence, Resend env var presence, Anthropic env var presence.
+- Service statuses now reflect actual system state. Removed misleading 90-day uptime bars (no historical uptime data is tracked).
+- "AI Messaging" service renamed to "Assistant Messaging" (brand compliance).
+
+### Fixed: Legal page titles rendered as "Privacy Policy | Qwikly | Qwikly"
+
+`/src/app/(landing)/legal/privacy/page.tsx`, `/src/app/(landing)/legal/terms/page.tsx`
+
+- Removed the manually appended `| Qwikly` suffix from both titles so the root layout template (`%s | Qwikly`) applies correctly.
+
 ---
 
-## Still needed (not this terminal's scope)
+## Still needed (needs Liam)
 
 - `YOCO_SECRET_KEY` — add to `.env.local` and Vercel env vars (get from app.yoco.com → Developers → Keys). Without it, customers cannot pay by card.
-- `YOCO_WEBHOOK_SECRET` — add to `.env.local` and Vercel env vars (get from Yoco → Developers → Webhooks). Without it, webhook signature validation is skipped in production.
+- `YOCO_WEBHOOK_SECRET` — add to `.env.local` and Vercel env vars (get from Yoco → Developers → Webhooks). **Now mandatory** — without it the webhook endpoint returns 500 and no payments will be processed.
+- `QA-A11Y-001` — ember (#E85A2C) on cream (#F4EEE4) achieves ~3:1 contrast, which passes for large display text but fails WCAG AA (4.5:1) for small text (eyebrow labels at 11px, badge labels at 12px). Add a dark ember token (e.g., `#8C3512`, ~6.8:1) and apply to small-text uses on landing pages.
