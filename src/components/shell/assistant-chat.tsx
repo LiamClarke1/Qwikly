@@ -245,8 +245,8 @@ export function AssistantChat() {
                 placeholder="Ask anything…"
                 disabled={loading}
                 rows={1}
-                className="flex-1 bg-transparent outline-none text-[13px] text-white placeholder:text-slate-500 resize-none leading-relaxed disabled:opacity-50 min-h-[20px]"
-                style={{ height: "20px" }}
+                className="flex-1 bg-transparent outline-none text-white placeholder:text-slate-500 resize-none leading-relaxed disabled:opacity-50 min-h-[20px]"
+                style={{ height: "20px", fontSize: "16px" }}
               />
               <button
                 onClick={() => send()}
