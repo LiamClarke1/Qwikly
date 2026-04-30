@@ -92,6 +92,16 @@ export interface ClientRow {
   onboarding_completed_at?: string | null;
   working_hours?: Record<string, [string, string] | null> | null;
   after_hours_mode?: "book_next_available" | "closed_message" | "always_open" | null;
+  // settings v2 fields (migration-settings-v2.sql)
+  profile_photo_url?: string | null;
+  timezone?: string | null;
+  website?: string | null;
+  industry?: string | null;
+  support_email?: string | null;
+  brand_color?: string | null;
+  delete_requested_at?: string | null;
+  ga_measurement_id?: string | null;
+  meta_pixel_id?: string | null;
 }
 
 export function useClient() {

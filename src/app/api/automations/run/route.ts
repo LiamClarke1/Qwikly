@@ -196,6 +196,170 @@ export async function POST(req: NextRequest) {
 
           fired++;
         }
+      } else if (trigger_type === "job_starting_soon") {
+        // Look FORWARD: find bookings starting in [now + delay_minutes, now + delay_minutes + 15 min]
+        const delayMinutes: number = trigger_config?.delay_minutes ?? 60;
+        const windowStart = new Date(now.getTime() + delayMinutes * 60 * 1000);
+        const windowEnd = new Date(windowStart.getTime() + 15 * 60 * 1000);
+
+        const { data: bookings } = await supabase
+          .from("bookings")
+          .select("id, customer_phone, customer_name, booking_datetime")
+          .eq("client_id", clientId)
+          .not("status", "in", '("no-show","cancelled","completed")')
+          .gte("booking_datetime", windowStart.toISOString())
+          .lte("booking_datetime", windowEnd.toISOString());
+
+        if (!bookings?.length) continue;
+
+        const { data: client } = await supabase
+          .from("clients")
+          .select("business_name")
+          .eq("id", clientId)
+          .single();
+
+        for (const booking of bookings) {
+          const { data: existing } = await supabase
+            .from("automation_logs")
+            .select("id")
+            .eq("automation_id", automation.id)
+            .eq("source_id", booking.id)
+            .maybeSingle();
+
+          if (existing) continue;
+
+          const message = interpolate(action_config?.template_body ?? "", {
+            name: booking.customer_name ?? "",
+            business: client?.business_name ?? "",
+            time: booking.booking_datetime
+              ? new Date(booking.booking_datetime).toLocaleString("en-ZA", {
+                timeZone: "Africa/Johannesburg",
+                weekday: "short", day: "numeric", month: "short",
+                hour: "2-digit", minute: "2-digit",
+              })
+              : "",
+          });
+
+          await sendWhatsAppMessage(booking.customer_phone, message);
+
+          await supabase.from("automation_logs").insert({
+            automation_id: automation.id,
+            source_id: booking.id,
+          });
+
+          await supabase
+            .from("automations")
+            .update({ fire_count: (automation.fire_count as number) + 1, last_fired_at: now.toISOString() })
+            .eq("id", automation.id);
+
+          fired++;
+        }
+      } else if (trigger_type === "quote_sent") {
+        // Fires delay_hours after an invoice was sent and is still unpaid — follow up on unanswered quotes
+        const delayHours: number = trigger_config?.delay_hours ?? 24;
+        const windowEnd = new Date(now.getTime() - delayHours * 3600 * 1000);
+        const windowStart = new Date(windowEnd.getTime() - 15 * 60 * 1000);
+
+        const { data: invoices } = await supabase
+          .from("invoices")
+          .select("id, customer_mobile, customer_name, invoice_number")
+          .eq("client_id", clientId)
+          .in("status", ["sent", "overdue"])
+          .gte("sent_at", windowStart.toISOString())
+          .lte("sent_at", windowEnd.toISOString())
+          .not("customer_mobile", "is", null);
+
+        if (!invoices?.length) continue;
+
+        const { data: client } = await supabase
+          .from("clients")
+          .select("business_name")
+          .eq("id", clientId)
+          .single();
+
+        for (const invoice of invoices) {
+          const { data: existing } = await supabase
+            .from("automation_logs")
+            .select("id")
+            .eq("automation_id", automation.id)
+            .eq("source_id", invoice.id)
+            .maybeSingle();
+
+          if (existing) continue;
+
+          const message = interpolate(action_config?.template_body ?? "", {
+            name: invoice.customer_name ?? "",
+            business: client?.business_name ?? "",
+            time: "",
+          });
+
+          await sendWhatsAppMessage((invoice as { customer_mobile: string }).customer_mobile, message);
+
+          await supabase.from("automation_logs").insert({
+            automation_id: automation.id,
+            source_id: invoice.id,
+          });
+
+          await supabase
+            .from("automations")
+            .update({ fire_count: (automation.fire_count as number) + 1, last_fired_at: now.toISOString() })
+            .eq("id", automation.id);
+
+          fired++;
+        }
+      } else if (trigger_type === "payment_due") {
+        // Fires when an invoice's due_at falls in the window and it is still unpaid
+        const delayHours: number = trigger_config?.delay_hours ?? 0;
+        const windowEnd = new Date(now.getTime() - delayHours * 3600 * 1000);
+        const windowStart = new Date(windowEnd.getTime() - 15 * 60 * 1000);
+
+        const { data: invoices } = await supabase
+          .from("invoices")
+          .select("id, customer_mobile, customer_name, invoice_number, total_zar")
+          .eq("client_id", clientId)
+          .in("status", ["sent", "overdue"])
+          .gte("due_at", windowStart.toISOString())
+          .lte("due_at", windowEnd.toISOString())
+          .not("customer_mobile", "is", null);
+
+        if (!invoices?.length) continue;
+
+        const { data: client } = await supabase
+          .from("clients")
+          .select("business_name")
+          .eq("id", clientId)
+          .single();
+
+        for (const invoice of invoices) {
+          const { data: existing } = await supabase
+            .from("automation_logs")
+            .select("id")
+            .eq("automation_id", automation.id)
+            .eq("source_id", invoice.id)
+            .maybeSingle();
+
+          if (existing) continue;
+
+          const message = interpolate(action_config?.template_body ?? "", {
+            name: invoice.customer_name ?? "",
+            business: client?.business_name ?? "",
+            time: "",
+          });
+
+          await sendWhatsAppMessage((invoice as { customer_mobile: string }).customer_mobile, message);
+
+          await supabase.from("automation_logs").insert({
+            automation_id: automation.id,
+            source_id: invoice.id,
+          });
+
+          await supabase
+            .from("automations")
+            .update({ fire_count: (automation.fire_count as number) + 1, last_fired_at: now.toISOString() })
+            .eq("id", automation.id);
+
+          fired++;
+        }
       }
     } catch (err) {
       console.error("[automations/run] automation failed", {

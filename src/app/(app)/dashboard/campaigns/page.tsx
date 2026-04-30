@@ -210,7 +210,11 @@ function CampaignEditor({
     setSaving(false);
     if (error) return setErr(error.message);
     if (launch && !scheduleAt) {
-      await fetch(`/api/campaigns/${(data as Campaign).id}/send`, { method: "POST" });
+      const sendRes = await fetch(`/api/campaigns/${(data as Campaign).id}/send`, { method: "POST" });
+      if (!sendRes.ok) {
+        const sendErr = await sendRes.json().catch(() => ({}));
+        return setErr((sendErr as { error?: string }).error ?? "Failed to send campaign. Please try again.");
+      }
     }
     onSaved(data as Campaign);
   };

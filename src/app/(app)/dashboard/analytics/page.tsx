@@ -28,7 +28,7 @@ export default function AnalyticsPage() {
   const [stats, setStats] = useState({
     totalChats: 0,
     bookings: 0,
-    avgResponse: "< 5s",
+    conversionRate: "—",
     invoicedTotal: 0,
     paidTotal: 0,
     overdueTotal: 0,
@@ -114,9 +114,11 @@ export default function AnalyticsPage() {
         .reduce((s, r) => s + (r.total_amount ?? 0), 0);
 
       setStats({
-        totalChats:    convRows.length,
-        bookings:      bookRows.length,
-        avgResponse:   "< 5s",
+        totalChats:     convRows.length,
+        bookings:       bookRows.length,
+        conversionRate: convRows.length > 0
+          ? `${Math.round((bookRows.length / convRows.length) * 100)}%`
+          : "—",
         invoicedTotal,
         paidTotal,
         overdueTotal,
@@ -150,7 +152,7 @@ export default function AnalyticsPage() {
   const kpis = [
     { label: "Customer enquiries", value: stats.totalChats, icon: MessageSquare, color: "#E85A2C", sub: `last ${range} days` },
     { label: "Appointments booked", value: stats.bookings, icon: CalendarCheck, color: "#3B82F6", sub: `last ${range} days` },
-    { label: "Avg. response time", value: stats.avgResponse, icon: Clock, color: "#22C55E", sub: "by your assistant" },
+    { label: "Booking rate", value: stats.conversionRate, icon: Clock, color: "#22C55E", sub: "chats that convert" },
     { label: "Invoiced this month", value: formatZAR(stats.invoicedTotal), icon: TrendingUp, color: "#A855F7", sub: `${formatZAR(stats.paidTotal)} paid` },
   ];
 

@@ -46,7 +46,7 @@ export async function POST(
     // Verify ownership
     const { data: ownedClient } = await db
       .from("clients")
-      .select("id, business_name")
+      .select("id, business_name, notification_email")
       .eq("id", convo.client_id)
       .eq("auth_user_id", user.id)
       .maybeSingle();
@@ -79,10 +79,11 @@ export async function POST(
         deliveryResult.error = "No email address on record for this contact";
       } else {
         const bizName = ownedClient.business_name || "Qwikly";
+        const replyTo = (ownedClient as { notification_email?: string | null }).notification_email ?? undefined;
         const { error: emailErr } = await resend.emails.send({
           from: `${bizName} <noreply@qwikly.co.za>`,
           to: convo.customer_email,
-          replyTo: undefined,
+          replyTo,
           subject: `Re: Your enquiry${convo.customer_name ? ` — ${convo.customer_name}` : ""}`,
           text: message,
           html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:24px">

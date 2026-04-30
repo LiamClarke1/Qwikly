@@ -55,10 +55,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
       const { data: client } = await supabase
         .from("clients")
-        .select("id")
+        .select("id, onboarding_complete")
         .limit(1)
         .maybeSingle();
-      if (!client) {
+      if (!client || !client.onboarding_complete) {
         router.push("/onboarding");
         return;
       }

@@ -395,6 +395,24 @@ ${kbSection}`;
         clientId: client.id,
         incomingBody: Body.slice(0, 200),
       });
+
+      // Don't leave the customer on read — send a fallback and escalate
+      const fallback =
+        "Thanks for your message! We're experiencing a brief technical issue. Someone from the team will be in touch with you shortly.";
+      try {
+        await sendWhatsAppMessage(From, fallback);
+        await db.from("messages_log").insert({
+          conversation_id: conversationId,
+          role: "assistant",
+          content: fallback,
+        });
+        await db
+          .from("conversations")
+          .update({ status: "escalated" })
+          .eq("id", conversationId);
+      } catch {
+        // Best-effort — Twilio still needs a 200
+      }
       return new NextResponse("OK", { status: 200 });
     }
 

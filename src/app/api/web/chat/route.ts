@@ -331,7 +331,7 @@ export async function POST(req: NextRequest) {
     { role: "user", content: message },
   ];
 
-  let reply = "Ja, something went wrong on our end. Try again or WhatsApp us directly.";
+  let reply = "Sorry, I ran into a technical issue. Please try again in a moment.";
   let visitorInfo: { name?: string; phone?: string; email?: string } | null = null;
 
   try {
