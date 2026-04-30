@@ -6,6 +6,13 @@
 .h-screen { height: 100vh; height: 100dvh; }
 .min-h-screen { min-height: 100vh; min-height: 100dvh; }
 
+/* Prevent iOS Safari auto-zoom on input focus (triggers when font-size < 16px) */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  input, textarea, select {
+    font-size: 16px;
+  }
+}
+
 /* ────────────────────────────────────────────────────────────── */
 /*  QWIKLY — EDITORIAL SYSTEM                                      */
 /*  Cream canvas · Deep ink · Single ember accent · Fraunces serif */
