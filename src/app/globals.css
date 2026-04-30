@@ -617,6 +617,15 @@
   background-size: 32px 32px;
 }
 
+/* Hide scrollbars while keeping scroll functionality */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
 /* Ember blur blob (used sparingly on ink sections) */
 .ember-blob {
   position: absolute;

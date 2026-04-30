@@ -272,7 +272,7 @@ export default function CrmClientsPage() {
       </div>
 
       {/* Summary strip */}
-      <div className="grid grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         {[
           { label: "Active",      value: stats.active,                   cls: "text-emerald-600" },
           { label: "At Risk",     value: stats.at_risk,                  cls: "text-red-500" },
@@ -289,7 +289,7 @@ export default function CrmClientsPage() {
       {/* Toolbar */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         {/* Search */}
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
+        <div className="relative w-full md:flex-1 md:min-w-[200px] md:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             value={query}
@@ -370,7 +370,7 @@ export default function CrmClientsPage() {
       {/* Filter panel */}
       {filterOpen && (
         <div className="bg-white border border-slate-200 rounded-2xl p-4 mb-4 shadow-sm">
-          <div className="grid grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
             <FilterGroup label="Status" options={Object.entries(STATUS_CONFIG).map(([v, c]) => ({ value: v, label: c.label }))}
               active={filters.status} onToggle={v => toggleFilter("status", v)} />
             <FilterGroup label="Plan" options={Object.entries(PLAN_CONFIG).map(([v, c]) => ({ value: v, label: c.label }))}
@@ -399,18 +399,48 @@ export default function CrmClientsPage() {
         <SkeletonTable />
       ) : clients.length === 0 ? (
         <EmptyState hasFilters={activeFilterCount > 0 || !!debouncedQ} onClear={clearFilters} />
-      ) : viewMode === "table" ? (
-        <TableView
-          clients={clients}
-          selected={selected}
-          allSelected={allSelected}
-          onSelectAll={toggleSelectAll}
-          onSelect={id => setSelected(s => { const n = new Set(s); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; })}
-          ColHeader={ColHeader}
-          onRefresh={fetchClients}
-        />
       ) : (
-        <GridView clients={clients} />
+        <>
+          {/* Mobile card list — always shown on small screens */}
+          <div className="md:hidden space-y-2">
+            {clients.map(c => (
+              <Link key={c.id} href={`/admin/clients/${c.id}`}
+                className="flex items-center gap-3 bg-white border border-slate-200 rounded-2xl px-4 py-3.5 shadow-sm active:bg-slate-50">
+                <div className="w-9 h-9 rounded-full bg-[#E85A2C]/10 flex items-center justify-center shrink-0 overflow-hidden border border-slate-200">
+                  {c.logo_url
+                    ? <img src={c.logo_url} alt="" className="w-full h-full object-cover" />
+                    : <span className="text-[11px] font-bold text-[#E85A2C]">{(c.business_name ?? "?")[0]?.toUpperCase()}</span>
+                  }
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-slate-800 truncate">{c.business_name ?? "Unnamed"}</p>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <StatusPill status={c.crm_status} />
+                    <span className="text-[11px] text-slate-400">{c.mrr_zar ? formatZAR(c.mrr_zar / 100) + " /mo" : "—"}</span>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+              </Link>
+            ))}
+          </div>
+
+          {/* Desktop table/grid */}
+          <div className="hidden md:block">
+            {viewMode === "table" ? (
+              <TableView
+                clients={clients}
+                selected={selected}
+                allSelected={allSelected}
+                onSelectAll={toggleSelectAll}
+                onSelect={id => setSelected(s => { const n = new Set(s); if (n.has(id)) { n.delete(id); } else { n.add(id); } return n; })}
+                ColHeader={ColHeader}
+                onRefresh={fetchClients}
+              />
+            ) : (
+              <GridView clients={clients} />
+            )}
+          </div>
+        </>
       )}
 
       {/* Pagination */}
@@ -532,7 +562,7 @@ function TableView({
 // ─── Grid view ────────────────────────────────────────────────────────────────
 function GridView({ clients }: { clients: CrmClientListItem[] }) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {clients.map(c => (
         <Link key={c.id} href={`/admin/clients/${c.id}`}
           className="bg-white border border-slate-200 rounded-2xl p-4 hover:shadow-md hover:border-[#E85A2C]/20 transition-all cursor-pointer group">

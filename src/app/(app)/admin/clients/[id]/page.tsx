@@ -84,9 +84,9 @@ function HealthRing({ score }: { score: number }) {
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-      <p className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold mb-1">{label}</p>
-      <p className="text-[22px] font-bold text-slate-900 leading-none">{value}</p>
+    <div className="bg-white border border-slate-200 rounded-2xl p-3 md:p-4 shadow-sm">
+      <p className="text-[10px] md:text-[11px] uppercase tracking-widest text-slate-400 font-semibold mb-1">{label}</p>
+      <p className="text-[18px] md:text-[22px] font-bold text-slate-900 leading-none">{value}</p>
       {sub && <p className="text-[11px] text-slate-400 mt-0.5">{sub}</p>}
     </div>
   );
@@ -149,30 +149,32 @@ export default function CrmClientDetailPage() {
 
       {/* Header */}
       <div className="flex items-start gap-4 mb-6">
-        <div className="w-12 h-12 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden">
+        <div className="w-11 h-11 md:w-12 md:h-12 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden">
           {client.logo_url
             ? <img src={client.logo_url} alt="" className="w-full h-full object-cover" />
             : <span className="text-lg font-bold text-slate-400">{(client.business_name ?? "?")[0]?.toUpperCase()}</span>
           }
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-[26px] font-bold text-slate-900 leading-tight">{client.business_name ?? "Unnamed"}</h1>
+          <div className="flex items-start gap-2 flex-wrap">
+            <h1 className="text-[20px] md:text-[26px] font-bold text-slate-900 leading-tight">{client.business_name ?? "Unnamed"}</h1>
             <StatusPill status={client.crm_status} />
-            <span className="text-[11px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 font-semibold">
-              {client.plan}
-            </span>
           </div>
           <p className="text-[13px] text-slate-500 mt-0.5">{client.trade ?? client.industry ?? "—"}</p>
+          {/* Mobile actions row */}
+          <div className="flex items-center gap-2 mt-2 md:hidden">
+            <StatusSelect current={client.crm_status} onChange={v => patchClient({ crm_status: v })} />
+          </div>
         </div>
-        <div className="shrink-0 flex items-center gap-3">
+        {/* Desktop health + status — hidden on mobile */}
+        <div className="hidden md:flex shrink-0 items-center gap-3">
           <HealthRing score={client.health_score ?? 100} />
           <StatusSelect current={client.crm_status} onChange={v => patchClient({ crm_status: v })} />
         </div>
       </div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <StatCard label="Conversations" value={client.conversation_count.toLocaleString()} />
         <StatCard label="Open tasks" value={client.tasks_open} />
         <StatCard label="Bookings" value={client.bookings_total.toLocaleString()} />
@@ -180,11 +182,11 @@ export default function CrmClientDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-0 mb-6 border-b border-slate-200 overflow-x-auto">
+      <div className="flex gap-0 mb-6 border-b border-slate-200 overflow-x-auto scrollbar-none -mx-4 md:mx-0 px-4 md:px-0">
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={cn(
-              "px-4 py-2.5 text-[13px] font-medium transition-colors cursor-pointer border-b-2 -mb-px shrink-0",
+              "px-3 md:px-4 py-2.5 text-[12px] md:text-[13px] font-medium transition-colors cursor-pointer border-b-2 -mb-px shrink-0",
               tab === t ? "border-[#E85A2C] text-[#E85A2C]" : "border-transparent text-slate-500 hover:text-slate-800"
             )}>
             {t}
@@ -340,7 +342,7 @@ function AnalyticsTab({ clientId }: { clientId: string }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <p className="text-[13px] font-semibold text-slate-700">Performance metrics</p>
         <div className="flex bg-white border border-slate-200 rounded-xl overflow-hidden">
           {RANGES.map(r => (
@@ -354,12 +356,12 @@ function AnalyticsTab({ clientId }: { clientId: string }) {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[0,1,2,3,4,5].map(i => <div key={i} className="h-24 rounded-2xl bg-slate-100 animate-pulse" />)}
         </div>
       ) : summary ? (
         <>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             <StatCard label="Total convos" value={summary.conversations_total.toLocaleString()} />
             <StatCard label="WhatsApp" value={summary.conversations_whatsapp.toLocaleString()} />
             <StatCard label="Web chat" value={summary.conversations_web.toLocaleString()} />
