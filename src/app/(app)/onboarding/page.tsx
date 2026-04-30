@@ -438,7 +438,7 @@ export default function OnboardingPage() {
     } else {
       const { data, error: err } = await supabase
         .from("clients")
-        .insert([{ ...payload, user_id: user.id, status: "trial" }])
+        .insert([{ ...payload, auth_user_id: user.id, status: "trial" }])
         .select().single();
       if (err) throw err;
       if (data) setClient(data);

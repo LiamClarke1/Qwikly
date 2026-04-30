@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
   const { data: client } = await db
     .from("clients")
     .select("business_name")
-    .eq("user_id", tenantId)
+    .eq("auth_user_id", tenantId)
     .maybeSingle();
 
   const businessName = client?.business_name ?? "";

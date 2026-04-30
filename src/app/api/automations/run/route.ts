@@ -6,7 +6,7 @@ import { sendWhatsAppMessage, interpolate } from "@/lib/twilio-whatsapp";
 
 export async function POST(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (secret && req.headers.get("x-cron-secret") !== secret) {
+  if (!secret || req.headers.get("x-cron-secret") !== secret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
