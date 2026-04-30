@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabaseAdmin } from "@/lib/supabase-server";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -22,8 +17,9 @@ export async function GET(
   { params }: { params: { tenantId: string } }
 ) {
   const { tenantId } = params;
+  const db = supabaseAdmin();
 
-  const { data } = await supabaseAdmin
+  const { data } = await db
     .from("clients")
     .select(
       "business_name, web_widget_color, web_widget_greeting, web_widget_launcher_label, web_widget_position, web_widget_enabled"
@@ -31,8 +27,11 @@ export async function GET(
     .eq("public_key", tenantId)
     .maybeSingle();
 
-  if (!data || !data.web_widget_enabled) {
+  if (!data) {
     return NextResponse.json({ error: "not_found" }, { status: 404, headers: CORS });
+  }
+  if (!data.web_widget_enabled) {
+    return NextResponse.json({ error: "disabled" }, { status: 403, headers: CORS });
   }
 
   return NextResponse.json(

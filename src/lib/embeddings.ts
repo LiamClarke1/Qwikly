@@ -1,10 +1,15 @@
 import OpenAI from "openai";
 import { SupabaseClient } from "@supabase/supabase-js";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not set");
+  if (!_openai) _openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  return _openai;
+}
 
 export async function embedText(text: string): Promise<number[]> {
-  const res = await openai.embeddings.create({
+  const res = await getOpenAI().embeddings.create({
     model: "text-embedding-3-small",
     input: text.replace(/\n/g, " ").slice(0, 8000),
   });
@@ -28,10 +33,11 @@ export async function ensureKbEmbeddings(
   for (const article of unembedded) {
     try {
       const embedding = await embedText(`${article.title}\n${article.body}`);
-      await supabaseAdmin
+      const { error: updateErr } = await supabaseAdmin
         .from("kb_articles")
         .update({ embedding })
         .eq("id", article.id);
+      if (updateErr) console.error("Failed to persist embedding for kb_article", article.id, updateErr.message);
     } catch (err) {
       console.error("Failed to embed kb_article", article.id, err);
     }
