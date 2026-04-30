@@ -5,3 +5,5 @@ out/
 .env.local
 .claude/
 *.tsbuildinfo
+.superpowers/
+.worktrees/
