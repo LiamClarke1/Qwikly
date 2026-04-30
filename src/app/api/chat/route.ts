@@ -1,12 +1,11 @@
+export const runtime = "nodejs";
+export const maxDuration = 30;
+
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
+import { supabaseAdmin as createSupabaseAdmin } from "@/lib/supabase-server";
 import { ensureKbEmbeddings, searchKb } from "@/lib/embeddings";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
 const CORS = {
@@ -38,8 +37,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400, headers: CORS });
   }
 
+  const db = createSupabaseAdmin();
+
   // Resolve public_key → client
-  const { data: client } = await supabaseAdmin
+  const { data: client } = await db
     .from("clients")
     .select("id, system_prompt, web_widget_enabled")
     .eq("public_key", tenantId)
@@ -59,14 +60,16 @@ export async function POST(req: NextRequest) {
 
   // Lazy embed any un-embedded KB articles for this tenant
   try {
-    await ensureKbEmbeddings(supabaseAdmin, client.id);
-  } catch {}
+    await ensureKbEmbeddings(db, client.id);
+  } catch (err) {
+    console.error("ensureKbEmbeddings error:", err);
+  }
 
   // RAG: search KB for relevant articles
   let retrievedSources: { id: number; title: string; similarity: number }[] = [];
   let kbContext = "";
   try {
-    const articles = await searchKb(supabaseAdmin, client.id, message);
+    const articles = await searchKb(db, client.id, message);
     if (articles.length > 0) {
       retrievedSources = articles.map((a) => ({
         id: a.id,
@@ -77,17 +80,21 @@ export async function POST(req: NextRequest) {
         "\n\n## Knowledge Base\n\nUse the following only when directly relevant to the visitor's question. Do not recite unprompted. If the answer is not covered here, say so honestly.\n\n" +
         articles.map((a) => `Q: ${a.title}\nA: ${a.body}`).join("\n\n");
     }
-  } catch {}
+  } catch (err) {
+    console.error("searchKb error:", err);
+  }
 
   const systemPrompt = (client.system_prompt ?? "") + kbContext;
 
+  const validSessionId = sessionId && sessionId.trim() ? sessionId.trim() : null;
+
   // Get or create conversation
   let convoId: string | null = null;
-  if (sessionId) {
-    const { data: existing } = await supabaseAdmin
+  if (validSessionId) {
+    const { data: existing } = await db
       .from("conversations")
       .select("id")
-      .eq("visitor_id", sessionId)
+      .eq("visitor_id", validSessionId)
       .eq("client_id", client.id)
       .eq("channel", "web_chat")
       .order("created_at", { ascending: false })
@@ -97,14 +104,14 @@ export async function POST(req: NextRequest) {
   }
 
   if (!convoId) {
-    const { data: newConvo } = await supabaseAdmin
+    const { data: newConvo } = await db
       .from("conversations")
       .insert({
         client_id: client.id,
-        customer_phone: sessionId ?? "web_visitor",
+        customer_phone: validSessionId ?? "web_visitor",
         channel: "web_chat",
         status: "active",
-        visitor_id: sessionId,
+        visitor_id: validSessionId,
         page_url: context?.pageUrl ?? null,
       })
       .select("id")
@@ -114,7 +121,7 @@ export async function POST(req: NextRequest) {
 
   // Load recent history BEFORE saving current message
   const { data: historyRows } = convoId
-    ? await supabaseAdmin
+    ? await db
         .from("messages_log")
         .select("role, content")
         .eq("conversation_id", convoId)
@@ -124,7 +131,7 @@ export async function POST(req: NextRequest) {
 
   // Save visitor message
   if (convoId) {
-    await supabaseAdmin.from("messages_log").insert({
+    await db.from("messages_log").insert({
       conversation_id: convoId,
       role: "customer",
       content: message,
@@ -147,7 +154,7 @@ export async function POST(req: NextRequest) {
       try {
         const stream = anthropic.messages.stream({
           model: "claude-haiku-4-5-20251001",
-          max_tokens: 200,
+          max_tokens: 600,
           system: systemPrompt,
           messages: claudeMessages,
         });
@@ -171,27 +178,31 @@ export async function POST(req: NextRequest) {
         controller.enqueue(
           encoder.encode(`data: ${JSON.stringify({ delta: fallback })}\n\n`)
         );
-      }
+      } finally {
+        // Persist assistant reply with retrieved sources — always runs
+        try {
+          if (convoId && fullReply) {
+            await db.from("messages_log").insert({
+              conversation_id: convoId,
+              role: "assistant",
+              content: fullReply,
+              retrieved_sources: retrievedSources.length > 0 ? retrievedSources : null,
+            });
+            await db
+              .from("conversations")
+              .update({ updated_at: new Date().toISOString() })
+              .eq("id", convoId);
+          }
+        } catch (persistErr) {
+          console.error("Persist error:", persistErr);
+        }
 
-      // Persist assistant reply with retrieved sources
-      if (convoId && fullReply) {
-        await supabaseAdmin.from("messages_log").insert({
-          conversation_id: convoId,
-          role: "assistant",
-          content: fullReply,
-          retrieved_sources: retrievedSources.length > 0 ? retrievedSources : null,
-        });
-        await supabaseAdmin
-          .from("conversations")
-          .update({ updated_at: new Date().toISOString() })
-          .eq("id", convoId);
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ conversation_id: convoId })}\n\n`)
+        );
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
       }
-
-      controller.enqueue(
-        encoder.encode(`data: ${JSON.stringify({ conversation_id: convoId })}\n\n`)
-      );
-      controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-      controller.close();
     },
   });
 
