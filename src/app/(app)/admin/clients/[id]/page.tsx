@@ -182,7 +182,10 @@ export default function CrmClientDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-0 mb-6 border-b border-slate-200 overflow-x-auto scrollbar-none -mx-4 md:mx-0 px-4 md:px-0">
+      <div
+        className="flex gap-0 mb-6 border-b border-slate-200 overflow-x-auto overflow-y-hidden scrollbar-none -mx-4 md:mx-0 px-4 md:px-0 select-none"
+        style={{ touchAction: "pan-x" }}
+      >
         {TABS.map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={cn(
