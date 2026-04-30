@@ -71,7 +71,7 @@ export default function DangerZonePage() {
           <div className="flex items-start gap-4 p-4 rounded-xl bg-surface-input border border-[var(--border)] mb-5">
             <Download className="w-4 h-4 text-fg-muted mt-0.5 shrink-0" />
             <div className="space-y-1">
-              <p className="text-small text-fg">What's included</p>
+              <p className="text-small text-fg">What&apos;s included</p>
               {[
                 "All conversations and messages",
                 "Contacts and their full history",
