@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageSquare, X, ArrowUp, Zap } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 type Message = { role: "user" | "assistant"; content: string };
 
 const STARTER_PROMPTS = [
+  "How do I see my incoming leads?",
+  "How do I customise my digital assistant?",
   "How do I connect my WhatsApp number?",
-  "How do automations work?",
-  "How do I send a campaign?",
-  "What does the AI on/off toggle do?",
+  "How do bookings get captured automatically?",
 ];
 
 export function AssistantChat() {
@@ -18,8 +18,15 @@ export function AssistantChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
+
+  // Scroll messages container to bottom — never touches the page scroll
+  const scrollToBottom = useCallback(() => {
+    if (messagesRef.current) {
+      messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+    }
+  }, []);
 
   useEffect(() => {
     if (open && messages.length === 0) {
@@ -36,13 +43,19 @@ export function AssistantChat() {
   }, [open]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+    // Small delay so the DOM has painted before we scroll
+    const t = setTimeout(scrollToBottom, 30);
+    return () => clearTimeout(t);
+  }, [messages, loading, scrollToBottom]);
 
   const send = async (text?: string) => {
     const content = (text ?? input).trim();
     if (!content || loading) return;
     setInput("");
+    // Reset textarea height
+    if (inputRef.current) {
+      inputRef.current.style.height = "20px";
+    }
 
     const next: Message[] = [...messages, { role: "user", content }];
     setMessages(next);
@@ -86,7 +99,7 @@ export function AssistantChat() {
 
   return (
     <>
-      {/* Trigger button — always dark regardless of page theme */}
+      {/* Trigger button */}
       <button
         onClick={() => setOpen(true)}
         aria-label="Open assistant"
@@ -101,21 +114,26 @@ export function AssistantChat() {
         <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#E85A2C] border-2 border-[#0D111A]" />
       </button>
 
-      {/* Panel — always rendered with explicit dark palette so it looks right in light AND dark mode */}
+      {/* Panel */}
       {open && (
         <div
           className={cn(
             "fixed z-50 flex flex-col",
-            "left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] max-h-[55vh] rounded-t-2xl",
+            // Mobile: full-width sheet anchored to bottom, height uses dvh so it
+            // shrinks with the keyboard and the header always stays visible
+            "left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))]",
+            "max-h-[calc(100dvh-3.5rem-env(safe-area-inset-bottom)-env(safe-area-inset-top)-1rem)]",
+            "rounded-t-2xl",
+            // Desktop: floating card
             "md:left-auto md:right-6 md:bottom-auto md:[bottom:max(1.5rem,env(safe-area-inset-bottom))]",
-            "md:w-[380px] md:max-h-[calc(100vh-48px)] md:h-[540px] md:rounded-2xl",
+            "md:w-[380px] md:h-[540px] md:max-h-[calc(100vh-48px)] md:rounded-2xl",
             "overflow-hidden",
             "bg-[#080C14] border border-white/[0.08]",
             "shadow-[0_24px_64px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.03)]",
             "motion-safe:animate-[slideUp_180ms_ease-out]"
           )}
         >
-          {/* Header */}
+          {/* Header — always pinned to top, never scrolls away */}
           <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.07] shrink-0">
             <div className="w-7 h-7 rounded-lg bg-[#E85A2C]/10 border border-[#E85A2C]/20 flex items-center justify-center shrink-0">
               <Zap className="w-3.5 h-3.5 text-[#E85A2C]" strokeWidth={2.5} />
@@ -133,8 +151,12 @@ export function AssistantChat() {
             </button>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 scrollbar-thin">
+          {/* Messages — scrolls independently, page never moves */}
+          <div
+            ref={messagesRef}
+            className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-2"
+            style={{ touchAction: "pan-y" }}
+          >
             {messages.map((m, i) => (
               <div
                 key={i}
@@ -179,11 +201,9 @@ export function AssistantChat() {
                 ))}
               </div>
             )}
-
-            <div ref={bottomRef} />
           </div>
 
-          {/* Input */}
+          {/* Input — always pinned to bottom, never scrolls away */}
           <div className="px-3 pb-3 pt-2 border-t border-white/[0.07] shrink-0">
             <div className="flex items-end gap-2 bg-white/[0.05] border border-white/[0.09] rounded-xl px-3.5 py-2.5 focus-within:border-[#E85A2C]/40 transition-colors duration-150">
               <textarea
