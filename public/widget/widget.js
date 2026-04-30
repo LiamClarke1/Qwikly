@@ -26,6 +26,7 @@
   var branding = null;
   var panelOpen = false;
   var sending = false;
+  var vpListener = null; // visualViewport keyboard listener
 
   // ── Shadow DOM ─────────────────────────────────────────────
   var host = document.createElement("div");
@@ -96,10 +97,11 @@
     ".ft{text-align:center;padding:6px;font-size:10px;color:#CBD5E1;border-top:1px solid #F8FAFC;background:#fff;flex-shrink:0}",
 
     // ── Mobile ──
-    // Cap height so it never fills the whole screen. 16px input already prevents zoom.
+    // JS (visualViewport listener) overrides bottom+maxHeight when keyboard opens.
+    // CSS values here are the resting state (no keyboard).
     "@media(max-width:600px){" +
       "#launcher{bottom:max(16px,calc(env(safe-area-inset-bottom) + 12px));right:max(16px,calc(env(safe-area-inset-right) + 8px));padding:11px 18px;font-size:13px}" +
-      "#panel{left:8px;right:8px;width:auto;bottom:max(72px,calc(env(safe-area-inset-bottom) + 68px));height:min(62vh,500px);max-height:calc(100dvh - 100px);border-radius:18px}" +
+      "#panel{left:8px;right:8px;width:auto;bottom:max(72px,calc(env(safe-area-inset-bottom) + 68px));height:auto;max-height:60vh;border-radius:18px;transition:none}" +
     "}",
   ].join("");
   shadow.appendChild(style);
@@ -287,12 +289,34 @@
       });
   }
 
+  // ── Keyboard-aware panel positioning ──────────────────────
+  // With interactiveWidget=resizes-visual, position:fixed elements don't
+  // auto-move above the keyboard. We use visualViewport to track the
+  // keyboard height and adjust the panel's bottom + maxHeight manually.
+  function adjustForKeyboard() {
+    var vv = window.visualViewport;
+    if (!vv) return;
+    var keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    // Launcher is ~68px tall; sit the panel just above keyboard + launcher gap
+    var bottomOffset = keyboardHeight + 68;
+    var availHeight  = vv.height - 68 - 8;
+    panel.style.bottom    = bottomOffset + "px";
+    panel.style.maxHeight = Math.max(availHeight, 200) + "px";
+  }
+
   // ── Open / close ───────────────────────────────────────────
   function openPanel() {
     if (panelOpen) return;
     panelOpen = true;
     buildPanel();
     panel.classList.add("open");
+
+    // Register keyboard listener on mobile
+    if (isMobile && window.visualViewport) {
+      vpListener = adjustForKeyboard;
+      window.visualViewport.addEventListener("resize", vpListener);
+      window.visualViewport.addEventListener("scroll", vpListener);
+    }
 
     setInputEnabled(false);
     showTyping();
@@ -317,6 +341,14 @@
   function closePanel() {
     panelOpen = false;
     panel.classList.remove("open");
+    // Remove keyboard listener and reset inline styles so CSS takes over
+    if (vpListener && window.visualViewport) {
+      window.visualViewport.removeEventListener("resize", vpListener);
+      window.visualViewport.removeEventListener("scroll", vpListener);
+      vpListener = null;
+    }
+    panel.style.bottom    = "";
+    panel.style.maxHeight = "";
   }
 
   // ── Events ─────────────────────────────────────────────────

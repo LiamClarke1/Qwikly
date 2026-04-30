@@ -13,15 +13,59 @@ const STARTER_PROMPTS = [
   "How do bookings get captured automatically?",
 ];
 
-export function AssistantChat() {
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const messagesRef = useRef<HTMLDivElement>(null);
+// Bottom-nav height on mobile (3.5rem = 56px)
+const BOTTOM_NAV_PX = 56;
 
-  // Scroll messages container to bottom — never touches the page scroll
+export function AssistantChat() {
+  const [open, setOpen]       = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput]     = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const inputRef   = useRef<HTMLTextAreaElement>(null);
+  const messagesRef = useRef<HTMLDivElement>(null);
+  const panelRef   = useRef<HTMLDivElement>(null);
+
+  // ── Keyboard-aware positioning via visualViewport API ────────────────
+  // With interactiveWidget=resizes-visual the layout viewport never
+  // shrinks, so position:fixed elements don't auto-move above the
+  // keyboard. We track the visual viewport directly and adjust manually.
+  useEffect(() => {
+    if (!open) return;
+
+    const vv = window.visualViewport;
+    // On desktop the CSS handles everything; JS only needed on mobile
+    if (!vv || window.innerWidth >= 768) return;
+
+    const update = () => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      // How many pixels the keyboard is covering from the bottom
+      const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      // Panel bottom sits above both the bottom-nav and the keyboard
+      const bottomOffset = keyboardHeight + BOTTOM_NAV_PX;
+      // Available height between panel top and panel bottom anchor
+      const availableHeight = vv.height - BOTTOM_NAV_PX - 8;
+      panel.style.bottom    = `${bottomOffset}px`;
+      panel.style.maxHeight = `${Math.max(availableHeight, 200)}px`;
+    };
+
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    update(); // run once immediately in case keyboard is already open
+
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+      // Reset inline styles when closed so CSS takes over again
+      if (panelRef.current) {
+        panelRef.current.style.bottom    = "";
+        panelRef.current.style.maxHeight = "";
+      }
+    };
+  }, [open]);
+
+  // ── Scroll messages container — never touches page scroll ────────────
   const scrollToBottom = useCallback(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
@@ -30,12 +74,10 @@ export function AssistantChat() {
 
   useEffect(() => {
     if (open && messages.length === 0) {
-      setMessages([
-        {
-          role: "assistant",
-          content: "Hey! I'm your Qwikly assistant. Ask me anything — setup, features, how something works. I've got you.",
-        },
-      ]);
+      setMessages([{
+        role: "assistant",
+        content: "Hey! I'm your Qwikly assistant. Ask me anything — setup, features, how something works. I've got you.",
+      }]);
     }
     if (open) {
       setTimeout(() => inputRef.current?.focus(), 100);
@@ -43,7 +85,6 @@ export function AssistantChat() {
   }, [open]);
 
   useEffect(() => {
-    // Small delay so the DOM has painted before we scroll
     const t = setTimeout(scrollToBottom, 30);
     return () => clearTimeout(t);
   }, [messages, loading, scrollToBottom]);
@@ -52,37 +93,28 @@ export function AssistantChat() {
     const content = (text ?? input).trim();
     if (!content || loading) return;
     setInput("");
-    // Reset textarea height
-    if (inputRef.current) {
-      inputRef.current.style.height = "20px";
-    }
+    if (inputRef.current) inputRef.current.style.height = "20px";
 
     const next: Message[] = [...messages, { role: "user", content }];
     setMessages(next);
     setLoading(true);
 
     try {
-      const res = await fetch("/api/assistant/chat", {
+      const res  = await fetch("/api/assistant/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: next }),
       });
       const data = await res.json();
-      setMessages([
-        ...next,
-        {
-          role: "assistant",
-          content: data.reply ?? "Something went wrong. Try again.",
-        },
-      ]);
+      setMessages([...next, {
+        role: "assistant",
+        content: data.reply ?? "Something went wrong. Try again.",
+      }]);
     } catch {
-      setMessages([
-        ...next,
-        {
-          role: "assistant",
-          content: "Connection error. Check your network and try again.",
-        },
-      ]);
+      setMessages([...next, {
+        role: "assistant",
+        content: "Connection error. Check your network and try again.",
+      }]);
     } finally {
       setLoading(false);
     }
@@ -104,8 +136,11 @@ export function AssistantChat() {
         onClick={() => setOpen(true)}
         aria-label="Open assistant"
         className={cn(
-          "fixed right-4 md:right-6 z-40 group w-12 h-12 rounded-2xl flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-all duration-200 cursor-pointer",
-          "bg-[#0D111A] border border-white/[0.12] hover:border-[#E85A2C]/50 hover:shadow-[0_4px_24px_rgba(232,90,44,0.25)]",
+          "fixed right-4 md:right-6 z-40 group w-12 h-12 rounded-2xl",
+          "flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.4)]",
+          "transition-all duration-200 cursor-pointer",
+          "bg-[#0D111A] border border-white/[0.12]",
+          "hover:border-[#E85A2C]/50 hover:shadow-[0_4px_24px_rgba(232,90,44,0.25)]",
           "bottom-[calc(3.75rem+env(safe-area-inset-bottom))] md:[bottom:max(1.5rem,env(safe-area-inset-bottom))]",
           open && "pointer-events-none opacity-0"
         )}
@@ -117,23 +152,23 @@ export function AssistantChat() {
       {/* Panel */}
       {open && (
         <div
+          ref={panelRef}
           className={cn(
-            "fixed z-50 flex flex-col",
-            // Mobile: full-width sheet anchored to bottom, height uses dvh so it
-            // shrinks with the keyboard and the header always stays visible
-            "left-0 right-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))]",
-            "max-h-[calc(100dvh-3.5rem-env(safe-area-inset-bottom)-env(safe-area-inset-top)-1rem)]",
-            "rounded-t-2xl",
-            // Desktop: floating card
-            "md:left-auto md:right-6 md:bottom-auto md:[bottom:max(1.5rem,env(safe-area-inset-bottom))]",
-            "md:w-[380px] md:h-[540px] md:max-h-[calc(100vh-48px)] md:rounded-2xl",
-            "overflow-hidden",
+            "fixed z-50 flex flex-col overflow-hidden",
             "bg-[#080C14] border border-white/[0.08]",
             "shadow-[0_24px_64px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.03)]",
-            "motion-safe:animate-[slideUp_180ms_ease-out]"
+            "motion-safe:animate-[slideUp_180ms_ease-out]",
+            // Mobile: full-width sheet, CSS positions it; JS overrides bottom+maxHeight on keyboard open
+            "left-0 right-0 rounded-t-2xl",
+            "bottom-[calc(3.5rem+env(safe-area-inset-bottom))]",
+            "max-h-[60vh]",
+            // Desktop: floating card, purely CSS
+            "md:left-auto md:right-6",
+            "md:bottom-[max(1.5rem,env(safe-area-inset-bottom))]",
+            "md:w-[380px] md:h-[540px] md:max-h-[calc(100vh-48px)] md:rounded-2xl"
           )}
         >
-          {/* Header — always pinned to top, never scrolls away */}
+          {/* Header — shrink-0 keeps it always visible at the top */}
           <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.07] shrink-0">
             <div className="w-7 h-7 rounded-lg bg-[#E85A2C]/10 border border-[#E85A2C]/20 flex items-center justify-center shrink-0">
               <Zap className="w-3.5 h-3.5 text-[#E85A2C]" strokeWidth={2.5} />
@@ -158,21 +193,13 @@ export function AssistantChat() {
             style={{ touchAction: "pan-y" }}
           >
             {messages.map((m, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "flex",
-                  m.role === "user" ? "justify-end" : "justify-start"
-                )}
-              >
-                <div
-                  className={cn(
-                    "max-w-[82%] px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap",
-                    m.role === "user"
-                      ? "bg-[#E85A2C] text-white rounded-2xl rounded-br-md"
-                      : "bg-white/[0.07] text-slate-100 rounded-2xl rounded-bl-md border border-white/[0.06]"
-                  )}
-                >
+              <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
+                <div className={cn(
+                  "max-w-[82%] px-3.5 py-2.5 text-[13px] leading-relaxed whitespace-pre-wrap",
+                  m.role === "user"
+                    ? "bg-[#E85A2C] text-white rounded-2xl rounded-br-md"
+                    : "bg-white/[0.07] text-slate-100 rounded-2xl rounded-bl-md border border-white/[0.06]"
+                )}>
                   {m.content}
                 </div>
               </div>
@@ -203,7 +230,7 @@ export function AssistantChat() {
             )}
           </div>
 
-          {/* Input — always pinned to bottom, never scrolls away */}
+          {/* Input — shrink-0 keeps it always visible at the bottom */}
           <div className="px-3 pb-3 pt-2 border-t border-white/[0.07] shrink-0">
             <div className="flex items-end gap-2 bg-white/[0.05] border border-white/[0.09] rounded-xl px-3.5 py-2.5 focus-within:border-[#E85A2C]/40 transition-colors duration-150">
               <textarea
