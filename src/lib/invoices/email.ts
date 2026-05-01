@@ -157,32 +157,28 @@ export function qwiklyBillingInvoiceHtml(d: {
   periodStart: string;
   periodEnd: string;
   invoiceNumber: string;
-  totalPaidZar: number;
-  commissionZar: number;
-  commissionRate: number;
+  plan: string;
+  subscriptionZar: number;
   dueAt: string;
   billingUrl: string;
 }): string {
   const accent = "#E85A2C";
+  const planLabel = d.plan.charAt(0).toUpperCase() + d.plan.slice(1);
   const content = `
     <tr><td style="background:#0D111A;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:32px;">
-      <p style="margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${accent};">Qwikly commission invoice</p>
+      <p style="margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:${accent};">Qwikly subscription invoice</p>
       <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;">${d.invoiceNumber}</h1>
       <p style="margin:0 0 24px;font-size:13px;color:#9CA3AF;line-height:1.6;">
-        Hi ${d.businessName}, here is your Qwikly platform commission for ${fmtDate(d.periodStart)} – ${fmtDate(d.periodEnd)}.
+        Hi ${d.businessName}, here is your Qwikly ${planLabel} plan subscription for ${fmtDate(d.periodStart)} – ${fmtDate(d.periodEnd)}.
       </p>
       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
         <tr>
-          <td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:#9CA3AF;font-size:13px;">Total invoiced to your customers</td>
-          <td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:#F4F4F5;font-size:13px;text-align:right;">${fmt(d.totalPaidZar)}</td>
-        </tr>
-        <tr>
-          <td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:#9CA3AF;font-size:13px;">Qwikly commission (${(d.commissionRate * 100).toFixed(0)}% of ex-VAT)</td>
-          <td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:#F4F4F5;font-size:13px;text-align:right;">${fmt(d.commissionZar)}</td>
+          <td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:#9CA3AF;font-size:13px;">Qwikly ${planLabel} plan — monthly subscription</td>
+          <td style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:#F4F4F5;font-size:13px;text-align:right;">${fmt(d.subscriptionZar)}</td>
         </tr>
         <tr>
           <td style="padding:8px 0 0;color:#F4F4F5;font-size:15px;font-weight:700;">Total due</td>
-          <td style="padding:8px 0 0;color:${accent};font-size:15px;font-weight:700;text-align:right;">${fmt(d.commissionZar)}</td>
+          <td style="padding:8px 0 0;color:${accent};font-size:15px;font-weight:700;text-align:right;">${fmt(d.subscriptionZar)}</td>
         </tr>
       </table>
       <p style="margin:0 0 20px;font-size:12px;color:#6B7280;">Due by ${fmtDate(d.dueAt)}. Late payment results in account restrictions.</p>

@@ -17,8 +17,8 @@ import { fmt, fmtDate } from "@/lib/money";
  *  invoice_paid_receipt       — payment receipt to customer
  *  client_payment_received    — notify client when customer pays
  *  client_eft_pending         — client must confirm EFT
- *  client_billing_ready       — monthly Qwikly commission invoice
- *  client_billing_overdue     — Qwikly commission invoice overdue
+ *  client_billing_ready       — monthly Qwikly subscription invoice
+ *  client_billing_overdue     — Qwikly subscription invoice overdue
  *  customer_audit_ping        — sample audit ping for cash/manual payments
  */
 
@@ -91,21 +91,23 @@ export function clientEftPendingWa(d: {
 
 export function clientBillingReadyWa(d: {
   businessName: string;
-  commissionZar: number;
+  subscriptionZar: number;
+  plan: string;
   periodLabel: string;
   dueAt: string;
   billingUrl: string;
 }): string {
-  return `Hi ${d.businessName}, your Qwikly platform commission for ${d.periodLabel} is *${fmt(d.commissionZar)}*, due by ${fmtDate(d.dueAt)}.\n\nView and pay: ${d.billingUrl}`;
+  const planLabel = d.plan.charAt(0).toUpperCase() + d.plan.slice(1);
+  return `Hi ${d.businessName}, your Qwikly ${planLabel} plan subscription for ${d.periodLabel} is *${fmt(d.subscriptionZar)}*, due by ${fmtDate(d.dueAt)}.\n\nView and pay: ${d.billingUrl}`;
 }
 
 export function clientBillingOverdueWa(d: {
   businessName: string;
-  commissionZar: number;
+  subscriptionZar: number;
   daysOverdue: number;
   billingUrl: string;
 }): string {
-  return `URGENT — ${d.businessName}, your Qwikly commission of *${fmt(d.commissionZar)}* is ${d.daysOverdue} day${d.daysOverdue === 1 ? "" : "s"} overdue. Unpaid invoices may restrict your account.\n\nPay now: ${d.billingUrl}`;
+  return `URGENT — ${d.businessName}, your Qwikly subscription of *${fmt(d.subscriptionZar)}* is ${d.daysOverdue} day${d.daysOverdue === 1 ? "" : "s"} overdue. Unpaid invoices may restrict your account.\n\nPay now: ${d.billingUrl}`;
 }
 
 export function customerAuditPingWa(d: {

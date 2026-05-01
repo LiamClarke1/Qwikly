@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     if ([1, 3, 5].includes(daysOverdue) && clientRow.whatsapp_number) {
       await sendWhatsAppMessage(clientRow.whatsapp_number as string, clientBillingOverdueWa({
         businessName: (clientRow.business_name as string) ?? "",
-        commissionZar: bill.total_zar,
+        subscriptionZar: bill.total_zar,
         daysOverdue,
         billingUrl,
       })).catch(() => {});
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
           to: [emailTo],
           subject: `ACTION REQUIRED: Your Qwikly account has been restricted`,
           html: `<p>Hi ${clientRow.business_name},</p>
-          <p>Your Qwikly commission invoice of <strong>${fmt(bill.total_zar)}</strong> is now <strong>${daysOverdue} days overdue</strong>.</p>
+          <p>Your Qwikly subscription invoice of <strong>${fmt(bill.total_zar)}</strong> is now <strong>${daysOverdue} days overdue</strong>.</p>
           <p>Your account is now in read-only mode — you cannot send new invoices until this is settled.</p>
           <p><a href="${billingUrl}">View and pay your invoice</a></p>
           <p>Questions? Reply to this email or WhatsApp us at hello@qwikly.co.za.</p>`,
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       await db.from("clients").update({ ai_paused: true }).eq("id", clientId);
       if (clientRow.whatsapp_number) {
         sendWhatsAppMessage(clientRow.whatsapp_number as string,
-          `URGENT: Your Qwikly commission is ${daysOverdue} days overdue. Your digital assistant has also been paused. Pay now to restore: ${billingUrl}`
+          `URGENT: Your Qwikly subscription is ${daysOverdue} days overdue. Your digital assistant has also been paused. Pay now to restore: ${billingUrl}`
         ).catch(() => {});
       }
       results.push({ billing_invoice_id: bill.id, days_overdue: daysOverdue, action: "ai_paused" });
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
           to: [emailTo],
           subject: `Your Qwikly account has been suspended`,
           html: `<p>Hi ${clientRow.business_name},</p>
-          <p>Your Qwikly commission invoice of ${fmt(bill.total_zar)} remains unpaid after 30 days. Your account has been suspended.</p>
+          <p>Your Qwikly subscription invoice of ${fmt(bill.total_zar)} remains unpaid after 30 days. Your account has been suspended.</p>
           <p>To reinstate your account, please settle the outstanding balance: <a href="${billingUrl}">${billingUrl}</a></p>
           <p>A full data export of your invoices and customer contacts will be emailed within 48 hours.</p>`,
         }).catch(() => {});

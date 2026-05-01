@@ -154,7 +154,7 @@ export default function SignupPage() {
         <div className="space-y-8 relative">
           <div>
             <p className="text-tiny uppercase tracking-wider text-fg-subtle font-semibold mb-4">
-              Free for 7 days
+              30-day money-back guarantee
             </p>
             <h1 className="font-display text-3xl text-fg leading-tight">
               Your phone rings while you&rsquo;re on the job.
@@ -168,10 +168,10 @@ export default function SignupPage() {
 
           <div className="space-y-3">
             {[
-              "No subscription — pay 8% only when a job is booked",
-              "Handles WhatsApp and email enquiries 24/7",
+              "Flat monthly plans from R399/month — no per-job fees, ever",
+              "Handles WhatsApp, email, and website enquiries 24/7",
               "Books into your Google Calendar automatically",
-              "Cancel anytime — no contract, no card held",
+              "Cancel anytime — no lock-in, 30-day money-back guarantee",
             ].map((point, i) => (
               <div key={i} className="flex items-start gap-3">
                 <div className="w-5 h-5 rounded-full bg-brand/15 border border-brand/25 flex items-center justify-center shrink-0 mt-0.5">
@@ -210,7 +210,7 @@ export default function SignupPage() {
 
           <div className="mb-8">
             <h2 className="text-h1 text-fg">Create your account</h2>
-            <p className="text-fg-muted text-small mt-1.5">Free for 7 days — no credit card needed</p>
+            <p className="text-fg-muted text-small mt-1.5">30-day money-back guarantee on all plans</p>
           </div>
 
           {/* Google — recommended primary path */}
@@ -295,7 +295,7 @@ export default function SignupPage() {
               {loading ? (
                 <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
               ) : (
-                "Create account — free for 7 days"
+                "Create your account"
               )}
             </button>
           </form>
@@ -308,7 +308,7 @@ export default function SignupPage() {
           </p>
 
           <p className="text-center text-tiny text-fg-subtle mt-4">
-            No setup fee · No subscription · Pay only when a job books
+            No setup fee · No per-job fees · 30-day money-back guarantee
           </p>
         </div>
       </div>

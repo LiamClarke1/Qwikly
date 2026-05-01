@@ -22,7 +22,7 @@ function GoogleIcon() {
 const proofPoints = [
   { icon: MessageSquare, text: "Replies to every WhatsApp in under 30 seconds — even at 2am" },
   { icon: Calendar, text: "Books appointments directly into your Google Calendar" },
-  { icon: Zap, text: "7-day free trial, no credit card, no setup fee" },
+  { icon: Zap, text: "Flat monthly plans from R399/month — no per-job fees, ever" },
 ];
 
 export default function LoginPage() {

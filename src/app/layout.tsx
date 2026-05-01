@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     template: "%s | Qwikly",
   },
   description:
-    "Qwikly replies to every WhatsApp and email lead in 30 seconds, qualifies them, and books the job into your calendar. Built for South African service businesses. Pay only when a job is booked — 8% per booking, R150 min, R5,000 cap.",
+    "Qwikly replies to every WhatsApp and email lead in 30 seconds, qualifies them, and books the job into your calendar. Built for South African service businesses. Flat monthly plans from R399/month. No per-job fees, ever.",
   keywords: [
     "WhatsApp lead response South Africa",
     "digital booking system South Africa",
@@ -58,7 +58,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Qwikly | Never Miss a Lead Again",
     description:
-      "Replies to every WhatsApp lead in 30 seconds. Books the job. Pay only when the calendar fills — 8% per booking.",
+      "Replies to every WhatsApp lead in 30 seconds. Books the job. Flat monthly plans from R399/month. No per-job fees, ever.",
     type: "website",
     url: "https://www.qwikly.co.za",
     siteName: "Qwikly",

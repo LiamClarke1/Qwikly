@@ -429,16 +429,6 @@ export default function InvoiceDetailPage() {
             </div>
           </div>
 
-          {/* Commission info */}
-          {invoice.qwikly_commission_zar != null && (
-            <div className="bg-brand/5 border border-brand/15 rounded-2xl p-4">
-              <p className="text-tiny text-brand font-semibold uppercase tracking-wider mb-1">Qwikly commission</p>
-              <p className="text-h2 text-fg">{fmt(invoice.qwikly_commission_zar)}</p>
-              <p className="text-tiny text-fg-muted mt-0.5">
-                8% of ex-VAT · {invoice.qwikly_commission_locked ? "Locked in next billing cycle" : "Pending monthly billing"}
-              </p>
-            </div>
-          )}
         </div>
       </div>
 

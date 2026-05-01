@@ -65,7 +65,7 @@ const rows: ComparisonRow[] = [
     receptionist: "R8-15k/mo",
     autoReply: "Free",
     diyChatbot: "R500-2k",
-    qwikly: "8% / booking",
+    qwikly: "From R399/mo",
   },
 ];
 

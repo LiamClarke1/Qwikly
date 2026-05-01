@@ -65,7 +65,6 @@ interface Stats {
   collected: number;
   outstanding: number;
   overdue: number;
-  estimated_fee: number;
 }
 
 function StatusBadge({ status }: { status: InvoiceStatus }) {
@@ -115,7 +114,7 @@ export default function InvoicesPage() {
     const outstanding = (data as InvoiceRow[]).filter(i => ["sent", "viewed", "partial_paid"].includes(i.status)).reduce((s, i) => s + (i.total_zar - i.amount_paid_zar), 0);
     const overdue = (data as InvoiceRow[]).filter(i => i.status === "overdue").reduce((s, i) => s + (i.total_zar - i.amount_paid_zar), 0);
 
-    setStats({ invoiced, collected, outstanding, overdue, estimated_fee: collected * 0.08 });
+    setStats({ invoiced, collected, outstanding, overdue });
     setLoading(false);
   }, [client, activeTab]);
 
@@ -154,12 +153,11 @@ export default function InvoicesPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <StatCard label="This month invoiced" value={fmt(stats.invoiced)} />
         <StatCard label="Collected" value={fmt(stats.collected)} />
         <StatCard label="Outstanding" value={fmt(stats.outstanding)} accent={stats.outstanding > 0} />
         <StatCard label="Overdue" value={fmt(stats.overdue)} accent={stats.overdue > 0} />
-        <StatCard label="Est. Qwikly fee" value={fmt(stats.estimated_fee)} sub="8% of collected" />
       </div>
 
       {/* Tabs + Search */}
@@ -250,9 +248,8 @@ export default function InvoicesPage() {
         </div>
       )}
 
-      {/* Qwikly fee explainer */}
       <p className="mt-5 text-tiny text-fg-subtle">
-        Qwikly takes 8% of all collected invoices (ex-VAT), billed on the 1st of each month.{" "}
+        Your Qwikly subscription is billed monthly. No per-job fees, ever.{" "}
         <Link href="/dashboard/billing" className="text-ember hover:underline">View billing history</Link>
       </p>
     </div>

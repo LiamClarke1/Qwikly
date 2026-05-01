@@ -85,7 +85,7 @@ export default function BillingPage() {
       <PageHeader
         eyebrow="Account"
         title="Billing"
-        description="Qwikly charges 8% of all collected invoice payments, billed on the 1st of each month."
+        description="Your Qwikly subscription is billed monthly. No per-job fees, no commissions."
       />
 
       {/* Stats */}
@@ -120,8 +120,8 @@ export default function BillingPage() {
         <div>
           <p className="text-small font-semibold text-fg mb-1">How billing works</p>
           <p className="text-small text-fg-muted leading-relaxed">
-            At the start of each month, Qwikly locks your previous month&apos;s activity and sends you a billing invoice.
-            The fee is 8% of all collected customer payments (ex-VAT). You have 7 days to pay before your account is paused.
+            Your Qwikly subscription renews monthly. An invoice is sent at the start of each billing cycle.
+            You have 7 days to pay before your account is paused. No per-job fees — ever.
           </p>
         </div>
       </div>
@@ -140,7 +140,7 @@ export default function BillingPage() {
       ) : (
         <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
           <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_120px_32px] gap-4 px-5 py-3 border-b border-line">
-            {["Period", "Invoiced", "Collected", "Fee (8%)", "Status", ""].map((h, i) => (
+            {["Period", "Invoiced", "Collected", "Subscription fee", "Status", ""].map((h, i) => (
               <p key={i} className={cn("text-tiny uppercase tracking-wider text-fg-subtle font-semibold", i >= 1 && i < 5 ? "text-right" : "")}>{h}</p>
             ))}
           </div>

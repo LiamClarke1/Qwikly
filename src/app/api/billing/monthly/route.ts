@@ -4,19 +4,24 @@ import { resend, FROM } from "@/lib/resend";
 import { sendWhatsAppMessage } from "@/lib/twilio-whatsapp";
 import { qwiklyBillingInvoiceHtml } from "@/lib/invoices/email";
 import { clientBillingReadyWa } from "@/lib/invoices/whatsapp";
-import { commission, exVat, toZar, fmt, fmtDate } from "@/lib/money";
+import { toZar, fmt, fmtDate } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.qwikly.co.za";
 
+const PLAN_PRICES: Record<string, number> = {
+  lite: 399,
+  pro: 799,
+  business: 1499,
+};
+
 /**
- * Monthly billing run — generates Qwikly commission invoices.
+ * Monthly billing run — generates Qwikly subscription invoices.
  * Triggered automatically on the 1st of each month from /api/invoices/daily.
  * Can also be called manually for a specific client.
  *
- * Commission = 8% of ex-VAT total of all PAID invoices in the prior calendar month.
- * Partial_paid invoices: commission on the paid portion only.
+ * Billing = flat monthly subscription fee based on client plan (lite/pro/business).
  */
 export async function POST(req: NextRequest) {
   if (req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -36,54 +41,22 @@ export async function POST(req: NextRequest) {
   const periodStart = `${periodYear}-${String(periodMonth).padStart(2, "0")}-01`;
   const lastDay = new Date(periodYear, periodMonth, 0).getDate();
   const periodEnd = `${periodYear}-${String(periodMonth).padStart(2, "0")}-${lastDay}`;
-  const dueDate = `${joburg.getFullYear()}-${String(joburg.getMonth() + 1).padStart(2, "0")}-07`;
+  const dueDate = `${joburg.getFullYear()}-${String(joburg.getMonth() + 1).padStart(2, "0")}-14`;
 
   // Get all active clients
   let clientQuery = db.from("clients").select("*").eq("billing_active", true);
   if (forceClientId) clientQuery = clientQuery.eq("id", forceClientId);
   const { data: clients } = await clientQuery;
 
-  const results: Array<{ client_id: number; result: string; commission_zar?: number; error?: string }> = [];
+  const results: Array<{ client_id: number; result: string; subscription_zar?: number; error?: string }> = [];
 
   for (const client of clients ?? []) {
     try {
-      // Get all paid invoices for the period
-      const { data: paidInvoices } = await db
-        .from("invoices")
-        .select("id, total_zar, amount_paid_zar, vat_zar, status, invoice_number, customer_name")
-        .eq("client_id", client.id)
-        .in("status", ["paid", "partial_paid"])
-        .gte("paid_at", `${periodStart}T00:00:00+02:00`)
-        .lte("paid_at", `${periodEnd}T23:59:59+02:00`)
-        .eq("qwikly_commission_locked", false);
+      // Resolve flat subscription fee from client plan
+      const plan: string = client.plan ?? "pro";
+      const subscriptionZar: number = toZar(PLAN_PRICES[plan] ?? PLAN_PRICES.pro);
 
-      if (!paidInvoices?.length) {
-        results.push({ client_id: client.id, result: "no_commissionable_invoices" });
-        continue;
-      }
-
-      // Compute totals
-      let totalPaidZar = 0;
-      let totalPaidExVat = 0;
-
-      for (const inv of paidInvoices) {
-        const paid = inv.amount_paid_zar;
-        totalPaidZar = toZar(totalPaidZar + paid);
-        // Compute ex-VAT portion of the paid amount
-        const vatRate = inv.vat_zar > 0 ? 0.15 : 0;
-        const paidExVat = vatRate > 0 ? exVat(paid, vatRate) : paid;
-        totalPaidExVat = toZar(totalPaidExVat + paidExVat);
-      }
-
-      const commissionRate: number = client.commission_rate ?? 0.08;
-      const commissionZar = commission(totalPaidExVat, commissionRate);
-
-      if (commissionZar <= 0) {
-        results.push({ client_id: client.id, result: "zero_commission" });
-        continue;
-      }
-
-      // Check if period already exists
+      // Check if period already exists for this month
       const { data: existingPeriod } = await db
         .from("qwikly_billing_periods")
         .select("id")
@@ -96,45 +69,36 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      // Create billing period
+      // Create billing period — reuse commission_zar column to store subscription fee
       const { data: period } = await db.from("qwikly_billing_periods").insert({
         client_id: client.id,
         period_start: periodStart,
         period_end: periodEnd,
-        total_invoiced_zar: paidInvoices.reduce((s, i) => toZar(s + i.total_zar), 0),
-        total_paid_zar: totalPaidZar,
-        total_paid_ex_vat_zar: totalPaidExVat,
-        commission_rate: commissionRate,
-        commission_zar: commissionZar,
+        total_invoiced_zar: 0,
+        total_paid_zar: 0,
+        total_paid_ex_vat_zar: 0,
+        commission_rate: 0,
+        commission_zar: subscriptionZar,
         status: "locked",
         locked_at: now.toISOString(),
         due_at: dueDate,
       }).select().single();
 
-      // Lock invoices so they can't be retro-edited
-      await db.from("invoices")
-        .update({ qwikly_commission_locked: true, qwikly_billing_invoice_id: null })
-        .in("id", paidInvoices.map(i => i.id));
-
       // Generate billing invoice number: QWK-YYYY-MM-NNNN
       const { data: seqNum } = await db.rpc("nextval", { sequence_name: "qwikly_billing_number_seq" }).maybeSingle();
       const billingInvoiceNumber = `QWK-${periodYear}-${String(periodMonth).padStart(2, "0")}-${String(seqNum ?? Date.now()).padStart(4, "0")}`;
 
-      // Line items snapshot
-      const lineItemsSnapshot = paidInvoices.map(inv => ({
-        invoice_id: inv.id,
-        invoice_number: inv.invoice_number,
-        customer_name: inv.customer_name,
-        amount_paid_zar: inv.amount_paid_zar,
-        commission_zar: commission(inv.vat_zar > 0 ? exVat(inv.amount_paid_zar) : inv.amount_paid_zar, commissionRate),
-      }));
+      const lineItemsSnapshot = [{
+        description: `Qwikly ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan — ${new Date(periodStart).toLocaleDateString("en-ZA", { month: "long", year: "numeric" })}`,
+        amount_zar: subscriptionZar,
+      }];
 
       const { data: billingInvoice } = await db.from("qwikly_billing_invoices").insert({
         client_id: client.id,
         period_id: period!.id,
         invoice_number: billingInvoiceNumber,
-        total_zar: commissionZar,
-        vat_zar: 0, // Qwikly not yet VAT registered
+        total_zar: subscriptionZar,
+        vat_zar: 0,
         status: "sent",
         due_at: dueDate,
         sent_at: now.toISOString(),
@@ -147,45 +111,43 @@ export async function POST(req: NextRequest) {
         qwikly_billing_invoice_id: billingInvoice!.id,
       }).eq("id", period!.id);
 
-      // Update invoices with billing invoice reference
-      await db.from("invoices").update({ qwikly_billing_invoice_id: billingInvoice!.id }).in("id", paidInvoices.map(i => i.id));
-
       const billingUrl = `${BASE_URL}/dashboard/billing/${period!.id}`;
       const periodLabel = new Date(periodStart).toLocaleDateString("en-ZA", { month: "long", year: "numeric" });
 
-      // Notify client
+      // Notify client via WhatsApp
       if (client.whatsapp_number) {
         sendWhatsAppMessage(client.whatsapp_number, clientBillingReadyWa({
           businessName: client.business_name ?? "",
-          commissionZar,
+          subscriptionZar,
+          plan,
           periodLabel,
           dueAt: dueDate,
           billingUrl,
         })).catch(() => {});
       }
 
+      // Notify client via email
       const emailTo = client.billing_email ?? client.notification_email;
       if (emailTo) {
         resend.emails.send({
           from: FROM,
           to: [emailTo],
-          subject: `Qwikly commission invoice ${billingInvoiceNumber} — ${fmt(commissionZar)} due ${fmtDate(dueDate)}`,
+          subject: `Qwikly subscription invoice ${billingInvoiceNumber} — ${fmt(subscriptionZar)} due ${fmtDate(dueDate)}`,
           html: qwiklyBillingInvoiceHtml({
             businessName: client.business_name ?? "",
             billingEmail: emailTo,
             periodStart,
             periodEnd,
             invoiceNumber: billingInvoiceNumber,
-            totalPaidZar,
-            commissionZar,
-            commissionRate,
+            plan,
+            subscriptionZar,
             dueAt: dueDate,
             billingUrl,
           }),
         }).catch(() => {});
       }
 
-      results.push({ client_id: client.id, result: "invoiced", commission_zar: commissionZar });
+      results.push({ client_id: client.id, result: "invoiced", subscription_zar: subscriptionZar });
     } catch (err) {
       results.push({ client_id: client.id, result: "error", error: String(err) });
     }

@@ -199,11 +199,7 @@ export default function BillingPeriodPage() {
                 <span className="text-small text-fg">{fmt(period.total_paid_ex_vat_zar)}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-line/50">
-                <span className="text-small text-fg-muted">Commission rate</span>
-                <span className="text-small text-fg">{(period.commission_rate * 100).toFixed(0)}%</span>
-              </div>
-              <div className="flex justify-between items-center py-2 border-b border-line/50">
-                <span className="text-small text-fg-muted">Commission (ex-VAT)</span>
+                <span className="text-small text-fg-muted">Subscription fee</span>
                 <span className="text-small font-semibold text-fg">{fmt(period.commission_zar)}</span>
               </div>
               {period.vat_zar > 0 && (
@@ -219,10 +215,10 @@ export default function BillingPeriodPage() {
             </div>
           </div>
 
-          {/* Invoices that generated commission */}
+          {/* Invoices this period */}
           {(period.invoices_summary ?? []).length > 0 && (
             <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
-              <p className="px-5 py-3.5 text-small font-semibold text-fg border-b border-line">Invoices included</p>
+              <p className="px-5 py-3.5 text-small font-semibold text-fg border-b border-line">Invoices this period</p>
               <div className="divide-y divide-line/50">
                 {period.invoices_summary.map(inv => (
                   <div key={inv.id} className="px-5 py-3.5 flex items-center justify-between gap-4">
