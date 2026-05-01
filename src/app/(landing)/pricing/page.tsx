@@ -19,11 +19,11 @@ const tiers: {
   {
     id: "starter",
     name: "Starter",
-    tagline: "Free forever — no card needed",
+    tagline: "Free forever. No card needed.",
     highlight: false,
     features: [
       "25 qualified leads/month",
-      "Website chat widget",
+      "Digital assistant platform",
       "Email lead delivery",
       '"Powered by Qwikly" branding',
       "Email support",
@@ -63,7 +63,7 @@ const tiers: {
 type FeatureCell = boolean | string;
 
 const featureRows: { label: string; starter: FeatureCell; pro: FeatureCell; premium: FeatureCell }[] = [
-  { label: "Website chat widget",              starter: true,        pro: true,        premium: true        },
+  { label: "Digital assistant platform",        starter: true,        pro: true,        premium: true        },
   { label: "Email lead delivery",              starter: true,        pro: true,        premium: true        },
   { label: "POPIA compliant",                  starter: true,        pro: true,        premium: true        },
   { label: "Email support",                    starter: true,        pro: true,        premium: true        },
@@ -83,12 +83,12 @@ const pricingFAQs = [
   {
     question: "What counts as a qualified lead?",
     answer:
-      "A qualified lead is a visitor who has provided their contact details and answered your qualifying questions — service type, location, and buying intent. Bounced chats and spam are not counted.",
+      "A qualified lead is a visitor who has provided their contact details and answered your qualifying questions: service type, location, and buying intent. Bounced chats and spam are not counted.",
   },
   {
     question: "What happens if I exceed my monthly limit?",
     answer:
-      "We'll notify you before you hit the cap. You can upgrade your plan, or add extra leads at R20 each. No automatic billing, no surprise charges, and your widget keeps working until you decide.",
+      "We'll notify you before you hit the cap. You can upgrade your plan, or add extra leads at R20 each. No automatic billing, no surprise charges, and your digital assistant keeps working until you decide.",
   },
   {
     question: "Can I switch plans anytime?",
@@ -374,7 +374,7 @@ export default function PricingPage() {
             <p className="text-ink-700 leading-relaxed max-w-lg mx-auto">
               Try Pro or Premium for 30 days. If you&rsquo;re not happy for any reason,
               we&rsquo;ll refund every cent. No hoops, no questions asked.
-              (Starter is free &mdash; no guarantee needed.)
+              (Starter is free. No guarantee needed.)
             </p>
           </div>
         </div>
@@ -388,7 +388,7 @@ export default function PricingPage() {
               <p className="eyebrow text-ember mb-3">Need more leads?</p>
               <h3 className="font-display text-2xl text-ink mb-2">Top-ups at R20 per extra qualified lead.</h3>
               <p className="text-ink-700 text-sm leading-relaxed">
-                Hit your monthly cap? Add extra leads one by one at R20 each &mdash; no plan change required.
+                Hit your monthly cap? Add extra leads one by one at R20 each. No plan change required.
                 No surprises, no automatic billing. You approve every top-up.
               </p>
             </div>

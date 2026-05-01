@@ -20,7 +20,7 @@ export default function ContactPage() {
             <em className="italic font-light">Talk to a human.</em>
           </h1>
           <p className="text-ink-700 text-lg leading-relaxed mb-16 max-w-xl">
-            Questions about pricing, setup, or whether Qwikly works for your business &mdash; we
+            Questions about pricing, setup, or whether Qwikly works for your business. We
             reply within one business day.
           </p>
 
@@ -43,7 +43,7 @@ export default function ContactPage() {
                   Mon&ndash;Fri 08:00&ndash;17:00 SAST
                   <br />
                   <span className="text-ink-400">
-                    Qwikly itself never stops &mdash; just us humans.
+                    Qwikly itself never stops. Just us humans.
                   </span>
                 </p>
               </div>

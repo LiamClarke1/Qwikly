@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Qwikly offers three flat monthly plans — Starter (free), Pro at R599/month, Premium at R1,299/month. No per-job fees, no commissions. 30-day money-back guarantee.",
+    "Qwikly offers three flat monthly plans: Starter (free), Pro at R599/month, Premium at R1,299/month. No per-job fees, no commissions. 30-day money-back guarantee.",
   alternates: { canonical: "https://www.qwikly.co.za/pricing" },
   openGraph: {
-    title: "Qwikly Pricing — Flat Monthly Plans. No Per-Job Fees.",
+    title: "Qwikly Pricing: Flat Monthly Plans. No Per-Job Fees.",
     description:
       "Starter Free · Pro R599/mo · Premium R1,299/mo. No commissions, no setup fees, no lock-in. 30-day money-back guarantee on Pro and Premium.",
     url: "https://www.qwikly.co.za/pricing",
@@ -16,9 +16,9 @@ export const metadata: Metadata = {
 const productSchema = {
   "@context": "https://schema.org",
   "@type": "Product",
-  name: "Qwikly Website Chat Widget",
+  name: "Qwikly Digital Assistant Platform",
   description:
-    "AI-powered website chat widget for South African businesses. Captures leads, qualifies them, and delivers booking requests to your inbox 24/7.",
+    "Digital assistant platform for South African businesses. Captures leads, qualifies them, and delivers booking requests to your inbox 24/7.",
   brand: { "@type": "Brand", name: "Qwikly" },
   offers: [
     {
@@ -27,7 +27,7 @@ const productSchema = {
       priceCurrency: "ZAR",
       price: "0",
       priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
-      description: "25 qualified leads per month. Website chat widget, email lead delivery, POPIA compliant. Free forever.",
+      description: "25 qualified leads per month. Digital assistant platform, email lead delivery, POPIA compliant. Free forever.",
       availability: "https://schema.org/InStock",
       url: "https://www.qwikly.co.za/pricing",
     },
@@ -63,7 +63,7 @@ const faqSchema = {
       name: "What counts as a qualified lead?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "A qualified lead is a visitor who has provided their contact details and answered your qualifying questions — service type, location, and buying intent. Bounced chats and spam are not counted.",
+        text: "A qualified lead is a visitor who has provided their contact details and answered your qualifying questions: service type, location, and buying intent. Bounced chats and spam are not counted.",
       },
     },
     {

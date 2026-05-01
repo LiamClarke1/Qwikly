@@ -6,7 +6,7 @@ import CTAButton from "@/components/CTAButton";
 export const metadata: Metadata = {
   title: "FAQ",
   description:
-    "Answers to the most common questions about Qwikly — how the website chat widget works, what counts as a qualified lead, pricing, and POPIA compliance.",
+    "Answers to the most common questions about Qwikly: how the digital assistant platform works, what counts as a qualified lead, pricing, and POPIA compliance.",
   alternates: { canonical: "https://www.qwikly.co.za/faq" },
 };
 
@@ -47,7 +47,7 @@ export default function FAQPage() {
             <em className="italic font-light text-ember">Talk to us.</em>
           </h2>
           <p className="text-paper/70 text-lg mt-8 max-w-xl mx-auto leading-relaxed">
-            We reply within one business day. Or start free and try Qwikly for yourself &mdash; no card required.
+            We reply within one business day. Or start free and try Qwikly for yourself. No card required.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
             <CTAButton size="lg" variant="solid" href="/signup">

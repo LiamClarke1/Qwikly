@@ -20,7 +20,7 @@ const HOW_STEPS = [
     Icon: Code,
     num: "01",
     title: "Paste one line of code",
-    body: "Works with Wix, Squarespace, WordPress, Webflow, Shopify, or any custom site. If you can edit your site, you can install Qwikly — most people are done in 5 minutes.",
+    body: "Works with Wix, Squarespace, WordPress, Webflow, Shopify, or any custom site. If you can edit your site, you can install Qwikly. Most people are done in 5 minutes.",
   },
   {
     Icon: Zap,
@@ -64,7 +64,7 @@ export default function ConnectYourWebsitePage() {
       <section className="pt-36 pb-24 px-6">
         <div className="max-w-site mx-auto max-w-3xl">
           <span className="inline-block border border-ember/30 text-ember text-[0.75rem] font-semibold tracking-widest uppercase px-3 py-1 rounded-full mb-6">
-            New — Website Channel
+            New. Website Channel
           </span>
           <h1 className="font-display font-medium leading-[0.93] tracking-tight mb-6"
               style={{ fontSize: "clamp(2.8rem,7vw,6rem)", letterSpacing: "-0.035em" }}>
@@ -74,7 +74,7 @@ export default function ConnectYourWebsitePage() {
           </h1>
           <p className="text-ink-500 text-xl leading-relaxed mb-10 max-w-2xl">
             Connect your existing website to a Qwikly digital assistant. Visitors get answers in 30 seconds,
-            jobs get qualified, bookings go straight into your calendar — even at 11 pm.
+            jobs get qualified, bookings go straight into your calendar. Even at 11 pm.
           </p>
           <div className="flex flex-wrap gap-4 items-center">
             <CTAButton href="/pricing" size="lg">

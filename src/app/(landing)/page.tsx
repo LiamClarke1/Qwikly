@@ -84,7 +84,7 @@ function BrowserWidgetMockup() {
             </div>
           </div>
 
-          {/* Qwikly chat widget — bottom right */}
+          {/* Qwikly digital assistant, bottom right */}
           <div className="absolute bottom-4 right-4 w-[215px]">
             <div className="bg-white rounded-2xl overflow-hidden border border-ink/[0.08]" style={{ boxShadow: "0 20px 40px rgba(14,14,12,0.18)" }}>
 
@@ -159,18 +159,71 @@ function BrowserWidgetMockup() {
 const howSteps = [
   {
     stamp: "i.",
-    title: "Sign up and paste one script tag.",
-    body: "Copy a single line of code into your website's HTML. No developer needed. No integrations to configure. Takes under 5 minutes.",
+    title: "Sign up and tell us about your business.",
+    body: "Create your account in under 2 minutes. Tell us your business name, industry, and the services you offer.",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    ),
   },
   {
     stamp: "ii.",
-    title: "Visitors chat with your AI assistant.",
-    body: "Your Qwikly widget greets every visitor, asks qualifying questions, and handles the full conversation — 24 hours a day, 7 days a week.",
+    title: "We scan your entire website automatically.",
+    body: "Our tool reads your site from top to bottom. Services, pricing, FAQs, contact details. Everything your customers ask about.",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        <line x1="8" y1="11" x2="14" y2="11" />
+        <line x1="11" y1="8" x2="11" y2="14" />
+      </svg>
+    ),
   },
   {
     stamp: "iii.",
-    title: "Qualified leads land in your inbox.",
-    body: "When a lead is qualified, you get an email with everything you need: name, contact details, what they want, and a booking request. Confirm in one click.",
+    title: "You review and confirm the details.",
+    body: "We show you a summary of everything we found. Correct it, fill in gaps, or add services we missed. Done in minutes.",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 11l3 3L22 4" />
+        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
+      </svg>
+    ),
+  },
+  {
+    stamp: "iv.",
+    title: "Your digital assistant is configured.",
+    body: "Based on your confirmed details, your assistant is ready. It knows your services, pricing, and how to qualify a real lead.",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+      </svg>
+    ),
+  },
+  {
+    stamp: "v.",
+    title: "Paste one script tag onto your website.",
+    body: "Copy a single line of code into your site. Works with Wix, Squarespace, WordPress, Webflow, Shopify, or any custom site.",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="16 18 22 12 16 6" />
+        <polyline points="8 6 2 12 8 18" />
+      </svg>
+    ),
+  },
+  {
+    stamp: "vi.",
+    title: "Leads land in your inbox from day one.",
+    body: "Your digital assistant greets visitors, answers questions using your content, qualifies them, and sends confirmed leads straight to your inbox.",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+        <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z" />
+      </svg>
+    ),
   },
 ];
 
@@ -183,7 +236,7 @@ const features = [
       </svg>
     ),
     title: "24/7 lead capture",
-    body: "Your website never sleeps. Every visitor, every hour, every day — no lead slips through because you were busy or offline.",
+    body: "Your website never sleeps. Every visitor, every hour, every day. No lead slips through because you were busy or offline.",
   },
   {
     icon: (
@@ -193,7 +246,7 @@ const features = [
       </svg>
     ),
     title: "Smart qualification",
-    body: "The assistant asks your questions — service type, location, budget, urgency. Only warm, ready-to-buy leads reach your inbox.",
+    body: "The assistant asks your questions: service type, location, budget, urgency. Only warm, ready-to-buy leads reach your inbox.",
   },
   {
     icon: (
@@ -205,7 +258,7 @@ const features = [
       </svg>
     ),
     title: "Instant booking requests",
-    body: "Qualified leads can request a booking time directly in the chat. You get notified the moment they do — no forms, no back-and-forth emails.",
+    body: "Qualified leads can request a booking time directly in the chat. You get notified the moment they do. No forms, no back-and-forth emails.",
   },
   {
     icon: (
@@ -222,7 +275,7 @@ const differentiators = [
   {
     num: "01",
     headline: "Live in 5 minutes.",
-    body: "No setup calls. No integrations to wire. No developer needed. Paste one script tag and your AI assistant is live. That's it.",
+    body: "No setup calls. No integrations to wire. No developer needed. Paste one script tag and your digital assistant is live. Done.",
   },
   {
     num: "02",
@@ -245,7 +298,7 @@ const teaserTiers = [
     highlight: false,
     features: [
       "25 qualified leads/month",
-      "Website chat widget",
+      "Digital assistant platform",
       "Email lead delivery",
       '"Powered by Qwikly" branding',
       "Email support",
@@ -293,7 +346,7 @@ const teaserTiers = [
 const faqTeaser = [
   {
     q: "What counts as a qualified lead?",
-    a: "A lead who has provided their contact details and answered your qualifying questions — service type, location, and intent. We only count real contacts, not bounced chats or spam.",
+    a: "A lead who has provided their contact details and answered your qualifying questions: service type, location, and intent. We only count real contacts, not bounced chats or spam.",
   },
   {
     q: "What happens when I hit my monthly limit?",
@@ -301,7 +354,7 @@ const faqTeaser = [
   },
   {
     q: "Can I use my own logo and colours?",
-    a: "Yes — on Pro and Premium plans, the widget uses your branding, not ours. Starter plans show 'Powered by Qwikly' branding.",
+    a: "Yes. On Pro and Premium plans, your digital assistant uses your branding, not ours. Starter plans show 'Powered by Qwikly'.",
   },
   {
     q: "Do you take a cut of my jobs?",
@@ -338,9 +391,9 @@ export default function Home() {
 
           {/* Headline */}
           <div className="reveal-words visible">
-            <h1 className="display-huge text-ink max-w-[18ch]">
-              The AI assistant{" "}
-              <em className="italic font-light">for your website</em>.
+            <h1 className="display-huge text-ink max-w-[20ch]">
+              The digital assistant{" "}
+              <em className="italic font-light">platform for your business</em>.
             </h1>
           </div>
 
@@ -348,8 +401,8 @@ export default function Home() {
           <div className="mt-10 md:mt-14 reveal-up">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
               <p className="text-lg md:text-xl text-ink-700 leading-relaxed max-w-lg">
-                Captures every lead, qualifies them, and books them in &mdash; even when you&rsquo;re asleep.
-                Live on your site in 5 minutes.
+                Captures every enquiry, qualifies it, and sends it to your inbox. Even when you&rsquo;re asleep.
+                Live in under 10 minutes.
               </p>
               <div className="flex flex-col gap-4 lg:items-end lg:text-right">
                 <div className="flex flex-wrap gap-4 lg:justify-end">
@@ -388,7 +441,7 @@ export default function Home() {
             ))}
           </div>
           <p className="eyebrow text-center text-ink-400 mt-8 text-[10px]">
-            Logo wall placeholder — real customers coming Q3 2026
+            Real customers coming Q3 2026
           </p>
         </div>
       </section>
@@ -403,15 +456,15 @@ export default function Home() {
             <div className="md:col-span-4">
               <p className="eyebrow text-ink-500 mb-6 reveal-up">How it works</p>
               <h2 className="display-lg text-ink reveal-up">
-                Three steps.
+                Six steps.
                 <br />
                 <span className="italic font-light">Zero fuss.</span>
               </h2>
             </div>
             <div className="md:col-span-7 md:col-start-6 md:pt-6">
               <p className="text-lg text-ink-700 leading-relaxed reveal-up">
-                Paste one script tag, and Qwikly handles every visitor conversation from first hello to
-                confirmed booking &mdash; no setup calls, no integrations to wire, no ongoing work from you.
+                Sign up, and in minutes your digital assistant knows your business inside out. It handles every visitor conversation from first hello to
+                confirmed booking. No setup calls, no integrations to wire, no ongoing work from you.
               </p>
             </div>
           </div>
@@ -419,12 +472,15 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 reveal-stagger">
             {howSteps.map((s) => (
               <div key={s.stamp} className="ed-card-ghost group">
-                <div className="flex items-start justify-between mb-6">
+                <div className="w-10 h-10 rounded-xl bg-ember/10 border border-ember/15 flex items-center justify-center text-ember mb-5">
+                  {s.icon}
+                </div>
+                <div className="flex items-start justify-between mb-4">
                   <span className="step-stamp">{s.stamp}</span>
                   <span className="eyebrow text-ink-500 group-hover:text-ember transition-colors">Step</span>
                 </div>
-                <h3 className="font-display text-2xl md:text-3xl text-ink leading-tight">{s.title}</h3>
-                <p className="mt-4 text-ink-700 leading-relaxed">{s.body}</p>
+                <h3 className="font-display text-xl md:text-2xl text-ink leading-tight">{s.title}</h3>
+                <p className="mt-3 text-ink-700 text-sm leading-relaxed">{s.body}</p>
               </div>
             ))}
           </div>
@@ -444,8 +500,7 @@ export default function Home() {
             </div>
             <div className="md:col-span-7 md:pt-4 reveal-up">
               <p className="text-lg text-ink-700 leading-relaxed">
-                Qwikly sits on your website and handles every incoming enquiry &mdash; qualifying, booking,
-                and delivering warm leads to your inbox, around the clock.
+                Qwikly handles every incoming enquiry on your behalf. It qualifies, books, and delivers warm leads to your inbox. Around the clock.
               </p>
             </div>
           </div>
@@ -672,7 +727,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
           <p className="eyebrow text-paper/60 mb-10 reveal-up">Your move</p>
           <h2 className="display-huge text-paper reveal-up max-w-[18ch] mx-auto">
-            Get your AI assistant{" "}
+            Get your digital assistant{" "}
             <em className="italic font-light text-ember">live this week</em>.
           </h2>
           <p className="mt-10 text-paper/70 text-lg md:text-xl max-w-xl mx-auto leading-relaxed reveal-up">

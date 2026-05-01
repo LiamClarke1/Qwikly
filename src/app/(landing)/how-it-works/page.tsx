@@ -5,34 +5,46 @@ import { FAQ_DATA, buildFAQSchema } from "@/lib/faq-data";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "Qwikly lives on your website, greets every visitor, qualifies leads, and delivers them to your inbox — all automatically, in minutes. Here's exactly how it works.",
+    "Qwikly scans your website, configures your digital assistant, and has it live in under 10 minutes. Here is exactly how the six-step process works.",
   alternates: { canonical: "https://www.qwikly.co.za/how-it-works" },
 };
 
 const steps = [
   {
     stamp: "i.",
-    title: "Sign up and paste one script tag.",
+    title: "Sign up and tell us about your business.",
     body:
-      "Copy a single line of code into your website's HTML — in the head or body, before the closing tag. No developer, no plugin, no integrations. Your widget is live within 5 minutes of signing up.",
+      "Create your account in under 2 minutes. Tell us your business name, industry, location, and the services you offer. No technical knowledge required.",
   },
   {
     stamp: "ii.",
-    title: "Visitors open the chat.",
+    title: "We scan your entire website automatically.",
     body:
-      "The Qwikly widget sits in the corner of your site. When a visitor clicks it, the AI assistant greets them by name if available, then starts a natural conversation — asking what they need, where they are, and how soon they want it.",
+      "Our tool reads your site from top to bottom. Services, pricing, FAQs, contact details, opening hours. Everything your customers typically ask about, captured and structured for your assistant.",
   },
   {
     stamp: "iii.",
-    title: "The lead gets qualified.",
+    title: "You review and confirm the details.",
     body:
-      "The assistant works through your custom qualifying questions. Visitors who don't match your criteria get a polite redirect. The ones who do have their contact details captured automatically.",
+      "We show you a clear summary of everything we found. Correct anything, fill in gaps, or add services we missed. This step takes most businesses under 5 minutes.",
   },
   {
     stamp: "iv.",
-    title: "You get an email. You confirm in one click.",
+    title: "Your digital assistant is configured.",
     body:
-      "Qualified leads arrive in your inbox with the visitor's name, contact details, what they want, and a booking time they've requested. A single button confirms or reschedules. You're always in control.",
+      "Based on what you confirmed, your assistant is set up and ready. It knows your services, your pricing, and exactly how to qualify a real lead from a time-waster.",
+  },
+  {
+    stamp: "v.",
+    title: "Paste one script tag onto your website.",
+    body:
+      "Copy a single line of code into your website's HTML. No developer, no plugin, no integrations needed. Works with Wix, Squarespace, WordPress, Webflow, Shopify, or any custom site.",
+  },
+  {
+    stamp: "vi.",
+    title: "Leads land in your inbox from the first visitor.",
+    body:
+      "Your digital assistant greets every visitor, answers their questions using your content, qualifies them based on your criteria, and sends confirmed leads straight to your inbox with a one-click confirmation.",
   },
 ];
 
@@ -40,7 +52,7 @@ const underTheHood = [
   {
     title: "Customisable qualifying questions",
     body:
-      "Tell Qwikly what to ask. Service type, location, budget, timeline — you define the questions, and the assistant works through them naturally in conversation.",
+      "Tell Qwikly what to ask: service type, location, budget, timeline. You define the questions, and the assistant works through them naturally in conversation.",
   },
   {
     title: "Instant email notifications",
@@ -95,15 +107,15 @@ export default function HowItWorksPage() {
             <em className="italic font-light">qualified lead in your inbox</em>.
           </h1>
           <p className="mt-8 text-lg text-ink-700 max-w-xl leading-relaxed">
-            One script tag. No integrations. No developer. Qwikly learns your business
-            once and then handles every visitor conversation, 24/7, without you touching it.
+            Qwikly scans your website, configures your digital assistant, and has it live in under 10 minutes.
+            No integrations. No developer. No ongoing work from you.
           </p>
           <div className="mt-6 flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-ember/10 border border-ember/20">
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 text-ember" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
               </svg>
-              <span className="text-xs font-semibold text-ember">Website Chat Widget</span>
+              <span className="text-xs font-semibold text-ember">Digital Assistant Platform</span>
             </div>
             <svg viewBox="0 0 16 16" className="w-3 h-3 text-ink-300" fill="none"><path d="M6 8h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
@@ -112,7 +124,7 @@ export default function HowItWorksPage() {
               </svg>
               <span className="text-xs font-semibold text-blue-500">Email Lead Delivery</span>
             </div>
-            <span className="text-xs text-ink-400 pl-1">One system. One script tag.</span>
+            <span className="text-xs text-ink-400 pl-1">One platform. One script tag.</span>
           </div>
         </div>
       </section>
@@ -120,17 +132,17 @@ export default function HowItWorksPage() {
       {/* Steps */}
       <section className="py-24 grain">
         <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {steps.map((s) => (
               <div key={s.stamp} className="ed-card-ghost">
                 <div className="flex items-start justify-between mb-6">
                   <span className="step-stamp">{s.stamp}</span>
                   <span className="eyebrow text-ink-500">Step</span>
                 </div>
-                <h2 className="font-display text-2xl md:text-3xl text-ink leading-tight">
+                <h2 className="font-display text-xl md:text-2xl text-ink leading-tight">
                   {s.title}
                 </h2>
-                <p className="mt-4 text-ink-700 leading-relaxed">{s.body}</p>
+                <p className="mt-4 text-ink-700 text-sm leading-relaxed">{s.body}</p>
               </div>
             ))}
           </div>
@@ -189,7 +201,7 @@ export default function HowItWorksPage() {
             <div className="md:col-span-6 md:col-start-7 md:pt-4">
               <p className="text-ink-700 text-lg leading-relaxed">
                 Everything you&rsquo;d expect from a full-time front office: triage, qualification,
-                logging, and notifications &mdash; working silently while you focus on the work.
+                logging, and notifications. Working silently while you focus on the work.
               </p>
             </div>
           </div>

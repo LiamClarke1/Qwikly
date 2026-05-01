@@ -22,9 +22,9 @@ export default function AboutPage() {
           <div className="bg-paper-deep border border-ink/[0.07] rounded-2xl p-6 mb-16">
             <p className="text-ink-700 leading-relaxed text-base">
               Qwikly exists because every local business I know loses leads the same way: a potential
-              customer visits their website, has a question, and leaves when nobody answers. We built an
-              AI assistant that lives on your website, greets every visitor, qualifies the lead, and
-              delivers it to your inbox &mdash; so you never lose a customer to silence again.
+              customer visits their website, has a question, and leaves when nobody answers. We built a
+              digital assistant platform that lives on your website, greets every visitor, qualifies the lead, and
+              delivers it to your inbox. So you never lose a customer to silence again.
             </p>
           </div>
 
@@ -59,7 +59,7 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-4 text-ink-700 leading-relaxed text-base">
                 <p>
-                  A website chat widget powered by AI. A visitor lands on your site. Qwikly greets
+                  A digital assistant platform for your website. A visitor lands on your site. Qwikly greets
                   them, asks the right qualifying questions, captures their contact details, and
                   delivers a warm lead to your inbox. You get one email, with a one-click confirmation
                   button. The whole process takes seconds.
@@ -111,7 +111,7 @@ export default function AboutPage() {
                 </div>
                 <div className="flex gap-6">
                   <span className="eyebrow text-ink-500 w-28 shrink-0">Data Officer</span>
-                  <span>Liam Clarke &mdash; liamclarke21@outlook.com</span>
+                  <span>Liam Clarke, liamclarke21@outlook.com</span>
                 </div>
               </div>
             </div>
@@ -127,8 +127,8 @@ export default function AboutPage() {
               <div className="space-y-4 text-ink-700 leading-relaxed text-base">
                 <p>
                   We take data protection seriously. Clarke Agency is registered as a responsible party
-                  under POPIA. All personal information we process &mdash; including visitor data captured
-                  by the Qwikly widget &mdash; is described in our{" "}
+                  under POPIA. All personal information we process, including visitor data captured
+                  by the Qwikly digital assistant, is described in our{" "}
                   <Link
                     href="/legal/privacy"
                     className="text-ember underline transition-colors"
@@ -160,7 +160,7 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-4 text-ink-700 leading-relaxed text-base">
                 <p>
-                  Qwikly currently operates as a website chat widget with email lead delivery.
+                  Qwikly currently operates as a digital assistant platform with email lead delivery.
                   WhatsApp routing and calendar integration are on the roadmap for Q3 2026.
                   Premium plan subscribers will get early access.
                 </p>
