@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Qwikly is a South African digital assistant built for trades businesses. Learn who we are, why we built this, and how we operate.",
+    "Qwikly is a South African AI website assistant built for local businesses. Learn who we are, why we built this, and how we operate.",
   alternates: { canonical: "https://www.qwikly.co.za/about" },
 };
 
@@ -15,21 +15,21 @@ export default function AboutPage() {
         <div className="max-w-3xl mx-auto">
           <p className="eyebrow text-ink-500 mb-6">About Qwikly</p>
           <h1 className="font-display font-medium text-[clamp(2.5rem,5vw,4rem)] leading-tight tracking-tight text-ink mb-8">
-            Built by a tradesperson&rsquo;s son,<br />
-            <em className="italic font-light">for tradespeople.</em>
+            Built for SA businesses<br />
+            <em className="italic font-light">that can&rsquo;t afford to miss a lead.</em>
           </h1>
 
           <div className="bg-paper-deep border border-ink/[0.07] rounded-2xl p-6 mb-16">
             <p className="text-ink-700 leading-relaxed text-base">
-              Qwikly exists because every contractor I know loses work the same way: a lead sends a
-              WhatsApp at 7 p.m. while they&rsquo;re under a sink, and by 8 p.m. that customer has already
-              booked the next person who answered. We built an AI that answers first, qualifies the
-              lead, and locks in the job, so tradespeople can focus on the work.
+              Qwikly exists because every local business I know loses leads the same way: a potential
+              customer visits their website, has a question, and leaves when nobody answers. We built an
+              AI assistant that lives on your website, greets every visitor, qualifies the lead, and
+              delivers it to your inbox &mdash; so you never lose a customer to silence again.
             </p>
           </div>
 
           <div className="space-y-14">
-            {/* Founder */}
+            {/* Who we are */}
             <div>
               <p className="eyebrow text-ember mb-3">01</p>
               <h2 className="font-display font-medium text-2xl text-ink mb-4 tracking-tight">
@@ -39,7 +39,7 @@ export default function AboutPage() {
                 <p>
                   Qwikly is operated by <strong className="text-ink">Clarke Agency</strong>, a
                   Johannesburg-based digital services business. Founded by Liam Clarke, Clarke Agency
-                  builds technology that gives small service businesses the same front-office capability
+                  builds technology that gives small local businesses the same front-office capability
                   as large companies, without the overhead.
                 </p>
                 <p>
@@ -51,7 +51,7 @@ export default function AboutPage() {
 
             <div className="rule" />
 
-            {/* Mission */}
+            {/* What we're building */}
             <div>
               <p className="eyebrow text-ember mb-3">02</p>
               <h2 className="font-display font-medium text-2xl text-ink mb-4 tracking-tight">
@@ -59,14 +59,14 @@ export default function AboutPage() {
               </h2>
               <div className="space-y-4 text-ink-700 leading-relaxed text-base">
                 <p>
-                  A fully automated front office for South African service businesses. A lead comes in
-                  on WhatsApp or email. Qwikly replies in 30 seconds, qualifies the job, offers real
-                  calendar slots, confirms the booking, sends reminders, and recovers no-shows, all
-                  without the business owner touching their phone.
+                  A website chat widget powered by AI. A visitor lands on your site. Qwikly greets
+                  them, asks the right qualifying questions, captures their contact details, and
+                  delivers a warm lead to your inbox. You get one email, with a one-click confirmation
+                  button. The whole process takes seconds.
                 </p>
                 <p>
-                  A simple flat monthly subscription, no per-job fees, no commissions, and no
-                  surprises. Plans start from R399/month. No per-job fees, ever.{" "}
+                  Flat monthly pricing, no per-job fees, no commissions, and no surprises. Plans
+                  start from R0/month on Starter and R599/month on Pro.{" "}
                   <Link href="/pricing" className="text-ember underline transition-colors">
                     See pricing
                   </Link>
@@ -118,36 +118,32 @@ export default function AboutPage() {
 
             <div className="rule" />
 
-            {/* WhatsApp / Meta disclosure */}
+            {/* POPIA */}
             <div>
               <p className="eyebrow text-ember mb-3">04</p>
               <h2 className="font-display font-medium text-2xl text-ink mb-4 tracking-tight">
-                WhatsApp &amp; Meta Platform
+                Privacy &amp; POPIA
               </h2>
               <div className="space-y-4 text-ink-700 leading-relaxed text-base">
                 <p>
-                  Qwikly connects your business to the WhatsApp Business Platform via Meta&rsquo;s official
-                  Cloud API. We are not affiliated with, endorsed by, or a representative of Meta
-                  Platforms, Inc. WhatsApp is a trademark of Meta Platforms, Inc.
+                  We take data protection seriously. Clarke Agency is registered as a responsible party
+                  under POPIA. All personal information we process &mdash; including visitor data captured
+                  by the Qwikly widget &mdash; is described in our{" "}
+                  <Link
+                    href="/legal/privacy"
+                    className="text-ember underline transition-colors"
+                  >
+                    Privacy Policy
+                  </Link>
+                  . All data is processed and stored in South Africa.
                 </p>
                 <p>
-                  All WhatsApp messaging through Qwikly is subject to Meta&rsquo;s{" "}
+                  If you have a question about your data or want to make a data request, email{" "}
                   <a
-                    href="https://www.whatsapp.com/legal/business-policy"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href="mailto:liamclarke21@outlook.com"
                     className="text-ember underline transition-colors"
                   >
-                    WhatsApp Business Policy
-                  </a>{" "}
-                  and{" "}
-                  <a
-                    href="https://www.whatsapp.com/legal/commerce-policy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-ember underline transition-colors"
-                  >
-                    Commerce Policy
+                    liamclarke21@outlook.com
                   </a>
                   .
                 </p>
@@ -156,30 +152,17 @@ export default function AboutPage() {
 
             <div className="rule" />
 
-            {/* POPIA */}
+            {/* Coming soon: channels */}
             <div>
               <p className="eyebrow text-ember mb-3">05</p>
               <h2 className="font-display font-medium text-2xl text-ink mb-4 tracking-tight">
-                Privacy &amp; POPIA
+                What&rsquo;s Coming
               </h2>
               <div className="space-y-4 text-ink-700 leading-relaxed text-base">
                 <p>
-                  We take data protection seriously. Clarke Agency is registered as a responsible party
-                  under POPIA. All personal information we process is described in our{" "}
-                  <Link
-                    href="/legal/privacy"
-                    className="text-ember underline transition-colors"
-                  >
-                    Privacy Policy
-                  </Link>
-                  . If you have a question about your data or want to make a data request, email{" "}
-                  <a
-                    href="mailto:liamclarke21@outlook.com"
-                    className="text-ember underline transition-colors"
-                  >
-                    liamclarke21@outlook.com
-                  </a>
-                  .
+                  Qwikly currently operates as a website chat widget with email lead delivery.
+                  WhatsApp routing and calendar integration are on the roadmap for Q3 2026.
+                  Premium plan subscribers will get early access.
                 </p>
               </div>
             </div>

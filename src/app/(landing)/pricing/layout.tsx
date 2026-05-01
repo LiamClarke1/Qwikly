@@ -3,12 +3,12 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Qwikly offers three flat monthly plans starting at R399/month. No per-job fees, no commissions, no setup costs. 30-day money-back guarantee.",
+    "Qwikly offers three flat monthly plans — Starter (free), Pro at R599/month, Premium at R1,299/month. No per-job fees, no commissions. 30-day money-back guarantee.",
   alternates: { canonical: "https://www.qwikly.co.za/pricing" },
   openGraph: {
     title: "Qwikly Pricing — Flat Monthly Plans. No Per-Job Fees.",
     description:
-      "Lite R399/mo · Pro R799/mo · Business R1,499/mo. No commissions, no setup fees, no lock-in. 30-day money-back guarantee.",
+      "Starter Free · Pro R599/mo · Premium R1,299/mo. No commissions, no setup fees, no lock-in. 30-day money-back guarantee on Pro and Premium.",
     url: "https://www.qwikly.co.za/pricing",
   },
 };
@@ -16,18 +16,18 @@ export const metadata: Metadata = {
 const productSchema = {
   "@context": "https://schema.org",
   "@type": "Product",
-  name: "Qwikly Digital Assistant",
+  name: "Qwikly Website Chat Widget",
   description:
-    "Automated WhatsApp lead response and booking system for South African tradespeople. Replies in 30 seconds, qualifies leads, and books appointments 24/7.",
+    "AI-powered website chat widget for South African businesses. Captures leads, qualifies them, and delivers booking requests to your inbox 24/7.",
   brand: { "@type": "Brand", name: "Qwikly" },
   offers: [
     {
       "@type": "Offer",
-      name: "Lite",
+      name: "Starter",
       priceCurrency: "ZAR",
-      price: "399",
+      price: "0",
       priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
-      description: "Up to 25 confirmed bookings per month. WhatsApp replies in 30 seconds, auto job qualification, calendar booking and reminders.",
+      description: "25 qualified leads per month. Website chat widget, email lead delivery, POPIA compliant. Free forever.",
       availability: "https://schema.org/InStock",
       url: "https://www.qwikly.co.za/pricing",
     },
@@ -35,19 +35,19 @@ const productSchema = {
       "@type": "Offer",
       name: "Pro",
       priceCurrency: "ZAR",
-      price: "799",
+      price: "599",
       priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
-      description: "Unlimited confirmed bookings. Everything in Lite plus no-show recovery, web widget, Google and Outlook calendar sync, and priority support.",
+      description: "200 qualified leads per month. Custom branding, custom greeting and qualifying questions, lead exports, priority support.",
       availability: "https://schema.org/InStock",
       url: "https://www.qwikly.co.za/pricing",
     },
     {
       "@type": "Offer",
-      name: "Business",
+      name: "Premium",
       priceCurrency: "ZAR",
-      price: "1499",
+      price: "1299",
       priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
-      description: "Everything in Pro plus multi-user teams, custom branding, quote and invoice handoff, dedicated success manager, and API access.",
+      description: "Unlimited qualified leads. Everything in Pro plus API access, dedicated support, and upcoming WhatsApp routing and calendar integration.",
       availability: "https://schema.org/InStock",
       url: "https://www.qwikly.co.za/pricing",
     },
@@ -60,26 +60,26 @@ const faqSchema = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "Do I pay per booking?",
+      name: "What counts as a qualified lead?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "No. Qwikly charges a flat monthly rate only. You pay the same amount whether you book 1 job or 100. No commissions, no per-job fees. Ever.",
+        text: "A qualified lead is a visitor who has provided their contact details and answered your qualifying questions — service type, location, and buying intent. Bounced chats and spam are not counted.",
       },
     },
     {
       "@type": "Question",
-      name: "What happens if I exceed 25 bookings on Lite?",
+      name: "Do I pay per lead or per booking?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "We'll let you know when you're approaching your limit and prompt you to upgrade to Pro. You won't be charged extra or cut off mid-month, and there are no surprise fees.",
+        text: "No. Qwikly charges a flat monthly rate only. No commissions, no per-job fees. Top-ups are available at R20 per extra lead if you exceed your monthly cap.",
       },
     },
     {
       "@type": "Question",
-      name: "Can I cancel anytime?",
+      name: "Can I switch plans anytime?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. No contracts, no lock-in. Cancel from your dashboard at any time. Monthly plans end at the close of your current billing period.",
+        text: "Yes. No contracts, no lock-in. Cancel or change plans from your dashboard at any time.",
       },
     },
     {
@@ -87,7 +87,7 @@ const faqSchema = {
       name: "Do you take a cut of my jobs?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Never. Qwikly earns nothing from your bookings. Every rand you earn stays yours.",
+        text: "Never. Qwikly earns nothing from your bookings. Every rand you earn stays yours. That's the whole point of flat pricing.",
       },
     },
     {

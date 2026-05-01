@@ -55,10 +55,10 @@ export function leadNotificationHtml({
           <table cellpadding="0" cellspacing="0">
             <tr>
               <td style="padding-right:12px;">
-                <a href="${confirmUrl}" style="display:inline-block;padding:12px 24px;background:#E85A2C;color:#fff;text-decoration:none;border-radius:10px;font-size:14px;font-weight:700;">Confirm this slot</a>
+                <a href="${esc(confirmUrl)}" style="display:inline-block;padding:12px 24px;background:#E85A2C;color:#fff;text-decoration:none;border-radius:10px;font-size:14px;font-weight:700;">Confirm this slot</a>
               </td>
               <td>
-                <a href="${suggestUrl}" style="display:inline-block;padding:12px 24px;background:#1A2030;color:#9CA3AF;text-decoration:none;border-radius:10px;font-size:14px;font-weight:600;border:1px solid rgba(255,255,255,0.1);">Suggest another time</a>
+                <a href="${esc(suggestUrl)}" style="display:inline-block;padding:12px 24px;background:#1A2030;color:#9CA3AF;text-decoration:none;border-radius:10px;font-size:14px;font-weight:600;border:1px solid rgba(255,255,255,0.1);">Suggest another time</a>
               </td>
             </tr>
           </table>
@@ -124,7 +124,7 @@ export function capReachedNotificationHtml({ businessName }: { businessName: str
         </td></tr>
         <tr><td style="background:#0D111A;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:32px;">
           <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#F59E0B;">Lead cap reached</p>
-          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.3px;">You've hit your 25-lead limit.</h1>
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.3px;">You've hit your 25-lead limit, ${esc(businessName)}.</h1>
           <p style="margin:0 0 24px;font-size:14px;color:#9CA3AF;line-height:1.6;">
             Your Starter plan captures up to 25 leads per month. You've reached that limit for this billing cycle. Upgrade to Pro to keep capturing leads — up to 200/month.
           </p>
@@ -141,5 +141,9 @@ export function capReachedNotificationHtml({ businessName }: { businessName: str
 }
 
 function esc(s: string) {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }

@@ -2,62 +2,67 @@ export const FAQ_DATA = [
   {
     question: "What is Qwikly?",
     answer:
-      "Qwikly is an AI-powered lead response and lifecycle platform for South African service businesses. It handles WhatsApp and email leads, qualifies them, books appointments, sends follow-ups, recovers no-shows, and revives dormant leads. It runs 24/7 so you never lose a job because you were too busy to reply.",
+      "Qwikly is a website chat widget powered by AI. You paste one script tag onto your site, and Qwikly greets visitors, asks qualifying questions, captures their contact details, and delivers warm leads to your inbox — 24/7, even while you sleep.",
   },
   {
     question: "How much does it cost?",
     answer:
-      "Qwikly offers three flat monthly plans: Lite at R399/month (up to 25 bookings), Pro at R799/month (unlimited bookings), and Business at R1,499/month (teams and advanced features). No per-job fees, no commissions, no setup costs. Pay annually and get 2 months free.",
+      "Qwikly offers three plans: Starter at R0/month (25 qualified leads, free forever), Pro at R599/month (200 qualified leads, custom branding, CSV exports), and Premium at R1,299/month (unlimited leads, API access, dedicated support). Pay annually and get 2 months free. No per-job fees, no commissions.",
   },
   {
-    question: "What trades and industries do you work with?",
+    question: "What counts as a qualified lead?",
     answer:
-      "Electricians, plumbers, roofers, solar installers, pest control, aircon technicians, pool services, landscapers, garage door specialists, security companies, dentists, beauty salons and spas, auto mechanics, estate agents, cleaning services, tutoring, vets, photographers, moving companies, fitness trainers, and more. If you take leads on WhatsApp or email, Qwikly can handle them.",
+      "A qualified lead is a visitor who has provided their contact details and answered your qualifying questions — service type, location, and buying intent. Bounced chats and spam are not counted against your monthly cap.",
   },
   {
-    question: "Does Qwikly handle email leads too?",
+    question: "What happens if I exceed my monthly lead limit?",
     answer:
-      "Yes. Qwikly responds to email leads on behalf of your business using the same trade-specific AI. It replies, qualifies, checks your availability, and books the appointment, all in email. Every conversation is visible in your dashboard.",
+      "We'll notify you before you hit your cap. You can upgrade your plan or add extra leads at R20 each — no automatic billing, no surprise charges. Your widget keeps working either way.",
   },
   {
-    question: "What happens if a customer goes quiet?",
+    question: "What businesses is Qwikly built for?",
     answer:
-      "Qwikly runs an automated follow-up sequence at 4 hours, 24 hours, 2 days, and 5 days. If they don't respond on WhatsApp, it switches to email. At 30 days dormant, Qwikly sends a seasonal or trade-specific revival message to bring them back. No lead is ever abandoned.",
+      "Any local business with a website that receives enquiries — restaurants, cafes, salons, gyms, clinics, dental practices, contractors, law firms, cleaning services, tutors, photographers, and more. If customers ask questions before booking, Qwikly handles that conversation for you.",
   },
   {
-    question: "What about no-shows?",
+    question: "How does setup work?",
     answer:
-      "If a customer misses their appointment, Qwikly sends an automatic rebooking message within minutes. It suggests the next available slot and makes it easy to reschedule, recovering revenue that would otherwise be lost.",
+      "Sign up, customise your greeting and qualifying questions from your dashboard, then paste one script tag into your website HTML. Most businesses are live in under 5 minutes. No developer needed.",
   },
   {
-    question: "Does it work with Google Calendar?",
+    question: "Can I use my own branding?",
     answer:
-      "Yes. Qwikly connects directly to your Google Calendar, checks real-time availability, offers slots, books confirmed appointments, and sends reminders 24 hours and 1 hour before each job to both you and the customer.",
+      "Yes — on Pro and Premium plans, the widget uses your logo and colour scheme, with no Qwikly branding. Starter plans show 'Powered by Qwikly' in the widget footer.",
   },
   {
-    question: "Can I see what the AI is saying to my customers?",
+    question: "Can I see what the assistant is saying to visitors?",
     answer:
-      "Absolutely. The Qwikly dashboard gives you full visibility into every conversation, across both WhatsApp and email. Read transcripts, see booking details, review qualification outcomes, and step in at any time.",
+      "Yes. Your dashboard shows every conversation in full — what the visitor asked, how the assistant responded, and whether the lead was qualified. You can review and export at any time.",
   },
   {
-    question: "How does the AI know about my business?",
+    question: "What happens when a lead is qualified?",
     answer:
-      "During setup we walk through your services, pricing, service areas, and FAQs. The AI is trained on your specific trade, so every reply sounds like it came from you, not a robot. We have custom prompts for 10+ trades.",
+      "You receive an email with the lead's name, contact details, what they're looking for, and a one-click confirmation link to accept the booking request. You're always in control of what gets booked.",
   },
   {
-    question: "Will customers know it's an AI?",
+    question: "Will visitors know it's an AI?",
     answer:
-      "Most won't. The AI uses natural, conversational language tailored to your brand voice and trade. If a customer ever asks directly, the AI will be transparent. But the goal is to feel like a helpful team member, not a chatbot.",
+      "The assistant is conversational and helpful rather than robotic. If a visitor asks directly whether they're speaking to an AI, it will be transparent. The goal is a helpful experience, not deception.",
   },
   {
-    question: "What if a lead asks something the AI can't answer?",
+    question: "Do you take a cut of my jobs?",
     answer:
-      "The AI will let the customer know that someone from your team will follow up shortly, and immediately notifies you so nothing falls through. You can jump in at any time from the dashboard.",
+      "Never. Qwikly charges a flat monthly fee only. We earn nothing from your bookings. Every rand from every job stays with your business.",
   },
   {
-    question: "How long does setup take?",
+    question: "Is Qwikly POPIA compliant?",
     answer:
-      "Most businesses are live within 24 to 48 hours. We handle the heavy lifting: WhatsApp integration, email setup, calendar connection, and AI training. You just answer a few questions about your services and availability.",
+      "Yes. Qwikly is fully POPIA-compliant. All visitor data is processed and stored in South Africa. We never sell your data or your customers' data to third parties.",
+  },
+  {
+    question: "When will WhatsApp routing and calendar integration launch?",
+    answer:
+      "Both are on the roadmap for Q3 2026. Premium plan subscribers will get early access. You'll be notified by email when they're available.",
   },
 ];
 

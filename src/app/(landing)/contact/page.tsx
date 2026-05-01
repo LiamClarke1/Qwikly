@@ -20,8 +20,8 @@ export default function ContactPage() {
             <em className="italic font-light">Talk to a human.</em>
           </h1>
           <p className="text-ink-700 text-lg leading-relaxed mb-16 max-w-xl">
-            Questions about pricing, setup, or whether Qwikly works for your trade, we reply within
-            one business day. Existing clients: WhatsApp is faster.
+            Questions about pricing, setup, or whether Qwikly works for your business &mdash; we
+            reply within one business day.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
@@ -38,25 +38,12 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <p className="eyebrow text-ink-500 mb-3">WhatsApp</p>
-                <a
-                  href="https://wa.me/27XXXXXXXXX"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-display text-lg text-ink hover:text-ember transition-colors"
-                >
-                  +27 XX XXX XXXX
-                </a>
-                <p className="text-sm text-ink-500 mt-1">Existing clients preferred</p>
-              </div>
-
-              <div>
                 <p className="eyebrow text-ink-500 mb-3">Hours</p>
                 <p className="text-sm text-ink-700 leading-relaxed">
                   Mon&ndash;Fri 08:00&ndash;17:00 SAST
                   <br />
                   <span className="text-ink-400">
-                    Qwikly itself never stops, just us humans.
+                    Qwikly itself never stops &mdash; just us humans.
                   </span>
                 </p>
               </div>

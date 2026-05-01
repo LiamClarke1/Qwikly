@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Check, Minus, Plus, Shield, MapPin } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 
-const MONTHLY = { lite: 399, pro: 799, business: 1499 } as const;
-const ANNUAL  = { lite: 3990, pro: 7990, business: 14990 } as const;
+const MONTHLY = { starter: 0, pro: 599, premium: 1299 } as const;
+const ANNUAL  = { starter: 0, pro: 5990, premium: 12990 } as const;
 
 type TierId = keyof typeof MONTHLY;
 
@@ -17,15 +17,15 @@ const tiers: {
   highlight: boolean;
 }[] = [
   {
-    id: "lite",
-    name: "Lite",
-    tagline: "For sole traders just getting started",
+    id: "starter",
+    name: "Starter",
+    tagline: "Free forever — no card needed",
     highlight: false,
     features: [
-      "Up to 25 confirmed bookings/month",
-      "WhatsApp replies in 30 seconds",
-      "Auto job qualification",
-      "Calendar booking + reminders",
+      "25 qualified leads/month",
+      "Website chat widget",
+      "Email lead delivery",
+      '"Powered by Qwikly" branding',
       "Email support",
       "POPIA compliant",
     ],
@@ -33,82 +33,77 @@ const tiers: {
   {
     id: "pro",
     name: "Pro",
-    tagline: "For busy tradies who can't afford limits",
+    tagline: "For businesses ready to grow",
     highlight: true,
     features: [
-      "Unlimited confirmed bookings",
-      "Everything in Lite, plus:",
-      "No-show recovery",
-      "Web widget for your site",
-      "Google + Outlook calendar sync",
-      "Monthly performance report",
-      "Priority WhatsApp support",
+      "200 qualified leads/month",
+      "Everything in Starter, plus:",
+      "Custom branding (your logo, no Qwikly)",
+      "Custom greeting + qualifying questions",
+      "Lead exports (CSV)",
+      "Priority email support",
     ],
   },
   {
-    id: "business",
-    name: "Business",
-    tagline: "For teams and growing operations",
+    id: "premium",
+    name: "Premium",
+    tagline: "Unlimited leads, full control",
     highlight: false,
     features: [
+      "Unlimited qualified leads",
       "Everything in Pro, plus:",
-      "Multi-user team accounts",
-      "Custom branding in messages",
-      "Quote / invoice handoff",
-      "Xero + QuickBooks (Coming soon)",
-      "Dedicated success manager",
+      "WhatsApp routing (coming soon)",
+      "Calendar integration (coming soon)",
       "API access",
+      "Dedicated support",
     ],
   },
 ];
 
 type FeatureCell = boolean | string;
 
-const featureRows: { label: string; lite: FeatureCell; pro: FeatureCell; business: FeatureCell }[] = [
-  { label: "WhatsApp replies in 30 seconds",  lite: true,        pro: true,        business: true        },
-  { label: "Auto job qualification",           lite: true,        pro: true,        business: true        },
-  { label: "Calendar booking + reminders",     lite: true,        pro: true,        business: true        },
-  { label: "POPIA compliant",                  lite: true,        pro: true,        business: true        },
-  { label: "Email support",                    lite: true,        pro: true,        business: true        },
-  { label: "Confirmed bookings / month",       lite: "25",        pro: "Unlimited", business: "Unlimited" },
-  { label: "No-show recovery",                 lite: false,       pro: true,        business: true        },
-  { label: "Web widget for your site",         lite: false,       pro: true,        business: true        },
-  { label: "Google + Outlook calendar sync",   lite: false,       pro: true,        business: true        },
-  { label: "Monthly performance report",       lite: false,       pro: true,        business: true        },
-  { label: "Priority WhatsApp support",        lite: false,       pro: true,        business: true        },
-  { label: "Multi-user team accounts",         lite: false,       pro: false,       business: true        },
-  { label: "Custom branding in messages",      lite: false,       pro: false,       business: true        },
-  { label: "Quote / invoice handoff",          lite: false,       pro: false,       business: true        },
-  { label: "Accounting integrations",          lite: false,       pro: false,       business: "Soon"      },
-  { label: "Dedicated success manager",        lite: false,       pro: false,       business: true        },
-  { label: "API access",                       lite: false,       pro: false,       business: true        },
+const featureRows: { label: string; starter: FeatureCell; pro: FeatureCell; premium: FeatureCell }[] = [
+  { label: "Website chat widget",              starter: true,        pro: true,        premium: true        },
+  { label: "Email lead delivery",              starter: true,        pro: true,        premium: true        },
+  { label: "POPIA compliant",                  starter: true,        pro: true,        premium: true        },
+  { label: "Email support",                    starter: true,        pro: true,        premium: true        },
+  { label: "Qualified leads / month",          starter: "25",        pro: "200",       premium: "Unlimited" },
+  { label: '"Powered by Qwikly" branding',    starter: true,        pro: false,       premium: false       },
+  { label: "Custom branding (your logo)",      starter: false,       pro: true,        premium: true        },
+  { label: "Custom greeting & questions",      starter: false,       pro: true,        premium: true        },
+  { label: "Lead exports (CSV)",               starter: false,       pro: true,        premium: true        },
+  { label: "Priority email support",           starter: false,       pro: true,        premium: true        },
+  { label: "WhatsApp routing",                 starter: false,       pro: false,       premium: "Soon"      },
+  { label: "Calendar integration",             starter: false,       pro: false,       premium: "Soon"      },
+  { label: "API access",                       starter: false,       pro: false,       premium: true        },
+  { label: "Dedicated support",               starter: false,       pro: false,       premium: true        },
 ];
 
 const pricingFAQs = [
   {
-    question: "Do I pay per booking?",
+    question: "What counts as a qualified lead?",
     answer:
-      "No. Qwikly charges a flat monthly rate only. You pay the same amount whether you book 1 job or 100. No commissions, no per-job fees. Ever.",
+      "A qualified lead is a visitor who has provided their contact details and answered your qualifying questions — service type, location, and buying intent. Bounced chats and spam are not counted.",
   },
   {
-    question: "What happens if I exceed 25 bookings on Lite?",
+    question: "What happens if I exceed my monthly limit?",
     answer:
-      "We'll let you know when you're approaching your limit and prompt you to upgrade to Pro. You won't be charged extra or cut off mid-month, and there are no surprise fees.",
+      "We'll notify you before you hit the cap. You can upgrade your plan, or add extra leads at R20 each. No automatic billing, no surprise charges, and your widget keeps working until you decide.",
   },
   {
-    question: "Can I cancel anytime?",
+    question: "Can I switch plans anytime?",
     answer:
-      "Yes. No contracts, no lock-in. Cancel from your dashboard at any time. Monthly plans end at the close of your current billing period.",
+      "Yes. Upgrade or downgrade from your dashboard at any time. Upgrades take effect immediately. Downgrades apply at the start of your next billing period.",
   },
   {
     question: "Do you take a cut of my jobs?",
     answer:
-      "Never. Qwikly earns nothing from your bookings. Every rand you earn stays yours. That's the whole point of flat pricing.",
+      "Never. Qwikly charges a flat monthly rate only. We earn nothing from your bookings. Every rand you earn stays yours. That's the whole point of flat pricing.",
   },
   {
-    question: "Is my data safe?",
+    question: "When will WhatsApp routing and calendar sync launch?",
     answer:
-      "Yes. Qwikly is fully POPIA-compliant and your data is hosted in South Africa. We never sell your data or your customers' data to third parties.",
+      "Both features are on the roadmap for Q3 2026. Premium plan subscribers will get early access when they launch. You'll be notified by email.",
   },
 ];
 
@@ -141,6 +136,7 @@ export default function PricingPage() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
   function displayPrice(id: TierId) {
+    if (id === "starter") return 0;
     return annual ? Math.round(ANNUAL[id] / 12) : MONTHLY[id];
   }
 
@@ -156,8 +152,8 @@ export default function PricingPage() {
             <em className="italic font-light">Ever.</em>
           </h1>
           <p className="mt-8 text-lg text-ink-700 max-w-xl leading-relaxed">
-            One flat monthly rate. No commissions, no setup fees, no lock-in.
-            Predictable costs built for South African tradies.
+            Flat monthly pricing in ZAR. No commissions, no setup fees, no lock-in.
+            Start free and upgrade only when you need more leads.
           </p>
         </div>
       </section>
@@ -212,7 +208,7 @@ export default function PricingPage() {
                   className={`relative flex flex-col ${
                     tier.highlight
                       ? "ed-card-ink"
-                      : tier.id === "business"
+                      : tier.id === "premium"
                       ? "ed-card"
                       : "ed-card-ghost"
                   } ${tier.highlight ? "pt-10" : ""}`}
@@ -237,17 +233,28 @@ export default function PricingPage() {
                   {/* Price */}
                   <div className="mb-8">
                     <div className="flex items-baseline gap-1">
-                      <span className={`font-display font-medium leading-none ${tier.highlight ? "text-paper" : "text-ink"}`}
-                        style={{ fontSize: "clamp(2.4rem, 4vw, 3rem)" }}>
-                        R{price.toLocaleString()}
+                      <span
+                        className={`font-display font-medium leading-none ${tier.highlight ? "text-paper" : "text-ink"}`}
+                        style={{ fontSize: "clamp(2.4rem, 4vw, 3rem)" }}
+                      >
+                        {tier.id === "starter" ? "Free" : `R${price.toLocaleString()}`}
                       </span>
-                      <span className={`text-sm ${tier.highlight ? "text-paper/50" : "text-ink-500"}`}>/mo</span>
+                      {tier.id !== "starter" && (
+                        <span className={`text-sm ${tier.highlight ? "text-paper/50" : "text-ink-500"}`}>/mo</span>
+                      )}
                     </div>
-                    <p className={`text-xs mt-2 ${tier.highlight ? "text-paper/45" : "text-ink-400"}`}>
-                      {annual
-                        ? `Billed R${ANNUAL[tier.id].toLocaleString()}/year`
-                        : "Billed monthly"}
-                    </p>
+                    {tier.id !== "starter" && (
+                      <p className={`text-xs mt-2 ${tier.highlight ? "text-paper/45" : "text-ink-400"}`}>
+                        {annual
+                          ? `Billed R${ANNUAL[tier.id].toLocaleString()}/year`
+                          : "Billed monthly"}
+                      </p>
+                    )}
+                    {tier.id === "starter" && (
+                      <p className={`text-xs mt-2 ${tier.highlight ? "text-paper/45" : "text-ink-400"}`}>
+                        No credit card required
+                      </p>
+                    )}
                   </div>
 
                   {/* Feature list */}
@@ -285,7 +292,7 @@ export default function PricingPage() {
                     size="md"
                     className="w-full justify-center"
                   >
-                    Choose {tier.name}
+                    {tier.id === "starter" ? "Start Free" : `Choose ${tier.name}`}
                   </CTAButton>
                 </div>
               );
@@ -293,7 +300,7 @@ export default function PricingPage() {
           </div>
 
           <p className="text-center eyebrow text-ink-500 mt-10">
-            30-day money-back guarantee · No setup fees · Cancel anytime
+            30-day money-back guarantee on Pro &amp; Premium · No setup fees · Cancel anytime
           </p>
         </div>
       </section>
@@ -318,13 +325,13 @@ export default function PricingPage() {
                     Feature
                   </th>
                   <th className="pb-5 px-4 text-center font-normal eyebrow text-ink-500">
-                    Lite
+                    Starter
                   </th>
                   <th className="pb-5 px-4 text-center font-normal">
                     <span className="eyebrow text-ember">Pro</span>
                   </th>
                   <th className="pb-5 px-4 text-center font-normal eyebrow text-ink-500">
-                    Business
+                    Premium
                   </th>
                 </tr>
               </thead>
@@ -335,13 +342,13 @@ export default function PricingPage() {
                       {row.label}
                     </td>
                     <td className="py-4 px-4 text-center">
-                      <TableCell value={row.lite} />
+                      <TableCell value={row.starter} />
                     </td>
                     <td className="py-4 px-4 text-center">
                       <TableCell value={row.pro} isProCol />
                     </td>
                     <td className="py-4 px-4 text-center">
-                      <TableCell value={row.business} />
+                      <TableCell value={row.premium} />
                     </td>
                   </tr>
                 ))}
@@ -360,21 +367,42 @@ export default function PricingPage() {
             </div>
             <p className="eyebrow text-ember mb-4">30-day money-back guarantee</p>
             <h2 className="display-md text-ink mb-6">
-              If Qwikly doesn&rsquo;t book more jobs than it costs,
+              If Qwikly doesn&rsquo;t deliver,
               <br className="hidden md:block" />{" "}
               <em className="italic font-light">you pay nothing</em>.
             </h2>
             <p className="text-ink-700 leading-relaxed max-w-lg mx-auto">
-              Try any plan for 30 days. If Qwikly doesn&rsquo;t generate more in
-              booked work than your subscription fee, we&rsquo;ll refund every cent.
-              No hoops, no questions asked.
+              Try Pro or Premium for 30 days. If you&rsquo;re not happy for any reason,
+              we&rsquo;ll refund every cent. No hoops, no questions asked.
+              (Starter is free &mdash; no guarantee needed.)
             </p>
           </div>
         </div>
       </section>
 
+      {/* ─── TOP-UPS EXPLAINER ─── */}
+      <section className="py-16 bg-paper-deep grain border-t border-b border-ink/[0.06]">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="max-w-lg">
+              <p className="eyebrow text-ember mb-3">Need more leads?</p>
+              <h3 className="font-display text-2xl text-ink mb-2">Top-ups at R20 per extra qualified lead.</h3>
+              <p className="text-ink-700 text-sm leading-relaxed">
+                Hit your monthly cap? Add extra leads one by one at R20 each &mdash; no plan change required.
+                No surprises, no automatic billing. You approve every top-up.
+              </p>
+            </div>
+            <div className="flex-shrink-0">
+              <CTAButton variant="outline" size="md" href="/signup">
+                Start Free
+              </CTAButton>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─── PRICING FAQ ─── */}
-      <section className="py-28 bg-paper-deep grain">
+      <section className="py-28 grain">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
             <div className="md:col-span-4">
@@ -450,15 +478,10 @@ export default function PricingPage() {
             </div>
             <div className="hidden md:block w-px h-5 bg-ink/10" />
             <div className="flex items-center gap-2.5">
-              <svg
-                className="w-5 h-5 text-ember"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-ember" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
-              <span className="eyebrow text-ink-600">WhatsApp Business</span>
+              <span className="eyebrow text-ink-600">ZAR Pricing</span>
             </div>
           </div>
         </div>
@@ -474,14 +497,14 @@ export default function PricingPage() {
             <em className="italic font-light text-ember">losing leads</em>?
           </h2>
           <p className="text-paper/70 text-lg mt-8 max-w-xl mx-auto leading-relaxed">
-            Flat monthly pricing. No commissions, no per-job fees, no surprises.
+            Free to start. Live in 5 minutes. No per-job fees, ever.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
             <CTAButton size="lg" variant="solid" href="/signup?plan=pro">
-              Get started with Pro
+              Start with Pro
             </CTAButton>
-            <CTAButton size="lg" variant="outline-light" href="/signup?plan=lite" withArrow={false}>
-              Start with Lite
+            <CTAButton size="lg" variant="outline-light" href="/signup?plan=starter" withArrow={false}>
+              Start Free
             </CTAButton>
           </div>
         </div>

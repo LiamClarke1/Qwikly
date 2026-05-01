@@ -37,21 +37,18 @@ export async function v2Auth(): Promise<V2AuthContext | null> {
 
   const db = supabaseAdmin();
 
-  const { data: business } = await db
-    .from("businesses")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const [{ data: business }, { data: sub }] = await Promise.all([
+    db.from("businesses").select("id").eq("user_id", user.id).maybeSingle(),
+    db.from("subscriptions")
+      .select("plan, status, stripe_customer_id, stripe_subscription_id, stripe_topup_item_id")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
 
-  if (!business) return null;
-
-  const { data: sub } = await db
-    .from("subscriptions")
-    .select(
-      "plan, status, stripe_customer_id, stripe_subscription_id, stripe_topup_item_id"
-    )
-    .eq("user_id", user.id)
-    .maybeSingle();
+  if (!business) {
+    console.warn("[v2-auth] authenticated user has no business row:", user.id);
+    return null;
+  }
 
   return {
     userId: user.id,

@@ -1,109 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { Plus, Minus } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
-import FAQ from "@/components/FAQ";
-import WhatsAppMock from "@/components/WhatsAppMock";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
-import { ProblemTiles, useProblem } from "@/components/landing/ProblemTiles";
-import { SolutionSection } from "@/components/landing/SolutionSection";
-import { FeatureTranslation } from "@/components/landing/FeatureTranslation";
-import { DemoPlayer } from "@/components/landing/DemoPlayer";
-import { RevenueCalculator } from "@/components/landing/RevenueCalculator";
-import { LiveActivityStrip } from "@/components/landing/LiveActivityStrip";
-import { LiveCounter } from "@/components/landing/LiveCounter";
-import { ConnectYourWebsiteSection } from "@/components/landing/ConnectYourWebsiteSection";
-import { WebsiteAssistantSection } from "@/components/landing/WebsiteAssistantSection";
 
 /* ─────────────────────────────────────────────────────────────
-   DATA
-   ───────────────────────────────────────────────────────────── */
-
-const STATS_VERIFIED = process.env.NEXT_PUBLIC_STATS_VERIFIED === "true";
-
-const outcomes = [
-  {
-    stat: "R28,000",
-    label: "recovered in month one",
-    body: "4 jobs booked after 6 p.m. that would have gone to the next contractor to reply.",
-    attr: "Thabo, Electrician, Johannesburg",
-  },
-  {
-    stat: "30 sec",
-    label: "first reply, every time",
-    body: "Answered before the customer opens a second tab. The lead never reaches your competitor.",
-    attr: STATS_VERIFIED ? "benchmark across 14,000+ conversations" : "measured reply time",
-  },
-  {
-    stat: "94%",
-    label: "of leads qualified",
-    body: "Pre-screened for location, job type, and urgency before anything hits your calendar.",
-    attr: STATS_VERIFIED ? "Qwikly customer average, Q1 2026" : "targeted qualification rate",
-  },
-  {
-    stat: "24/7",
-    label: "never off, never late",
-    body: "2 a.m. burst geyser. Sunday pool pump. Public holiday roof leak. You wake up to a booked job.",
-    attr: "flat monthly plan. No per-job fees, ever.",
-  },
-];
-
-const tradeLines = [
-  "Electricians", "Plumbers", "Roofers", "Solar Installers", "Pest Control",
-  "Aircon", "Pool Services", "Landscaping", "Garage Doors", "Security",
-  "Dentists", "Beauty Salons", "Auto Mechanics", "Estate Agents", "Cleaners",
-  "Tutors", "Vets", "Photographers", "Movers", "Fitness Trainers",
-];
-
-const howSteps = [
-  {
-    stamp: "i.",
-    title: "A lead messages in.",
-    body: "WhatsApp at 7 p.m. while you're finishing a job. Email on a Sunday morning. It doesn't matter when. Qwikly sees it first.",
-  },
-  {
-    stamp: "ii.",
-    title: "Qwikly replies in 30 seconds.",
-    body: "Not a generic script. A real conversation. It asks the right qualifying questions: job type, area, and urgency. In the voice of your business.",
-  },
-  {
-    stamp: "iii.",
-    title: "The appointment locks in.",
-    body: "Qwikly reads your Google Calendar, offers real slots, and confirms the booking. You get a WhatsApp ping. The customer gets a confirmation.",
-  },
-  {
-    stamp: "iv.",
-    title: "Everything after runs itself.",
-    body: "24-hour and 1-hour reminders. No-show rebooking the same day. Dormant leads revived at 30 days. You just do the work.",
-  },
-];
-
-const testimonials = [
-  {
-    quote: "Picked up 4 extra jobs in the first month that I know I would have missed. About R28,000 in work from leads that came in after 6 p.m.",
-    name: "Thabo M.",
-    trade: "Electrician",
-    city: "Johannesburg",
-    badge: "R28,000 recovered · 4 jobs",
-  },
-  {
-    quote: "Two no-shows last month got automatically rebooked. That alone covered what I pay Qwikly. Weekend leads used to just disappear.",
-    name: "Sarah K.",
-    trade: "Pool Services",
-    city: "Cape Town",
-    badge: "2 no-shows saved",
-  },
-  {
-    quote: "Handles 6 to 8 bookings a month for me now. The ones that come in while I'm under a sink used to just vanish into the ether.",
-    name: "James R.",
-    trade: "Plumber",
-    city: "Pretoria",
-    badge: "6–8 bookings / month",
-  },
-];
-
-/* ─────────────────────────────────────────────────────────────
-   Helpers
+   HELPERS
    ───────────────────────────────────────────────────────────── */
 
 function LiveClock() {
@@ -123,57 +26,288 @@ function LiveClock() {
   return <span className="num">{time || "00:00:00"}</span>;
 }
 
-function StatCounter({ value, suffix = "" }: { value: number; suffix?: string }) {
-  const [n, setN] = useState(0);
-  const ref = useRef<HTMLSpanElement>(null);
-  const started = useRef(false);
+/* ─────────────────────────────────────────────────────────────
+   BROWSER WIDGET MOCKUP
+   ───────────────────────────────────────────────────────────── */
 
-  useEffect(() => {
-    if (!ref.current) return;
-    const ob = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting || started.current) return;
-        started.current = true;
-        ob.disconnect();
-        const duration = 1800;
-        const start = performance.now();
-        const loop = (t: number) => {
-          const p = Math.min((t - start) / duration, 1);
-          const eased = 1 - Math.pow(1 - p, 3);
-          setN(Math.round(eased * value));
-          if (p < 1) requestAnimationFrame(loop);
-        };
-        requestAnimationFrame(loop);
-      },
-      { threshold: 0.5 }
-    );
-    ob.observe(ref.current);
-    return () => ob.disconnect();
-  }, [value]);
-
+function BrowserWidgetMockup() {
   return (
-    <span ref={ref} className="num">
-      {n.toLocaleString()}
-      {suffix}
-    </span>
+    <div className="relative w-full max-w-[720px] mx-auto">
+      <div className="ember-blob w-[350px] h-[350px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-50" />
+
+      {/* Browser frame */}
+      <div className="relative bg-[#E4DDD4] rounded-2xl shadow-2xl overflow-hidden border border-ink/[0.12]">
+
+        {/* Browser chrome */}
+        <div className="bg-[#D5CEC6] px-4 py-3 flex items-center gap-3 border-b border-ink/10">
+          <div className="flex gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
+            <div className="w-3 h-3 rounded-full bg-[#FEBC2E]" />
+            <div className="w-3 h-3 rounded-full bg-[#28C840]" />
+          </div>
+          <div className="flex-1 flex items-center bg-white/50 rounded-lg h-7 px-3 gap-2">
+            <svg viewBox="0 0 24 24" className="w-3 h-3 text-ink/40 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" />
+            </svg>
+            <span className="text-[10px] text-ink/50 font-mono">yourbusiness.co.za</span>
+          </div>
+        </div>
+
+        {/* Website content */}
+        <div className="relative bg-[#F7F3EE] p-5 min-h-[340px]">
+
+          {/* Placeholder nav */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-ink/15" />
+              <div className="w-20 h-3 bg-ink/20 rounded" />
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-2.5 bg-ink/10 rounded" />
+              <div className="w-12 h-2.5 bg-ink/10 rounded" />
+              <div className="w-16 h-6 bg-ink/15 rounded-lg" />
+            </div>
+          </div>
+
+          {/* Placeholder hero copy */}
+          <div className="space-y-2.5 max-w-[55%]">
+            <div className="w-full h-5 bg-ink/20 rounded" />
+            <div className="w-4/5 h-5 bg-ink/15 rounded" />
+            <div className="mt-3 space-y-1.5">
+              <div className="w-full h-3 bg-ink/10 rounded" />
+              <div className="w-3/4 h-3 bg-ink/10 rounded" />
+            </div>
+            <div className="mt-4 flex gap-3">
+              <div className="w-24 h-8 bg-ink/20 rounded-lg" />
+              <div className="w-20 h-8 bg-ink/10 rounded-lg border border-ink/20" />
+            </div>
+          </div>
+
+          {/* Qwikly chat widget — bottom right */}
+          <div className="absolute bottom-4 right-4 w-[215px]">
+            <div className="bg-white rounded-2xl overflow-hidden border border-ink/[0.08]" style={{ boxShadow: "0 20px 40px rgba(14,14,12,0.18)" }}>
+
+              {/* Widget header */}
+              <div className="bg-ink px-4 py-3 flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-ember flex items-center justify-center flex-shrink-0">
+                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-paper" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-paper text-[10px] font-semibold leading-none">Qwikly Assistant</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+                    <p className="text-paper/50 text-[8px] leading-none">Online now</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="p-3 space-y-2 bg-[#F9F6F2]">
+                <div className="bg-white rounded-xl rounded-tl-sm px-3 py-2 max-w-[90%] border border-ink/[0.06]">
+                  <p className="text-ink text-[9px] leading-relaxed">Hi! Looking to book, get a quote, or just have a question?</p>
+                </div>
+                <div className="bg-ember rounded-xl rounded-tr-sm px-3 py-2 max-w-[72%] ml-auto">
+                  <p className="text-paper text-[9px]">Book for Friday?</p>
+                </div>
+                <div className="bg-white rounded-xl rounded-tl-sm px-3 py-2 max-w-[90%] border border-ink/[0.06]">
+                  <p className="text-ink text-[9px] leading-relaxed">Friday works! What time, and how many?</p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="flex gap-0.5 bg-white rounded-full px-2 py-1.5 border border-ink/[0.06]">
+                    <span className="w-1 h-1 rounded-full bg-ink/30 animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1 h-1 rounded-full bg-ink/30 animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1 h-1 rounded-full bg-ink/30 animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </div>
+                  <p className="text-ink/40 text-[8px]">Typing…</p>
+                </div>
+              </div>
+
+              {/* Input row */}
+              <div className="border-t border-ink/[0.06] px-3 py-2.5 flex items-center gap-2 bg-white">
+                <div className="flex-1 bg-[#F4EEE4] rounded-lg h-6 px-2 flex items-center">
+                  <span className="text-ink/30 text-[9px]">Type a message…</span>
+                </div>
+                <div className="w-6 h-6 rounded-full bg-ember flex items-center justify-center flex-shrink-0">
+                  <svg viewBox="0 0 24 24" className="w-3 h-3 text-paper" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Script tag badge */}
+          <div className="absolute bottom-4 left-5">
+            <div className="inline-flex items-center gap-2 bg-ink text-paper px-3 py-1.5 rounded-lg text-[9px] font-mono shadow-md">
+              <span className="text-ember">&lt;script&gt;</span>
+              <span className="text-paper/60">Paste once. Done.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
-function CheckIcon({ dark = false }: { dark?: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className={`w-4 h-4 flex-shrink-0 mt-0.5 ${dark ? "text-ember" : "text-ember"}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
+/* ─────────────────────────────────────────────────────────────
+   DATA
+   ───────────────────────────────────────────────────────────── */
+
+const howSteps = [
+  {
+    stamp: "i.",
+    title: "Sign up and paste one script tag.",
+    body: "Copy a single line of code into your website's HTML. No developer needed. No integrations to configure. Takes under 5 minutes.",
+  },
+  {
+    stamp: "ii.",
+    title: "Visitors chat with your AI assistant.",
+    body: "Your Qwikly widget greets every visitor, asks qualifying questions, and handles the full conversation — 24 hours a day, 7 days a week.",
+  },
+  {
+    stamp: "iii.",
+    title: "Qualified leads land in your inbox.",
+    body: "When a lead is qualified, you get an email with everything you need: name, contact details, what they want, and a booking request. Confirm in one click.",
+  },
+];
+
+const features = [
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 6v6l4 2" />
+      </svg>
+    ),
+    title: "24/7 lead capture",
+    body: "Your website never sleeps. Every visitor, every hour, every day — no lead slips through because you were busy or offline.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+        <path d="M8 10h8M8 14h5" />
+      </svg>
+    ),
+    title: "Smart qualification",
+    body: "The assistant asks your questions — service type, location, budget, urgency. Only warm, ready-to-buy leads reach your inbox.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    ),
+    title: "Instant booking requests",
+    body: "Qualified leads can request a booking time directly in the chat. You get notified the moment they do — no forms, no back-and-forth emails.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.82 19.79 19.79 0 01.27 1.2 2 2 0 012.24 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.62-.62a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" />
+      </svg>
+    ),
+    title: "One-click confirmation",
+    body: "Leads are emailed to you with a single confirmation button. Accept a booking in seconds, from anywhere, on any device.",
+  },
+];
+
+const differentiators = [
+  {
+    num: "01",
+    headline: "Live in 5 minutes.",
+    body: "No setup calls. No integrations to wire. No developer needed. Paste one script tag and your AI assistant is live. That's it.",
+  },
+  {
+    num: "02",
+    headline: "No per-job fees. Ever.",
+    body: "Flat monthly pricing only. We don't take a cut of your bookings, your jobs, or your revenue. Every rand you earn stays yours.",
+  },
+  {
+    num: "03",
+    headline: "Built for SA.",
+    body: "POPIA compliant. ZAR pricing. Data hosted in South Africa. Built for the way South African businesses actually operate.",
+  },
+];
+
+const teaserTiers = [
+  {
+    name: "Starter",
+    price: "R0",
+    period: "/month",
+    tagline: "Free forever",
+    highlight: false,
+    features: [
+      "25 qualified leads/month",
+      "Website chat widget",
+      "Email lead delivery",
+      '"Powered by Qwikly" branding',
+      "Email support",
+    ],
+    cta: "Start Free",
+    href: "/signup?plan=starter",
+    variant: "primary" as const,
+  },
+  {
+    name: "Pro",
+    price: "R599",
+    period: "/month",
+    tagline: "Most popular",
+    highlight: true,
+    features: [
+      "200 qualified leads/month",
+      "Custom branding (your logo)",
+      "Custom greeting & questions",
+      "Lead exports (CSV)",
+      "Priority email support",
+    ],
+    cta: "Start with Pro",
+    href: "/signup?plan=pro",
+    variant: "solid" as const,
+  },
+  {
+    name: "Premium",
+    price: "R1,299",
+    period: "/month",
+    tagline: "Unlimited everything",
+    highlight: false,
+    features: [
+      "Unlimited qualified leads",
+      "Everything in Pro",
+      "WhatsApp routing (coming soon)",
+      "Calendar integration (coming soon)",
+      "API access + dedicated support",
+    ],
+    cta: "Get Premium",
+    href: "/signup?plan=premium",
+    variant: "outline" as const,
+  },
+];
+
+const faqTeaser = [
+  {
+    q: "What counts as a qualified lead?",
+    a: "A lead who has provided their contact details and answered your qualifying questions — service type, location, and intent. We only count real contacts, not bounced chats or spam.",
+  },
+  {
+    q: "What happens when I hit my monthly limit?",
+    a: "You'll get a heads-up before you hit the cap. You can upgrade, or add extra leads at R20 each. No surprise charges, no automatic billing.",
+  },
+  {
+    q: "Can I use my own logo and colours?",
+    a: "Yes — on Pro and Premium plans, the widget uses your branding, not ours. Starter plans show 'Powered by Qwikly' branding.",
+  },
+  {
+    q: "Do you take a cut of my jobs?",
+    a: "Never. Flat monthly fee only. Every rand from every booking stays with your business. That's the whole point.",
+  },
+];
 
 /* ─────────────────────────────────────────────────────────────
    PAGE
@@ -181,18 +315,19 @@ function CheckIcon({ dark = false }: { dark?: boolean }) {
 
 export default function Home() {
   useScrollReveal();
-  const { problem, setProblem } = useProblem();
+  const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
   return (
     <>
       {/* ═══════ 01 · HERO ═══════════════════════════════════════ */}
       <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden grain">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
+
           {/* Top meta row */}
-          <div className="flex items-center justify-between text-[0.7rem] text-ink-500 mb-16 md:mb-24 reveal-up">
+          <div className="flex items-center justify-between text-[0.7rem] text-ink-500 mb-16 md:mb-20 reveal-up">
             <div className="eyebrow flex items-center gap-3">
               <span className="inline-block w-2 h-2 rounded-full bg-ember tick" />
-              Live · Answering leads now
+              Live · Capturing leads now
             </div>
             <div className="eyebrow hidden sm:flex items-center gap-3">
               <span>Johannesburg</span>
@@ -203,284 +338,62 @@ export default function Home() {
 
           {/* Headline */}
           <div className="reveal-words visible">
-            <h1 className="display-huge text-ink">
-              Stop losing jobs<br />
-              <span className="italic font-light">to the first reply</span>.
+            <h1 className="display-huge text-ink max-w-[18ch]">
+              The AI assistant{" "}
+              <em className="italic font-light">for your website</em>.
             </h1>
           </div>
 
           {/* Subhead + CTAs */}
           <div className="mt-10 md:mt-14 reveal-up">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-              <p className="text-lg md:text-xl text-ink-700 leading-relaxed">
-                Replies to every WhatsApp lead in 30 seconds. Books the job. Flat monthly price — no per-job fees, ever.
+              <p className="text-lg md:text-xl text-ink-700 leading-relaxed max-w-lg">
+                Captures every lead, qualifies them, and books them in &mdash; even when you&rsquo;re asleep.
+                Live on your site in 5 minutes.
               </p>
               <div className="flex flex-col gap-4 lg:items-end lg:text-right">
                 <div className="flex flex-wrap gap-4 lg:justify-end">
                   <CTAButton size="lg" variant="primary" href="/signup">
-                    Get my assistant live
+                    Start Free
                   </CTAButton>
-                  <CTAButton size="lg" variant="outline" href="#demo" withArrow={false}>
-                    See it answer a real lead
+                  <CTAButton size="lg" variant="outline" href="#how-it-works" withArrow={false}>
+                    See how it works
                   </CTAButton>
                 </div>
                 <p className="text-sm text-ink-500">
-                  No setup fee. 30-day money-back guarantee. Flat monthly pricing.
+                  No credit card. Free forever on Starter. Upgrade when you need more.
                 </p>
-                <LiveCounter />
               </div>
             </div>
-            {STATS_VERIFIED && (
-              <div className="mt-10 grid grid-cols-3 gap-8 border-t border-ink/10 pt-8 max-w-lg">
-                <div>
-                  <p className="font-display text-4xl text-ink"><StatCounter value={17} /></p>
-                  <p className="text-xs text-ink-500 mt-1">Leads replied</p>
-                </div>
-                <div>
-                  <p className="font-display text-4xl text-ink"><StatCounter value={11} /></p>
-                  <p className="text-xs text-ink-500 mt-1">Jobs booked</p>
-                </div>
-                <div>
-                  <p className="font-display text-4xl text-ember">R<StatCounter value={48} />k</p>
-                  <p className="text-xs text-ink-500 mt-1">Revenue captured</p>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Hero — animated WhatsApp phone */}
-          <div className="mt-20 md:mt-28 relative reveal-scale">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              <div className="lg:col-span-6 flex justify-center lg:justify-start relative">
-                <div className="animate-phone-float">
-                  <WhatsAppMock />
-                </div>
-                <div className="ember-blob w-[400px] h-[400px] -left-20 -top-10 hidden lg:block" />
-              </div>
-              <div className="lg:col-span-6 space-y-8">
-                <div>
-                  <p className="eyebrow text-ember mb-3">Reply in 30 s</p>
-                  <p className="font-display text-2xl md:text-3xl text-ink leading-tight max-w-md">
-                    It reads the message, asks what you&rsquo;d ask, and{" "}
-                    <em className="italic text-ember">books the slot</em>. The customer never has to wait.
-                  </p>
-                </div>
-                <div className="space-y-4">
-                  {[
-                    "Responds in under 30 seconds, around the clock",
-                    "Speaks in your business voice, not like a generic auto-reply",
-                    "Qualifies leads before they reach your calendar",
-                  ].map((point) => (
-                    <div key={point} className="flex items-start gap-3">
-                      <span className="mt-1.5 w-4 h-4 rounded-full bg-ember/15 border border-ember/30 flex items-center justify-center flex-shrink-0">
-                        <span className="w-1.5 h-1.5 rounded-full bg-ember" />
-                      </span>
-                      <p className="text-ink-700 leading-relaxed">{point}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+          {/* Hero visual */}
+          <div className="mt-20 md:mt-28 reveal-scale">
+            <BrowserWidgetMockup />
           </div>
 
         </div>
+      </section>
 
-        {/* Bottom marquee — full viewport width, outside max-w container */}
-        <div className="mt-24 ticker-pause">
-          <div className="border-t border-ink/10 mb-6" />
-          <div className="overflow-hidden">
-            <div className="flex items-center gap-12 ticker-scroll-slow w-max text-ink-700 pl-6">
-              {[...tradeLines, ...tradeLines].map((t, i) => (
-                <span key={`${t}-${i}`} className="headline-marquee">
-                  {t}
-                  <span className="text-ember not-italic font-display mx-8">·</span>
-                </span>
-              ))}
-            </div>
+      {/* ═══════ 02 · SOCIAL PROOF STRIP ════════════════════════ */}
+      <section className="py-14 border-t border-b border-ink/[0.06]">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+          <p className="eyebrow text-center text-ink-400 mb-10">Trusted by South African businesses</p>
+          <div className="flex flex-wrap items-center justify-center gap-x-14 gap-y-6">
+            {["Restaurant", "Hair Salon", "Law Firm", "Dental Clinic", "Gym", "Contractor"].map((name) => (
+              <div key={name} className="flex items-center gap-2.5 opacity-30 select-none">
+                <div className="w-7 h-7 rounded-lg bg-ink/20" />
+                <span className="font-display text-base text-ink tracking-tight">{name}</span>
+              </div>
+            ))}
           </div>
-          <div className="border-b border-ink/10 mt-6" />
-          <p className="eyebrow text-center text-ink-500 mt-6">
-            20+ trades · Built for South African service businesses
+          <p className="eyebrow text-center text-ink-400 mt-8 text-[10px]">
+            Logo wall placeholder — real customers coming Q3 2026
           </p>
         </div>
       </section>
 
-      {/* ═══════ 02 · PROBLEM ════════════════════════════════════ */}
-      <section className="relative py-28 md:py-36 bg-ink text-paper overflow-hidden grain-dark">
-        <div className="ember-blob w-[500px] h-[500px] top-10 -right-40" />
-        <div className="dot-grid absolute inset-0 opacity-60" />
-
-        <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <p className="eyebrow text-paper/60 mb-8 reveal-up">02. The problem</p>
-          <h2 className="display-xl text-paper max-w-[20ch] reveal-up">
-            You didn&rsquo;t start a business{" "}
-            <em className="italic font-light text-ember">to babysit a phone</em>.
-          </h2>
-
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-px bg-paper/[0.06] rounded-2xl overflow-hidden reveal-stagger">
-            {[
-              {
-                num: "01",
-                headline: "Missed call. Lost job.",
-                body: "The phone rang at 6pm on a Friday. You were under a sink. The lead called someone else. That job was worth R3,200.",
-              },
-              {
-                num: "02",
-                headline: "Replied 4 hours later.",
-                body: "They wanted you. You took too long. By the time you messaged back, they'd already booked the first guy to reply.",
-              },
-              {
-                num: "03",
-                headline: "WhatsApp full of ghosts.",
-                body: "Leads you meant to follow up. Quotes you never sent. Every unread message is revenue you already lost and don't know it.",
-              },
-            ].map((pain) => (
-              <div key={pain.num} className="bg-paper/[0.03] px-7 py-8 flex flex-col gap-4">
-                <span className="font-mono text-xs text-ember/60 tracking-widest">{pain.num}</span>
-                <p className="font-display text-2xl md:text-3xl text-paper leading-tight">{pain.headline}</p>
-                <p className="text-paper/55 text-sm leading-relaxed">{pain.body}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-12 gap-10 items-end reveal-up">
-            <div className="md:col-span-7">
-              <div className="mock-card-dark p-6 md:p-8">
-                <div className="flex items-center justify-between mb-5">
-                  <p className="eyebrow text-paper/60">Inbound · WhatsApp & Email</p>
-                  <p className="eyebrow text-ember">Replied in 0:00:28</p>
-                </div>
-                <div className="space-y-3 text-sm">
-                  <div className="bg-white/5 rounded-2xl px-4 py-3 max-w-[85%]">
-                    <p className="text-paper/90 leading-relaxed">Hi, my geyser is leaking bad. Burst I think. Joburg north. Can anyone come now?</p>
-                    <p className="text-paper/40 text-[0.65rem] mt-1 num">02:14</p>
-                  </div>
-                  <div className="bg-ember/90 rounded-2xl px-4 py-3 max-w-[85%] ml-auto">
-                    <p className="text-paper leading-relaxed">Hi, sorry to hear. I can send someone out now. Can you confirm the suburb and shut the mains for me?</p>
-                    <p className="text-paper/70 text-[0.65rem] mt-1 num">02:14</p>
-                  </div>
-                  <div className="bg-white/5 rounded-2xl px-4 py-3 max-w-[85%]">
-                    <p className="text-paper/90 leading-relaxed">Randburg. Mains off. How soon?</p>
-                    <p className="text-paper/40 text-[0.65rem] mt-1 num">02:15</p>
-                  </div>
-                  <div className="bg-ember/90 rounded-2xl px-4 py-3 max-w-[85%] ml-auto">
-                    <p className="text-paper leading-relaxed">Booked for 02:45 tonight. You&rsquo;ll get a confirmation + the tech&rsquo;s number when they&rsquo;re 5 min away.</p>
-                    <p className="text-paper/70 text-[0.65rem] mt-1 num">02:15</p>
-                  </div>
-                </div>
-                <div className="rule-light mt-5" />
-                <p className="eyebrow text-paper/40 mt-4">Qwikly conversation · logged to your dashboard</p>
-              </div>
-            </div>
-            <div className="md:col-span-5">
-              <p className="display-md text-ember mb-4">At 2:14 a.m.</p>
-              <p className="font-display text-xl text-paper/80 leading-relaxed">
-                Someone&rsquo;s geyser bursts in Randburg. They message three plumbers. Yours replies in 28 seconds.
-              </p>
-              <p className="mt-4 text-paper/60 leading-relaxed">
-                The other two replied at 07:48. That job was already done.
-              </p>
-              <div className="mt-6 italic text-paper/50 text-sm border-l-2 border-ember/40 pl-4">
-                &ldquo;If you&rsquo;re nodding, keep scrolling.&rdquo;
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════ 03 · PERSONALISATION TILES ═════════════════════ */}
-      <section className="relative py-28 md:py-36 overflow-hidden grain">
-        <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <p className="eyebrow text-ink-500 mb-6 reveal-up">03. Your situation</p>
-          <h2 className="display-lg text-ink max-w-[22ch] reveal-up">
-            What&rsquo;s killing your business right now?
-          </h2>
-          <p className="mt-4 text-ink-700 max-w-lg reveal-up">
-            Pick the one that hits hardest. The next section will be specific to your problem.
-          </p>
-
-          <div className="mt-10 reveal-up">
-            <ProblemTiles selected={problem} onChange={setProblem} />
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════ 04 · SOLUTION (conditional) ════════════════════ */}
-      <section className="relative py-28 md:py-36 bg-paper-deep grain overflow-hidden">
-        <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <p className="eyebrow text-ink-500 mb-6 reveal-up">04. The fix</p>
-          <div className="reveal-up">
-            <SolutionSection problem={problem} />
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════ OUTCOMES ════════════════════════════════════════ */}
-      <section
-        id="outcomes"
-        className="relative py-28 md:py-40 bg-ink text-paper overflow-hidden grain-dark"
-      >
-        <div className="ember-blob w-[600px] h-[600px] top-20 -left-40" />
-        <div className="dot-grid absolute inset-0 opacity-60" />
-
-        <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <div className="flex items-center justify-between mb-16 reveal-up">
-            <p className="eyebrow text-paper/60">Outcomes</p>
-            <p className="eyebrow text-paper/60">Jobs, not features.</p>
-          </div>
-
-          <h2 className="display-xl max-w-[16ch] reveal-up">
-            We sell you <em className="italic font-light text-ember">jobs</em>.
-            Everything else is how we get there.
-          </h2>
-
-          <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-20 reveal-stagger">
-            {outcomes.map((o) => (
-              <div key={o.stat} className="relative">
-                <div className="outcome-num text-paper">{o.stat}</div>
-                <p className="font-display italic text-xl text-ember mt-2">{o.label}</p>
-                <div className="rule-light mt-6 w-16" />
-                <p className="mt-6 text-base md:text-lg text-paper/80 max-w-md leading-relaxed">{o.body}</p>
-                <p className="mt-4 eyebrow text-paper/40">{o.attr}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-24 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 reveal-up">
-            <p className="font-display italic text-2xl md:text-3xl text-paper max-w-xl leading-snug">
-              &ldquo;The ones that come in while I&rsquo;m under a sink used to just vanish.&rdquo;
-            </p>
-            <CTAButton size="lg" variant="solid" href="#pricing">
-              See plans
-            </CTAButton>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════ 05 · FEATURE TRANSLATION ═══════════════════════ */}
-      <section className="relative py-28 md:py-36 overflow-hidden grain">
-        <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <p className="eyebrow text-ink-500 mb-6 reveal-up">05. What it does</p>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-14">
-            <div className="md:col-span-5">
-              <h2 className="display-lg text-ink reveal-up">
-                What it actually does{" "}
-                <em className="italic font-light">for you</em>.
-              </h2>
-            </div>
-            <div className="md:col-span-7 md:pt-4 reveal-up">
-              <p className="text-lg text-ink-700 leading-relaxed">
-                Tech companies love jargon. Here&rsquo;s what Qwikly actually does, in plain English, translated from the stuff they use to impress investors.
-              </p>
-            </div>
-          </div>
-          <div className="reveal-up">
-            <FeatureTranslation />
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════ HOW IT WORKS ════════════════════════════════════ */}
+      {/* ═══════ 03 · HOW IT WORKS ═══════════════════════════════ */}
       <section
         id="how-it-works"
         className="relative py-28 md:py-40 bg-paper-deep grain overflow-hidden"
@@ -490,35 +403,20 @@ export default function Home() {
             <div className="md:col-span-4">
               <p className="eyebrow text-ink-500 mb-6 reveal-up">How it works</p>
               <h2 className="display-lg text-ink reveal-up">
-                Four steps.
+                Three steps.
                 <br />
-                <span className="italic font-light">Zero input</span> from you.
+                <span className="italic font-light">Zero fuss.</span>
               </h2>
             </div>
             <div className="md:col-span-7 md:col-start-6 md:pt-6">
               <p className="text-lg text-ink-700 leading-relaxed reveal-up">
-                Qwikly connects to your WhatsApp and email, learns your services, your pricing, your service area, the way you speak, and then works the full sales cycle, start to finish, without you touching it.
+                Paste one script tag, and Qwikly handles every visitor conversation from first hello to
+                confirmed booking &mdash; no setup calls, no integrations to wire, no ongoing work from you.
               </p>
-              <div className="mt-5 flex items-center gap-3 flex-wrap reveal-up">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#25D366]/10 border border-[#25D366]/20">
-                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                  <span className="text-xs font-semibold text-[#25D366]">WhatsApp</span>
-                </div>
-                <span className="text-ink-300 text-xs">+</span>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-ember/10 border border-ember/20">
-                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 text-ember" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
-                  <span className="text-xs font-semibold text-ember">Email</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
-                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 text-blue-500" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
-                  <span className="text-xs font-semibold text-blue-500">Website Chat</span>
-                </div>
-                <span className="text-xs text-ink-400">All three channels handled automatically.</span>
-              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 reveal-stagger">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 reveal-stagger">
             {howSteps.map((s) => (
               <div key={s.stamp} className="ed-card-ghost group">
                 <div className="flex items-start justify-between mb-6">
@@ -533,334 +431,263 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════ 06 · DEMO ═══════════════════════════════════════ */}
-      <section id="demo" className="relative py-28 md:py-36 overflow-hidden grain">
+      {/* ═══════ 04 · FEATURES ═══════════════════════════════════ */}
+      <section className="relative py-28 md:py-36 overflow-hidden grain">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <p className="eyebrow text-ink-500 mb-6 reveal-up">06. See it live</p>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-14">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-16">
             <div className="md:col-span-5">
+              <p className="eyebrow text-ink-500 mb-6 reveal-up">What it does</p>
               <h2 className="display-lg text-ink reveal-up">
-                Watch it answer a real lead.{" "}
-                <em className="italic font-light">Right now.</em>
+                Everything your{" "}
+                <em className="italic font-light">front desk would do</em>.
               </h2>
             </div>
             <div className="md:col-span-7 md:pt-4 reveal-up">
               <p className="text-lg text-ink-700 leading-relaxed">
-                These are scripted from real Qwikly conversations. Every response, timing, and follow-up is exactly what your customers would experience.
+                Qwikly sits on your website and handles every incoming enquiry &mdash; qualifying, booking,
+                and delivering warm leads to your inbox, around the clock.
               </p>
             </div>
           </div>
-          <div className="reveal-up">
-            <DemoPlayer />
-          </div>
-          <div className="mt-10 flex flex-wrap items-center gap-4 reveal-up">
-            <CTAButton size="lg" variant="primary" href="/signup">
-              Get my assistant live
-            </CTAButton>
-            <p className="text-sm text-ink-500">30-day money-back guarantee. No setup fee.</p>
-          </div>
-        </div>
-      </section>
 
-      {/* ═══════ WEBSITE DIGITAL ASSISTANT ══════════════════════ */}
-      <WebsiteAssistantSection />
-
-      {/* ═══════ INVOICING ══════════════════════════════════════ */}
-      <section className="relative py-24 bg-ink text-paper overflow-hidden grain-dark">
-        <div className="ember-blob w-[400px] h-[400px] bottom-0 left-1/2 -translate-x-1/2 opacity-40" />
-        <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
-            <div>
-              <p className="eyebrow text-ember mb-5">Also included: invoicing</p>
-              <h2 className="display-lg text-paper leading-tight">
-                Book it. Invoice it.<br />
-                <em className="italic font-light text-ember">Get paid.</em>
-              </h2>
-              <p className="mt-6 text-paper/65 text-lg leading-relaxed max-w-md">
-                Once a job is booked, Qwikly generates and sends the invoice via WhatsApp or email the same day. No chasing. No paperwork. Clients pay faster when they get the invoice before the tech even leaves the driveway.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              {[
-                { num: "01", title: "Auto-generated on job completion", body: "Invoice created instantly from the booking. Line items, your logo, payment details, all pre-filled." },
-                { num: "02", title: "Sent via WhatsApp or email", body: "Client gets the invoice the same day. No logging into software, no manual send." },
-                { num: "03", title: "Payment status tracked in dashboard", body: "See exactly which jobs are paid, outstanding, or overdue. All in one place." },
-              ].map((item) => (
-                <div key={item.num} className="flex items-start gap-4 p-5 rounded-2xl bg-paper/[0.04] border border-paper/[0.08]">
-                  <span className="font-mono text-xs text-ember/60 tracking-widest shrink-0 mt-0.5">{item.num}</span>
-                  <div>
-                    <p className="font-semibold text-paper text-sm">{item.title}</p>
-                    <p className="text-paper/50 text-sm mt-1 leading-relaxed">{item.body}</p>
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 reveal-stagger">
+            {features.map((f) => (
+              <div key={f.title} className="ed-card group cursor-default">
+                <div className="w-10 h-10 rounded-xl bg-ember/10 border border-ember/15 flex items-center justify-center text-ember mb-6">
+                  {f.icon}
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════ TESTIMONIALS ════════════════════════════════════ */}
-      <section className="relative py-28 md:py-40 bg-paper-deep grain overflow-hidden">
-        <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <div className="flex items-baseline justify-between mb-16 reveal-up">
-            <div>
-              <p className="eyebrow text-ink-500 mb-4">Proof</p>
-              <h2 className="display-lg text-ink max-w-[16ch]">
-                Booked jobs,{" "}
-                <em className="italic font-light">not promises</em>.
-              </h2>
-            </div>
-            <p className="eyebrow text-ink-500 hidden md:block">Verified customers · Q1 2026</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 reveal-stagger">
-            {testimonials.map((t) => (
-              <figure key={t.name} className="ed-card flex flex-col justify-between">
-                <div className="inline-flex items-center gap-2 bg-ember/10 text-ember eyebrow px-3 py-1.5 rounded-full w-fit mb-8">
-                  <span className="w-1.5 h-1.5 rounded-full bg-ember" />
-                  {t.badge}
-                </div>
-                <blockquote className="pullquote">&ldquo;{t.quote}&rdquo;</blockquote>
-                <figcaption className="mt-10 pt-6 border-t border-ink/10">
-                  <p className="font-medium text-ink">{t.name}</p>
-                  <p className="text-sm text-ink-500 mt-0.5">{t.trade} · {t.city}</p>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════ WHY QWIKLY VS THE REST ═════════════════════════ */}
-      <section className="relative py-28 md:py-36 overflow-hidden grain">
-        <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <p className="eyebrow text-ink-500 mb-6 reveal-up">Why Qwikly</p>
-          <h2 className="display-lg text-ink max-w-[22ch] reveal-up">
-            Why Qwikly vs{" "}
-            <em className="italic font-light">the rest</em>.
-          </h2>
-
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 reveal-stagger">
-            {[
-              {
-                num: "01",
-                headline: "No per-job fees. Ever.",
-                body: "Most tools take a cut every time a job is booked. Qwikly charges a flat monthly price — you keep every rand you earn.",
-              },
-              {
-                num: "02",
-                headline: "Built for South Africa.",
-                body: "POPIA compliant. ZAR pricing. Your customer data stays in South Africa. Built for the way SA tradies actually work.",
-              },
-              {
-                num: "03",
-                headline: "Live the same day.",
-                body: "No lengthy onboarding. No developer needed. Connect your WhatsApp and you’re live — usually in under 24 hours.",
-              },
-            ].map((item) => (
-              <div key={item.num} className="ed-card-ghost group cursor-pointer">
-                <span className="font-mono text-xs text-ember/60 tracking-widest mb-6 block">{item.num}</span>
-                <h3 className="font-display text-2xl md:text-3xl text-ink leading-tight mb-4">{item.headline}</h3>
-                <p className="text-ink-700 leading-relaxed">{item.body}</p>
+                <h3 className="font-display text-xl text-ink mb-3">{f.title}</h3>
+                <p className="text-ink-700 text-sm leading-relaxed">{f.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ═══════ 07 · REVENUE CALCULATOR ════════════════════════ */}
-      <section className="relative py-28 md:py-36 bg-paper-deep grain overflow-hidden">
+      {/* ═══════ 05 · WHY QWIKLY ════════════════════════════════ */}
+      <section className="relative py-28 md:py-40 bg-ink text-paper overflow-hidden grain-dark">
+        <div className="ember-blob w-[500px] h-[500px] top-10 -right-40" />
+        <div className="dot-grid absolute inset-0 opacity-60" />
+
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <p className="eyebrow text-ink-500 mb-6 reveal-up">07. Your number</p>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-14">
-            <div className="md:col-span-5">
-              <h2 className="display-lg text-ink reveal-up">
-                Get your missed-revenue estimate{" "}
-                <em className="italic font-light">in 30 seconds</em>.
-              </h2>
-            </div>
-            <div className="md:col-span-7 md:pt-4 reveal-up">
-              <p className="text-lg text-ink-700 leading-relaxed">
-                Three inputs. One number you&rsquo;ve probably never calculated. Most tradespeople are surprised, and then angry that they waited this long to fix it.
-              </p>
-            </div>
-          </div>
-          <div className="reveal-up">
-            <RevenueCalculator />
+          <p className="eyebrow text-paper/60 mb-8 reveal-up">Why Qwikly</p>
+          <h2 className="display-xl text-paper max-w-[18ch] reveal-up mb-20">
+            Why Qwikly vs{" "}
+            <em className="italic font-light text-ember">the rest</em>.
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-paper/[0.06] rounded-2xl overflow-hidden reveal-stagger">
+            {differentiators.map((d) => (
+              <div key={d.num} className="bg-paper/[0.03] px-7 py-8 flex flex-col gap-4">
+                <span className="font-mono text-xs text-ember/60 tracking-widest">{d.num}</span>
+                <h3 className="font-display text-2xl md:text-3xl text-paper leading-tight">{d.headline}</h3>
+                <p className="text-paper/60 text-sm leading-relaxed">{d.body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ═══════ CONNECT YOUR WEBSITE ════════════════════════════ */}
-      <ConnectYourWebsiteSection />
-
-      {/* ═══════ PRICING ═════════════════════════════════════════ */}
+      {/* ═══════ 06 · PRICING TEASER ════════════════════════════ */}
       <section
         id="pricing"
         className="relative py-28 md:py-40 bg-paper-deep grain overflow-hidden"
       >
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
-
-          <div className="text-center mb-4 reveal-up">
+          <div className="text-center mb-14 reveal-up">
             <p className="eyebrow text-ink-500 mb-4">Pricing</p>
             <h2 className="display-lg text-ink">
-              No per-job fees.{" "}
-              <em className="italic font-light text-ember">Ever.</em>
+              Start free.{" "}
+              <em className="italic font-light text-ember">Scale when you&rsquo;re ready.</em>
             </h2>
             <p className="mt-4 text-ink-700 text-lg max-w-xl mx-auto leading-relaxed">
-              One flat monthly price. No commissions, no setup fees, no surprises.
+              No per-job fees. No commissions. Flat monthly pricing in ZAR.
             </p>
           </div>
 
-          <div className="flex justify-center mt-8 mb-12 reveal-up">
-            <div className="inline-flex items-center gap-2 bg-ember/10 border border-ember/20 text-ember eyebrow px-4 py-2 rounded-full">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              Pay annually — get 2 months free
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch reveal-stagger">
+            {teaserTiers.map((tier) => (
+              <div
+                key={tier.name}
+                className={`relative flex flex-col ${
+                  tier.highlight
+                    ? "bg-ink text-paper rounded-2xl p-8 shadow-xl ring-2 ring-ember pt-12"
+                    : "ed-card-ghost"
+                }`}
+              >
+                {tier.highlight && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                    <span className="eyebrow bg-ember text-paper px-4 py-1.5 rounded-full whitespace-nowrap">
+                      Most Popular
+                    </span>
+                  </div>
+                )}
 
-            {/* Lite */}
-            <div className="ed-card flex flex-col">
-              <p className="eyebrow text-ink-500 mb-3">Lite</p>
-              <div className="mb-1">
-                <span className="font-display text-5xl text-ink">R399</span>
-                <span className="text-ink-500 text-sm ml-2">/month</span>
-              </div>
-              <p className="text-sm text-ink-500 mb-6">or R3,990/yr — 2 months free</p>
-              <p className="text-sm text-ink-700 font-medium pb-5 mb-5 border-b border-ink/10">Up to 25 confirmed bookings/month</p>
-              <ul className="space-y-3 flex-1 mb-8">
-                {[
-                  "WhatsApp replies in 30 seconds",
-                  "Auto job qualification",
-                  "Calendar booking + reminders",
-                  "Email support",
-                  "POPIA compliant",
-                ].map((feat) => (
-                  <li key={feat} className="flex items-start gap-3 text-sm text-ink-700">
-                    <CheckIcon />
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-              <CTAButton size="md" variant="outline" href="/signup">
-                Get started
-              </CTAButton>
-            </div>
+                <p className={`eyebrow mb-1 ${tier.highlight ? "text-ember" : "text-ink-500"}`}>
+                  {tier.name}
+                </p>
+                <p className={`text-sm leading-snug mb-6 ${tier.highlight ? "text-paper/60" : "text-ink-700"}`}>
+                  {tier.tagline}
+                </p>
 
-            {/* Pro — Most Popular */}
-            <div className="relative bg-ink text-paper rounded-2xl p-8 flex flex-col shadow-xl ring-2 ring-ember">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                <span className="bg-ember text-paper text-[0.65rem] font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full whitespace-nowrap">Most Popular</span>
-              </div>
-              <p className="eyebrow text-paper/60 mb-3 mt-3">Pro</p>
-              <div className="mb-1">
-                <span className="font-display text-5xl text-paper">R799</span>
-                <span className="text-paper/50 text-sm ml-2">/month</span>
-              </div>
-              <p className="text-sm text-paper/40 mb-6">or R7,990/yr — 2 months free</p>
-              <p className="text-sm text-paper/70 font-medium pb-5 mb-5 border-b border-paper/10">Unlimited confirmed bookings</p>
-              <ul className="space-y-3 flex-1 mb-8">
-                {[
-                  "Everything in Lite",
-                  "No-show recovery",
-                  "Web widget for your site",
-                  "Google + Outlook calendar sync",
-                  "Monthly performance report",
-                  "Priority WhatsApp support",
-                ].map((feat) => (
-                  <li key={feat} className="flex items-start gap-3 text-sm text-paper/80">
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 text-ember flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-              <CTAButton size="md" variant="solid" href="/signup">
-                Start with Pro
-              </CTAButton>
-            </div>
+                <div className="mb-8">
+                  <span
+                    className={`font-display font-medium leading-none ${tier.highlight ? "text-paper" : "text-ink"}`}
+                    style={{ fontSize: "clamp(2.4rem, 4vw, 3rem)" }}
+                  >
+                    {tier.price}
+                  </span>
+                  <span className={`text-sm ml-1 ${tier.highlight ? "text-paper/50" : "text-ink-500"}`}>
+                    {tier.period}
+                  </span>
+                </div>
 
-            {/* Business */}
-            <div className="ed-card flex flex-col">
-              <p className="eyebrow text-ink-500 mb-3">Business</p>
-              <div className="mb-1">
-                <span className="font-display text-5xl text-ink">R1,499</span>
-                <span className="text-ink-500 text-sm ml-2">/month</span>
-              </div>
-              <p className="text-sm text-ink-500 mb-6">or R14,990/yr — 2 months free</p>
-              <p className="text-sm text-ink-700 font-medium pb-5 mb-5 border-b border-ink/10">Everything in Pro, plus:</p>
-              <ul className="space-y-3 flex-1 mb-8">
-                {[
-                  "Multi-user team accounts",
-                  "Custom branding (logo in messages)",
-                  "Quote / invoice handoff",
-                  "Integrations (Xero, QuickBooks) — Coming soon",
-                  "Dedicated success manager",
-                  "API access",
-                ].map((feat) => (
-                  <li key={feat} className="flex items-start gap-3 text-sm text-ink-700">
-                    <CheckIcon />
-                    {feat}
-                  </li>
-                ))}
-              </ul>
-              <CTAButton size="md" variant="outline" href="/signup">
-                Get started
-              </CTAButton>
-            </div>
+                <ul className="space-y-3 flex-1 mb-8">
+                  {tier.features.map((feat) => (
+                    <li
+                      key={feat}
+                      className={`flex items-start gap-3 text-sm leading-relaxed ${
+                        tier.highlight ? "text-paper/80" : "text-ink-700"
+                      }`}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="w-4 h-4 text-ember flex-shrink-0 mt-0.5"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      {feat}
+                    </li>
+                  ))}
+                </ul>
 
+                <CTAButton
+                  href={tier.href}
+                  variant={tier.variant}
+                  size="md"
+                  className="w-full justify-center"
+                >
+                  {tier.cta}
+                </CTAButton>
+              </div>
+            ))}
           </div>
 
-          {/* 30-day money-back guarantee badge */}
-          <div className="mt-12 text-center reveal-up">
+          <div className="mt-10 flex flex-col items-center gap-4 reveal-up">
             <div className="inline-flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-6 py-3 rounded-2xl">
               <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 <polyline points="9 12 11 14 15 10" />
               </svg>
-              <p className="text-sm font-medium">30-day money-back guarantee on all plans</p>
+              <p className="text-sm font-medium">30-day money-back guarantee on Pro and Premium</p>
             </div>
-            <p className="mt-4 text-xs text-ink-400">POPIA compliant · Your customer data stays in South Africa · ZAR pricing</p>
+            <p className="text-sm text-ink-500">
+              Pay annually and get 2 months free · Top-ups at R20/extra lead
+            </p>
+            <CTAButton variant="outline" size="md" href="/pricing">
+              See full pricing and comparison table
+            </CTAButton>
           </div>
-
         </div>
       </section>
 
-      {/* ═══════ LIVE ACTIVITY STRIP ═════════════════════════════ */}
-      <LiveActivityStrip />
+      {/* ═══════ 07 · FAQ TEASER ════════════════════════════════ */}
+      <section className="relative py-28 md:py-36 overflow-hidden grain">
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
+            <div className="md:col-span-4">
+              <p className="eyebrow text-ink-500 mb-6 reveal-up">Questions</p>
+              <h2 className="display-lg text-ink reveal-up">
+                Quick
+                <br />
+                <em className="italic font-light">answers</em>.
+              </h2>
+            </div>
 
-      {/* ═══════ FAQ ═════════════════════════════════════════════ */}
-      <FAQ />
+            <div className="md:col-span-7 md:col-start-6">
+              <div className="divide-y divide-ink/10 border-t border-ink/10">
+                {faqTeaser.map((item, index) => {
+                  const isOpen = openFAQ === index;
+                  return (
+                    <div key={index}>
+                      <button
+                        onClick={() => setOpenFAQ(isOpen ? null : index)}
+                        className="w-full flex items-start justify-between py-6 text-left gap-6 cursor-pointer group"
+                      >
+                        <span
+                          className={`font-display text-xl leading-snug transition-colors duration-200 ${
+                            isOpen ? "text-ember" : "text-ink group-hover:text-ember"
+                          }`}
+                        >
+                          {item.q}
+                        </span>
+                        <span
+                          className={`flex-shrink-0 mt-1 w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${
+                            isOpen
+                              ? "bg-ember border-ember text-paper"
+                              : "border-ink/20 text-ink group-hover:border-ember group-hover:text-ember"
+                          }`}
+                        >
+                          {isOpen ? (
+                            <Minus className="w-4 h-4" strokeWidth={2} />
+                          ) : (
+                            <Plus className="w-4 h-4" strokeWidth={2} />
+                          )}
+                        </span>
+                      </button>
+                      <div
+                        className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                          isOpen ? "max-h-64 pb-8" : "max-h-0"
+                        }`}
+                      >
+                        <p className="text-ink-700 text-base leading-relaxed max-w-prose">
+                          {item.a}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
-      {/* ═══════ FINAL CTA ═══════════════════════════════════════ */}
+              <div className="mt-8 reveal-up">
+                <CTAButton variant="outline" size="md" href="/faq">
+                  See all frequently asked questions
+                </CTAButton>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════ 08 · FINAL CTA ══════════════════════════════════ */}
       <section className="relative py-32 md:py-44 bg-ink text-paper overflow-hidden grain-dark">
         <div className="ember-blob w-[900px] h-[500px] top-0 left-1/2 -translate-x-1/2" />
         <div className="dot-grid absolute inset-0 opacity-60" />
 
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
           <p className="eyebrow text-paper/60 mb-10 reveal-up">Your move</p>
-          <h2 className="display-huge text-paper reveal-up max-w-[16ch] mx-auto">
-            Stop losing jobs to the{" "}
-            <em className="italic font-light text-ember">first reply</em>.
+          <h2 className="display-huge text-paper reveal-up max-w-[18ch] mx-auto">
+            Get your AI assistant{" "}
+            <em className="italic font-light text-ember">live this week</em>.
           </h2>
           <p className="mt-10 text-paper/70 text-lg md:text-xl max-w-xl mx-auto leading-relaxed reveal-up">
-            Flat monthly price. No commissions, no contracts, no setup fees. Your first month is covered by our 30-day money-back guarantee.
+            Free to start. Live in 5 minutes. No per-job fees, ever.
           </p>
           <div className="mt-12 flex flex-wrap items-center justify-center gap-4 reveal-up">
             <CTAButton size="lg" variant="solid" href="/signup">
-              Start with Pro
+              Start Free
             </CTAButton>
-            <CTAButton size="lg" variant="outline-light" href="#pricing" withArrow={false}>
+            <CTAButton size="lg" variant="outline-light" href="/pricing" withArrow={false}>
               See all plans
             </CTAButton>
           </div>
           <p className="mt-8 text-sm text-paper/40 reveal-up">
-            No setup fees · No per-job fees · 30-day money-back guarantee
+            POPIA compliant · Hosted in South Africa · hello@qwikly.co.za
           </p>
         </div>
       </section>
