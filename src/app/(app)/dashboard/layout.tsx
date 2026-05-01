@@ -48,18 +48,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [isDark]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
+    supabase.auth.getSession().then(({ data }) => {
       if (!data.session) {
         router.push("/login");
-        return;
-      }
-      const { data: client } = await supabase
-        .from("clients")
-        .select("id, onboarding_complete")
-        .limit(1)
-        .maybeSingle();
-      if (!client || !client.onboarding_complete) {
-        router.push("/onboarding");
         return;
       }
       setAuthed(true);
