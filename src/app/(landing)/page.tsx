@@ -32,62 +32,94 @@ function LiveClock() {
 
 function BrowserWidgetMockup() {
   return (
-    <div className="relative w-full max-w-[720px] mx-auto">
-      <div className="ember-blob w-[350px] h-[350px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-50" />
+    <div className="relative w-full max-w-[760px] mx-auto">
+      {/* Warm glow behind the screen */}
+      <div className="ember-blob w-[420px] h-[320px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-40" />
 
-      {/* Browser frame */}
-      <div className="relative bg-[#E4DDD4] rounded-2xl shadow-2xl overflow-hidden border border-ink/[0.12]">
-
-        {/* Browser chrome */}
-        <div className="bg-[#D5CEC6] px-4 py-3 flex items-center gap-3 border-b border-ink/10">
-          <div className="flex gap-1.5">
+      {/* Premium dark browser shell */}
+      <div
+        className="relative rounded-2xl overflow-hidden"
+        style={{
+          boxShadow:
+            "0 2px 0 rgba(255,255,255,0.05) inset," +
+            "0 80px 160px -40px rgba(14,14,12,0.55)," +
+            "0 30px 60px -20px rgba(14,14,12,0.25)," +
+            "0 0 0 1px rgba(14,14,12,0.18)",
+        }}
+      >
+        {/* Chrome bar — macOS dark */}
+        <div className="bg-[#2C2C2E] px-4 py-3 flex items-center gap-3 border-b border-black/20">
+          <div className="flex gap-1.5 flex-shrink-0">
             <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
             <div className="w-3 h-3 rounded-full bg-[#FEBC2E]" />
             <div className="w-3 h-3 rounded-full bg-[#28C840]" />
           </div>
-          <div className="flex-1 flex items-center bg-white/50 rounded-lg h-7 px-3 gap-2">
-            <svg viewBox="0 0 24 24" className="w-3 h-3 text-ink/40 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-              <path d="M7 11V7a5 5 0 0110 0v4" />
-            </svg>
-            <span className="text-[10px] text-ink/50 font-mono">yourbusiness.co.za</span>
+          <div className="flex-1 flex justify-center">
+            <div className="flex items-center bg-black/30 rounded-md h-7 px-3 gap-2 w-full max-w-[260px]">
+              <svg viewBox="0 0 24 24" className="w-3 h-3 text-white/25 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" />
+              </svg>
+              <span className="text-[10px] text-white/35 font-mono tracking-tight">yourbusiness.co.za</span>
+            </div>
           </div>
         </div>
 
-        {/* Website content */}
-        <div className="relative bg-[#F7F3EE] p-5 min-h-[340px]">
+        {/* ── Website interior ─────────────────────────────────── */}
+        <div className="relative bg-white" style={{ minHeight: "348px" }}>
 
-          {/* Placeholder nav */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-ink/15" />
-              <div className="w-20 h-3 bg-ink/20 rounded" />
+          {/* Realistic nav bar */}
+          <div className="flex items-center justify-between px-5 py-3.5 bg-white border-b border-gray-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-[#92400E] flex items-center justify-center">
+                <div className="w-4 h-4 rounded-sm bg-white/30" />
+              </div>
+              <div className="w-22 h-2.5 bg-gray-800/55 rounded-sm" />
             </div>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-2.5 bg-ink/10 rounded" />
-              <div className="w-12 h-2.5 bg-ink/10 rounded" />
-              <div className="w-16 h-6 bg-ink/15 rounded-lg" />
-            </div>
-          </div>
-
-          {/* Placeholder hero copy */}
-          <div className="space-y-2.5 max-w-[55%]">
-            <div className="w-full h-5 bg-ink/20 rounded" />
-            <div className="w-4/5 h-5 bg-ink/15 rounded" />
-            <div className="mt-3 space-y-1.5">
-              <div className="w-full h-3 bg-ink/10 rounded" />
-              <div className="w-3/4 h-3 bg-ink/10 rounded" />
-            </div>
-            <div className="mt-4 flex gap-3">
-              <div className="w-24 h-8 bg-ink/20 rounded-lg" />
-              <div className="w-20 h-8 bg-ink/10 rounded-lg border border-ink/20" />
+            <div className="flex items-center gap-5">
+              <div className="w-9 h-2 bg-gray-200 rounded-sm" />
+              <div className="w-12 h-2 bg-gray-200 rounded-sm" />
+              <div className="w-9 h-2 bg-gray-200 rounded-sm" />
+              <div className="w-16 h-7 bg-[#92400E] rounded-full" />
             </div>
           </div>
 
-          {/* Qwikly digital assistant, bottom right */}
-          <div className="absolute bottom-4 right-4 w-[215px]">
-            <div className="bg-white rounded-2xl overflow-hidden border border-ink/[0.08]" style={{ boxShadow: "0 20px 40px rgba(14,14,12,0.18)" }}>
+          {/* Rich hero band — warm brown gradient simulating a real business site */}
+          <div
+            className="relative px-6 py-8 overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #3c1407 0%, #78350f 55%, #a16207 100%)" }}
+          >
+            <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "radial-gradient(circle at 70% 50%, rgba(255,255,255,0.6) 0%, transparent 60%)" }} />
+            <div className="max-w-[52%] space-y-2.5 relative">
+              <div className="w-full h-4 bg-white/45 rounded-sm" />
+              <div className="w-4/5 h-4 bg-white/35 rounded-sm" />
+              <div className="w-3/5 h-2.5 bg-white/22 rounded-sm mt-0.5" />
+              <div className="flex gap-2.5 mt-4">
+                <div className="w-20 h-7 bg-white/30 rounded-full" />
+                <div className="w-16 h-7 border border-white/30 rounded-full" />
+              </div>
+            </div>
+          </div>
 
+          {/* Body skeleton */}
+          <div className="px-5 py-4 space-y-2.5">
+            <div className="flex gap-3 items-center">
+              <div className="w-full h-2.5 bg-gray-100 rounded" />
+            </div>
+            <div className="w-4/5 h-2.5 bg-gray-100 rounded" />
+            <div className="w-3/5 h-2 bg-gray-50 rounded" />
+          </div>
+
+          {/* ── Qwikly chat widget ───────────────────────────── */}
+          <div className="absolute bottom-4 right-4 w-[228px]">
+            <div
+              className="bg-white rounded-2xl overflow-hidden"
+              style={{
+                boxShadow:
+                  "0 28px 64px -12px rgba(14,14,12,0.32)," +
+                  "0 0 0 1px rgba(14,14,12,0.07)",
+              }}
+            >
               {/* Widget header */}
               <div className="bg-ink px-4 py-3 flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-full bg-ember flex items-center justify-center flex-shrink-0">
@@ -104,12 +136,12 @@ function BrowserWidgetMockup() {
                 </div>
               </div>
 
-              {/* Messages */}
+              {/* Message thread */}
               <div className="p-3 space-y-2 bg-[#F9F6F2]">
                 <div className="bg-white rounded-xl rounded-tl-sm px-3 py-2 max-w-[90%] border border-ink/[0.06]">
                   <p className="text-ink text-[9px] leading-relaxed">Hi! Looking to book, get a quote, or just have a question?</p>
                 </div>
-                <div className="bg-ember rounded-xl rounded-tr-sm px-3 py-2 max-w-[72%] ml-auto">
+                <div className="bg-ember rounded-xl rounded-tr-sm px-3 py-2 max-w-[70%] ml-auto">
                   <p className="text-paper text-[9px]">Book for Friday?</p>
                 </div>
                 <div className="bg-white rounded-xl rounded-tl-sm px-3 py-2 max-w-[90%] border border-ink/[0.06]">
@@ -141,9 +173,9 @@ function BrowserWidgetMockup() {
 
           {/* Script tag badge */}
           <div className="absolute bottom-4 left-5">
-            <div className="inline-flex items-center gap-2 bg-ink text-paper px-3 py-1.5 rounded-lg text-[9px] font-mono shadow-md">
+            <div className="inline-flex items-center gap-2 bg-ink text-paper px-3 py-1.5 rounded-lg text-[9px] font-mono shadow-lg">
               <span className="text-ember">&lt;script&gt;</span>
-              <span className="text-paper/60">Paste once. Done.</span>
+              <span className="text-paper/55">Paste once. Done.</span>
             </div>
           </div>
         </div>
@@ -157,18 +189,116 @@ function BrowserWidgetMockup() {
    ───────────────────────────────────────────────────────────── */
 
 const businessLogos = [
-  { name: "Restaurant",      letter: "R", bg: "#FEF3C7", fg: "#B45309" },
-  { name: "Hair Salon",      letter: "S", bg: "#FCE7F3", fg: "#9D174D" },
-  { name: "Law Firm",        letter: "L", bg: "#E0E7FF", fg: "#3730A3" },
-  { name: "Dental Clinic",   letter: "D", bg: "#E0F2FE", fg: "#0369A1" },
-  { name: "Gym & Fitness",   letter: "G", bg: "#DCFCE7", fg: "#166534" },
-  { name: "Contractor",      letter: "C", bg: "#FEF9C3", fg: "#A16207" },
-  { name: "Photographer",    letter: "P", bg: "#F3E8FF", fg: "#6B21A8" },
-  { name: "Medical Clinic",  letter: "M", bg: "#CCFBF1", fg: "#0F766E" },
-  { name: "Tutor",           letter: "T", bg: "#DBEAFE", fg: "#1D4ED8" },
-  { name: "Cafe",            letter: "C", bg: "#FFEDD5", fg: "#C2410C" },
-  { name: "Cleaning",        letter: "C", bg: "#F0FDF4", fg: "#15803D" },
-  { name: "Beauty Spa",      letter: "B", bg: "#FFF1F2", fg: "#BE123C" },
+  {
+    name: "Restaurants",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="8" y1="2" x2="8" y2="22" /><line x1="12" y1="2" x2="12" y2="10" /><line x1="16" y1="2" x2="16" y2="10" />
+        <path d="M8 10c0 2.2 1.8 4 4 4s4-1.8 4-4" />
+      </svg>
+    ),
+  },
+  {
+    name: "Hair Salons",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="6" cy="6" r="3" /><circle cx="6" cy="18" r="3" />
+        <line x1="20" y1="4" x2="8.12" y2="15.88" />
+        <line x1="14.47" y1="14.48" x2="20" y2="20" />
+        <line x1="8.12" y1="8.12" x2="12" y2="12" />
+      </svg>
+    ),
+  },
+  {
+    name: "Law Firms",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+        <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
+      </svg>
+    ),
+  },
+  {
+    name: "Dental Clinics",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M8 13s1.5 2 4 2 4-2 4-2" />
+        <line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" />
+      </svg>
+    ),
+  },
+  {
+    name: "Gyms",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="4" cy="12" r="2.5" /><circle cx="20" cy="12" r="2.5" />
+        <line x1="6.5" y1="12" x2="17.5" y2="12" />
+        <line x1="4" y1="9" x2="4" y2="15" /><line x1="8" y1="9" x2="8" y2="15" />
+        <line x1="20" y1="9" x2="20" y2="15" /><line x1="16" y1="9" x2="16" y2="15" />
+      </svg>
+    ),
+  },
+  {
+    name: "Contractors",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+      </svg>
+    ),
+  },
+  {
+    name: "Photographers",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+        <circle cx="12" cy="13" r="4" />
+      </svg>
+    ),
+  },
+  {
+    name: "Medical Clinics",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
+    ),
+  },
+  {
+    name: "Tutors",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z" />
+        <path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
+      </svg>
+    ),
+  },
+  {
+    name: "Cafes",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8h1a4 4 0 010 8h-1" />
+        <path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z" />
+        <line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" />
+      </svg>
+    ),
+  },
+  {
+    name: "Cleaning Services",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+    ),
+  },
+  {
+    name: "Beauty Spas",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    ),
+  },
 ];
 
 const howSteps = [
@@ -444,26 +574,24 @@ export default function Home() {
       </section>
 
       {/* ═══════ 02 · SOCIAL PROOF MARQUEE ══════════════════════ */}
-      <section className="py-12 border-t border-b border-ink/[0.07] overflow-hidden ticker-pause">
-        <p className="eyebrow text-center text-ink-400 mb-10 px-6">Trusted by South African businesses</p>
-        <div className="flex">
-          <div className="ticker-scroll flex items-center gap-x-2">
+      <section className="py-12 border-t border-b border-ink/[0.07]">
+        <p className="eyebrow text-center text-ink-400 mb-8 px-6">Built for South African businesses</p>
+        <div className="relative overflow-hidden ticker-pause">
+          {/* Left fade */}
+          <div className="absolute left-0 top-0 bottom-0 w-24 md:w-40 z-10 pointer-events-none" style={{ background: "linear-gradient(to right, #F4EEE4, transparent)" }} />
+          {/* Right fade */}
+          <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 z-10 pointer-events-none" style={{ background: "linear-gradient(to left, #F4EEE4, transparent)" }} />
+
+          <div className="ticker-scroll flex items-center gap-3">
             {[...businessLogos, ...businessLogos].map((b, i) => (
-              <div key={i} className="inline-flex items-center gap-3 px-5 py-2 flex-shrink-0">
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
-                  style={{ backgroundColor: b.bg }}
-                >
-                  <span
-                    className="font-display font-bold text-sm leading-none"
-                    style={{ color: b.fg }}
-                  >
-                    {b.letter}
-                  </span>
+              <div
+                key={i}
+                className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-white border border-ink/[0.09] rounded-xl shadow-sm flex-shrink-0 whitespace-nowrap"
+              >
+                <div className="w-7 h-7 rounded-lg bg-ink/[0.04] border border-ink/[0.07] flex items-center justify-center text-ink/45 flex-shrink-0">
+                  {b.icon}
                 </div>
-                <span className="font-display text-base tracking-tight whitespace-nowrap text-ink/55">
-                  {b.name}
-                </span>
+                <span className="text-sm font-medium text-ink/55 tracking-tight">{b.name}</span>
               </div>
             ))}
           </div>
