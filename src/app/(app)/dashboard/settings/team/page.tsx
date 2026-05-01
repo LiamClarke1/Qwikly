@@ -3,13 +3,16 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect, FormEvent } from "react";
-import { Check, AlertCircle, UserPlus, RefreshCw, Trash2, X as XIcon, Crown } from "lucide-react";
+import { Check, AlertCircle, UserPlus, RefreshCw, Trash2, X as XIcon, Crown, Lock, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Select, Field } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page";
 import { cn } from "@/lib/cn";
+import { useClient } from "@/lib/use-client";
+import { resolvePlan } from "@/lib/plan";
 
 type Role = "owner" | "admin" | "editor" | "viewer";
 type Status = "pending" | "active" | "revoked";
@@ -47,6 +50,10 @@ const STATUS_TONE: Record<Status, "neutral" | "success" | "warning" | "danger"> 
 };
 
 export default function TeamPage() {
+  const { client, loading: clientLoading } = useClient();
+  const tier = resolvePlan(client?.plan);
+  const canUseTeam = tier === "business";
+
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<Toast | null>(null);
@@ -65,7 +72,10 @@ export default function TeamPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (canUseTeam) load();
+    else setLoading(false);
+  }, [canUseTeam]);
 
   const resendInvite = async (m: Member) => {
     const res = await fetch("/api/settings/team", {
@@ -96,6 +106,37 @@ export default function TeamPage() {
       show("Role updated");
     } else show("Failed to update role", "danger");
   };
+
+  if (!clientLoading && !canUseTeam) {
+    return (
+      <>
+        <PageHeader
+          title="Team"
+          description="Manage who has access to your Qwikly workspace."
+        />
+        <Card>
+          <div className="flex flex-col items-center text-center gap-5 py-10 px-6">
+            <div className="w-14 h-14 rounded-2xl bg-ink/[0.05] border border-ink/[0.08] flex items-center justify-center">
+              <Lock className="w-6 h-6 text-ink-400" />
+            </div>
+            <div className="max-w-sm">
+              <p className="text-h3 font-semibold text-fg">Team accounts are a Business feature</p>
+              <p className="text-small text-fg-muted mt-2 leading-relaxed">
+                Upgrade to Business to invite team members, assign roles, and manage access across your workspace.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/billing"
+              className="inline-flex items-center gap-2 px-5 h-10 rounded-xl bg-ember text-paper text-small font-medium hover:bg-ember-deep transition-colors duration-150 cursor-pointer"
+            >
+              Upgrade to Business <ArrowRight className="w-4 h-4" />
+            </Link>
+            <p className="text-tiny text-fg-subtle">R1,499/month · No per-job fees. Ever.</p>
+          </div>
+        </Card>
+      </>
+    );
+  }
 
   return (
     <>

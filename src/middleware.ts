@@ -23,6 +23,11 @@ const PUBLIC_PREFIXES = [
   "/api/health",
   "/api/web",
   "/api/assistant/chat",
+  "/api/cron",
+  "/api/automations/run",
+  "/api/invoices/daily",
+  "/api/l",
+  "/api/pdf",
   "/connect-your-website",
   "/widget",
 ];

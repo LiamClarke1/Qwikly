@@ -2,8 +2,10 @@
 
 export const dynamic = "force-dynamic";
 
-import { Code2, Globe } from "lucide-react";
+import { Code2, Globe, Lock, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { useClient } from "@/lib/use-client";
+import { resolvePlan } from "@/lib/plan";
 import { EmbedActions } from "./_components/EmbedActions";
 
 function SkeletonLine({ className }: { className?: string }) {
@@ -14,9 +16,44 @@ function SkeletonLine({ className }: { className?: string }) {
 
 export default function EmbedPage() {
   const { client, loading } = useClient();
+  const tier = resolvePlan(client?.plan);
+  const canUseWidget = tier === "pro" || tier === "business";
 
   const publicKey = client?.public_key ?? "";
   const tenantName = client?.business_name ?? "Your business";
+
+  if (!loading && !canUseWidget) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div>
+          <h1 className="text-h2 font-display text-ink font-bold tracking-tight">
+            Get embed code
+          </h1>
+          <p className="text-small text-ink-500 mt-1">
+            Drop this snippet on any website to activate your digital assistant.
+          </p>
+        </div>
+        <div className="rounded-2xl bg-white border border-ink/[0.08] shadow-sm p-10 flex flex-col items-center text-center gap-5">
+          <div className="w-14 h-14 rounded-2xl bg-ink/[0.05] border border-ink/[0.08] flex items-center justify-center">
+            <Lock className="w-6 h-6 text-ink-400" />
+          </div>
+          <div className="max-w-sm">
+            <p className="text-h3 font-semibold text-ink">Web widget is a Pro feature</p>
+            <p className="text-small text-ink-500 mt-2 leading-relaxed">
+              Upgrade to Pro to embed your Qwikly digital assistant on any website. Get the snippet, customise the widget, and go live in minutes.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/billing"
+            className="inline-flex items-center gap-2 px-5 h-10 rounded-xl bg-ember text-paper text-small font-medium hover:bg-ember-deep transition-colors duration-150 cursor-pointer"
+          >
+            Upgrade to Pro <ArrowRight className="w-4 h-4" />
+          </Link>
+          <p className="text-tiny text-ink-400">R799/month · No per-job fees. Ever.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

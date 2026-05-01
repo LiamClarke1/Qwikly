@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin as createSupabaseAdmin } from "@/lib/supabase-server";
 import { ensureKbEmbeddings, searchKb } from "@/lib/embeddings";
+import { enrollLeadInSequences } from "@/lib/email/sequences";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -191,7 +192,18 @@ export async function POST(req: NextRequest) {
             // Detect lead capture: assistant acknowledged contact details or booking
             const leadPattern = /\b(noted your|contact you|get back to you|book you in|appointment|reach out|your details|i've saved|we'll call|your number|your email)\b/i;
             const leadUpdate: Record<string, unknown> = { updated_at: new Date().toISOString() };
-            if (leadPattern.test(fullReply)) leadUpdate.lead_captured = true;
+            if (leadPattern.test(fullReply)) {
+              leadUpdate.lead_captured = true;
+              leadUpdate.status = "lead";
+              // Fire-and-forget enrollment
+              db.from("conversations").select("customer_email, customer_name").eq("id", convoId).maybeSingle().then(({ data: cv }) => {
+                if (cv?.customer_email) {
+                  enrollLeadInSequences(client.id, cv.customer_email, cv.customer_name ?? null, convoId).catch(
+                    (err) => console.error("[sequences] enroll error", err)
+                  );
+                }
+              });
+            }
             await db.from("conversations").update(leadUpdate).eq("id", convoId);
           }
         } catch (persistErr) {

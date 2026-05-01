@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { enrollLeadInSequences } from "@/lib/email/sequences";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -65,6 +66,13 @@ export async function POST(req: NextRequest) {
 
   if (error || !convo) {
     return NextResponse.json({ error: error?.message ?? "create_failed" }, { status: 500, headers: CORS });
+  }
+
+  // Auto-enroll lead if email was provided
+  if (email) {
+    enrollLeadInSequences(Number(client_id), email, name, String(convo.id)).catch(
+      (err) => console.error("[sequences] enroll error", err)
+    );
   }
 
   // Generate a simple ws_token (in production this would be a signed JWT)

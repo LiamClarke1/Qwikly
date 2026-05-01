@@ -7,12 +7,14 @@ import Link from "next/link";
 import {
   CalendarCheck, MessageSquare, AlertTriangle, ArrowRight,
   TrendingUp, Plus, Receipt, Clock, CheckCircle2, Zap,
+  Lock, X, CreditCard,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
 import { useUser } from "@/lib/use-user";
 import { formatTime, formatZAR, timeAgo } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { resolvePlan, nextRenewalDate, PLAN_CONFIG, type PlanTier } from "@/lib/plan";
 
 interface Booking {
   id: string;
@@ -69,11 +71,149 @@ function KpiCard({
   );
 }
 
+function PlanCard({
+  tier,
+  bookingsMonth,
+  loading,
+}: {
+  tier: PlanTier;
+  bookingsMonth: number;
+  loading: boolean;
+}) {
+  const config = PLAN_CONFIG[tier];
+  const renewal = nextRenewalDate();
+  const renewalStr = renewal.toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" });
+  const usagePct = config.bookingLimit ? Math.min(100, Math.round((bookingsMonth / config.bookingLimit) * 100)) : 0;
+  const nearLimit = config.bookingLimit !== null && bookingsMonth >= 20;
+
+  if (loading) return <SkeletonCard className="h-36" />;
+
+  return (
+    <div className="rounded-2xl bg-white border border-ink/[0.08] overflow-hidden shadow-[0_1px_4px_rgba(14,14,12,0.05)]">
+      <div className="px-5 pt-4 pb-3.5 border-b border-ink/[0.06]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-ember/10 flex items-center justify-center">
+              <CreditCard className="w-3.5 h-3.5 text-ember" />
+            </div>
+            <h2 className="text-h3 text-ink font-semibold">Your plan</h2>
+          </div>
+          <Link
+            href="/dashboard/billing"
+            className="text-tiny font-medium text-ember hover:underline cursor-pointer"
+          >
+            Manage plan
+          </Link>
+        </div>
+      </div>
+      <div className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-small font-bold text-ink">{config.name}</span>
+          <span className="text-small font-bold text-ink num">R{config.priceMonthly}/mo</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-tiny text-ink-400">Renews</span>
+          <span className="text-tiny text-ink-500 num">{renewalStr}</span>
+        </div>
+
+        {config.bookingLimit !== null && (
+          <div className="pt-0.5 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <p className="text-tiny text-ink-400">Bookings used</p>
+              <p className={cn("text-tiny font-semibold num", nearLimit ? "text-ember" : "text-ink")}>
+                {bookingsMonth} of {config.bookingLimit}
+              </p>
+            </div>
+            <div className="h-1.5 rounded-full bg-ink/[0.08] overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${usagePct}%`,
+                  background: usagePct >= 80 ? "#E85A2C" : "#22C55E",
+                }}
+              />
+            </div>
+            {nearLimit && (
+              <p className="text-tiny text-ember font-medium leading-snug">
+                Approaching your monthly limit — upgrade to Pro for unlimited bookings.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UpgradePrompt({
+  tier,
+  bookingsMonth,
+  webWidgetActive,
+}: {
+  tier: PlanTier;
+  bookingsMonth: number;
+  webWidgetActive: boolean;
+}) {
+  const dismissKey = `qwikly-upgrade-dismissed-${new Date().getFullYear()}-${new Date().getMonth()}-${tier}`;
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const isDismissed = sessionStorage.getItem(dismissKey) === "1";
+    if (isDismissed) return;
+    if (tier === "lite" && bookingsMonth >= 20) setVisible(true);
+    if (tier === "pro" && webWidgetActive) setVisible(true);
+  }, [tier, bookingsMonth, webWidgetActive, dismissKey]);
+
+  const dismiss = () => {
+    sessionStorage.setItem(dismissKey, "1");
+    setVisible(false);
+  };
+
+  if (!visible) return null;
+
+  const isProPrompt = tier === "lite";
+  const title = isProPrompt
+    ? "You're almost at your monthly booking limit"
+    : "Your team is using the web widget heavily";
+  const body = isProPrompt
+    ? "Pro gives you unlimited bookings, no-show recovery, and calendar sync — for R799/month. No per-job fees. Ever."
+    : "Upgrade to Business for custom branding, team accounts, and integrations — from R1,499/month.";
+  const ctaLabel = isProPrompt ? "See Pro plan" : "See Business plan";
+
+  return (
+    <div className="relative rounded-2xl bg-ember/[0.06] border border-ember/[0.18] p-4 flex items-start gap-3">
+      <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
+        <TrendingUp className="w-4 h-4 text-ember" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-small font-semibold text-ink">{title}</p>
+        <p className="text-tiny text-ink-500 mt-0.5 leading-relaxed">{body}</p>
+        <Link
+          href="/dashboard/billing"
+          className="inline-flex items-center gap-1 text-tiny font-medium text-ember hover:underline mt-2 cursor-pointer"
+        >
+          {ctaLabel} <ArrowRight className="w-3 h-3" />
+        </Link>
+      </div>
+      <button
+        onClick={dismiss}
+        className="shrink-0 p-1 rounded-lg hover:bg-ink/[0.06] text-ink-400 hover:text-ink transition-colors duration-150 cursor-pointer"
+        aria-label="Dismiss"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const { client } = useClient();
   const { firstName } = useUser();
   const [loading, setLoading] = useState(true);
-  const [bookingsWeek, setBookingsWeek] = useState(0);
+  const [bookingsMonth, setBookingsMonth] = useState(0);
+  const [bookingsConfirmed, setBookingsConfirmed] = useState(0);
+  const [bookingsPending, setBookingsPending] = useState(0);
+  const [bookingsRecovered, setBookingsRecovered] = useState(0);
   const [chatsToday, setChatsToday] = useState(0);
   const [invoicedMonth, setInvoicedMonth] = useState(0);
   const [overdueAmount, setOverdueAmount] = useState(0);
@@ -82,18 +222,19 @@ export default function HomePage() {
   const [todayBookings, setTodayBookings] = useState<Booking[]>([]);
   const [recentConvos, setRecentConvos] = useState<Convo[]>([]);
 
+  const tier: PlanTier = resolvePlan(client?.plan);
+  const config = PLAN_CONFIG[tier];
+  const webWidgetActive = !!(client?.web_widget_last_seen_at);
+
   useEffect(() => {
     (async () => {
       const now = new Date();
-      const startWeek = new Date(now);
-      startWeek.setDate(now.getDate() - now.getDay());
-      startWeek.setHours(0, 0, 0, 0);
       const startMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const startDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const endDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
 
-      const [bWeek, esc, today, invoicesMonth, recentChats, todayConvos] = await Promise.all([
-        supabase.from("bookings").select("*", { count: "exact", head: false }).gte("created_at", startWeek.toISOString()),
+      const [monthBookings, esc, today, invoicesMonth, recentChats, todayConvos] = await Promise.all([
+        supabase.from("bookings").select("id,status").gte("created_at", startMonth),
         supabase.from("conversations").select("id,customer_name,customer_phone,status,updated_at").eq("status", "escalated").order("updated_at", { ascending: false }).limit(3),
         supabase.from("bookings").select("id,customer_name,job_type,area,booking_datetime,status").gte("booking_datetime", startDay).lt("booking_datetime", endDay).order("booking_datetime"),
         supabase.from("invoices").select("total_amount,status").gte("created_at", startMonth),
@@ -101,7 +242,17 @@ export default function HomePage() {
         supabase.from("conversations").select("id", { count: "exact", head: true }).gte("created_at", startDay),
       ]);
 
-      setBookingsWeek(bWeek.count ?? (bWeek.data?.length ?? 0));
+      const allMonthBookings = (monthBookings.data ?? []) as { id: string; status: string }[];
+      const confirmed = allMonthBookings.filter(b => b.status === "confirmed").length;
+      const recovered = allMonthBookings.filter(b => b.status === "no_show_recovered").length;
+      const pending = allMonthBookings.filter(b =>
+        !["confirmed", "cancelled", "completed", "no_show_recovered"].includes(b.status)
+      ).length;
+      setBookingsMonth(allMonthBookings.length);
+      setBookingsConfirmed(confirmed);
+      setBookingsPending(pending);
+      setBookingsRecovered(recovered);
+
       setEscalations((esc.data as Convo[]) ?? []);
       setTodayBookings((today.data as Booking[]) ?? []);
       setRecentConvos((recentChats.data as Convo[]) ?? []);
@@ -145,6 +296,10 @@ export default function HomePage() {
     closed: "Done",
     completed: "Done",
   };
+
+  const bookingSubLine = loading
+    ? "loading…"
+    : `${bookingsConfirmed} confirmed · ${bookingsPending} pending`;
 
   return (
     <div className="space-y-5 animate-fade-in">
@@ -193,7 +348,7 @@ export default function HomePage() {
       {/* ── KPI row ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
-          label="Bookings this week" value={bookingsWeek} sub="from enquiries"
+          label="Bookings this month" value={bookingsMonth} sub={bookingSubLine}
           icon={CalendarCheck} color="#3B82F6" loading={loading}
         />
         <KpiCard
@@ -210,11 +365,62 @@ export default function HomePage() {
         />
       </div>
 
+      {/* ── Upgrade prompt (contextual, dismissible) ────────────── */}
+      {!loading && (
+        <UpgradePrompt
+          tier={tier}
+          bookingsMonth={bookingsMonth}
+          webWidgetActive={webWidgetActive}
+        />
+      )}
+
       {/* ── Main grid ───────────────────────────────────────────── */}
       <div className="grid lg:grid-cols-3 gap-4">
 
         {/* Left column */}
         <div className="lg:col-span-2 space-y-4">
+
+          {/* Bookings this month breakdown */}
+          {!loading && (
+            <div className="rounded-2xl bg-white border border-ink/[0.08] overflow-hidden shadow-[0_1px_4px_rgba(14,14,12,0.05)]">
+              <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-ink/[0.06]">
+                <div>
+                  <h2 className="text-h3 text-ink font-semibold">Bookings this month</h2>
+                  <p className="text-tiny text-ink-400 mt-0.5">
+                    {new Date().toLocaleDateString("en-ZA", { month: "long", year: "numeric" })}
+                  </p>
+                </div>
+                <span className="text-2xl font-bold text-ink num">{bookingsMonth}</span>
+              </div>
+              <div className="grid grid-cols-3 divide-x divide-ink/[0.06] p-5 gap-0">
+                <div className="text-center px-3">
+                  <p className="text-xl font-bold text-green-700 num">{bookingsConfirmed}</p>
+                  <p className="text-tiny text-ink-400 mt-1">Confirmed</p>
+                </div>
+                <div className="text-center px-3">
+                  <p className="text-xl font-bold text-ink num">{bookingsPending}</p>
+                  <p className="text-tiny text-ink-400 mt-1">Pending</p>
+                </div>
+                {config.noShowRecovery ? (
+                  <div className="text-center px-3">
+                    <p className="text-xl font-bold text-blue-600 num">{bookingsRecovered}</p>
+                    <p className="text-tiny text-ink-400 mt-1">Recovered</p>
+                  </div>
+                ) : (
+                  <div className="text-center px-3 flex flex-col items-center justify-center">
+                    <Lock className="w-4 h-4 text-ink-300 mb-1" />
+                    <p className="text-tiny text-ink-400 leading-tight">No-show recovery</p>
+                    <Link
+                      href="/dashboard/billing"
+                      className="text-[10px] font-semibold text-ember hover:underline cursor-pointer mt-0.5"
+                    >
+                      Pro+
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Today's schedule */}
           <div className="rounded-2xl bg-white border border-ink/[0.08] overflow-hidden shadow-[0_1px_4px_rgba(14,14,12,0.05)]">
@@ -345,6 +551,9 @@ export default function HomePage() {
 
         {/* Right column */}
         <div className="space-y-4">
+
+          {/* Plan card */}
+          <PlanCard tier={tier} bookingsMonth={bookingsMonth} loading={loading} />
 
           {/* Needs attention */}
           {!loading && escalations.length > 0 && (

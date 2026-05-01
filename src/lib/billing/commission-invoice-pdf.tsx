@@ -108,7 +108,7 @@ export function CommissionInvoicePDF({ data }: { data: CommissionInvoiceData }) 
           <Text style={s.tableHeaderText}>AMOUNT</Text>
         </View>
         <View style={s.tableRow}>
-          <Text style={s.tableLabel}>Qwikly platform commission — {periodLabel}</Text>
+          <Text style={s.tableLabel}>Qwikly subscription fee — {periodLabel}</Text>
           <Text style={s.tableValue}>{fmtZar(data.commissionExVat)}</Text>
         </View>
         <View style={s.tableRow}>

@@ -72,6 +72,9 @@ export interface ClientRow {
   invoice_footer_text?: string | null;
   invoice_terms_default?: string | null;
   invoice_counter?: number | null;
+  plan?: string | null;
+  billing_active?: boolean | null;
+  trial_ends_at?: string | null;
   commission_rate?: number | null;
   risk_score?: number | null;
   risk_flags?: string[] | null;

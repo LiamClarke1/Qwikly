@@ -5,9 +5,9 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import {
   Plus, X, Check, Play, Pause, Trash2,
-  CalendarCheck, Star, Clock, AlertTriangle, ArrowRight,
+  CalendarCheck, Clock, AlertTriangle, ArrowRight,
   Bell, Mail, MessageSquare, Smartphone, FileText, CreditCard,
-  Wrench,
+  Wrench, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
@@ -162,8 +162,11 @@ const OPTIONAL_RECIPES: RecipeConfig[] = [
   },
 ];
 
+type PageTab = "automations" | "sequences";
+
 export default function AutomationsPage() {
   const { client } = useClient();
+  const [pageTab, setPageTab] = useState<PageTab>("automations");
   const [items, setItems] = useState<Automation[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Automation | null>(null);
@@ -216,14 +219,39 @@ export default function AutomationsPage() {
     <>
       <PageHeader
         title="Automations"
-        description="Rules that fire automatically. Reminders, alerts, follow-ups, recalls."
+        description="Trigger-based rules and email follow-up sequences."
         actions={
-          <Button variant="primary" size="md" icon={<Plus className="w-4 h-4" />} onClick={() => setCreating(true)}>
-            Build your own
-          </Button>
+          pageTab === "automations" ? (
+            <Button variant="primary" size="md" icon={<Plus className="w-4 h-4" />} onClick={() => setCreating(true)}>
+              Build your own
+            </Button>
+          ) : undefined
         }
       />
 
+      {/* Tab switcher */}
+      <div className="flex rounded-xl border border-white/[0.08] overflow-hidden max-w-xs mb-6">
+        {(["automations", "sequences"] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setPageTab(tab)}
+            className={cn(
+              "flex-1 px-4 py-2 text-small font-medium capitalize cursor-pointer transition-colors",
+              pageTab === tab
+                ? "bg-white/[0.08] text-fg"
+                : "text-fg-muted hover:text-fg hover:bg-white/[0.04]"
+            )}
+          >
+            {tab === "automations" ? "Trigger automations" : "Email sequences"}
+          </button>
+        ))}
+      </div>
+
+      {pageTab === "sequences" && client && (
+        <SequencesTab clientId={client.id as unknown as number} />
+      )}
+
+      {pageTab === "automations" && (
       <div className="max-w-4xl space-y-8">
 
         {/* ── Quick-add recipes ─────────────────────────────────── */}
@@ -381,6 +409,8 @@ export default function AutomationsPage() {
         )}
       </div>
 
+      )}
+
       {(creating || editing) && client && (
         <AutomationEditor
           clientId={client.id as unknown as number}
@@ -396,6 +426,292 @@ export default function AutomationsPage() {
           }}
         />
       )}
+    </>
+  );
+}
+
+// ── Email Sequences Tab ───────────────────────────────────────────────────────
+
+interface Sequence {
+  id: string;
+  name: string;
+  trigger_type: string;
+  status: "draft" | "active" | "paused" | "archived";
+  created_at: string;
+  email_sequence_steps: Array<{ id: string; position: number; delay_hours: number; subject: string; heading?: string; body: string; cta_text?: string; cta_url?: string }>;
+  email_sequence_enrollments: Array<{ id: string; status: string }>;
+}
+
+const SEQUENCE_TRIGGERS: Record<string, string> = {
+  manual:               "Manual enrol only",
+  lead_captured:        "Lead captured",
+  conversation_closed:  "Conversation closed",
+  inactivity_7d:        "7-day inactivity",
+  inactivity_14d:       "14-day inactivity",
+};
+
+function SequencesTab({ clientId }: { clientId: number }) {
+  const [sequences, setSequences] = useState<Sequence[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/sequences")
+      .then(r => r.json())
+      .then(data => { setSequences(data); setLoading(false); });
+  }, []);
+
+  const toggleStatus = async (seq: Sequence) => {
+    const next = seq.status === "active" ? "paused" : "active";
+    await fetch(`/api/sequences/${seq.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: next }),
+    });
+    setSequences(list => list.map(s => s.id === seq.id ? { ...s, status: next } : s));
+  };
+
+  const remove = async (seq: Sequence) => {
+    if (!confirm(`Delete "${seq.name}"?`)) return;
+    await fetch(`/api/sequences/${seq.id}`, { method: "DELETE" });
+    setSequences(list => list.filter(s => s.id !== seq.id));
+  };
+
+  return (
+    <div className="max-w-4xl space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-h3 text-fg font-semibold">Email sequences</p>
+          <p className="text-small text-fg-muted mt-0.5">Multi-step email campaigns triggered automatically.</p>
+        </div>
+        <Button variant="primary" size="md" icon={<Plus className="w-4 h-4" />} onClick={() => setCreating(true)}>
+          New sequence
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">{Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-20" />)}</div>
+      ) : sequences.length === 0 && !creating ? (
+        <div className="py-12 text-center border border-white/[0.06] rounded-xl">
+          <Mail className="w-8 h-8 text-fg-faint mx-auto mb-3" />
+          <p className="text-body font-semibold text-fg mb-1">No sequences yet</p>
+          <p className="text-small text-fg-muted mb-4">Build a sequence to automatically follow up with leads over time.</p>
+          <Button variant="primary" onClick={() => setCreating(true)}>Create your first sequence</Button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {sequences.map(seq => {
+            const enrolled = seq.email_sequence_enrollments?.filter(e => e.status === "active").length ?? 0;
+            const isExpanded = expanded === seq.id;
+            return (
+              <div key={seq.id} className="border border-white/[0.06] rounded-xl overflow-hidden">
+                <div
+                  className="flex items-start gap-4 p-4 cursor-pointer hover:bg-white/[0.02] transition-colors"
+                  onClick={() => setExpanded(isExpanded ? null : seq.id)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-body font-semibold text-fg">{seq.name}</p>
+                      <Badge tone={seq.status === "active" ? "success" : "neutral"} dot>
+                        {seq.status}
+                      </Badge>
+                      {seq.trigger_type === "lead_captured" && (
+                        <Badge tone="sky">auto</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-1 text-tiny text-fg-subtle flex-wrap">
+                      <span>{SEQUENCE_TRIGGERS[seq.trigger_type] ?? seq.trigger_type}</span>
+                      <span>·</span>
+                      <span>{seq.email_sequence_steps?.length ?? 0} steps</span>
+                      {enrolled > 0 && <><span>·</span><span>{enrolled} active</span></>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
+                    <Button variant="ghost" size="icon" onClick={() => toggleStatus(seq)} title={seq.status === "active" ? "Pause" : "Activate"}>
+                      {seq.status === "active" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => remove(seq)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    {isExpanded ? <ChevronUp className="w-4 h-4 text-fg-muted" /> : <ChevronDown className="w-4 h-4 text-fg-muted" />}
+                  </div>
+                </div>
+
+                {isExpanded && (
+                  <div className="border-t border-white/[0.06] px-4 py-3 space-y-2">
+                    {(seq.email_sequence_steps ?? []).sort((a, b) => a.position - b.position).map((step, i) => (
+                      <div key={step.id} className="flex items-start gap-3 p-3 rounded-lg bg-white/[0.02]">
+                        <div className="w-6 h-6 rounded-full bg-brand/10 flex items-center justify-center shrink-0 text-tiny font-bold text-brand">{i + 1}</div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-small font-semibold text-fg">{step.subject}</p>
+                          <p className="text-tiny text-fg-muted mt-0.5">Send {step.delay_hours}h after enrol</p>
+                          {step.body && <p className="text-tiny text-fg-subtle mt-1 line-clamp-2">{step.body}</p>}
+                        </div>
+                      </div>
+                    ))}
+                    {!(seq.email_sequence_steps?.length) && (
+                      <p className="text-tiny text-fg-muted py-2">No steps yet.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {creating && (
+        <SequenceEditor
+          onClose={() => setCreating(false)}
+          onCreated={seq => { setSequences(list => [seq, ...list]); setCreating(false); }}
+        />
+      )}
+    </div>
+  );
+}
+
+interface StepDraft {
+  subject: string;
+  heading: string;
+  body: string;
+  delay_hours: number;
+  cta_text: string;
+  cta_url: string;
+}
+
+function SequenceEditor({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: (seq: Sequence) => void;
+}) {
+  const [name, setName] = useState("");
+  const [trigger, setTrigger] = useState("manual");
+  const [steps, setSteps] = useState<StepDraft[]>([
+    { subject: "", heading: "", body: "", delay_hours: 24, cta_text: "", cta_url: "" },
+  ]);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const addStep = () => setSteps(s => [...s, { subject: "", heading: "", body: "", delay_hours: (s[s.length - 1]?.delay_hours ?? 0) + 48, cta_text: "", cta_url: "" }]);
+  const removeStep = (i: number) => setSteps(s => s.filter((_, idx) => idx !== i));
+  const updateStep = (i: number, patch: Partial<StepDraft>) => setSteps(s => s.map((x, idx) => idx === i ? { ...x, ...patch } : x));
+
+  const save = async () => {
+    setErr(null);
+    if (!name.trim()) return setErr("Name is required.");
+    if (steps.some(s => !s.subject.trim() || !s.body.trim())) return setErr("Every step needs a subject and body.");
+    setSaving(true);
+    const res = await fetch("/api/sequences", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name.trim(),
+        trigger_type: trigger,
+        steps: steps.map((s, i) => ({ ...s, position: i, heading: s.heading || undefined, cta_text: s.cta_text || undefined, cta_url: s.cta_url || undefined })),
+      }),
+    });
+    const data = await res.json();
+    setSaving(false);
+    if (!res.ok) return setErr(data.error ?? "Failed to save.");
+    // Reload the created sequence with steps
+    const full = await fetch(`/api/sequences`).then(r => r.json());
+    const created = full.find((s: Sequence) => s.id === data.id) ?? { ...data, email_sequence_steps: [], email_sequence_enrollments: [] };
+    onCreated(created);
+  };
+
+  return (
+    <>
+      <div onClick={onClose} className="fixed inset-0 z-40 bg-black/60 animate-fade-in" />
+      <div className="fixed inset-0 z-50 overflow-y-auto pointer-events-none">
+        <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+          <Card className="w-full max-w-xl pointer-events-auto animate-slide-up">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-h2 text-fg">New email sequence</h2>
+              <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] cursor-pointer">
+                <X className="w-4 h-4 text-fg-muted" />
+              </button>
+            </div>
+
+            <div className="space-y-5">
+              <Field label="Name">
+                <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. New lead follow-up" />
+              </Field>
+
+              <div>
+                <p className="text-small font-medium text-fg mb-2">Trigger</p>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {Object.entries(SEQUENCE_TRIGGERS).map(([key, label]) => (
+                    <button
+                      key={key}
+                      onClick={() => setTrigger(key)}
+                      className={cn(
+                        "p-3 rounded-xl border text-left text-small font-medium transition-colors cursor-pointer",
+                        trigger === key
+                          ? "border-brand bg-brand/[0.08] text-fg"
+                          : "border-white/[0.06] text-fg-muted hover:border-line-strong"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-small font-medium text-fg mb-2">Steps</p>
+                <div className="space-y-3">
+                  {steps.map((step, i) => (
+                    <div key={i} className="p-4 rounded-xl border border-white/[0.06] bg-white/[0.02] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-tiny font-semibold text-brand">Step {i + 1}</span>
+                        {steps.length > 1 && (
+                          <button onClick={() => removeStep(i)} className="text-tiny text-danger hover:underline cursor-pointer">Remove</button>
+                        )}
+                      </div>
+                      <Field label="Send after (hours)">
+                        <Input type="number" min="1" value={step.delay_hours} onChange={e => updateStep(i, { delay_hours: Number(e.target.value) })} />
+                      </Field>
+                      <Field label="Subject line">
+                        <Input value={step.subject} onChange={e => updateStep(i, { subject: e.target.value })} placeholder="e.g. Quick follow-up from {businessName}" />
+                      </Field>
+                      <Field label="Email body">
+                        <Textarea rows={3} value={step.body} onChange={e => updateStep(i, { body: e.target.value })} placeholder="Write your email message here..." />
+                      </Field>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <Field label="CTA button text (optional)">
+                          <Input value={step.cta_text} onChange={e => updateStep(i, { cta_text: e.target.value })} placeholder="e.g. Book a call" />
+                        </Field>
+                        <Field label="CTA URL (optional)">
+                          <Input value={step.cta_url} onChange={e => updateStep(i, { cta_url: e.target.value })} placeholder="https://..." />
+                        </Field>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    onClick={addStep}
+                    className="w-full p-3 rounded-xl border border-dashed border-white/[0.08] hover:border-white/[0.16] text-small text-fg-muted hover:text-fg transition-colors cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Add another step
+                  </button>
+                </div>
+              </div>
+
+              {err && <p className="text-small text-danger">{err}</p>}
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6 pt-5 border-t border-white/[0.06]">
+              <Button variant="ghost" onClick={onClose}>Cancel</Button>
+              <Button variant="primary" loading={saving} icon={<Check className="w-4 h-4" />} onClick={save}>
+                Save as draft
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
     </>
   );
 }
