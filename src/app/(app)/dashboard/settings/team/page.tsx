@@ -52,7 +52,7 @@ const STATUS_TONE: Record<Status, "neutral" | "success" | "warning" | "danger"> 
 export default function TeamPage() {
   const { client, loading: clientLoading } = useClient();
   const tier = resolvePlan(client?.plan);
-  const canUseTeam = tier === "business";
+  const canUseTeam = tier === "premium";
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,18 +120,18 @@ export default function TeamPage() {
               <Lock className="w-6 h-6 text-ink-400" />
             </div>
             <div className="max-w-sm">
-              <p className="text-h3 font-semibold text-fg">Team accounts are a Business feature</p>
+              <p className="text-h3 font-semibold text-fg">Team accounts are a Premium feature</p>
               <p className="text-small text-fg-muted mt-2 leading-relaxed">
-                Upgrade to Business to invite team members, assign roles, and manage access across your workspace.
+                Upgrade to Premium to invite team members, assign roles, and manage access across your workspace.
               </p>
             </div>
             <Link
               href="/dashboard/billing"
               className="inline-flex items-center gap-2 px-5 h-10 rounded-xl bg-ember text-paper text-small font-medium hover:bg-ember-deep transition-colors duration-150 cursor-pointer"
             >
-              Upgrade to Business <ArrowRight className="w-4 h-4" />
+              Upgrade to Premium <ArrowRight className="w-4 h-4" />
             </Link>
-            <p className="text-tiny text-fg-subtle">R1,499/month · No per-job fees. Ever.</p>
+            <p className="text-tiny text-fg-subtle">R1,299/month · No per-lead fees. Cancel anytime.</p>
           </div>
         </Card>
       </>

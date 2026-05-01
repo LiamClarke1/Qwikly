@@ -17,7 +17,7 @@ function SkeletonLine({ className }: { className?: string }) {
 export default function EmbedPage() {
   const { client, loading } = useClient();
   const tier = resolvePlan(client?.plan);
-  const canUseWidget = tier === "pro" || tier === "business";
+  const canUseWidget = tier === "pro" || tier === "premium" || tier === "starter";
 
   const publicKey = client?.public_key ?? "";
   const tenantName = client?.business_name ?? "Your business";
@@ -49,7 +49,7 @@ export default function EmbedPage() {
           >
             Upgrade to Pro <ArrowRight className="w-4 h-4" />
           </Link>
-          <p className="text-tiny text-ink-400">R799/month · No per-job fees. Ever.</p>
+          <p className="text-tiny text-ink-400">Pro from R599/month · No per-lead fees. Cancel anytime.</p>
         </div>
       </div>
     );

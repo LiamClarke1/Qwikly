@@ -15,7 +15,7 @@ import { fmt, fmtDateLong } from "@/lib/money";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type PlanId = "lite" | "pro" | "business";
+type PlanId = "starter" | "pro" | "premium";
 type BillingCycle = "monthly" | "annual";
 type InvoiceStatus = "paid" | "open" | "overdue";
 
@@ -85,49 +85,46 @@ async function requestPaymentMethodUpdate(): Promise<string | null> {
 
 // ─── Pricing constants ────────────────────────────────────────────────────────
 
-const MONTHLY: Record<PlanId, number> = { lite: 399, pro: 799, business: 1499 };
-const ANNUAL:  Record<PlanId, number> = { lite: 3990, pro: 7990, business: 14990 };
+const MONTHLY: Record<PlanId, number> = { starter: 0, pro: 599, premium: 1299 };
+// Annual = 10 months (2 months free)
+const ANNUAL:  Record<PlanId, number> = { starter: 0, pro: 5990, premium: 12990 };
 
 const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean; features: string[] }> = {
-  lite: {
-    name: "Lite",
-    tagline: "For sole traders getting started",
+  starter: {
+    name: "Starter",
+    tagline: "Free forever — no card required",
     highlight: false,
     features: [
-      "Up to 25 confirmed bookings/month",
-      "WhatsApp replies in 30 seconds",
-      "Auto job qualification",
-      "Calendar booking + reminders",
+      "25 qualified leads/month",
+      "Website chat widget",
+      "Email lead delivery",
+      '"Powered by Qwikly" branding',
       "Email support",
-      "POPIA compliant",
     ],
   },
   pro: {
     name: "Pro",
-    tagline: "For busy tradies who can't afford limits",
+    tagline: "Most popular for growing businesses",
     highlight: true,
     features: [
-      "Unlimited confirmed bookings",
-      "Everything in Lite, plus:",
-      "No-show recovery",
-      "Web widget for your site",
-      "Google + Outlook calendar sync",
-      "Monthly performance report",
-      "Priority WhatsApp support",
+      "200 qualified leads/month",
+      "Custom branding (your logo)",
+      "Custom greeting + qualifying questions",
+      "Lead exports (CSV)",
+      "Priority email support",
     ],
   },
-  business: {
-    name: "Business",
-    tagline: "For teams and growing operations",
+  premium: {
+    name: "Premium",
+    tagline: "Unlimited leads, unlimited potential",
     highlight: false,
     features: [
+      "Unlimited qualified leads",
       "Everything in Pro, plus:",
-      "Multi-user team accounts",
-      "Custom branding in messages",
-      "Quote / invoice handoff",
-      "Xero + QuickBooks (Coming soon)",
-      "Dedicated success manager",
+      "WhatsApp routing (coming soon)",
+      "Calendar integration (coming soon)",
       "API access",
+      "Dedicated support",
     ],
   },
 };
@@ -282,6 +279,9 @@ export default function BillingPage() {
   const [invoices, setInvoices] = useState<SubscriptionInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingChange, setPendingChange] = useState<{ plan: PlanId; cycle: BillingCycle } | null>(null);
+  // Resolve legacy plan IDs on load
+  const resolvedPlan = (sub?.plan as string) === "lite" ? "starter" as PlanId :
+    (sub?.plan as string) === "business" ? "premium" as PlanId : (sub?.plan as PlanId);
   const [showCancel, setShowCancel] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
 
@@ -319,10 +319,11 @@ export default function BillingPage() {
     );
   }
 
-  const plan = PLANS[sub.plan];
+  const currentPlanId: PlanId = resolvedPlan ?? "starter";
+  const plan = PLANS[currentPlanId];
   const isMonthly = sub.cycle === "monthly";
-  const monthlyPrice = MONTHLY[sub.plan];
-  const displayPrice = isMonthly ? monthlyPrice : Math.round(ANNUAL[sub.plan] / 12);
+  const monthlyPrice = MONTHLY[currentPlanId];
+  const displayPrice = isMonthly ? monthlyPrice : Math.round(ANNUAL[currentPlanId] / 12);
   const annualSaving = monthlyPrice * 2;
 
   async function handlePlanChange(plan: PlanId, cycle: BillingCycle) {
@@ -415,15 +416,15 @@ export default function BillingPage() {
       <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-line">
           <p className="text-small font-semibold text-fg">Change plan</p>
-          <p className="text-tiny text-fg-muted mt-0.5">No per-job fees. Ever.</p>
+          <p className="text-tiny text-fg-muted mt-0.5">No per-lead fees. Flat monthly pricing.</p>
         </div>
         <div className="p-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {(["lite", "pro", "business"] as PlanId[]).map((planId) => {
+            {(["starter", "pro", "premium"] as PlanId[]).map((planId) => {
               const meta = PLANS[planId];
-              const isCurrent = planId === sub.plan;
+              const isCurrent = planId === currentPlanId;
               const price = isMonthly ? MONTHLY[planId] : Math.round(ANNUAL[planId] / 12);
-              const isUpgrade = MONTHLY[planId] > MONTHLY[sub.plan];
+              const isUpgrade = MONTHLY[planId] > MONTHLY[currentPlanId];
 
               return (
                 <div
@@ -614,7 +615,7 @@ export default function BillingPage() {
       {/* Modals */}
       {pendingChange && (
         <PlanChangeModal
-          from={sub.plan}
+          from={currentPlanId}
           to={pendingChange.plan}
           fromCycle={sub.cycle}
           toCycle={pendingChange.cycle}

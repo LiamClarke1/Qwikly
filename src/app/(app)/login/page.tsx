@@ -20,9 +20,9 @@ function GoogleIcon() {
 }
 
 const proofPoints = [
-  { icon: MessageSquare, text: "Replies to every WhatsApp in under 30 seconds — even at 2am" },
-  { icon: Calendar, text: "Books appointments directly into your Google Calendar" },
-  { icon: Zap, text: "Flat monthly plans from R399/month — no per-job fees, ever" },
+  { icon: MessageSquare, text: "Captures and qualifies every website visitor — even at 2am" },
+  { icon: Calendar, text: "Leads delivered to your email the moment they're captured" },
+  { icon: Zap, text: "Free plan available — Pro from R599/month, no per-lead fees" },
 ];
 
 export default function LoginPage() {

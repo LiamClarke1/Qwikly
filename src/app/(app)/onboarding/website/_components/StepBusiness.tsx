@@ -6,14 +6,35 @@ import { ClientRow } from "@/lib/use-client";
 import { Loader2 } from "lucide-react";
 import { Input, Select, Field } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { type PlanTier } from "@/lib/plan";
 
-const TRADES = [
-  "Electrician", "Plumber", "Roofer", "Solar Installer", "Pest Control",
-  "Aircon", "Pool Cleaning", "Landscaper", "Garage Door", "Security", "Other",
+const INDUSTRIES = [
+  "Restaurant / Café",
+  "Hair & Beauty Salon",
+  "Gym / Fitness Studio",
+  "Medical / Dental Clinic",
+  "Contractor / Trades",
+  "Electrician",
+  "Plumber",
+  "Landscaper",
+  "Cleaning Service",
+  "Pest Control",
+  "Pool Care",
+  "Solar Installer",
+  "Aircon & HVAC",
+  "Security",
+  "Coffee Shop",
+  "Retail",
+  "Accountant / Bookkeeper",
+  "Legal Practice",
+  "Real Estate Agency",
+  "Marketing Agency",
+  "Other",
 ];
 
 interface Props {
   client: ClientRow;
+  plan: PlanTier;
   onAdvance: () => Promise<void>;
   onBack: () => void;
   refresh: () => Promise<void>;
@@ -22,24 +43,31 @@ interface Props {
 export default function StepBusiness({ client, onAdvance }: Props) {
   const [form, setForm] = useState({
     business_name: client.business_name ?? "",
-    trade: client.trade ?? "",
-    owner_name: client.owner_name ?? "",
-    address: client.address ?? "",
+    industry: client.industry ?? "",
+    support_email: client.support_email ?? client.notification_email ?? "",
+    contact_phone: client.notification_phone ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.business_name.trim()) { setError("Business name is required."); return; }
+    if (!form.business_name.trim()) {
+      setError("Business name is required.");
+      return;
+    }
     setSaving(true);
     setError(null);
-    const { error: dbErr } = await supabase.from("clients").update({
-      business_name: form.business_name.trim(),
-      trade: form.trade ? form.trade.toLowerCase() : null,
-      owner_name: form.owner_name.trim() || null,
-      address: form.address.trim() || null,
-    }).eq("id", client.id);
+    const { error: dbErr } = await supabase
+      .from("clients")
+      .update({
+        business_name: form.business_name.trim(),
+        industry: form.industry || null,
+        support_email: form.support_email.trim() || null,
+        notification_email: form.support_email.trim() || null,
+        notification_phone: form.contact_phone.trim() || null,
+      })
+      .eq("id", client.id);
     setSaving(false);
     if (dbErr) { setError(dbErr.message); return; }
     await onAdvance();
@@ -48,10 +76,10 @@ export default function StepBusiness({ client, onAdvance }: Props) {
   return (
     <div className="pt-10 max-w-lg">
       <h1 className="text-display-1 font-semibold text-fg mb-2">
-        Let&rsquo;s get your digital assistant live in about 10 minutes.
+        Tell us about your business.
       </h1>
-      <p className="text-fg-muted text-body mb-2">
-        Tell us about your business. Everything here can be edited later in Settings.
+      <p className="text-fg-muted text-body mb-8">
+        This gets your widget talking in the right way from day one. Everything can be changed later in Settings.
       </p>
 
       {error && (
@@ -60,40 +88,43 @@ export default function StepBusiness({ client, onAdvance }: Props) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5 mt-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <Field label="Business name">
           <Input
             value={form.business_name}
             onChange={(e) => setForm((f) => ({ ...f, business_name: e.target.value }))}
-            placeholder="JD Electrical"
+            placeholder="Acme Plumbing"
+            required
           />
         </Field>
 
-        <Field label="Your trade" hint="Don't see yours? Pick the closest one — you can change it later.">
+        <Field label="Industry" hint="Helps us set smart defaults for your qualifying questions.">
           <Select
-            value={form.trade}
-            onChange={(e) => setForm((f) => ({ ...f, trade: e.target.value }))}
+            value={form.industry}
+            onChange={(e) => setForm((f) => ({ ...f, industry: e.target.value }))}
           >
-            <option value="">Select your trade…</option>
-            {TRADES.map((t) => (
-              <option key={t} value={t.toLowerCase()}>{t}</option>
+            <option value="">Select your industry…</option>
+            {INDUSTRIES.map((ind) => (
+              <option key={ind} value={ind}>{ind}</option>
             ))}
           </Select>
         </Field>
 
-        <Field label="Your name" hint="Optional — your digital assistant will use this to introduce you.">
+        <Field label="Contact email" hint="Leads will be delivered here.">
           <Input
-            value={form.owner_name}
-            onChange={(e) => setForm((f) => ({ ...f, owner_name: e.target.value }))}
-            placeholder="Johan"
+            type="email"
+            value={form.support_email}
+            onChange={(e) => setForm((f) => ({ ...f, support_email: e.target.value }))}
+            placeholder="you@example.com"
           />
         </Field>
 
-        <Field label="City / service area" hint="Comma-separated, e.g. Johannesburg, Sandton, Midrand. Optional.">
+        <Field label="Contact phone" hint="Optional — shown to visitors who want to call instead.">
           <Input
-            value={form.address}
-            onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
-            placeholder="Johannesburg, Sandton, Midrand"
+            type="tel"
+            value={form.contact_phone}
+            onChange={(e) => setForm((f) => ({ ...f, contact_phone: e.target.value }))}
+            placeholder="+27 82 000 0000"
           />
         </Field>
 

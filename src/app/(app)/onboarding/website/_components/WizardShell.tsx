@@ -13,13 +13,10 @@ interface WizardShellProps {
 
 const STEP_LABELS = [
   "Your business",
-  "Your website",
-  "Customise",
-  "Calendar",
-  "Working hours",
+  "Configure assistant",
   "Install widget",
-  "Verify install",
-  "Test conversation",
+  "Billing",
+  "All done!",
 ];
 
 export function WizardShell({
