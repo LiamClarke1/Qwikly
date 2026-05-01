@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 import CTAButton from "@/components/CTAButton";
 import FAQ from "@/components/FAQ";
 import WhatsAppMock from "@/components/WhatsAppMock";
@@ -44,7 +44,7 @@ const outcomes = [
     stat: "24/7",
     label: "never off, never late",
     body: "2 a.m. burst geyser. Sunday pool pump. Public holiday roof leak. You wake up to a booked job.",
-    attr: "no monthly fee. Pay only on booking.",
+    attr: "flat monthly plan. No per-job fees, ever.",
   },
 ];
 
@@ -100,19 +100,6 @@ const testimonials = [
     city: "Pretoria",
     badge: "6–8 bookings / month",
   },
-];
-
-const pricingIncludes = [
-  "30-second reply on WhatsApp, email & website chat",
-  "Website chat widget — one line of code to install",
-  "Automated follow-ups at 4h, 24h, 2d, 5d",
-  "No-show rebooking within minutes",
-  "Quote follow-up sequences",
-  "Dormant-lead revival at 30 days",
-  "Reminders 24h and 1h before each job",
-  "Trade-specific digital assistant trained for your services",
-  "Full conversation dashboard",
-  "Google Calendar sync",
 ];
 
 /* ─────────────────────────────────────────────────────────────
@@ -172,57 +159,19 @@ function StatCounter({ value, suffix = "" }: { value: number; suffix?: string })
   );
 }
 
-function PricingCalculator() {
-  const [rawPrice, setRawPrice] = useState("");
-
-  const result = useMemo(() => {
-    const price = parseFloat(rawPrice.replace(/[^0-9.]/g, ""));
-    if (!price || price <= 0) return null;
-    const fee = Math.min(Math.max(price * 0.08, 150), 5000);
-    const keep = price - fee;
-    return { fee: Math.round(fee), keep: Math.round(keep) };
-  }, [rawPrice]);
-
+function CheckIcon({ dark = false }: { dark?: boolean }) {
   return (
-    <div className="mt-16 mb-4 bg-ink/5 border border-ink/10 rounded-2xl p-6 md:p-8 reveal-up">
-      <p className="eyebrow text-ink-500 mb-2">See what you&rsquo;d pay</p>
-      <p className="font-display text-xl text-ink mb-6">Enter your typical job price</p>
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-        <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display text-ink-500">R</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min="0"
-            value={rawPrice}
-            onChange={(e) => setRawPrice(e.target.value)}
-            placeholder="e.g. 2500"
-            className="pl-8 pr-4 py-3 bg-white border border-ink/15 rounded-xl text-ink text-lg font-display w-48 focus:outline-none focus:ring-2 focus:ring-ember/40 focus:border-ember/40 transition-all"
-          />
-        </div>
-        {result ? (
-          <div className="flex flex-wrap gap-6 items-center">
-            <div>
-              <p className="eyebrow text-ink-500">Qwikly fee</p>
-              <p className="font-display text-3xl text-ember mt-0.5">R{result.fee.toLocaleString()}</p>
-            </div>
-            <div className="w-px h-10 bg-ink/10 hidden sm:block" />
-            <div>
-              <p className="eyebrow text-ink-500">You keep</p>
-              <p className="font-display text-3xl text-ink mt-0.5">R{result.keep.toLocaleString()}</p>
-            </div>
-            <div className="w-px h-10 bg-ink/10 hidden sm:block" />
-            <div>
-              <p className="eyebrow text-ink-500">Return multiple</p>
-              <p className="font-display text-3xl text-ink mt-0.5">{Math.round(result.keep / result.fee)}×</p>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-ink-500 italic">Your fee and what you keep will appear here</p>
-        )}
-      </div>
-      <p className="text-xs text-ink-400 mt-4">Min R150 · Max R5,000 per booking · Only charged on confirmed jobs</p>
-    </div>
+    <svg
+      viewBox="0 0 24 24"
+      className={`w-4 h-4 flex-shrink-0 mt-0.5 ${dark ? "text-ember" : "text-ember"}`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
   );
 }
 
@@ -264,19 +213,19 @@ export default function Home() {
           <div className="mt-10 md:mt-14 reveal-up">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
               <p className="text-lg md:text-xl text-ink-700 leading-relaxed">
-                Qwikly answers your WhatsApp, email, and website chat, qualifies the lead, quotes them, books the job, and sends the invoice. All while you stay on site. You pay only when a real appointment lands in your calendar.
+                Replies to every WhatsApp lead in 30 seconds. Books the job. Flat monthly price — no per-job fees, ever.
               </p>
               <div className="flex flex-col gap-4 lg:items-end lg:text-right">
                 <div className="flex flex-wrap gap-4 lg:justify-end">
                   <CTAButton size="lg" variant="primary" href="/signup">
-                    Start your 7-day trial
+                    Get my assistant live
                   </CTAButton>
                   <CTAButton size="lg" variant="outline" href="#demo" withArrow={false}>
                     See it answer a real lead
                   </CTAButton>
                 </div>
                 <p className="text-sm text-ink-500">
-                  No setup fee. No contract. Pay only when a job is booked.
+                  No setup fee. 30-day money-back guarantee. Flat monthly pricing.
                 </p>
                 <LiveCounter />
               </div>
@@ -501,8 +450,8 @@ export default function Home() {
             <p className="font-display italic text-2xl md:text-3xl text-paper max-w-xl leading-snug">
               &ldquo;The ones that come in while I&rsquo;m under a sink used to just vanish.&rdquo;
             </p>
-            <CTAButton size="lg" variant="solid" href="/signup">
-              Start your 7-day trial
+            <CTAButton size="lg" variant="solid" href="#pricing">
+              See plans
             </CTAButton>
           </div>
         </div>
@@ -606,9 +555,9 @@ export default function Home() {
           </div>
           <div className="mt-10 flex flex-wrap items-center gap-4 reveal-up">
             <CTAButton size="lg" variant="primary" href="/signup">
-              Start your 7-day trial
+              Get my assistant live
             </CTAButton>
-            <p className="text-sm text-ink-500">No card. No setup fee. Cancel anytime.</p>
+            <p className="text-sm text-ink-500">30-day money-back guarantee. No setup fee.</p>
           </div>
         </div>
       </section>
@@ -682,8 +631,45 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════ 07 · REVENUE CALCULATOR ════════════════════════ */}
+      {/* ═══════ WHY QWIKLY VS THE REST ═════════════════════════ */}
       <section className="relative py-28 md:py-36 overflow-hidden grain">
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
+          <p className="eyebrow text-ink-500 mb-6 reveal-up">Why Qwikly</p>
+          <h2 className="display-lg text-ink max-w-[22ch] reveal-up">
+            Why Qwikly vs{" "}
+            <em className="italic font-light">the rest</em>.
+          </h2>
+
+          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 reveal-stagger">
+            {[
+              {
+                num: "01",
+                headline: "No per-job fees. Ever.",
+                body: "Most tools take a cut every time a job is booked. Qwikly charges a flat monthly price — you keep every rand you earn.",
+              },
+              {
+                num: "02",
+                headline: "Built for South Africa.",
+                body: "POPIA compliant. ZAR pricing. Your customer data stays in South Africa. Built for the way SA tradies actually work.",
+              },
+              {
+                num: "03",
+                headline: "Live the same day.",
+                body: "No lengthy onboarding. No developer needed. Connect your WhatsApp and you’re live — usually in under 24 hours.",
+              },
+            ].map((item) => (
+              <div key={item.num} className="ed-card-ghost group cursor-pointer">
+                <span className="font-mono text-xs text-ember/60 tracking-widest mb-6 block">{item.num}</span>
+                <h3 className="font-display text-2xl md:text-3xl text-ink leading-tight mb-4">{item.headline}</h3>
+                <p className="text-ink-700 leading-relaxed">{item.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════ 07 · REVENUE CALCULATOR ════════════════════════ */}
+      <section className="relative py-28 md:py-36 bg-paper-deep grain overflow-hidden">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <p className="eyebrow text-ink-500 mb-6 reveal-up">07. Your number</p>
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-14">
@@ -714,62 +700,134 @@ export default function Home() {
         className="relative py-28 md:py-40 bg-paper-deep grain overflow-hidden"
       >
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <div className="flex items-baseline justify-between mb-16 reveal-up">
-            <p className="eyebrow text-ink-500">Pricing</p>
-            <p className="eyebrow text-ink-500">No subscription · No setup</p>
-          </div>
 
-          <div className="relative text-center reveal-scale">
-            <p className="mega-num text-ink tracking-tight">
-              8<span className="text-ember align-top text-[0.55em] ml-2">%</span>
-            </p>
-            <p className="font-display italic text-2xl md:text-3xl text-ink-700 mt-2 md:mt-0">
-              of the service price, only when a job is booked.
+          <div className="text-center mb-4 reveal-up">
+            <p className="eyebrow text-ink-500 mb-4">Pricing</p>
+            <h2 className="display-lg text-ink">
+              No per-job fees.{" "}
+              <em className="italic font-light text-ember">Ever.</em>
+            </h2>
+            <p className="mt-4 text-ink-700 text-lg max-w-xl mx-auto leading-relaxed">
+              One flat monthly price. No commissions, no setup fees, no surprises.
             </p>
           </div>
 
-          <PricingCalculator />
-
-          <div className="mt-16 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start reveal-up">
-            <div className="lg:col-span-5 space-y-8">
-              <div className="flex items-start justify-between gap-6 pb-6 border-b border-ink/10">
-                <div>
-                  <p className="eyebrow text-ink-500">Minimum</p>
-                  <p className="font-display text-4xl text-ink mt-1">R150</p>
-                </div>
-                <div className="text-right">
-                  <p className="eyebrow text-ink-500">Cap per job</p>
-                  <p className="font-display text-4xl text-ink mt-1">R5,000</p>
-                </div>
-              </div>
-              <div>
-                <p className="eyebrow text-ember mb-2">Typical return</p>
-                <p className="font-display text-5xl text-ink">10× – 50×</p>
-                <p className="text-ink-700 mt-3 text-sm max-w-sm leading-relaxed">
-                  Every rand Qwikly takes comes out of revenue it created. If the calendar stays empty, you pay nothing.
-                </p>
-              </div>
-              <CTAButton size="lg" variant="primary" href="/signup">
-                Start your 7-day trial
-              </CTAButton>
-              <p className="text-xs text-ink-500">7-day trial. Cancels anytime. No card held hostage.</p>
-              <p className="text-xs text-ink-400">POPIA compliant · Your customer data stays in South Africa</p>
+          <div className="flex justify-center mt-8 mb-12 reveal-up">
+            <div className="inline-flex items-center gap-2 bg-ember/10 border border-ember/20 text-ember eyebrow px-4 py-2 rounded-full">
+              <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Pay annually — get 2 months free
             </div>
+          </div>
 
-            <div className="lg:col-span-7 lg:pl-10 lg:border-l border-ink/10">
-              <p className="eyebrow text-ink-500 mb-6">Everything included</p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
-                {pricingIncludes.map((item, i) => (
-                  <li key={item} className="flex items-start gap-4 text-ink-700 text-[0.95rem] leading-snug">
-                    <span className="font-display italic text-ember text-sm num mt-0.5 min-w-[2ch]">
-                      {(i + 1).toString().padStart(2, "0")}
-                    </span>
-                    <span>{item}</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch reveal-stagger">
+
+            {/* Lite */}
+            <div className="ed-card flex flex-col">
+              <p className="eyebrow text-ink-500 mb-3">Lite</p>
+              <div className="mb-1">
+                <span className="font-display text-5xl text-ink">R399</span>
+                <span className="text-ink-500 text-sm ml-2">/month</span>
+              </div>
+              <p className="text-sm text-ink-500 mb-6">or R3,990/yr — 2 months free</p>
+              <p className="text-sm text-ink-700 font-medium pb-5 mb-5 border-b border-ink/10">Up to 25 confirmed bookings/month</p>
+              <ul className="space-y-3 flex-1 mb-8">
+                {[
+                  "WhatsApp replies in 30 seconds",
+                  "Auto job qualification",
+                  "Calendar booking + reminders",
+                  "Email support",
+                  "POPIA compliant",
+                ].map((feat) => (
+                  <li key={feat} className="flex items-start gap-3 text-sm text-ink-700">
+                    <CheckIcon />
+                    {feat}
                   </li>
                 ))}
               </ul>
+              <CTAButton size="md" variant="outline" href="/signup">
+                Get started
+              </CTAButton>
             </div>
+
+            {/* Pro — Most Popular */}
+            <div className="relative bg-ink text-paper rounded-2xl p-8 flex flex-col shadow-xl ring-2 ring-ember">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                <span className="bg-ember text-paper text-[0.65rem] font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full whitespace-nowrap">Most Popular</span>
+              </div>
+              <p className="eyebrow text-paper/60 mb-3 mt-3">Pro</p>
+              <div className="mb-1">
+                <span className="font-display text-5xl text-paper">R799</span>
+                <span className="text-paper/50 text-sm ml-2">/month</span>
+              </div>
+              <p className="text-sm text-paper/40 mb-6">or R7,990/yr — 2 months free</p>
+              <p className="text-sm text-paper/70 font-medium pb-5 mb-5 border-b border-paper/10">Unlimited confirmed bookings</p>
+              <ul className="space-y-3 flex-1 mb-8">
+                {[
+                  "Everything in Lite",
+                  "No-show recovery",
+                  "Web widget for your site",
+                  "Google + Outlook calendar sync",
+                  "Monthly performance report",
+                  "Priority WhatsApp support",
+                ].map((feat) => (
+                  <li key={feat} className="flex items-start gap-3 text-sm text-paper/80">
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 text-ember flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    {feat}
+                  </li>
+                ))}
+              </ul>
+              <CTAButton size="md" variant="solid" href="/signup">
+                Start with Pro
+              </CTAButton>
+            </div>
+
+            {/* Business */}
+            <div className="ed-card flex flex-col">
+              <p className="eyebrow text-ink-500 mb-3">Business</p>
+              <div className="mb-1">
+                <span className="font-display text-5xl text-ink">R1,499</span>
+                <span className="text-ink-500 text-sm ml-2">/month</span>
+              </div>
+              <p className="text-sm text-ink-500 mb-6">or R14,990/yr — 2 months free</p>
+              <p className="text-sm text-ink-700 font-medium pb-5 mb-5 border-b border-ink/10">Everything in Pro, plus:</p>
+              <ul className="space-y-3 flex-1 mb-8">
+                {[
+                  "Multi-user team accounts",
+                  "Custom branding (logo in messages)",
+                  "Quote / invoice handoff",
+                  "Integrations (Xero, QuickBooks) — Coming soon",
+                  "Dedicated success manager",
+                  "API access",
+                ].map((feat) => (
+                  <li key={feat} className="flex items-start gap-3 text-sm text-ink-700">
+                    <CheckIcon />
+                    {feat}
+                  </li>
+                ))}
+              </ul>
+              <CTAButton size="md" variant="outline" href="/signup">
+                Get started
+              </CTAButton>
+            </div>
+
           </div>
+
+          {/* 30-day money-back guarantee badge */}
+          <div className="mt-12 text-center reveal-up">
+            <div className="inline-flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-6 py-3 rounded-2xl">
+              <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <polyline points="9 12 11 14 15 10" />
+              </svg>
+              <p className="text-sm font-medium">30-day money-back guarantee on all plans</p>
+            </div>
+            <p className="mt-4 text-xs text-ink-400">POPIA compliant · Your customer data stays in South Africa · ZAR pricing</p>
+          </div>
+
         </div>
       </section>
 
@@ -791,18 +849,18 @@ export default function Home() {
             <em className="italic font-light text-ember">first reply</em>.
           </h2>
           <p className="mt-10 text-paper/70 text-lg md:text-xl max-w-xl mx-auto leading-relaxed reveal-up">
-            7 days free. No card upfront. The first job Qwikly books usually pays for the whole year.
+            Flat monthly price. No commissions, no contracts, no setup fees. Your first month is covered by our 30-day money-back guarantee.
           </p>
           <div className="mt-12 flex flex-wrap items-center justify-center gap-4 reveal-up">
             <CTAButton size="lg" variant="solid" href="/signup">
-              Start your 7-day trial
+              Start with Pro
             </CTAButton>
-            <CTAButton size="lg" variant="outline-light" href="mailto:hello@qwikly.co.za" withArrow={false}>
-              Talk to a human
+            <CTAButton size="lg" variant="outline-light" href="#pricing" withArrow={false}>
+              See all plans
             </CTAButton>
           </div>
           <p className="mt-8 text-sm text-paper/40 reveal-up">
-            No setup fees · No contracts · Pay only when a job is booked
+            No setup fees · No per-job fees · 30-day money-back guarantee
           </p>
         </div>
       </section>
