@@ -77,14 +77,17 @@ export async function POST(req: NextRequest) {
 
   // ── Starter cap ──────────────────────────────────────────────────────────────
   if (plan === "starter" && usagePeriod.leads_captured >= 25) {
-    resend.emails
-      .send({
-        from: FROM,
-        to: [business.contact_email],
-        subject: "You've hit your Qwikly lead cap — upgrade to keep capturing",
-        html: capReachedNotificationHtml({ businessName: business.name }),
-      })
-      .catch(() => {});
+    // Only email on the first blocked request (when exactly at cap)
+    if (usagePeriod.leads_captured === 25) {
+      resend.emails
+        .send({
+          from: FROM,
+          to: [business.contact_email],
+          subject: "You've hit your Qwikly lead cap — upgrade to keep capturing",
+          html: capReachedNotificationHtml({ businessName: business.name }),
+        })
+        .catch(() => {});
+    }
     return NextResponse.json({ ok: true, capped: true }, { headers: CORS });
   }
 
@@ -105,6 +108,11 @@ export async function POST(req: NextRequest) {
 
   if (leadError || !lead) {
     console.error("[leads] insert error:", leadError?.message);
+    return NextResponse.json({ error: "failed_to_store" }, { status: 500, headers: CORS });
+  }
+
+  if (!lead.confirm_token) {
+    console.error("[leads] confirm_token missing on lead:", lead.id);
     return NextResponse.json({ error: "failed_to_store" }, { status: 500, headers: CORS });
   }
 
@@ -148,7 +156,7 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   const auth = await v2Auth();
   if (!auth) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: CORS });
   }
 
   const db = supabaseAdmin();
@@ -160,7 +168,7 @@ export async function GET() {
     .limit(500);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return NextResponse.json({ error: error.message }, { status: 400, headers: CORS });
   }
 
   return NextResponse.json(data ?? []);
