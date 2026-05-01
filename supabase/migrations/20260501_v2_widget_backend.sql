@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS businesses (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS businesses_user_id_idx ON businesses(user_id);
-CREATE INDEX IF NOT EXISTS businesses_api_key_idx ON businesses(api_key);
 
 ALTER TABLE businesses ENABLE ROW LEVEL SECURITY;
 
@@ -91,7 +90,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
   stripe_subscription_id TEXT UNIQUE,
   stripe_topup_item_id TEXT,
   status TEXT NOT NULL DEFAULT 'active'
-    CHECK (status IN ('active', 'past_due', 'canceled', 'trialing')),
+    CHECK (status IN ('active', 'past_due', 'canceled', 'trialing', 'incomplete', 'incomplete_expired')),
   current_period_start TIMESTAMPTZ,
   current_period_end TIMESTAMPTZ
 );
@@ -119,6 +118,9 @@ CREATE TABLE IF NOT EXISTS usage_periods (
 CREATE INDEX IF NOT EXISTS usage_periods_business_id_idx ON usage_periods(business_id);
 CREATE INDEX IF NOT EXISTS usage_periods_period_idx ON usage_periods(business_id, period_start DESC);
 
+ALTER TABLE usage_periods ADD CONSTRAINT usage_periods_business_period_uniq
+  UNIQUE (business_id, period_start);
+
 ALTER TABLE usage_periods ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "owners_read_usage" ON usage_periods
@@ -141,12 +143,16 @@ CREATE TABLE IF NOT EXISTS lead_rate_windows (
 
 CREATE INDEX IF NOT EXISTS lead_rate_windows_cleanup_idx ON lead_rate_windows(window_start);
 
+ALTER TABLE lead_rate_windows ENABLE ROW LEVEL SECURITY;
+-- No policies needed: service role bypasses RLS. Deny all for anon/authenticated roles.
+
 -- ── Rate Limiting RPC Function ──────────────────────────────────────────────
 
 CREATE OR REPLACE FUNCTION increment_rate_window(p_api_key TEXT, p_window_start TIMESTAMPTZ)
 RETURNS INT
 LANGUAGE SQL
 SECURITY DEFINER
+SET search_path = public
 AS $$
   INSERT INTO lead_rate_windows (api_key, window_start, count)
   VALUES (p_api_key, p_window_start, 1)
