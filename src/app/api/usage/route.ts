@@ -12,13 +12,18 @@ export async function GET() {
   const db = supabaseAdmin();
   const now = new Date();
 
-  const { data: usage } = await db
+  const { data: usage, error: usageError } = await db
     .from("usage_periods")
     .select("id, period_start, period_end, leads_captured, top_up_count")
     .eq("business_id", auth.businessId)
     .lte("period_start", now.toISOString())
     .gte("period_end", now.toISOString())
     .maybeSingle();
+
+  if (usageError) {
+    console.error("[usage GET] query error:", usageError.message);
+    return NextResponse.json({ error: "usage_unavailable" }, { status: 500 });
+  }
 
   const planConfig = PLAN_CONFIG[resolvePlan(auth.plan)];
   const cap = planConfig.leadLimit; // null = unlimited (Premium)

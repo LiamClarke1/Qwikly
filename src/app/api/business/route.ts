@@ -40,7 +40,19 @@ export async function PATCH(req: NextRequest) {
   const updates: Record<string, unknown> = {};
 
   for (const field of PATCHABLE) {
-    if (field in body) updates[field] = body[field];
+    if (!(field in body)) continue;
+    if (field === "qualifying_questions") {
+      const val = body[field];
+      if (!Array.isArray(val) || val.some((q) => typeof q !== "string")) {
+        return NextResponse.json({ error: "qualifying_questions must be an array of strings" }, { status: 400 });
+      }
+    }
+    if (field === "accent_colour") {
+      if (typeof body[field] !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(body[field] as string)) {
+        return NextResponse.json({ error: "accent_colour must be a valid 6-digit hex colour (e.g. #E85A2C)" }, { status: 400 });
+      }
+    }
+    updates[field] = body[field];
   }
 
   if ("branding_removed" in body && auth.plan !== "starter") {
@@ -63,7 +75,10 @@ export async function PATCH(req: NextRequest) {
     .select("id, name, industry, contact_email, accent_colour, greeting, qualifying_questions, api_key, branding_removed, created_at")
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error) {
+    console.error("[business PATCH] update error:", error.message);
+    return NextResponse.json({ error: "update_failed" }, { status: 500 });
+  }
 
   return NextResponse.json({
     ...data,
