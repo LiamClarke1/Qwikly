@@ -92,7 +92,7 @@ export default function InvoicesPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("all");
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
-  const [stats, setStats] = useState<Stats>({ invoiced: 0, collected: 0, outstanding: 0, overdue: 0, estimated_fee: 0 });
+  const [stats, setStats] = useState<Stats>({ invoiced: 0, collected: 0, outstanding: 0, overdue: 0 });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
