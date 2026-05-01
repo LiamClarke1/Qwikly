@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, FormEvent, useRef, useCallback } from "react";
+import { useState, useEffect, FormEvent, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
@@ -203,6 +203,13 @@ function WSelectWithOther({ value, onChange, options, placeholder }: {
   const hasOther = options.includes("Other");
   const isOther = value === "Other" || (hasOther && value !== "" && !options.includes(value));
   const [otherText, setOtherText] = useState(isOther && value !== "Other" ? value : "");
+  useEffect(() => {
+    if (value !== "Other" && isOther) {
+      setOtherText(value);
+    } else if (!isOther) {
+      setOtherText("");
+    }
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div>
       <select
