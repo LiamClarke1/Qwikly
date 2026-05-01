@@ -19,10 +19,15 @@ export async function POST() {
     );
   }
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer: auth.stripeCustomerId,
-    return_url: `${BASE}/dashboard/billing`,
-  });
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: auth.stripeCustomerId,
+      return_url: `${BASE}/dashboard/billing`,
+    });
 
-  return NextResponse.json({ url: session.url });
+    return NextResponse.json({ url: session.url });
+  } catch (err) {
+    console.error("[billing/portal] session create error:", err);
+    return NextResponse.json({ error: "billing_provider_error" }, { status: 502 });
+  }
 }
