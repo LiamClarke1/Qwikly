@@ -41,7 +41,7 @@ async function retrieveChunks(
   const terms = fallbackQuery
     .split(/\s+/)
     .filter((w) => w.length > 2)
-    .join(" & ");
+    .join(" | ");
 
   if (terms) {
     const { data } = await db
