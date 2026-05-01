@@ -116,12 +116,12 @@ export default function EmbedPage() {
 
             {/* iframe */}
             {loading ? (
-              <div className="w-full bg-white animate-pulse" style={{ height: 320 }} />
+              <div className="w-full bg-white animate-pulse" style={{ height: 660 }} />
             ) : (
               <iframe
                 src={`/embed/preview?key=${publicKey}`}
                 title="Widget preview"
-                style={{ border: "none", width: "100%", height: 320 }}
+                style={{ border: "none", width: "100%", height: 660 }}
               />
             )}
           </div>
