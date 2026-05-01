@@ -7,7 +7,7 @@ export const FAQ_DATA = [
   {
     question: "How much does it cost?",
     answer:
-      "8% of the service price, charged only when a booking is made. No monthly fee, no setup cost, no contract. Minimum R150 per booking, maximum R5,000, so you always pay a fair amount relative to what you earn. You only pay when Qwikly successfully books a real appointment.",
+      "Qwikly offers three flat monthly plans: Lite at R399/month (up to 25 bookings), Pro at R799/month (unlimited bookings), and Business at R1,499/month (teams and advanced features). No per-job fees, no commissions, no setup costs. Pay annually and get 2 months free.",
   },
   {
     question: "What trades and industries do you work with?",
