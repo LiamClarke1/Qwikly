@@ -18,7 +18,7 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="text-sm text-ink-500 mb-2">
-            Last updated: 27 April 2026
+            Last updated: 1 May 2026
           </p>
           <p className="text-sm text-ink-500 mb-16">
             Governing law: Republic of South Africa
@@ -130,34 +130,29 @@ export default function TermsPage() {
 
             <div className="rule" />
 
-            {/* 4. Trial and Payment */}
+            {/* 4. Subscription and Payment */}
             <div>
               <p className="eyebrow text-ember mb-3">04</p>
               <h2 className="font-display font-medium text-2xl text-ink mb-4 tracking-tight">
-                Trial Period &amp; Payment Terms
+                Subscription Plans &amp; Payment Terms
               </h2>
               <div className="space-y-4 text-ink-700 leading-relaxed text-base">
-                <h3 className="font-display font-medium text-lg text-ink mt-2">Free Trial</h3>
+                <h3 className="font-display font-medium text-lg text-ink mt-2">Flat Monthly Subscription</h3>
                 <p>
-                  New accounts receive a 7-day free trial. No payment information is required to begin
-                  the trial. At the end of the trial period, your account will require active use of
-                  the Service to continue operating. No charges are incurred if you do not proceed past
-                  the trial.
-                </p>
-
-                <h3 className="font-display font-medium text-lg text-ink mt-6">Commission Model</h3>
-                <p>
-                  Qwikly charges a commission of <strong className="text-ink font-medium">8% of the service price</strong> for
-                  each job successfully booked through the platform. No subscription fee, setup fee, or
-                  retainer is charged.
+                  Qwikly is billed as a flat monthly (or annual) subscription. There are no per-job
+                  fees, no commissions, and no setup fees. The applicable plan and pricing at the time
+                  of subscription are as set out on the{" "}
+                  <a href="/pricing" className="text-ember underline transition-colors">pricing page</a>.
+                  Current plans are:
                 </p>
                 <ul className="space-y-2 mt-2 ml-4">
                   {[
-                    "Minimum fee per booking: R150 (one hundred and fifty rand)",
-                    "Maximum fee per booking: R5,000 (five thousand rand)",
-                    "The fee is calculated on the service price you provide during onboarding for the specific service booked",
-                    "Fees are invoiced monthly for all bookings completed in the preceding calendar month",
-                    "Payment is due within 14 days of invoice date",
+                    "Lite — R399/month (up to 25 confirmed bookings per month)",
+                    "Pro — R799/month (unlimited confirmed bookings)",
+                    "Business — R1,499/month (unlimited bookings, multi-user, custom branding, integrations)",
+                    "Annual billing is available at a discounted rate equivalent to 10 months' fees (2 months free)",
+                    "Subscription fees are billed monthly in advance on the anniversary of your sign-up date",
+                    "Payment is due on the billing date; failure to pay may result in suspension of the Service",
                   ].map((item) => (
                     <li key={item} className="flex gap-3 text-sm leading-relaxed">
                       <span className="text-ember mt-0.5 shrink-0">·</span>
@@ -166,19 +161,35 @@ export default function TermsPage() {
                   ))}
                 </ul>
 
-                <h3 className="font-display font-medium text-lg text-ink mt-6">Late Payment</h3>
+                <h3 className="font-display font-medium text-lg text-ink mt-6">Money-Back Guarantee</h3>
                 <p>
-                  Invoices not settled within 14 days may result in suspension of your account. Persistent
-                  non-payment may result in termination. We reserve the right to charge interest on overdue
-                  amounts at the rate prescribed under the Prescribed Rate of Interest Act 55 of 1975.
+                  All plans include a 30-day money-back guarantee from the date of your first payment.
+                  If you are not satisfied with the Service within the first 30 days, contact us at{" "}
+                  <a
+                    href="mailto:hello@qwikly.co.za"
+                    className="text-ember underline transition-colors"
+                  >
+                    hello@qwikly.co.za
+                  </a>{" "}
+                  and we will issue a full refund. After 30 days, subscription fees are non-refundable
+                  except where required by the Consumer Protection Act 68 of 2008 or other applicable
+                  South African law.
                 </p>
 
-                <h3 className="font-display font-medium text-lg text-ink mt-6">Refunds</h3>
+                <h3 className="font-display font-medium text-lg text-ink mt-6">Late Payment</h3>
                 <p>
-                  Fees are charged only on completed bookings. We do not provide refunds on commissions
-                  already earned unless a booking was demonstrably attributable to a technical error on
-                  our part. Disputes must be raised within 30 days of the relevant invoice date by
-                  contacting{" "}
+                  Invoices not settled within 14 days of the billing date may result in suspension of
+                  your account. Persistent non-payment may result in termination. We reserve the right
+                  to charge interest on overdue amounts at the rate prescribed under the Prescribed Rate
+                  of Interest Act 55 of 1975.
+                </p>
+
+                <h3 className="font-display font-medium text-lg text-ink mt-6">Plan Changes</h3>
+                <p>
+                  You may upgrade or downgrade your plan at any time. Upgrades take effect immediately
+                  and are billed on a pro-rata basis for the remainder of the current billing cycle.
+                  Downgrades take effect at the start of the next billing cycle. Disputes regarding
+                  billing must be raised within 30 days of the relevant invoice date by contacting{" "}
                   <a
                     href="mailto:liamclarke21@outlook.com"
                     className="text-ember underline transition-colors"
@@ -362,8 +373,9 @@ export default function TermsPage() {
                   >
                     liamclarke21@outlook.com
                   </a>
-                  . Termination takes effect at the end of the current billing cycle, and any outstanding
-                  fees for completed bookings remain payable.
+                  . Termination takes effect at the end of the current billing cycle. Any subscription
+                  fees already paid for the current billing cycle are non-refundable beyond the 30-day
+                  money-back guarantee period.
                 </p>
                 <p>
                   We may suspend or terminate your account immediately, with or without notice, if we

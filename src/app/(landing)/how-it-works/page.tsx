@@ -221,12 +221,12 @@ export default function HowItWorksPage() {
             <em className="italic font-light text-ember">action</em>.
           </h2>
           <p className="text-paper/70 text-lg mt-8 max-w-xl mx-auto leading-relaxed">
-            Start your 7-day trial and watch Qwikly handle your first real
-            leads. The first job usually pays for the whole year.
+            Flat monthly plans, no per-job fees, ever. See exactly what&rsquo;s
+            included and pick the plan that fits your trade.
           </p>
           <div className="mt-12">
-            <CTAButton size="lg" variant="solid">
-              Start your 7-day trial
+            <CTAButton size="lg" variant="solid" href="/pricing">
+              See plans
             </CTAButton>
           </div>
         </div>

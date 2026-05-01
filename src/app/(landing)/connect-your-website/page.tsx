@@ -77,8 +77,8 @@ export default function ConnectYourWebsitePage() {
             jobs get qualified, bookings go straight into your calendar — even at 11 pm.
           </p>
           <div className="flex flex-wrap gap-4 items-center">
-            <CTAButton href="/signup" size="lg">
-              Connect my website — free for 7 days
+            <CTAButton href="/pricing" size="lg">
+              Start with Pro
             </CTAButton>
             <Link
               href="#how-it-works"
@@ -87,6 +87,9 @@ export default function ConnectYourWebsitePage() {
               See how it works <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+          <p className="mt-4 text-sm text-ink-500">
+            Web widget included in <strong className="text-ink">Pro</strong> and <strong className="text-ink">Business</strong> plans. Not available on Lite. No per-job fees, ever.
+          </p>
         </div>
       </section>
 
@@ -194,9 +197,9 @@ export default function ConnectYourWebsitePage() {
               style={{ letterSpacing: "-0.03em" }}>
             Get your assistant live in 10 minutes.
           </h2>
-          <p className="text-paper/60 mb-10 text-lg">Free for 7 days. No credit card. One line of code.</p>
-          <CTAButton href="/signup" size="lg">
-            Connect my website
+          <p className="text-paper/60 mb-10 text-lg">Included in Pro and Business plans. No per-job fees, ever. One line of code.</p>
+          <CTAButton href="/pricing" size="lg">
+            See plans
           </CTAButton>
         </div>
       </section>

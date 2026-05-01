@@ -522,7 +522,7 @@ ${f.ai_never_say || "Not specified"}
         {/* Header */}
         <div className="text-center mb-8">
           <span className="inline-block bg-accent/10 text-accent text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-            Free 7-Day Trial. No card required.
+            30-day money-back guarantee on all plans.
           </span>
           <h1 className="text-3xl font-bold text-text-dark mb-2">Set up your digital assistant</h1>
           <p className="text-text-muted-dark text-sm">
@@ -1106,7 +1106,7 @@ ${f.ai_never_say || "Not specified"}
                 className="px-8 py-3 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent-hover transition-colors duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                Start My Free Trial
+                Get Started
               </button>
             )}
           </div>

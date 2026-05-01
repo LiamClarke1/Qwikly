@@ -65,9 +65,12 @@ export default function AboutPage() {
                   without the business owner touching their phone.
                 </p>
                 <p>
-                  We charge only when a booking happens: 8% of the job value, minimum R150, maximum
-                  R5,000. No monthly fee. No card required during the 7-day trial. If Qwikly doesn&rsquo;t
-                  book jobs, it costs nothing.
+                  A simple flat monthly subscription, no per-job fees, no commissions, and no
+                  surprises. Plans start from R399/month. No per-job fees, ever.{" "}
+                  <Link href="/pricing" className="text-ember underline transition-colors">
+                    See pricing
+                  </Link>
+                  .
                 </p>
               </div>
             </div>
@@ -191,10 +194,10 @@ export default function AboutPage() {
                 Get in touch
               </Link>
               <Link
-                href="/signup"
+                href="/pricing"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-ink/[0.06] text-ink border border-ink/10 rounded-xl font-medium text-sm hover:bg-ink/10 transition-colors cursor-pointer"
               >
-                Start free trial
+                See plans
               </Link>
             </div>
           </div>

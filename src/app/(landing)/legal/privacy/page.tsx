@@ -147,7 +147,7 @@ export default function PrivacyPage() {
                     "AI response generation: customer message content is passed to Claude (Anthropic) to generate contextually appropriate replies. No customer data is retained by Anthropic for training purposes beyond the session",
                     "Booking management: creating, updating, and tracking bookings and lead status in the Qwikly dashboard",
                     "Follow-up automation: sending scheduled follow-up messages based on booking stage or lead status",
-                    "Invoicing and billing: calculating commission fees and issuing invoices to business owners",
+                    "Invoicing and billing: calculating subscription fees and issuing invoices to business owners",
                     "Service improvement: analysing usage patterns in aggregate to improve platform performance",
                     "Communications: sending service-related notifications and, where consented, product updates",
                     "Legal compliance: meeting our obligations under POPIA, ECTA, and other applicable laws",
