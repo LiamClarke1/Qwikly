@@ -6,11 +6,27 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Cache-Control": "public, max-age=300",
+};
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: { clientId: string } }
 ) {
   const { clientId } = params;
+
+  // Hardcoded branding for the Qwikly marketing site itself
+  if (clientId === "1") {
+    return NextResponse.json({
+      name: "Qwikly",
+      color: "#E85A2C",
+      greeting: "Hey. What trade you in?",
+      launcher_label: "Reply in 30s",
+      position: "bottom-right",
+    }, { headers: CORS_HEADERS });
+  }
 
   const { data, error } = await supabaseAdmin
     .from("clients")
@@ -32,12 +48,7 @@ export async function GET(
     greeting: data.web_widget_greeting ?? "Hi! How can we help you today?",
     launcher_label: data.web_widget_launcher_label ?? "Message us",
     position: data.web_widget_position ?? "bottom-right",
-  }, {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Cache-Control": "public, max-age=300",
-    },
-  });
+  }, { headers: CORS_HEADERS });
 }
 
 export async function OPTIONS() {
