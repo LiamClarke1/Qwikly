@@ -38,17 +38,29 @@ export async function POST(req: NextRequest) {
 
   if (data.user) {
     const db = supabaseAdmin();
-    await db.from("businesses").insert({
+
+    const { error: bizError } = await db.from("businesses").insert({
       user_id: data.user.id,
       name: businessName ?? "",
       contact_email: email,
     });
-    await db.from("subscriptions").insert({
+
+    if (bizError) {
+      await supabaseAdmin().auth.admin.deleteUser(data.user.id);
+      return NextResponse.json({ error: "account_setup_failed" }, { status: 500 });
+    }
+
+    const { error: subError } = await db.from("subscriptions").insert({
       user_id: data.user.id,
       plan: "starter",
       billing_cycle: "monthly",
       status: "active",
     });
+
+    if (subError) {
+      await supabaseAdmin().auth.admin.deleteUser(data.user.id);
+      return NextResponse.json({ error: "account_setup_failed" }, { status: 500 });
+    }
   }
 
   return NextResponse.json(

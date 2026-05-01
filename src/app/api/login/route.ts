@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -17,15 +16,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "email and password are required" }, { status: 400 });
   }
 
-  const cookieStore = cookies();
+  // Create a response object first so cookies can be written to it
+  const response = NextResponse.json({});
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (s) =>
-          s.forEach(({ name, value, options }) => cookieStore.set(name, value, options)),
+        getAll: () => req.cookies.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
       },
     }
   );
@@ -35,8 +39,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 401 });
   }
 
-  return NextResponse.json({
-    user: { id: data.user.id, email: data.user.email },
-    access_token: data.session.access_token,
-  });
+  // Replace the body of the response (cookies are already set on the response object)
+  return NextResponse.json(
+    {
+      user: { id: data.user.id, email: data.user.email },
+      access_token: data.session.access_token,
+    },
+    {
+      headers: response.headers,
+    }
+  );
 }

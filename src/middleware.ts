@@ -30,6 +30,12 @@ const PUBLIC_PREFIXES = [
   "/api/pdf",
   "/connect-your-website",
   "/widget",
+  // v2 public endpoints
+  "/api/widget-config",
+  "/api/leads/confirm",
+  "/api/webhooks/stripe",
+  "/api/signup",
+  "/api/login",
 ];
 
 export async function middleware(request: NextRequest) {

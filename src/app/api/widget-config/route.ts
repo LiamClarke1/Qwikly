@@ -3,20 +3,29 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
-const CORS = {
+const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
+};
+
+const SUCCESS_HEADERS = {
+  ...CORS_HEADERS,
   "Cache-Control": "public, max-age=60",
 };
 
+const ERROR_HEADERS = {
+  ...CORS_HEADERS,
+  "Cache-Control": "no-store",
+};
+
 export async function OPTIONS() {
-  return new NextResponse(null, { headers: CORS });
+  return new NextResponse(null, { headers: CORS_HEADERS });
 }
 
 export async function GET(req: NextRequest) {
   const key = req.nextUrl.searchParams.get("key");
   if (!key) {
-    return NextResponse.json({ error: "key_required" }, { status: 400, headers: CORS });
+    return NextResponse.json({ error: "key_required" }, { status: 400, headers: ERROR_HEADERS });
   }
 
   const db = supabaseAdmin();
@@ -28,7 +37,7 @@ export async function GET(req: NextRequest) {
     .maybeSingle();
 
   if (error || !business) {
-    return NextResponse.json({ error: "not_found" }, { status: 404, headers: CORS });
+    return NextResponse.json({ error: "not_found" }, { status: 404, headers: ERROR_HEADERS });
   }
 
   const { data: sub } = await db
@@ -50,6 +59,6 @@ export async function GET(req: NextRequest) {
       qualifying_questions: business.qualifying_questions ?? [],
       branding_removed: brandingRemoved,
     },
-    { headers: CORS }
+    { headers: SUCCESS_HEADERS }
   );
 }
