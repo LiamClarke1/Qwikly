@@ -197,6 +197,38 @@ function WSelect({ value, onChange, options, placeholder }: { value: string; onC
   );
 }
 
+function WSelectWithOther({ value, onChange, options, placeholder }: {
+  value: string; onChange: (v: string) => void; options: string[]; placeholder?: string;
+}) {
+  const hasOther = options.includes("Other");
+  const isOther = value === "Other" || (hasOther && value !== "" && !options.includes(value));
+  const [otherText, setOtherText] = useState(isOther && value !== "Other" ? value : "");
+  return (
+    <div>
+      <select
+        value={isOther ? "Other" : value}
+        onChange={(e) => {
+          if (e.target.value !== "Other") { setOtherText(""); onChange(e.target.value); }
+          else onChange("Other");
+        }}
+        className="w-full bg-white/[0.03] border border-line rounded-xl px-4 py-3 text-fg text-small focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand/60 transition-colors duration-200 cursor-pointer"
+      >
+        {placeholder && <option value="" className="bg-ink-900">{placeholder}</option>}
+        {options.map((o) => <option key={o} value={o} className="bg-ink-900">{o}</option>)}
+      </select>
+      {isOther && (
+        <input
+          type="text"
+          value={otherText}
+          placeholder="Please describe your trade…"
+          className="mt-2 w-full bg-white/[0.03] border border-line rounded-xl px-4 py-3 text-fg text-small placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand/60 transition-colors duration-200"
+          onChange={(e) => { setOtherText(e.target.value); onChange(e.target.value); }}
+        />
+      )}
+    </div>
+  );
+}
+
 function Pills({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
   return (
     <div className="flex flex-wrap gap-2">
@@ -743,7 +775,7 @@ function IntroView({
             <WInput value={form.owner_name} onChange={set("owner_name")} placeholder="e.g. Pete Jacobs" />
           </Field>
           <Field label="Type of work">
-            <WSelect value={form.trade} onChange={set("trade")} options={TRADES} placeholder="Select your trade" />
+            <WSelectWithOther value={form.trade} onChange={set("trade")} options={TRADES} placeholder="Select your trade" />
           </Field>
           <Field label="Cities and suburbs you cover" hint="Your assistant declines jobs outside these areas automatically.">
             <WInput value={form.areas} onChange={set("areas")} placeholder="e.g. Sandton, Midrand, Fourways, Randburg" />
@@ -1311,7 +1343,7 @@ export default function SetupPage() {
                 <WInput value={form.owner_name} onChange={set("owner_name")} placeholder="e.g. Pete Jacobs" />
               </Field>
               <Field label="Type of work">
-                <WSelect value={form.trade} onChange={set("trade")} options={TRADES} placeholder="Select your trade" />
+                <WSelectWithOther value={form.trade} onChange={set("trade")} options={TRADES} placeholder="Select your trade" />
               </Field>
               <Field label="Cities and suburbs you cover" hint="Your assistant declines jobs outside these areas automatically.">
                 <WInput value={form.areas} onChange={set("areas")} placeholder="e.g. Sandton, Midrand, Fourways, Randburg" />

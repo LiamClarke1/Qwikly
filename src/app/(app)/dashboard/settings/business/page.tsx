@@ -13,7 +13,7 @@ import { PageHeader } from "@/components/ui/page";
 
 const TRADES = [
   "electrician", "plumber", "roofer", "solar installer", "pest control",
-  "aircon installer", "pool cleaning", "landscaper", "garage door installer", "security company",
+  "aircon / hvac", "pool cleaning", "landscaper", "garage doors", "security", "other",
 ];
 
 const INDUSTRIES = [
@@ -203,8 +203,11 @@ function BrandCard({ client, save }: { client: Client; save: (p: Partial<Client>
 // ─── Profile card ─────────────────────────────────────────────────────────────
 
 function ProfileCard({ client, save }: { client: Client; save: (p: Partial<Client>) => void }) {
+  // Determine if the stored trade value is a known trade or custom "other" text
+  const storedTrade = client.trade ?? "";
+  const isOtherTrade = storedTrade !== "" && !TRADES.includes(storedTrade) && storedTrade !== "other";
   const [form, setForm] = useState({
-    trade:             client.trade            ?? "",
+    trade:             isOtherTrade ? "other" : storedTrade,
     owner_name:        client.owner_name       ?? "",
     whatsapp_number:   client.whatsapp_number  ?? "",
     years_in_business: client.years_in_business ?? "",
@@ -213,22 +216,43 @@ function ProfileCard({ client, save }: { client: Client; save: (p: Partial<Clien
     brands_used:       client.brands_used       ?? "",
     google_calendar_id: client.google_calendar_id ?? "",
   });
+  const [otherTrade, setOtherTrade] = useState(isOtherTrade ? storedTrade : "");
   const [saving, setSaving] = useState(false);
   const set = (k: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm({ ...form, [k]: e.target.value });
+
+  const handleSave = async (e: FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    const patch = {
+      ...form,
+      trade: form.trade === "other" ? otherTrade || "other" : form.trade,
+    };
+    await save(patch as Partial<Client>);
+    setSaving(false);
+  };
 
   return (
     <Card>
       <CardHeader title="Business profile" description="Basic info your assistant uses when chatting with customers." />
       <form
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        onSubmit={async (e: FormEvent) => { e.preventDefault(); setSaving(true); await save(form as Partial<Client>); setSaving(false); }}
+        onSubmit={handleSave}
       >
         <Field label="Trade">
-          <Select value={form.trade} onChange={set("trade")}>
+          <Select value={form.trade} onChange={(e) => { set("trade")(e); if (e.target.value !== "other") setOtherTrade(""); }}>
             <option value="">Select a trade</option>
             {TRADES.map((t) => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
           </Select>
+          {form.trade === "other" && (
+            <input
+              type="text"
+              value={otherTrade}
+              placeholder="Please describe your trade…"
+              className="mt-2 w-full bg-surface-input border border-[var(--border)] rounded-xl px-4 py-3 text-fg text-small placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-[var(--brand)] focus:border-[var(--brand)] transition-colors duration-200"
+              onChange={(e) => setOtherTrade(e.target.value)}
+            />
+          )}
         </Field>
         <Field label="Owner name"><Input value={form.owner_name} onChange={set("owner_name")} /></Field>
         <Field label="WhatsApp number"><Input value={form.whatsapp_number} onChange={set("whatsapp_number")} placeholder="+27 82 123 4567" /></Field>
@@ -295,9 +319,9 @@ function ServicesCard({ client, save }: { client: Client; save: (p: Partial<Clie
           <Field label="Booking preference">
             <Select value={form.booking_preference} onChange={set("booking_preference")}>
               <option value="">Select preference</option>
-              <option value="whatsapp">WhatsApp first</option>
-              <option value="call">Phone call</option>
-              <option value="ai">Assistant books directly</option>
+              <option value="WhatsApp">WhatsApp</option>
+              <option value="Call">Phone call</option>
+              <option value="Either works">Either works</option>
             </Select>
           </Field>
           <Field label="Expected response time">
@@ -306,17 +330,13 @@ function ServicesCard({ client, save }: { client: Client; save: (p: Partial<Clie
           <Field label="After-hours availability">
             <Select value={form.after_hours} onChange={set("after_hours")}>
               <option value="">Select option</option>
-              <option value="yes">Yes, available</option>
-              <option value="no">Business hours only</option>
-              <option value="emergency">Emergency callouts only</option>
+              <option value="Yes">Yes, available</option>
+              <option value="No">Business hours only</option>
+              <option value="Depends on the job">Depends on the job</option>
             </Select>
           </Field>
           <Field label="Emergency response">
-            <Select value={form.emergency_response} onChange={set("emergency_response")}>
-              <option value="">Select option</option>
-              <option value="yes">Yes, we handle emergencies</option>
-              <option value="no">No emergency callouts</option>
-            </Select>
+            <Input value={form.emergency_response} onChange={set("emergency_response")} placeholder="e.g. Yes, same day" />
           </Field>
         </div>
       </Card>
@@ -358,10 +378,10 @@ function PricingCard({ client, save }: { client: Client; save: (p: Partial<Clien
           <Field label="Charge type">
             <Select value={form.charge_type} onChange={set("charge_type")}>
               <option value="">Select charge type</option>
-              <option value="hourly">Hourly rate</option>
-              <option value="fixed">Fixed price per job</option>
-              <option value="quote">Quote-based</option>
-              <option value="mixed">Mixed (hourly + materials)</option>
+              <option value="Call-out fee + labour">Call-out fee + labour</option>
+              <option value="Per job quote">Per job quote</option>
+              <option value="Hourly rate">Hourly rate</option>
+              <option value="Mix of the above">Mix of the above</option>
             </Select>
           </Field>
           <Field label="Callout fee" hint="Leave blank if none.">
@@ -373,9 +393,9 @@ function PricingCard({ client, save }: { client: Client; save: (p: Partial<Clien
           <Field label="Free quotes">
             <Select value={form.free_quotes} onChange={set("free_quotes")}>
               <option value="">Select option</option>
-              <option value="yes">Yes, free quotes</option>
-              <option value="no">No, quotes are charged</option>
-              <option value="onsite">Free on-site assessment</option>
+              <option value="Yes">Yes, free quotes</option>
+              <option value="No">No, charged for quotes</option>
+              <option value="Only for big jobs">Only for big jobs</option>
             </Select>
           </Field>
         </div>
