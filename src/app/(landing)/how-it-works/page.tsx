@@ -89,12 +89,6 @@ const responseStats = [
   },
 ];
 
-const quickSummary = [
-  { step: "01", text: "We scan your site" },
-  { step: "02", text: "Your assistant goes live" },
-  { step: "03", text: "Leads land in your inbox" },
-];
-
 export default function HowItWorksPage() {
   const faqSchema = buildFAQSchema(FAQ_DATA);
   return (
@@ -105,81 +99,33 @@ export default function HowItWorksPage() {
       />
 
       {/* ═══════ HERO ═══════════════════════════════════════════ */}
-      <section className="relative bg-[#0A0908] overflow-hidden grain-dark">
-        <div className="ember-blob w-[600px] h-[600px] -top-32 -right-32 opacity-25" />
-        <div className="ember-blob w-[350px] h-[350px] bottom-0 -left-24 opacity-15" />
-        <div className="dot-grid absolute inset-0 opacity-30" />
-
-        <div className="relative mx-auto max-w-site px-6 lg:px-10 pt-36 pb-24 md:pt-44 md:pb-32">
-
-          {/* Badge */}
-          <div className="mb-12">
-            <span className="inline-flex items-center gap-2.5 bg-ember/15 border border-ember/25 text-ember px-5 py-2.5 rounded-full text-sm font-medium">
-              <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <section className="relative pt-40 pb-20 grain overflow-hidden">
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
+          <p className="eyebrow text-ink-500 mb-6">How it works</p>
+          <h1 className="display-xl text-ink max-w-[20ch]">
+            From first visit to{" "}
+            <em className="italic font-light">qualified lead in your inbox</em>.
+          </h1>
+          <p className="mt-8 text-lg text-ink-700 max-w-xl leading-relaxed">
+            Qwikly scans your website, configures your digital assistant, and has it live in under 10 minutes.
+            No integrations. No developer. No ongoing work from you.
+          </p>
+          <div className="mt-6 flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-ember/10 border border-ember/20">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 text-ember" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
               </svg>
-              Digital Assistant Platform
-            </span>
-          </div>
-
-          {/* Two-column */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-start">
-
-            {/* Left */}
-            <div>
-              <h1 className="display-xl text-paper">
-                From first visit to{" "}
-                <em className="italic font-light text-ember">
-                  qualified lead in your inbox
-                </em>
-                .
-              </h1>
-              <p className="mt-8 text-lg text-paper/65 max-w-xl leading-relaxed">
-                Qwikly scans your website, configures your digital assistant, and has it live in under 10 minutes.
-                No integrations. No developer. No ongoing work from you.
-              </p>
-
-              {/* Trust badges */}
-              <div className="mt-10 flex flex-wrap gap-4">
-                {[
-                  "Live in under 10 minutes",
-                  "One script tag, any website",
-                  "No developer needed",
-                ].map((badge) => (
-                  <div key={badge} className="flex items-center gap-2.5 bg-paper/[0.05] border border-paper/10 rounded-full px-4 py-2">
-                    <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 text-ember flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                    <span className="text-sm text-paper/65">{badge}</span>
-                  </div>
-                ))}
-              </div>
+              <span className="text-xs font-semibold text-ember">Digital Assistant Platform</span>
             </div>
-
-            {/* Right: quick summary cards */}
-            <div className="flex flex-col gap-3">
-              {quickSummary.map((item, i) => (
-                <div
-                  key={item.step}
-                  className="flex items-center gap-5 bg-paper/[0.04] border border-paper/[0.08] rounded-2xl px-6 py-5 group hover:bg-paper/[0.07] hover:border-paper/[0.14] transition-colors duration-300"
-                >
-                  <span className="font-mono text-xs text-ember/60 w-6 flex-shrink-0">{item.step}</span>
-                  <div className="w-px h-8 bg-paper/10 flex-shrink-0" />
-                  <span className="font-display text-xl text-paper">{item.text}</span>
-                  {i === quickSummary.length - 1 && (
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 text-ember ml-auto flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  )}
-                </div>
-              ))}
-              <div className="mt-4">
-                <CTAButton size="md" variant="solid" href="/signup">
-                  Get started free
-                </CTAButton>
-              </div>
+            <svg viewBox="0 0 16 16" className="w-3 h-3 text-ink-300" fill="none"><path d="M6 8h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 text-blue-500" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+              <span className="text-xs font-semibold text-blue-500">Email Lead Delivery</span>
             </div>
-
+            <span className="text-xs text-ink-400 pl-1">One platform. One script tag.</span>
           </div>
         </div>
       </section>

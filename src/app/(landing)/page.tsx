@@ -156,6 +156,21 @@ function BrowserWidgetMockup() {
    DATA
    ───────────────────────────────────────────────────────────── */
 
+const businessLogos = [
+  { name: "Restaurant",      letter: "R", bg: "#FEF3C7", fg: "#B45309" },
+  { name: "Hair Salon",      letter: "S", bg: "#FCE7F3", fg: "#9D174D" },
+  { name: "Law Firm",        letter: "L", bg: "#E0E7FF", fg: "#3730A3" },
+  { name: "Dental Clinic",   letter: "D", bg: "#E0F2FE", fg: "#0369A1" },
+  { name: "Gym & Fitness",   letter: "G", bg: "#DCFCE7", fg: "#166534" },
+  { name: "Contractor",      letter: "C", bg: "#FEF9C3", fg: "#A16207" },
+  { name: "Photographer",    letter: "P", bg: "#F3E8FF", fg: "#6B21A8" },
+  { name: "Medical Clinic",  letter: "M", bg: "#CCFBF1", fg: "#0F766E" },
+  { name: "Tutor",           letter: "T", bg: "#DBEAFE", fg: "#1D4ED8" },
+  { name: "Cafe",            letter: "C", bg: "#FFEDD5", fg: "#C2410C" },
+  { name: "Cleaning",        letter: "C", bg: "#F0FDF4", fg: "#15803D" },
+  { name: "Beauty Spa",      letter: "B", bg: "#FFF1F2", fg: "#BE123C" },
+];
+
 const howSteps = [
   {
     stamp: "i.",
@@ -373,103 +388,82 @@ export default function Home() {
   return (
     <>
       {/* ═══════ 01 · HERO ═══════════════════════════════════════ */}
-      <section className="relative bg-[#0A0908] overflow-hidden grain-dark">
-        {/* Background atmosphere */}
-        <div className="ember-blob w-[700px] h-[700px] -top-48 -right-32 opacity-30" />
-        <div className="ember-blob w-[400px] h-[400px] bottom-0 -left-32 opacity-15" />
-        <div className="dot-grid absolute inset-0 opacity-30" />
+      <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden grain">
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
 
-        <div className="relative mx-auto max-w-site px-6 lg:px-10 pt-32 pb-20 md:pt-44 md:pb-28">
-
-          {/* Live badge */}
-          <div className="mb-12 reveal-up">
-            <span className="inline-flex items-center gap-2.5 bg-ember/15 border border-ember/25 text-ember px-5 py-2.5 rounded-full text-sm font-medium">
-              <span className="w-2 h-2 rounded-full bg-ember tick" />
-              Live · Handling enquiries now
-            </span>
+          {/* Top meta row */}
+          <div className="flex items-center justify-between text-[0.7rem] text-ink-500 mb-16 md:mb-20 reveal-up">
+            <div className="eyebrow flex items-center gap-3">
+              <span className="inline-block w-2 h-2 rounded-full bg-ember tick" />
+              Live · Capturing leads now
+            </div>
+            <div className="eyebrow hidden sm:flex items-center gap-3">
+              <span>Johannesburg</span>
+              <span className="text-ink-300">/</span>
+              <LiveClock />
+            </div>
           </div>
 
-          {/* Two-column layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr] gap-16 lg:gap-20 items-center">
-
-            {/* Left: copy */}
-            <div>
-              <div className="reveal-words visible">
-                <h1 className="display-huge text-paper">
-                  Your business<br />
-                  never misses<br />
-                  <em className="italic font-light text-ember">a lead again</em>.
-                </h1>
-              </div>
-
-              <p className="mt-8 text-lg md:text-xl text-paper/65 leading-relaxed max-w-xl reveal-up">
-                Qwikly scans your website, builds a digital assistant that knows your business, and captures every enquiry 24/7. Warm leads land in your inbox. Even while you sleep.
-              </p>
-
-              <div className="mt-10 flex flex-wrap gap-4 reveal-up">
-                <CTAButton size="lg" variant="solid" href="/signup">
-                  Start Free
-                </CTAButton>
-                <CTAButton size="lg" variant="outline-light" href="#how-it-works" withArrow={false}>
-                  See how it works
-                </CTAButton>
-              </div>
-              <p className="mt-5 text-sm text-paper/35 reveal-up">
-                No credit card. Free forever on Starter. Upgrade when ready.
-              </p>
-
-              {/* Stats row */}
-              <div className="mt-14 pt-8 border-t border-paper/[0.08] grid grid-cols-3 gap-6 reveal-up">
-                {[
-                  { num: "24/7", label: "Always on" },
-                  { num: "<10min", label: "To go live" },
-                  { num: "R0", label: "To start" },
-                ].map((s) => (
-                  <div key={s.num}>
-                    <p className="font-display text-2xl md:text-3xl text-paper font-bold leading-none num">{s.num}</p>
-                    <p className="mt-2 text-xs text-paper/40 uppercase tracking-[0.12em]">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right: browser mockup */}
-            <div className="reveal-scale">
-              <BrowserWidgetMockup />
-            </div>
-
+          {/* Headline */}
+          <div className="reveal-words visible">
+            <h1 className="display-huge text-ink max-w-[20ch]">
+              The digital assistant{" "}
+              <em className="italic font-light">platform for your business</em>.
+            </h1>
           </div>
+
+          {/* Subhead + CTAs */}
+          <div className="mt-10 md:mt-14 reveal-up">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+              <p className="text-lg md:text-xl text-ink-700 leading-relaxed max-w-lg">
+                Captures every enquiry, qualifies it, and sends it to your inbox. Even when you&rsquo;re asleep.
+                Live in under 10 minutes.
+              </p>
+              <div className="flex flex-col gap-4 lg:items-end lg:text-right">
+                <div className="flex flex-wrap gap-4 lg:justify-end">
+                  <CTAButton size="lg" variant="primary" href="/signup">
+                    Start Free
+                  </CTAButton>
+                  <CTAButton size="lg" variant="outline" href="#how-it-works" withArrow={false}>
+                    See how it works
+                  </CTAButton>
+                </div>
+                <p className="text-sm text-ink-500">
+                  No credit card. Free forever on Starter. Upgrade when you need more.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Hero visual */}
+          <div className="mt-20 md:mt-28 reveal-scale">
+            <BrowserWidgetMockup />
+          </div>
+
         </div>
       </section>
 
-      {/* ═══════ 02 · TRUST STRIP ════════════════════════════════ */}
-      <section className="py-10 border-b border-ink/[0.06] bg-ink/[0.02]">
-        <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5">
-            {[
-              { icon: "clock", label: "< 10 min setup" },
-              { icon: "shield", label: "POPIA compliant" },
-              { icon: "zap", label: "24/7 lead capture" },
-              { icon: "tag", label: "No per-job fees" },
-              { icon: "globe", label: "Hosted in South Africa" },
-            ].map(({ icon, label }) => (
-              <div key={label} className="flex items-center gap-2.5 text-ink-500">
-                {icon === "clock" && (
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-ember flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-                )}
-                {icon === "shield" && (
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-ember flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                )}
-                {icon === "zap" && (
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-ember flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                )}
-                {icon === "tag" && (
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-ember flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
-                )}
-                {icon === "globe" && (
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-ember flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
-                )}
-                <span className="text-sm font-medium text-ink-600">{label}</span>
+      {/* ═══════ 02 · SOCIAL PROOF MARQUEE ══════════════════════ */}
+      <section className="py-12 border-t border-b border-ink/[0.07] overflow-hidden ticker-pause">
+        <p className="eyebrow text-center text-ink-400 mb-10 px-6">Trusted by South African businesses</p>
+        <div className="flex">
+          <div className="ticker-scroll flex items-center gap-x-2">
+            {[...businessLogos, ...businessLogos].map((b, i) => (
+              <div key={i} className="inline-flex items-center gap-3 px-5 py-2 flex-shrink-0">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm"
+                  style={{ backgroundColor: b.bg }}
+                >
+                  <span
+                    className="font-display font-bold text-sm leading-none"
+                    style={{ color: b.fg }}
+                  >
+                    {b.letter}
+                  </span>
+                </div>
+                <span className="font-display text-base tracking-tight whitespace-nowrap text-ink/55">
+                  {b.name}
+                </span>
               </div>
             ))}
           </div>
