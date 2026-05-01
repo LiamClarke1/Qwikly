@@ -111,7 +111,7 @@
 
   .display-huge {
     font-family: var(--font-fraunces), Georgia, serif;
-    font-weight: 500;
+    font-weight: 700;
     font-size: clamp(3rem, 8.5vw, 9rem);
     line-height: 0.9;
     letter-spacing: -0.04em;
@@ -120,7 +120,7 @@
 
   .display-xl {
     font-family: var(--font-fraunces), Georgia, serif;
-    font-weight: 500;
+    font-weight: 700;
     font-size: clamp(2.5rem, 5.5vw, 5.5rem);
     line-height: 0.96;
     letter-spacing: -0.03em;
@@ -128,7 +128,7 @@
 
   .display-lg {
     font-family: var(--font-fraunces), Georgia, serif;
-    font-weight: 500;
+    font-weight: 700;
     font-size: clamp(2rem, 4vw, 4rem);
     line-height: 1.02;
     letter-spacing: -0.025em;
@@ -136,7 +136,7 @@
 
   .display-md {
     font-family: var(--font-fraunces), Georgia, serif;
-    font-weight: 500;
+    font-weight: 600;
     font-size: clamp(1.6rem, 3vw, 2.75rem);
     line-height: 1.08;
     letter-spacing: -0.02em;
