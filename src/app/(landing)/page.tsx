@@ -222,9 +222,7 @@ const businessLogos = [
     name: "Dental Clinics",
     icon: (
       <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <path d="M8 13s1.5 2 4 2 4-2 4-2" />
-        <line x1="9" y1="9" x2="9.01" y2="9" /><line x1="15" y1="9" x2="15.01" y2="9" />
+        <path d="M12 2c-3.5 0-6 2.5-6 6 0 2 .5 3.5 1 5l1 5c.2 1 .8 2 2 2s1.8-1 2-2l1-3 1 3c.2 1 .8 2 2 2s1.8-1 2-2l1-5c.5-1.5 1-3 1-5 0-3.5-2.5-6-6-6z" />
       </svg>
     ),
   },
@@ -260,7 +258,8 @@ const businessLogos = [
     name: "Medical Clinics",
     icon: (
       <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" />
       </svg>
     ),
   },
@@ -287,7 +286,8 @@ const businessLogos = [
     name: "Cleaning Services",
     icon: (
       <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
       </svg>
     ),
   },
@@ -296,6 +296,188 @@ const businessLogos = [
     icon: (
       <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </svg>
+    ),
+  },
+  {
+    name: "Estate Agents",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+        <rect x="9" y="14" width="6" height="7" />
+      </svg>
+    ),
+  },
+  {
+    name: "Plumbers",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2v6m0 0a4 4 0 100 8 4 4 0 000-8zm0 8v6" />
+        <path d="M8 8H4a2 2 0 000 4h4m8-4h4a2 2 0 010 4h-4" />
+      </svg>
+    ),
+  },
+  {
+    name: "Electricians",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </svg>
+    ),
+  },
+  {
+    name: "Accountants",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" />
+        <line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" />
+        <line x1="6" y1="8" x2="10" y2="8" /><line x1="6" y1="11" x2="10" y2="11" /><line x1="14" y1="8" x2="18" y2="8" /><line x1="14" y1="11" x2="18" y2="11" />
+      </svg>
+    ),
+  },
+  {
+    name: "Physiotherapists",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="5" r="2" />
+        <path d="M12 7v6m0 0l-3 4m3-4l3 4" />
+        <path d="M9 13H6m12 0h-3" />
+      </svg>
+    ),
+  },
+  {
+    name: "Optometrists",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+  },
+  {
+    name: "Veterinarians",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.96-1.45-2.344-2.5" />
+        <path d="M8 14v.5A3.5 3.5 0 0011.5 18h1a3.5 3.5 0 003.5-3.5V14" />
+        <line x1="12" y1="9" x2="12" y2="13" /><line x1="10" y1="11" x2="14" y2="11" />
+      </svg>
+    ),
+  },
+  {
+    name: "Driving Schools",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="1" y="3" width="15" height="13" rx="2" />
+        <path d="M16 8h4l3 3v5h-7V8z" />
+        <circle cx="5.5" cy="18.5" r="2.5" /><circle cx="18.5" cy="18.5" r="2.5" />
+      </svg>
+    ),
+  },
+  {
+    name: "Car Washes",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M7 16.5c0 1.38 1.12 2.5 2.5 2.5h5c1.38 0 2.5-1.12 2.5-2.5V14H7v2.5z" />
+        <path d="M17 14l1.5-5H5.5L7 14" />
+        <path d="M9 7c0-1.1.9-2 2-2h2a2 2 0 012 2" />
+        <line x1="5" y1="3" x2="5" y2="5" /><line x1="9" y1="2" x2="9" y2="4" /><line x1="13" y1="3" x2="13" y2="5" />
+      </svg>
+    ),
+  },
+  {
+    name: "Mechanics",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+      </svg>
+    ),
+  },
+  {
+    name: "Florists",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22V12m0 0c0-4 3-7 6-7-1 4-3 7-6 7zm0 0c0-4-3-7-6-7 1 4 3 7 6 7z" />
+        <circle cx="12" cy="8" r="3" />
+      </svg>
+    ),
+  },
+  {
+    name: "Jewellers",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+      </svg>
+    ),
+  },
+  {
+    name: "Pest Control",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="11" r="3" />
+        <path d="M12 8V5m0 9v3M9.5 9.5L7 7m9.5 2.5L19 7M9.5 12.5L7 15m9.5-2.5L19 15" />
+        <path d="M8 5h8" />
+      </svg>
+    ),
+  },
+  {
+    name: "Security",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <polyline points="9 12 11 14 15 10" />
+      </svg>
+    ),
+  },
+  {
+    name: "Travel Agents",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
+      </svg>
+    ),
+  },
+  {
+    name: "Event Planners",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+        <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" />
+      </svg>
+    ),
+  },
+  {
+    name: "Yoga Studios",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="4" r="2" />
+        <path d="M12 6v4m-4 2c1.5 0 3-.5 4-2 1 1.5 2.5 2 4 2" />
+        <path d="M8 12l-3 6m14-6l-3 6" />
+        <line x1="6" y1="18" x2="10" y2="18" /><line x1="14" y1="18" x2="18" y2="18" />
+      </svg>
+    ),
+  },
+  {
+    name: "Nutritionists",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 8h1a4 4 0 010 8h-1" />
+        <path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z" />
+        <line x1="6" y1="1" x2="6" y2="4" /><line x1="10" y1="1" x2="10" y2="4" /><line x1="14" y1="1" x2="14" y2="4" />
+      </svg>
+    ),
+  },
+  {
+    name: "Pet Groomers",
+    icon: (
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="9" cy="7" r="4" />
+        <path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" />
+        <path d="M16 3.13a4 4 0 010 7.75" />
+        <path d="M21 21v-2a4 4 0 00-3-3.87" />
       </svg>
     ),
   },
@@ -603,11 +785,11 @@ export default function Home() {
           {/* Right fade */}
           <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 z-10 pointer-events-none" style={{ background: "linear-gradient(to left, #F4EEE4, transparent)" }} />
 
-          <div className="ticker-scroll flex items-center gap-3 w-max">
+          <div className="ticker-scroll flex items-center w-max">
             {[...businessLogos, ...businessLogos].map((b, i) => (
               <div
                 key={i}
-                className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-white border border-ink/[0.09] rounded-xl shadow-sm flex-shrink-0 whitespace-nowrap"
+                className="inline-flex items-center gap-2.5 px-4 py-2.5 bg-white border border-ink/[0.09] rounded-xl shadow-sm flex-shrink-0 whitespace-nowrap mr-3"
               >
                 <div className="w-7 h-7 rounded-lg bg-ink/[0.04] border border-ink/[0.07] flex items-center justify-center text-ink/45 flex-shrink-0">
                   {b.icon}
