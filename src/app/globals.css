@@ -338,7 +338,7 @@
   100% { transform: translateX(-50%); }
 }
 .ticker-scroll {
-  animation: ticker-scroll 40s linear infinite;
+  animation: ticker-scroll 22s linear infinite;
   will-change: transform;
 }
 .ticker-scroll-slow {
