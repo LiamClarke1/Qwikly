@@ -68,9 +68,9 @@ const PLANS: {
     cta: "Start Free Trial",
     noCard: true,
     features: [
-      "25 qualified leads during trial",
-      "Full Pro features included",
-      "Digital assistant platform",
+      "75 qualified leads/month",
+      "Full Pro features — identical",
+      "Digital assistant + embed snippet",
       "Custom branding + questions",
       "No bank account needed",
     ],

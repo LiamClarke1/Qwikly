@@ -17,13 +17,13 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
   trial: {
     name: 'Trial',
     priceMonthly: 0,
-    leadLimit: 25,
-    removeBranding: true,
-    customGreeting: true,
-    csvExport: true,
+    leadLimit: 75,
+    removeBranding: false,
+    customGreeting: false,
+    csvExport: false,
     calendarIntegration: false,
     apiAccess: false,
-    supportTier: 'priority',
+    supportTier: 'email',
   },
   // Legacy — existing subscribers only, no longer shown in UI
   starter: {

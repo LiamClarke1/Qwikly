@@ -443,8 +443,8 @@ const teaserTiers = [
     highlight: false,
     isTrial: true,
     features: [
-      "25 qualified leads during trial",
-      "Full Pro features included",
+      "75 qualified leads/month",
+      "Full Pro features — identical",
       "Custom branding + questions",
       "No bank account needed",
       "Upgrade anytime",

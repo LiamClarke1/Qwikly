@@ -24,12 +24,12 @@ const tiers: {
     highlight: false,
     cta: "Start 14-day trial",
     features: [
-      "25 qualified leads during trial",
+      "75 qualified leads/month",
       "Full Pro features — identical",
       "Digital assistant + embed snippet",
-      "Email lead delivery",
-      "POPIA compliant",
+      "Custom branding + questions",
       "No card required",
+      "Upgrade anytime",
     ],
   },
   {

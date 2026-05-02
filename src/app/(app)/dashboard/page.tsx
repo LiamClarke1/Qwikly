@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Zap, AlertTriangle, ArrowRight, TrendingUp, CheckCircle2,
-  X, Users, Clock, ChevronRight, WifiOff, Rocket,
+  X, Users, Clock, ChevronRight, WifiOff, Rocket, PauseCircle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
@@ -31,6 +31,86 @@ interface Lead {
 function SkeletonCard({ className }: { className?: string }) {
   return (
     <div className={cn("rounded-2xl bg-ink/[0.05] border border-ink/[0.08] animate-pulse", className)} />
+  );
+}
+
+// ─── Trial banner ─────────────────────────────────────────────────────────────
+
+function TrialBanner() {
+  const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/subscription")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.plan === "trial" && data.trialEndsAt) {
+          setTrialEndsAt(new Date(data.trialEndsAt));
+        }
+        setReady(true);
+      })
+      .catch(() => setReady(true));
+  }, []);
+
+  if (!ready || !trialEndsAt) return null;
+
+  const now = new Date();
+  const msLeft = trialEndsAt.getTime() - now.getTime();
+  const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
+  const expired = msLeft <= 0;
+
+  if (expired) {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0">
+            <PauseCircle className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-amber-900">Your digital assistant is paused</p>
+            <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+              Your 14-day trial has ended. Visitors can no longer reach your assistant. Your data and leads are safe — pick a plan to reactivate instantly.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/dashboard/settings/billing"
+          className="inline-flex items-center gap-2 px-4 h-9 rounded-xl bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 transition-colors duration-150 cursor-pointer shrink-0"
+        >
+          Pick a plan <ArrowRight className="w-4 h-4" />
+        </Link>
+      </div>
+    );
+  }
+
+  const urgent = daysLeft <= 2;
+  const warning = daysLeft <= 5;
+  const dayLabel = daysLeft === 1 ? "1 day" : `${daysLeft} days`;
+
+  return (
+    <div className={cn(
+      "rounded-2xl border p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3",
+      urgent ? "border-amber-200 bg-amber-50" : warning ? "border-sky-200 bg-sky-50" : "border-green-200 bg-green-50"
+    )}>
+      <div className="flex items-center gap-3">
+        <Clock className={cn("w-4 h-4 shrink-0", urgent ? "text-amber-600" : warning ? "text-sky-600" : "text-green-600")} />
+        <p className={cn("text-sm", urgent ? "text-amber-800" : warning ? "text-sky-800" : "text-green-800")}>
+          <span className="font-semibold">Free trial — {dayLabel} remaining.</span>{" "}
+          {urgent
+            ? "Add a plan now to keep your digital assistant running without interruption."
+            : "Your assistant is live and fully active on Pro features."}
+        </p>
+      </div>
+      <Link
+        href="/dashboard/settings/billing"
+        className={cn(
+          "inline-flex items-center gap-2 px-4 h-8 rounded-xl text-sm font-semibold transition-colors duration-150 cursor-pointer shrink-0",
+          urgent ? "bg-amber-600 text-white hover:bg-amber-700" : "bg-sky-600 text-white hover:bg-sky-700"
+        )}
+      >
+        View plans <ArrowRight className="w-3.5 h-3.5" />
+      </Link>
+    </div>
   );
 }
 
@@ -319,6 +399,9 @@ export default function HomePage() {
           </Link>
         </div>
       </div>
+
+      {/* ── Trial countdown ──────────────────────────────────────── */}
+      <TrialBanner />
 
       {/* ── Onboarding reminder ──────────────────────────────────── */}
       {!loading && client && !client.onboarding_completed_at && (
