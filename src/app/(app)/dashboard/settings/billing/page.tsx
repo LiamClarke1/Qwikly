@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState, useCallback } from "react";
 import {
   CreditCard, Calendar, Check, Download, Shield,
-  ArrowRight, X, CheckCircle, ChevronRight,
+  ArrowRight, X, CheckCircle, ChevronRight, Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page";
@@ -15,17 +15,18 @@ import { fmt, fmtDateLong } from "@/lib/money";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type PlanId = "starter" | "pro" | "premium";
+type PlanId = "starter" | "pro" | "premium" | "billions";
 type BillingCycle = "monthly" | "annual";
 type InvoiceStatus = "paid" | "open" | "overdue";
 
 interface SubscriptionData {
-  plan: PlanId;
+  plan: PlanId | "trial";
   cycle: BillingCycle;
   renewsAt: string | null;
   paymentMethod: { brand: string; last4: string } | null;
   status: string;
   cancelAtPeriodEnd: boolean;
+  trialEndsAt?: string | null;
 }
 
 interface SubscriptionInvoice {
@@ -79,9 +80,9 @@ async function requestPaymentMethodUpdate(): Promise<string | null> {
 
 // ─── Pricing constants ────────────────────────────────────────────────────────
 
-const MONTHLY: Record<PlanId, number> = { starter: 399, pro: 999, premium: 2499 };
+const MONTHLY: Record<PlanId, number> = { starter: 399, pro: 999, premium: 2499, billions: 4999 };
 // Annual = 15% discount
-const ANNUAL:  Record<PlanId, number> = { starter: 4069, pro: 10190, premium: 25490 };
+const ANNUAL:  Record<PlanId, number> = { starter: 4069, pro: 10190, premium: 25490, billions: 50990 };
 
 const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean; features: string[] }> = {
   starter: {
@@ -118,6 +119,18 @@ const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean;
       "Calendar integration (coming soon)",
       "API access",
       "Dedicated support",
+    ],
+  },
+  billions: {
+    name: "Billions",
+    tagline: "Enterprise scale, full white-label",
+    highlight: false,
+    features: [
+      "5,000 qualified leads/month",
+      "Everything in Premium, plus:",
+      "White-label (no Qwikly branding)",
+      "Dedicated account manager",
+      "Custom integrations",
     ],
   },
 };
@@ -272,12 +285,20 @@ export default function BillingPage() {
   const [invoices, setInvoices] = useState<SubscriptionInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingChange, setPendingChange] = useState<{ plan: PlanId; cycle: BillingCycle } | null>(null);
-  // Resolve legacy/trial plan IDs for display
+  const isTrialPlan = (sub?.plan as string) === "trial";
+  // Resolve legacy plan IDs for display — never map trial to a paid plan
   const resolvedPlan = (sub?.plan as string) === "lite" ? "starter" as PlanId :
     (sub?.plan as string) === "business" ? "premium" as PlanId :
-    (sub?.plan as string) === "trial" ? "pro" as PlanId : (sub?.plan as PlanId);
+    isTrialPlan ? "starter" as PlanId : (sub?.plan as PlanId);
   const [showCancel, setShowCancel] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
+
+  // Trial days remaining
+  const trialDaysLeft = (() => {
+    if (!isTrialPlan || !sub?.trialEndsAt) return null;
+    const ms = new Date(sub.trialEndsAt).getTime() - Date.now();
+    return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+  })();
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -347,13 +368,41 @@ export default function BillingPage() {
         description="Manage your subscription, payment method, and invoice history."
       />
 
+      {/* ── Trial Banner ─────────────────────────────────────────────────── */}
+      {isTrialPlan && (
+        <div className="bg-amber-500/10 border border-amber-500/25 rounded-2xl p-5 flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <Clock className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" aria-hidden="true" />
+            <div>
+              <p className="text-small font-semibold text-fg">
+                You&apos;re on a 14-day free trial
+                {trialDaysLeft !== null && (
+                  <span className="ml-2 text-tiny font-normal text-amber-400">
+                    {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining
+                  </span>
+                )}
+              </p>
+              <p className="text-tiny text-fg-muted mt-0.5">
+                No payment taken during trial. Choose a plan below to continue after your trial ends.
+              </p>
+            </div>
+          </div>
+          <a
+            href="#choose-plan"
+            className="shrink-0 inline-flex items-center gap-1.5 text-tiny font-semibold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+          >
+            Choose a plan <ChevronRight className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      )}
+
       {/* ── A: Current Subscription ──────────────────────────────────────── */}
-      <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
+      {!isTrialPlan && <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-line flex flex-wrap items-center justify-between gap-3">
           <p className="text-small font-semibold text-fg">Current subscription</p>
           {isMonthly && (
             <button
-              onClick={() => setPendingChange({ plan: effectiveSub.plan, cycle: "annual" })}
+              onClick={() => setPendingChange({ plan: currentPlanId, cycle: "annual" })}
               className="flex items-center gap-1 text-tiny font-medium text-brand hover:underline cursor-pointer transition-colors"
             >
               Switch to annual — save {fmt(annualSaving)}/yr
@@ -383,7 +432,7 @@ export default function BillingPage() {
               </p>
               {!isMonthly && (
                 <p className="text-tiny text-fg-muted mt-0.5">
-                  Billed {fmt(ANNUAL[effectiveSub.plan])}/year
+                  Billed {fmt(ANNUAL[currentPlanId])}/year
                 </p>
               )}
             </div>
@@ -419,21 +468,25 @@ export default function BillingPage() {
             </button>
           </div>
         )}
-      </div>
+      </div>}
 
-      {/* ── B: Change Plan ───────────────────────────────────────────────── */}
-      <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
+      {/* ── B: Choose / Change Plan ──────────────────────────────────────── */}
+      <div id="choose-plan" className="bg-surface-card border border-line rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-line">
-          <p className="text-small font-semibold text-fg">Change plan</p>
-          <p className="text-tiny text-fg-muted mt-0.5">No per-lead fees. Flat monthly pricing.</p>
+          <p className="text-small font-semibold text-fg">{isTrialPlan ? "Choose your plan" : "Change plan"}</p>
+          <p className="text-tiny text-fg-muted mt-0.5">
+            {isTrialPlan
+              ? "Pick a plan to activate after your trial. Payment is collected when you confirm."
+              : "No per-lead fees. Flat monthly pricing."}
+          </p>
         </div>
         <div className="p-5">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {(["starter", "pro", "premium"] as PlanId[]).map((planId) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {(["starter", "pro", "premium", "billions"] as PlanId[]).map((planId) => {
               const meta = PLANS[planId];
-              const isCurrent = planId === currentPlanId;
+              const isCurrent = !isTrialPlan && planId === currentPlanId;
               const price = isMonthly ? MONTHLY[planId] : Math.round(ANNUAL[planId] / 12);
-              const isUpgrade = MONTHLY[planId] > MONTHLY[currentPlanId];
+              const isUpgrade = isTrialPlan || MONTHLY[planId] > MONTHLY[currentPlanId];
 
               return (
                 <div
@@ -491,9 +544,9 @@ export default function BillingPage() {
                       variant={isUpgrade ? "primary" : "outline"}
                       size="sm"
                       className="w-full justify-center"
-                      onClick={() => setPendingChange({ plan: planId, cycle: effectiveSub.cycle })}
+                      onClick={() => setPendingChange({ plan: planId, cycle: "monthly" })}
                     >
-                      {isUpgrade ? "Upgrade" : "Downgrade"}
+                      {isTrialPlan ? "Activate" : isUpgrade ? "Upgrade" : "Downgrade"}
                     </Button>
                   )}
                 </div>

@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Check, Minus, Plus, Shield, MapPin } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 
-const MONTHLY = { trial: 0, starter: 399, pro: 999, premium: 2499 } as const;
-const ANNUAL  = { trial: 0, starter: 4068, pro: 10188, premium: 25490 } as const;
+const MONTHLY = { trial: 0, starter: 399, pro: 999, premium: 2499, billions: 4999 } as const;
+const ANNUAL  = { trial: 0, starter: 4068, pro: 10188, premium: 25490, billions: 50990 } as const;
 
 type TierId = keyof typeof MONTHLY;
 
@@ -76,24 +76,40 @@ const tiers: {
       "Dedicated support",
     ],
   },
+  {
+    id: "billions" as TierId,
+    name: "Billions",
+    tagline: "Enterprise scale, white-label",
+    highlight: false,
+    cta: "Start with Billions",
+    features: [
+      "5,000 qualified leads/month",
+      "Everything in Premium, plus:",
+      "White-label (no Qwikly branding)",
+      "Dedicated account manager",
+      "Custom integrations",
+    ],
+  },
 ];
 
 type FeatureCell = boolean | string;
 
-const featureRows: { label: string; starter: FeatureCell; pro: FeatureCell; premium: FeatureCell }[] = [
-  { label: "Digital assistant platform",        starter: true,        pro: true,        premium: true        },
-  { label: "Email lead delivery",              starter: true,        pro: true,        premium: true        },
-  { label: "POPIA compliant",                  starter: true,        pro: true,        premium: true        },
-  { label: "Email support",                    starter: true,        pro: true,        premium: true        },
-  { label: "Qualified leads / month",          starter: "75",        pro: "250",       premium: "1,000"     },
-  { label: '"Powered by Qwikly" branding',    starter: true,        pro: false,       premium: false       },
-  { label: "Custom branding (your logo)",      starter: false,       pro: true,        premium: true        },
-  { label: "Custom greeting & questions",      starter: false,       pro: true,        premium: true        },
-  { label: "Lead exports (CSV)",               starter: false,       pro: true,        premium: true        },
-  { label: "Priority email support",           starter: false,       pro: true,        premium: true        },
-  { label: "Calendar integration",             starter: false,       pro: false,       premium: "Soon"      },
-  { label: "API access",                       starter: false,       pro: false,       premium: true        },
-  { label: "Dedicated support",               starter: false,       pro: false,       premium: true        },
+const featureRows: { label: string; starter: FeatureCell; pro: FeatureCell; premium: FeatureCell; billions: FeatureCell }[] = [
+  { label: "Digital assistant platform",       starter: true,   pro: true,    premium: true,    billions: true     },
+  { label: "Email lead delivery",             starter: true,   pro: true,    premium: true,    billions: true     },
+  { label: "POPIA compliant",                 starter: true,   pro: true,    premium: true,    billions: true     },
+  { label: "Email support",                   starter: true,   pro: true,    premium: true,    billions: true     },
+  { label: "Qualified leads / month",         starter: "75",   pro: "250",   premium: "1,000", billions: "5,000"  },
+  { label: '"Powered by Qwikly" branding',   starter: true,   pro: false,   premium: false,   billions: false    },
+  { label: "Custom branding (your logo)",     starter: false,  pro: true,    premium: true,    billions: true     },
+  { label: "Custom greeting & questions",     starter: false,  pro: true,    premium: true,    billions: true     },
+  { label: "Lead exports (CSV)",              starter: false,  pro: true,    premium: true,    billions: true     },
+  { label: "Priority email support",          starter: false,  pro: true,    premium: true,    billions: true     },
+  { label: "Calendar integration",            starter: false,  pro: false,   premium: "Soon",  billions: true     },
+  { label: "API access",                      starter: false,  pro: false,   premium: true,    billions: true     },
+  { label: "Dedicated support",              starter: false,  pro: false,   premium: true,    billions: true     },
+  { label: "White-label (no Qwikly)",        starter: false,  pro: false,   premium: false,   billions: true     },
+  { label: "Dedicated account manager",      starter: false,  pro: false,   premium: false,   billions: true     },
 ];
 
 const pricingFAQs = [
@@ -220,7 +236,7 @@ export default function PricingPage() {
           </div>
 
           {/* Tier cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 items-stretch">
             {tiers.map((tier) => {
               const price = displayPrice(tier.id);
 
@@ -340,10 +356,10 @@ export default function PricingPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse min-w-[540px]">
+            <table className="w-full border-collapse min-w-[620px]">
               <thead>
                 <tr className="border-b border-ink/10">
-                  <th className="text-left pb-5 pr-6 font-normal eyebrow text-ink-500 w-[46%]">
+                  <th className="text-left pb-5 pr-6 font-normal eyebrow text-ink-500 w-[38%]">
                     Feature
                   </th>
                   <th className="pb-5 px-4 text-center font-normal eyebrow text-ink-500">
@@ -354,6 +370,9 @@ export default function PricingPage() {
                   </th>
                   <th className="pb-5 px-4 text-center font-normal eyebrow text-ink-500">
                     Premium
+                  </th>
+                  <th className="pb-5 px-4 text-center font-normal eyebrow text-ink-500">
+                    Billions
                   </th>
                 </tr>
               </thead>
@@ -371,6 +390,9 @@ export default function PricingPage() {
                     </td>
                     <td className="py-4 px-4 text-center">
                       <TableCell value={row.premium} />
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <TableCell value={row.billions} />
                     </td>
                   </tr>
                 ))}

@@ -29,10 +29,10 @@ function OnboardingContent() {
   const [currentStep, setCurrentStep] = useState(1);
 
   const planParam = searchParams.get("plan");
-  const validPlans: PlanTier[] = ["starter", "pro", "premium"];
+  const validPlans: PlanTier[] = ["trial", "starter", "pro", "premium", "billions"];
   const plan: PlanTier = validPlans.includes(planParam as PlanTier)
     ? (planParam as PlanTier)
-    : "starter";
+    : "trial";
 
   useEffect(() => {
     if (!client) return;

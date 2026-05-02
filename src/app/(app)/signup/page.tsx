@@ -60,6 +60,22 @@ const PLANS: {
   noCard: boolean;
 }[] = [
   {
+    id: "trial",
+    name: "Free Trial",
+    price: "Free",
+    sub: "14 days",
+    badge: "No card required",
+    cta: "Start Free Trial",
+    noCard: true,
+    features: [
+      "25 qualified leads during trial",
+      "Full Pro features included",
+      "Digital assistant platform",
+      "Custom branding + questions",
+      "No bank account needed",
+    ],
+  },
+  {
     id: "starter",
     name: "Starter",
     price: "R399",
@@ -113,18 +129,18 @@ interface PlanSelectProps {
 }
 
 function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
-  const [selected, setSelected] = useState<PlanTier>(initialPlan ?? "pro");
+  const [selected, setSelected] = useState<PlanTier>(initialPlan ?? "trial");
 
   return (
-    <div className="w-full max-w-3xl">
+    <div className="w-full max-w-4xl">
       <div className="mb-8">
-        <h2 className="text-h1 text-ink">Choose your plan</h2>
+        <h2 className="text-h1 text-ink">Start your free trial</h2>
         <p className="text-ink-500 text-small mt-1.5">
-          30-day money-back guarantee on Pro and Premium. Pay annually and get 2 months free.
+          14 days free. No bank account required. Upgrade when you&apos;re ready.
         </p>
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {PLANS.map((plan) => {
           const isSelected = selected === plan.id;
           return (
@@ -133,13 +149,17 @@ function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
               type="button"
               onClick={() => setSelected(plan.id)}
               className={`relative text-left rounded-2xl border p-5 transition-all duration-200 cursor-pointer flex flex-col gap-4 ${
-                isSelected
+                plan.id === "trial"
+                  ? isSelected
+                    ? "border-emerald-500 bg-emerald-50 ring-1 ring-emerald-300"
+                    : "border-emerald-200 bg-emerald-50/50 hover:border-emerald-400"
+                  : isSelected
                   ? "border-ember bg-ember/[0.06] ring-1 ring-brand/30"
                   : "border-line hover:border-ink/[0.20] bg-white/70"
               }`}
             >
               {plan.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-ember text-white text-[10px] font-bold tracking-wide whitespace-nowrap">
+                <span className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-white text-[10px] font-bold tracking-wide whitespace-nowrap ${plan.id === "trial" ? "bg-emerald-500" : "bg-ember"}`}>
                   {plan.badge}
                 </span>
               )}
@@ -149,9 +169,9 @@ function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
                 </div>
               )}
               <div>
-                <p className="text-fg text-small font-semibold">{plan.name}</p>
+                <p className={`text-small font-semibold ${plan.id === "trial" ? "text-emerald-700" : "text-fg"}`}>{plan.name}</p>
                 <p className="text-fg mt-1">
-                  <span className="text-2xl font-bold num">{plan.price}</span>
+                  <span className={`text-2xl font-bold num ${plan.id === "trial" ? "text-emerald-600" : ""}`}>{plan.price}</span>
                   <span className="text-ink-400 text-tiny ml-1">{plan.sub}</span>
                 </p>
               </div>
@@ -171,14 +191,14 @@ function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
       <button
         type="button"
         onClick={() => onSelect(selected)}
-        className="w-full h-12 bg-grad-brand text-white text-small font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 active:brightness-95 transition-all duration-150 shadow-[0_8px_24px_-8px_rgba(232,90,44,0.4)]"
+        className={`w-full h-12 text-white text-small font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 active:brightness-95 transition-all duration-150 ${selected === "trial" ? "bg-emerald-600 shadow-[0_8px_24px_-8px_rgba(16,185,129,0.4)]" : "bg-grad-brand shadow-[0_8px_24px_-8px_rgba(232,90,44,0.4)]"}`}
       >
-        Continue with {PLANS.find((p) => p.id === selected)?.name}
+        {PLANS.find((p) => p.id === selected)?.cta ?? "Continue"}
         <ArrowRight className="w-4 h-4" />
       </button>
 
       <p className="text-center text-tiny text-ink-400 mt-4">
-        No setup fee · No per-lead fees · Cancel anytime
+        {selected === "trial" ? "No bank account required · Cancel anytime" : "No setup fee · No per-lead fees · Cancel anytime"}
       </p>
     </div>
   );
@@ -232,7 +252,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, businessName }),
+        body: JSON.stringify({ email, password, businessName, plan }),
       });
       json = await res.json();
       if (!res.ok) {
@@ -283,9 +303,10 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
   }
 
   const planLabel =
-    plan === "trial" ? "Trial — Free (14 days)" :
+    plan === "trial" ? "Free Trial — 14 days, no card required" :
     plan === "starter" ? "Starter — R399/mo" :
     plan === "pro" ? "Pro — R999/mo" :
+    plan === "billions" ? "Billions — R4,999/mo" :
     "Premium — R2,499/mo";
 
   return (
@@ -304,7 +325,9 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
         </div>
         <h2 className="text-h1 text-ink">Create your account</h2>
         <p className="text-ink-500 text-small mt-1.5">
-          {plan === "starter" ? "No card needed. Live in 5 minutes." : "30-day money-back guarantee."}
+          {plan === "trial" ? "No bank account required. Live in 5 minutes." :
+           plan === "starter" ? "No card needed. Live in 5 minutes." :
+           "30-day money-back guarantee."}
         </p>
       </div>
 
@@ -430,13 +453,13 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
 function SignupContent() {
   const searchParams = useSearchParams();
   const rawPlan = searchParams.get("plan");
-  const validPlans: PlanTier[] = ["starter", "pro", "premium"];
+  const validPlans: PlanTier[] = ["trial", "starter", "pro", "premium", "billions"];
   const initialPlan: PlanTier | null = validPlans.includes(rawPlan as PlanTier)
     ? (rawPlan as PlanTier)
     : null;
 
   const [step, setStep] = useState<"plan" | "account">(initialPlan ? "account" : "plan");
-  const [chosenPlan, setChosenPlan] = useState<PlanTier>(initialPlan ?? "pro");
+  const [chosenPlan, setChosenPlan] = useState<PlanTier>(initialPlan ?? "trial");
 
   const handlePlanSelect = (plan: PlanTier) => {
     setChosenPlan(plan);

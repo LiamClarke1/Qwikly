@@ -1,4 +1,4 @@
-export type PlanTier = 'trial' | 'starter' | 'pro' | 'premium';
+export type PlanTier = 'trial' | 'starter' | 'pro' | 'premium' | 'billions';
 
 interface PlanConfig {
   name: string;
@@ -57,6 +57,17 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     apiAccess: true,
     supportTier: 'dedicated',
   },
+  billions: {
+    name: 'Billions',
+    priceMonthly: 4999,
+    leadLimit: 5000,
+    removeBranding: true,
+    customGreeting: true,
+    csvExport: true,
+    calendarIntegration: true,
+    apiAccess: true,
+    supportTier: 'dedicated',
+  },
 };
 
 export function resolvePlan(raw: string | null | undefined): PlanTier {
@@ -64,6 +75,7 @@ export function resolvePlan(raw: string | null | undefined): PlanTier {
   if (raw === 'pro') return 'pro';
   if (raw === 'premium' || raw === 'business') return 'premium';
   if (raw === 'starter' || raw === 'lite') return 'starter';
+  if (raw === 'billions') return 'billions';
   return 'starter';
 }
 

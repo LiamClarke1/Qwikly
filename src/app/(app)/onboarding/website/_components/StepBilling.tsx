@@ -20,6 +20,49 @@ export default function StepBilling({ plan, onAdvance, onBack }: Props) {
 
   const config = PLAN_CONFIG[plan];
 
+  if (plan === "trial") {
+    return (
+      <div className="pt-10 max-w-lg">
+        <h1 className="text-display-1 font-semibold text-fg mb-2">
+          Your 14-day free trial is ready.
+        </h1>
+        <p className="text-fg-muted text-body mb-8">
+          No bank account required. No credit card. Nothing to pay today.
+        </p>
+
+        <div className="rounded-2xl bg-success/5 border border-success/20 p-6 mb-8 space-y-4">
+          <p className="text-small font-semibold text-fg">What&apos;s included in your trial:</p>
+          <ul className="space-y-2.5">
+            {[
+              "25 qualified leads during your trial",
+              "Full Pro features (custom branding, questions)",
+              "Digital assistant platform",
+              "Email lead delivery",
+              "POPIA compliant",
+            ].map((f) => (
+              <li key={f} className="flex items-center gap-2.5">
+                <Check className="w-4 h-4 text-success shrink-0" />
+                <span className="text-small text-fg-muted">{f}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="pt-2 border-t border-success/15">
+            <p className="text-tiny text-fg-subtle">
+              After 14 days, choose a plan to continue. Your dashboard and all lead history stay with you.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <Button type="button" variant="outline" onClick={onBack}>← Back</Button>
+          <Button type="button" onClick={() => onAdvance()} className="flex-1">
+            Activate my free trial →
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (plan === "starter") {
     return (
       <div className="pt-10 max-w-lg">

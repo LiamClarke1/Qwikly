@@ -107,6 +107,8 @@ export const PLAN_MAP: Record<string, string | undefined> = {
   pro_annual: process.env.PAYSTACK_PLAN_PRO_ANNUAL,
   premium_monthly: process.env.PAYSTACK_PLAN_PREMIUM_MONTHLY,
   premium_annual: process.env.PAYSTACK_PLAN_PREMIUM_ANNUAL,
+  billions_monthly: process.env.PAYSTACK_PLAN_BILLIONS_MONTHLY,
+  billions_annual: process.env.PAYSTACK_PLAN_BILLIONS_ANNUAL,
 };
 
 // Amount in ZAR cents — monthly × 12 × 0.85 for annual (15% off)
@@ -117,6 +119,8 @@ export const PLAN_AMOUNTS: Record<string, number> = {
   pro_annual: 1018800,      // R999 × 12 × 0.85 = R10,188
   premium_monthly: 249900,
   premium_annual: 2549000,  // R2,499 × 12 × 0.85 = R25,490
+  billions_monthly: 499900,
+  billions_annual: 5099000, // R4,999 × 12 × 0.85 = R50,990
 };
 
 // Reverse lookup: plan_code → { plan, cycle }

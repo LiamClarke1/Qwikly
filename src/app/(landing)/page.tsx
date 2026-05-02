@@ -436,11 +436,30 @@ const differentiators = [
 
 const teaserTiers = [
   {
+    name: "Free Trial",
+    price: "Free",
+    period: "14 days",
+    tagline: "No bank account required",
+    highlight: false,
+    isTrial: true,
+    features: [
+      "25 qualified leads during trial",
+      "Full Pro features included",
+      "Custom branding + questions",
+      "No bank account needed",
+      "Upgrade anytime",
+    ],
+    cta: "Start Free Trial",
+    href: "/signup?plan=trial",
+    variant: "primary" as const,
+  },
+  {
     name: "Starter",
     price: "R399",
     period: "/month",
     tagline: "For businesses getting started",
     highlight: false,
+    isTrial: false,
     features: [
       "75 qualified leads/month",
       "Digital assistant platform",
@@ -450,7 +469,7 @@ const teaserTiers = [
     ],
     cta: "Start with Starter",
     href: "/signup?plan=starter",
-    variant: "primary" as const,
+    variant: "outline" as const,
   },
   {
     name: "Pro",
@@ -458,6 +477,7 @@ const teaserTiers = [
     period: "/month",
     tagline: "Most popular",
     highlight: true,
+    isTrial: false,
     features: [
       "250 qualified leads/month",
       "Custom branding (your logo)",
@@ -475,6 +495,7 @@ const teaserTiers = [
     period: "/month",
     tagline: "Unlimited leads, full control",
     highlight: false,
+    isTrial: false,
     features: [
       "Up to 1,000 qualified leads/month",
       "Everything in Pro",
@@ -550,15 +571,15 @@ export default function Home() {
               </p>
               <div className="flex flex-col gap-4 lg:items-end lg:text-right">
                 <div className="flex flex-wrap gap-4 lg:justify-end">
-                  <CTAButton size="lg" variant="primary" href="/signup">
-                    Start Free
+                  <CTAButton size="lg" variant="primary" href="/signup?plan=trial">
+                    Start Free Trial
                   </CTAButton>
                   <CTAButton size="lg" variant="outline" href="#how-it-works" withArrow={false}>
                     See how it works
                   </CTAButton>
                 </div>
                 <p className="text-sm text-ink-500">
-                  Free 14-day trial. No credit card required. Upgrade when you&apos;re ready.
+                  14-day free trial. No bank account required. No card needed. Upgrade when you&apos;re ready.
                 </p>
               </div>
             </div>
@@ -739,12 +760,14 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch reveal-stagger">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch reveal-stagger">
             {teaserTiers.map((tier) => (
               <div
                 key={tier.name}
                 className={`relative flex flex-col ${
-                  tier.highlight
+                  tier.isTrial
+                    ? "rounded-2xl p-8 border-2 border-emerald-200 bg-emerald-50"
+                    : tier.highlight
                     ? "bg-ink text-paper rounded-2xl p-8 shadow-xl ring-2 ring-ember pt-12"
                     : "ed-card-ghost"
                 }`}
@@ -756,22 +779,29 @@ export default function Home() {
                     </span>
                   </div>
                 )}
+                {tier.isTrial && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                    <span className="eyebrow bg-emerald-600 text-white px-4 py-1.5 rounded-full whitespace-nowrap">
+                      No card required
+                    </span>
+                  </div>
+                )}
 
-                <p className={`eyebrow mb-1 ${tier.highlight ? "text-ember" : "text-ink-500"}`}>
+                <p className={`eyebrow mb-1 mt-2 ${tier.isTrial ? "text-emerald-700" : tier.highlight ? "text-ember" : "text-ink-500"}`}>
                   {tier.name}
                 </p>
-                <p className={`text-sm leading-snug mb-6 ${tier.highlight ? "text-paper/60" : "text-ink-700"}`}>
+                <p className={`text-sm leading-snug mb-6 ${tier.isTrial ? "text-emerald-600" : tier.highlight ? "text-paper/60" : "text-ink-700"}`}>
                   {tier.tagline}
                 </p>
 
                 <div className="mb-8">
                   <span
-                    className={`font-display font-medium leading-none ${tier.highlight ? "text-paper" : "text-ink"}`}
+                    className={`font-display font-medium leading-none ${tier.isTrial ? "text-emerald-700" : tier.highlight ? "text-paper" : "text-ink"}`}
                     style={{ fontSize: "clamp(2.4rem, 4vw, 3rem)" }}
                   >
                     {tier.price}
                   </span>
-                  <span className={`text-sm ml-1 ${tier.highlight ? "text-paper/50" : "text-ink-500"}`}>
+                  <span className={`text-sm ml-1 ${tier.isTrial ? "text-emerald-600" : tier.highlight ? "text-paper/50" : "text-ink-500"}`}>
                     {tier.period}
                   </span>
                 </div>
@@ -781,12 +811,12 @@ export default function Home() {
                     <li
                       key={feat}
                       className={`flex items-start gap-3 text-sm leading-relaxed ${
-                        tier.highlight ? "text-paper/80" : "text-ink-700"
+                        tier.isTrial ? "text-emerald-700" : tier.highlight ? "text-paper/80" : "text-ink-700"
                       }`}
                     >
                       <svg
                         viewBox="0 0 24 24"
-                        className="w-4 h-4 text-ember flex-shrink-0 mt-0.5"
+                        className={`w-4 h-4 flex-shrink-0 mt-0.5 ${tier.isTrial ? "text-emerald-500" : "text-ember"}`}
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="2.5"
@@ -802,9 +832,9 @@ export default function Home() {
 
                 <CTAButton
                   href={tier.href}
-                  variant={tier.variant}
+                  variant={tier.isTrial ? "primary" : tier.variant}
                   size="md"
-                  className="w-full justify-center"
+                  className={`w-full justify-center ${tier.isTrial ? "!bg-emerald-600 !text-white hover:!bg-emerald-700" : ""}`}
                 >
                   {tier.cta}
                 </CTAButton>
@@ -978,8 +1008,8 @@ export default function Home() {
             Free to start. Live in 5 minutes. No per-job fees, ever.
           </p>
           <div className="mt-12 flex flex-wrap items-center justify-center gap-4 reveal-up">
-            <CTAButton size="lg" variant="solid" href="/signup">
-              Start Free
+            <CTAButton size="lg" variant="solid" href="/signup?plan=trial">
+              Start Free Trial
             </CTAButton>
             <CTAButton size="lg" variant="outline-light" href="/pricing" withArrow={false}>
               See all plans
