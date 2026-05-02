@@ -50,7 +50,7 @@ function OnboardingBanner({ businessName }: { businessName: string | null }) {
           Complete your setup to connect your digital assistant to your website and start capturing leads.
         </p>
         <Link
-          href="/onboarding/website"
+          href="/dashboard/setup"
           className="inline-flex items-center gap-1.5 mt-3 px-4 h-9 rounded-xl bg-ember text-paper text-tiny font-semibold hover:bg-ember-deep transition-colors duration-150 cursor-pointer"
         >
           Complete setup <ArrowRight className="w-3.5 h-3.5" />
