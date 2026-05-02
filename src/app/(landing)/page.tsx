@@ -898,6 +898,71 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══════ 07b · FOR YOUR WEBSITE ════════════════════════ */}
+      <section className="relative py-28 md:py-36 bg-paper overflow-hidden grain">
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center">
+
+            {/* Text */}
+            <div className="reveal-up">
+              <p className="eyebrow text-ink-500 mb-6">For your website</p>
+              <h2 className="display-lg text-ink mb-6">
+                Already have a website?{" "}
+                <em className="italic font-light">Add Qwikly in 5 minutes.</em>
+              </h2>
+              <p className="text-ink-700 text-lg leading-relaxed mb-8 max-w-[42ch]">
+                Paste one line of code into Wix, WordPress, Squarespace, or any custom site. Your digital assistant goes live instantly — no developer needed.
+              </p>
+              <CTAButton href="/connect-your-website" size="lg">
+                See how it works
+              </CTAButton>
+            </div>
+
+            {/* Browser + widget mockup */}
+            <div className="reveal-up flex justify-center md:justify-end">
+              <div className="relative">
+                <div className="w-72 bg-white rounded-2xl shadow-xl border border-ink/[0.08] overflow-hidden">
+                  {/* Browser chrome */}
+                  <div className="bg-[#F1F3F4] px-3 py-2.5 flex items-center gap-2 border-b border-ink/[0.06]">
+                    <div className="flex gap-1.5">
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
+                    </div>
+                    <div className="flex-1 bg-white rounded-md px-3 py-1 text-[10px] text-ink/30 border border-ink/[0.08]">
+                      yoursite.co.za
+                    </div>
+                  </div>
+                  {/* Page body */}
+                  <div className="px-5 py-6 bg-gray-50 min-h-[130px] relative">
+                    <div className="space-y-2 mb-4">
+                      <div className="h-2.5 bg-ink/8 rounded w-3/4" />
+                      <div className="h-2 bg-ink/5 rounded w-full" />
+                      <div className="h-2 bg-ink/5 rounded w-5/6" />
+                    </div>
+                    {/* Widget launcher */}
+                    <div className="absolute bottom-4 right-4">
+                      <div className="inline-flex items-center gap-1.5 bg-ember text-white text-[10px] font-bold px-3.5 py-2 rounded-full shadow-lg shadow-ember/30">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                        </svg>
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
+                        Reply in 30s
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Badge */}
+                <div className="absolute -top-3 -right-3 bg-ember text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-md shadow-ember/30 whitespace-nowrap">
+                  5 min setup
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       {/* ═══════ 08 · FINAL CTA ══════════════════════════════════ */}
       <section className="relative py-32 md:py-44 bg-ink text-paper overflow-hidden grain-dark">
         <div className="ember-blob w-[900px] h-[500px] top-0 left-1/2 -translate-x-1/2" />

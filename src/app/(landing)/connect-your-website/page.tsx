@@ -122,23 +122,23 @@ export default function ConnectYourWebsitePage() {
               style={{ letterSpacing: "-0.03em" }}>
             Why not just use a contact form?
           </h2>
-          <div className="overflow-x-auto rounded-2xl border border-line">
-            <table className="w-full text-[0.9rem]">
+          <div className="overflow-x-auto rounded-2xl border border-line -mx-2 px-2">
+            <table className="w-full text-[0.9rem] min-w-[540px]">
               <thead>
                 <tr className="bg-paper-deep border-b border-line">
-                  <th className="text-left py-4 px-6 font-medium text-ink-500 w-[35%]" />
-                  <th className="py-4 px-4 font-medium text-ink-500 text-center">Contact form</th>
-                  <th className="py-4 px-4 font-medium text-ink-500 text-center">Generic chatbot</th>
-                  <th className="py-4 px-4 font-semibold text-ember text-center">Qwikly</th>
+                  <th className="text-left py-4 px-5 font-medium text-ink-500 w-[38%]" />
+                  <th className="py-4 px-3 font-medium text-ink-500 text-center whitespace-nowrap">Contact form</th>
+                  <th className="py-4 px-3 font-medium text-ink-500 text-center whitespace-nowrap">Generic chatbot</th>
+                  <th className="py-4 px-3 font-semibold text-ember text-center whitespace-nowrap">Qwikly</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARISON.map((row, i) => (
                   <tr key={row.label} className={i % 2 === 0 ? "bg-paper" : "bg-paper-deep"}>
-                    <td className="py-4 px-6 text-ink-700 font-medium">{row.label}</td>
-                    <td className="py-4 px-4 text-center text-ink-500">{row.form}</td>
-                    <td className="py-4 px-4 text-center text-ink-500">{row.chatbot}</td>
-                    <td className="py-4 px-4 text-center font-semibold text-ember">{row.qwikly}</td>
+                    <td className="py-4 px-5 text-ink-700 font-medium whitespace-nowrap">{row.label}</td>
+                    <td className="py-4 px-3 text-center text-ink-500">{row.form}</td>
+                    <td className="py-4 px-3 text-center text-ink-500">{row.chatbot}</td>
+                    <td className="py-4 px-3 text-center font-semibold text-ember">{row.qwikly}</td>
                   </tr>
                 ))}
               </tbody>
