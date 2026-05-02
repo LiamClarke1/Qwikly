@@ -79,17 +79,17 @@ async function requestPaymentMethodUpdate(): Promise<string | null> {
 
 // ─── Pricing constants ────────────────────────────────────────────────────────
 
-const MONTHLY: Record<PlanId, number> = { starter: 0, pro: 599, premium: 1299 };
-// Annual = 10 months (2 months free)
-const ANNUAL:  Record<PlanId, number> = { starter: 0, pro: 5990, premium: 12990 };
+const MONTHLY: Record<PlanId, number> = { starter: 399, pro: 999, premium: 2499 };
+// Annual = 15% discount
+const ANNUAL:  Record<PlanId, number> = { starter: 4069, pro: 10190, premium: 25490 };
 
 const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean; features: string[] }> = {
   starter: {
     name: "Starter",
-    tagline: "Free forever — no card required",
+    tagline: "Most affordable entry point",
     highlight: false,
     features: [
-      "25 qualified leads/month",
+      "75 qualified leads/month",
       "Website chat widget",
       "Email lead delivery",
       '"Powered by Qwikly" branding',
@@ -101,7 +101,7 @@ const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean;
     tagline: "Most popular for growing businesses",
     highlight: true,
     features: [
-      "200 qualified leads/month",
+      "250 qualified leads/month",
       "Custom branding (your logo)",
       "Custom greeting + qualifying questions",
       "Lead exports (CSV)",
@@ -110,12 +110,11 @@ const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean;
   },
   premium: {
     name: "Premium",
-    tagline: "Unlimited leads, unlimited potential",
+    tagline: "Maximum leads, dedicated support",
     highlight: false,
     features: [
-      "Unlimited qualified leads",
+      "1,000 qualified leads/month",
       "Everything in Pro, plus:",
-      "WhatsApp routing (coming soon)",
       "Calendar integration (coming soon)",
       "API access",
       "Dedicated support",
@@ -273,9 +272,10 @@ export default function BillingPage() {
   const [invoices, setInvoices] = useState<SubscriptionInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingChange, setPendingChange] = useState<{ plan: PlanId; cycle: BillingCycle } | null>(null);
-  // Resolve legacy plan IDs on load
+  // Resolve legacy/trial plan IDs for display
   const resolvedPlan = (sub?.plan as string) === "lite" ? "starter" as PlanId :
-    (sub?.plan as string) === "business" ? "premium" as PlanId : (sub?.plan as PlanId);
+    (sub?.plan as string) === "business" ? "premium" as PlanId :
+    (sub?.plan as string) === "trial" ? "pro" as PlanId : (sub?.plan as PlanId);
   const [showCancel, setShowCancel] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
 
@@ -316,7 +316,7 @@ export default function BillingPage() {
   const isMonthly = effectiveSub.cycle === "monthly";
   const monthlyPrice = MONTHLY[currentPlanId];
   const displayPrice = isMonthly ? monthlyPrice : Math.round(ANNUAL[currentPlanId] / 12);
-  const annualSaving = monthlyPrice * 2;
+  const annualSaving = Math.round(monthlyPrice * 12 * 0.15);
 
   async function handlePlanChange(plan: PlanId, cycle: BillingCycle) {
     const url = await requestPlanChange(plan, cycle);
@@ -389,32 +389,36 @@ export default function BillingPage() {
             </div>
           </div>
 
-          <div className="mt-5 pt-4 border-t border-line/50 flex items-center gap-2">
-            <Calendar className={cn("w-4 h-4 shrink-0", effectiveSub.cancelAtPeriodEnd ? "text-warning" : "text-fg-muted")} />
-            <p className="text-small text-fg-muted">
-              {effectiveSub.cancelAtPeriodEnd ? (
-                <>
-                  <span className="text-warning font-medium">Cancels on</span>{" "}
-                  <span className="text-fg font-medium">{fmtDateLong(effectiveSub.renewsAt ?? "")}</span>
-                </>
-              ) : (
-                <>
-                  Next renewal{" "}
-                  <span className="text-fg font-medium">{fmtDateLong(effectiveSub.renewsAt ?? "")}</span>
-                </>
-              )}
-            </p>
-          </div>
+          {effectiveSub.renewsAt && (
+            <div className="mt-5 pt-4 border-t border-line/50 flex items-center gap-2">
+              <Calendar className={cn("w-4 h-4 shrink-0", effectiveSub.cancelAtPeriodEnd ? "text-warning" : "text-fg-muted")} />
+              <p className="text-small text-fg-muted">
+                {effectiveSub.cancelAtPeriodEnd ? (
+                  <>
+                    <span className="text-warning font-medium">Cancels on</span>{" "}
+                    <span className="text-fg font-medium">{fmtDateLong(effectiveSub.renewsAt)}</span>
+                  </>
+                ) : (
+                  <>
+                    Next renewal{" "}
+                    <span className="text-fg font-medium">{fmtDateLong(effectiveSub.renewsAt)}</span>
+                  </>
+                )}
+              </p>
+            </div>
+          )}
         </div>
 
-        <div className="px-5 py-3 border-t border-line/50">
-          <button
-            onClick={() => setShowCancel(true)}
-            className="text-tiny text-fg-subtle hover:text-danger cursor-pointer transition-colors"
-          >
-            Cancel subscription
-          </button>
-        </div>
+        {effectiveSub.renewsAt && (
+          <div className="px-5 py-3 border-t border-line/50">
+            <button
+              onClick={() => setShowCancel(true)}
+              className="text-tiny text-fg-subtle hover:text-danger cursor-pointer transition-colors"
+            >
+              Cancel subscription
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── B: Change Plan ───────────────────────────────────────────────── */}
@@ -628,9 +632,9 @@ export default function BillingPage() {
           onConfirm={() => handlePlanChange(pendingChange.plan, pendingChange.cycle)}
         />
       )}
-      {showCancel && (
+      {showCancel && effectiveSub.renewsAt && (
         <CancelModal
-          renewsAt={effectiveSub.renewsAt ?? ""}
+          renewsAt={effectiveSub.renewsAt}
           onClose={() => setShowCancel(false)}
           onConfirm={handleCancel}
         />
