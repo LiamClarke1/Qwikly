@@ -55,6 +55,21 @@ export async function GET(request: NextRequest) {
           billing_cycle: "monthly",
           status: "active",
         });
+
+        // Create clients row so the onboarding wizard can find the user
+        const { data: existingClient } = await db
+          .from("clients")
+          .select("id")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+
+        if (!existingClient) {
+          await db.from("clients").insert({
+            auth_user_id: user.id,
+            business_name: name,
+            onboarding_step: 1,
+          });
+        }
       }
     }
 

@@ -39,27 +39,40 @@ export async function POST(req: NextRequest) {
   if (data.user) {
     const db = supabaseAdmin();
 
-    const { error: bizError } = await db.from("businesses").insert({
+    const { error: bizError } = await db.from("businesses").upsert({
       user_id: data.user.id,
       name: businessName ?? "",
       contact_email: email,
-    });
+    }, { onConflict: "user_id" });
 
     if (bizError) {
-      await supabaseAdmin().auth.admin.deleteUser(data.user.id);
       return NextResponse.json({ error: "account_setup_failed" }, { status: 500 });
     }
 
-    const { error: subError } = await db.from("subscriptions").insert({
+    const { error: subError } = await db.from("subscriptions").upsert({
       user_id: data.user.id,
       plan: "starter",
       billing_cycle: "monthly",
       status: "active",
-    });
+    }, { onConflict: "user_id" });
 
     if (subError) {
-      await supabaseAdmin().auth.admin.deleteUser(data.user.id);
       return NextResponse.json({ error: "account_setup_failed" }, { status: 500 });
+    }
+
+    // Create a clients row if one doesn't exist — the onboarding wizard reads from this table
+    const { data: existingClient } = await db
+      .from("clients")
+      .select("id")
+      .eq("auth_user_id", data.user.id)
+      .maybeSingle();
+
+    if (!existingClient) {
+      await db.from("clients").insert({
+        auth_user_id: data.user.id,
+        business_name: businessName ?? "",
+        onboarding_step: 1,
+      });
     }
   }
 
