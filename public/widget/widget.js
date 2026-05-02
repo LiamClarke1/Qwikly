@@ -414,8 +414,7 @@
   }
 
   function showNudge() {
-    if (sessionStorage.getItem("qwikly_nudge") || panelOpen) return;
-    sessionStorage.setItem("qwikly_nudge", "1");
+    if (panelOpen) return;
 
     var n = document.createElement("div");
     n.id = "nudge";
@@ -458,10 +457,8 @@
     launcher.addEventListener("click", openPanel);
     fireEvent("widget_loaded");
 
-    // Show nudge once after 3 s to draw attention to the launcher
-    if (!sessionStorage.getItem("qwikly_nudge")) {
-      setTimeout(showNudge, 3000);
-    }
+    // Show nudge 5 s after page load to draw attention to the launcher
+    setTimeout(showNudge, 5000);
   }
 
   // ── Public API ─────────────────────────────────────────────
