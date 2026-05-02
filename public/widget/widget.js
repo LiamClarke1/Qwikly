@@ -110,7 +110,7 @@
     "#nudge.show{opacity:1;transform:translateY(0)}",
     "#nudge::after{content:'';position:absolute;bottom:-7px;right:28px;width:13px;height:13px;background:#fff;transform:rotate(45deg);border-right:1px solid rgba(0,0,0,.06);border-bottom:1px solid rgba(0,0,0,.06)}",
     "#nudge-txt{font-size:13px;font-weight:600;line-height:1.45;flex:1}",
-    "#nudge-sub{font-size:11px;font-weight:400;color:#6B7280;margin-top:2px}",
+    "#nudge-sub{font-size:12.7px;font-weight:400;color:#6B7280;margin-top:2px}",
     "#nudge-x{background:none;border:none;color:#9CA3AF;cursor:pointer;font-size:18px;line-height:1;flex-shrink:0;padding:0;margin-top:-1px;transition:color .15s}",
     "#nudge-x:hover{color:#6B7280}",
   ].join("");
@@ -433,7 +433,7 @@
     // Small delay so the element is painted before the transition fires
     setTimeout(function () { n.classList.add("show"); }, 20);
 
-    var timer = setTimeout(dismissNudge, 8000);
+    var timer = setTimeout(dismissNudge, 16000);
 
     if (closeBtn) {
       closeBtn.addEventListener("click", function (e) {
