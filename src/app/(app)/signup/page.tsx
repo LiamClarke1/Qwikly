@@ -62,12 +62,12 @@ const PLANS: {
   {
     id: "starter",
     name: "Starter",
-    price: "Free",
-    sub: "forever",
-    cta: "Start Free",
-    noCard: true,
+    price: "R399",
+    sub: "/month",
+    cta: "Start with Starter",
+    noCard: false,
     features: [
-      "25 qualified leads/month",
+      "75 qualified leads/month",
       "Digital assistant",
       "Email lead delivery",
       '"Powered by Qwikly" branding',
@@ -77,13 +77,13 @@ const PLANS: {
   {
     id: "pro",
     name: "Pro",
-    price: "R599",
+    price: "R999",
     sub: "/month",
     badge: "Most Popular",
     cta: "Choose Pro",
     noCard: false,
     features: [
-      "200 qualified leads/month",
+      "250 qualified leads/month",
       "Custom branding (your logo)",
       "Custom greeting + qualifying questions",
       "Lead exports (CSV)",
@@ -93,14 +93,13 @@ const PLANS: {
   {
     id: "premium",
     name: "Premium",
-    price: "R1,299",
+    price: "R2,499",
     sub: "/month",
     cta: "Choose Premium",
     noCard: false,
     features: [
-      "Unlimited qualified leads",
+      "Up to 1,000 qualified leads/month",
       "Everything in Pro, plus:",
-      "WhatsApp routing (coming soon)",
       "Calendar integration (coming soon)",
       "API access",
       "Dedicated support",
@@ -283,7 +282,11 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
     );
   }
 
-  const planLabel = plan === "starter" ? "Free Starter" : plan === "pro" ? "Pro — R599/mo" : "Premium — R1,299/mo";
+  const planLabel =
+    plan === "trial" ? "Trial — Free (14 days)" :
+    plan === "starter" ? "Starter — R399/mo" :
+    plan === "pro" ? "Pro — R999/mo" :
+    "Premium — R2,499/mo";
 
   return (
     <div className="w-full max-w-md">

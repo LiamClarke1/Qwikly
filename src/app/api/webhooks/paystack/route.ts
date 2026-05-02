@@ -166,10 +166,17 @@ async function handleSubscriptionDisable(
   const subscriptionCode = data.subscription_code as string;
   if (!subscriptionCode) return;
 
-  await db
+  const { data: sub } = await db
     .from("subscriptions")
     .update({ status: "canceled" })
-    .eq("paystack_subscription_code", subscriptionCode);
+    .eq("paystack_subscription_code", subscriptionCode)
+    .select("user_id")
+    .maybeSingle();
+
+  // Downgrade clients.plan to starter when subscription is cancelled
+  if (sub?.user_id) {
+    await db.from("clients").update({ plan: "starter" }).eq("auth_user_id", sub.user_id);
+  }
 
   console.log("[paystack-webhook] subscription.disable processed:", subscriptionCode);
 }

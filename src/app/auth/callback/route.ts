@@ -7,6 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
+  const plan = requestUrl.searchParams.get("plan");
   const next = requestUrl.searchParams.get("next") ?? "/dashboard";
 
   if (code) {
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Check if this user has any clients yet; if not, send them to setup.
+    // Check if this user has any clients yet; if not, send them to onboarding.
     const { data: client } = await supabase
       .from("clients")
       .select("id")
@@ -65,7 +66,10 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     if (!client) {
-      return NextResponse.redirect(new URL("/dashboard/setup", requestUrl.origin));
+      const onboardingPath = plan
+        ? `/onboarding/website?plan=${plan}`
+        : "/onboarding/website";
+      return NextResponse.redirect(new URL(onboardingPath, requestUrl.origin));
     }
   }
 

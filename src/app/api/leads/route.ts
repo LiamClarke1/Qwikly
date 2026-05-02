@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { v2Auth } from "@/lib/v2-auth";
 import { resend, FROM } from "@/lib/resend";
+import { PLAN_CONFIG, resolvePlan } from "@/lib/plan";
 import {
   leadNotificationHtml,
   capReachedNotificationHtml,
@@ -74,11 +75,13 @@ export async function POST(req: NextRequest) {
 
   const plan = (sub?.plan ?? "starter") as "starter" | "pro" | "premium";
   const usagePeriod = await ensureUsagePeriod(db, business.id, sub);
+  const planConfig = PLAN_CONFIG[resolvePlan(plan)];
+  const leadCap = planConfig.leadLimit; // null = no hard cap (premium)
 
-  // ── Starter cap ──────────────────────────────────────────────────────────────
-  if (plan === "starter" && usagePeriod.leads_captured >= 25) {
+  // ── Lead cap enforcement ──────────────────────────────────────────────────────
+  if (leadCap !== null && usagePeriod.leads_captured >= leadCap) {
     // Only email on the first blocked request (when exactly at cap)
-    if (usagePeriod.leads_captured === 25) {
+    if (usagePeriod.leads_captured === leadCap) {
       resend.emails
         .send({
           from: FROM,
@@ -117,12 +120,13 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Increment usage ───────────────────────────────────────────────────────────
-  const isProOverCap = plan === "pro" && usagePeriod.leads_captured >= 200;
+  // Track top-up count when a paid plan goes over its included cap (soft overflow for billing)
+  const isOverCap = leadCap !== null && usagePeriod.leads_captured >= leadCap;
   await db
     .from("usage_periods")
     .update({
       leads_captured: usagePeriod.leads_captured + 1,
-      ...(isProOverCap ? { top_up_count: usagePeriod.top_up_count + 1 } : {}),
+      ...(isOverCap ? { top_up_count: usagePeriod.top_up_count + 1 } : {}),
     })
     .eq("id", usagePeriod.id);
 
