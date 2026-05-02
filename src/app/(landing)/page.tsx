@@ -594,7 +594,8 @@ export default function Home() {
       </section>
 
       {/* ═══════ 02 · SOCIAL PROOF MARQUEE ══════════════════════ */}
-      <section className="py-12 border-t border-b border-ink/[0.07]">
+      <section className="py-12 relative">
+        <div className="absolute top-0 inset-x-0 shimmer-line" />
         <p className="eyebrow text-center text-ink-400 mb-8 px-6">Built for South African businesses</p>
         <div className="relative overflow-hidden ticker-pause">
           {/* Left fade */}
@@ -616,6 +617,7 @@ export default function Home() {
             ))}
           </div>
         </div>
+        <div className="absolute bottom-0 inset-x-0 shimmer-line" />
       </section>
 
       {/* ═══════ 03 · HOW IT WORKS ═══════════════════════════════ */}
