@@ -22,7 +22,7 @@ function GoogleIcon() {
 const proofPoints = [
   { icon: MessageSquare, text: "Captures and qualifies every website visitor — even at 2am" },
   { icon: Calendar, text: "Leads delivered to your email the moment they're captured" },
-  { icon: Zap, text: "Free plan available — Pro from R599/month, no per-lead fees" },
+  { icon: Zap, text: "Free plan available — Pro from R999/month, no per-lead fees" },
 ];
 
 export default function LoginPage() {
@@ -70,32 +70,29 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="dark min-h-screen [min-height:100dvh] flex bg-[#07080B]">
+    <main className="min-h-screen [min-height:100dvh] flex bg-paper">
       {/* Left panel — brand */}
-      <div className="hidden lg:flex lg:w-[45%] shrink-0 flex-col justify-between p-12 bg-[#0D111A] border-r border-white/[0.06] relative overflow-hidden">
-        {/* Subtle ember glow */}
-        <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full bg-brand/[0.08] blur-3xl pointer-events-none" />
+      <div className="hidden lg:flex lg:w-[45%] shrink-0 flex-col justify-between p-12 bg-paper-deep border-r border-ink/[0.08] relative overflow-hidden">
+        <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full bg-ember/[0.06] blur-3xl pointer-events-none" />
 
         <div>
           <a href="/" className="inline-flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-grad-brand flex items-center justify-center shadow-glow">
+            <div className="w-9 h-9 rounded-xl bg-grad-brand flex items-center justify-center">
               <Zap className="w-4 h-4 text-white" strokeWidth={2.5} />
             </div>
-            <span className="text-h3 text-fg font-semibold">Qwikly</span>
+            <span className="font-heading text-base text-ink font-semibold tracking-tight">Qwikly</span>
           </a>
         </div>
 
         <div className="space-y-8 relative">
           <div>
-            <p className="text-tiny uppercase tracking-wider text-fg-subtle font-semibold mb-4">
-              Your digital front desk
-            </p>
-            <h1 className="font-display text-3xl text-fg leading-tight">
+            <p className="eyebrow text-ink-500 mb-4">Your digital front desk</p>
+            <h1 className="font-display text-[2.6rem] text-ink leading-[1.05] tracking-[-0.03em]">
               Your phone rings while you&rsquo;re up a ladder.
               <br />
-              <span className="text-brand italic font-light">We answer it.</span>
+              <em className="text-ember italic font-light">We answer it.</em>
             </h1>
-            <p className="text-fg-muted mt-4 text-sm leading-relaxed max-w-sm">
+            <p className="text-ink-500 mt-4 text-sm leading-relaxed max-w-sm">
               While you&rsquo;re on the job, Qwikly handles every enquiry, qualifies the lead, and fills your calendar automatically.
             </p>
           </div>
@@ -105,19 +102,17 @@ export default function LoginPage() {
               const Icon = p.icon;
               return (
                 <div key={i} className="flex items-center gap-3.5">
-                  <div className="w-9 h-9 rounded-xl bg-brand/[0.12] border border-brand/20 flex items-center justify-center shrink-0">
-                    <Icon className="w-4 h-4 text-brand" />
+                  <div className="w-9 h-9 rounded-xl bg-ember/[0.10] border border-ember/20 flex items-center justify-center shrink-0">
+                    <Icon className="w-4 h-4 text-ember" />
                   </div>
-                  <span className="text-fg text-sm">{p.text}</span>
+                  <span className="text-ink-700 text-sm">{p.text}</span>
                 </div>
               );
             })}
           </div>
         </div>
 
-        <p className="text-fg-subtle text-tiny relative">
-          Trusted by South African service businesses
-        </p>
+        <p className="eyebrow text-ink-400 relative">Trusted by South African service businesses</p>
       </div>
 
       {/* Right panel — form */}
@@ -126,16 +121,16 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="lg:hidden mb-8">
             <a href="/" className="inline-flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-grad-brand flex items-center justify-center shadow-glow">
+              <div className="w-8 h-8 rounded-xl bg-grad-brand flex items-center justify-center">
                 <Zap className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
               </div>
-              <span className="text-h3 text-fg font-semibold">Qwikly</span>
+              <span className="font-heading text-base text-ink font-semibold">Qwikly</span>
             </a>
           </div>
 
           <div className="mb-8">
-            <h2 className="text-h1 text-fg">Welcome back</h2>
-            <p className="text-fg-muted text-small mt-1.5">Sign in to your dashboard</p>
+            <h2 className="font-display text-[2rem] text-ink font-bold tracking-[-0.03em] leading-tight">Welcome back.</h2>
+            <p className="text-ink-500 text-sm mt-1.5">Sign in to your dashboard</p>
           </div>
 
           {/* Google — primary path */}
@@ -143,10 +138,10 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-3 h-12 bg-white/[0.06] border border-line-strong rounded-xl text-fg text-small font-medium hover:bg-white/[0.10] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-200"
+            className="w-full flex items-center justify-center gap-3 h-12 bg-white border border-ink/[0.14] rounded-xl text-ink text-sm font-medium hover:bg-ink/[0.03] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-200 shadow-sm"
           >
             {googleLoading ? (
-              <div className="w-4 h-4 rounded-full border-2 border-fg-subtle border-t-fg animate-spin" />
+              <div className="w-4 h-4 rounded-full border-2 border-ink/20 border-t-ink animate-spin" />
             ) : (
               <GoogleIcon />
             )}
@@ -154,14 +149,14 @@ export default function LoginPage() {
           </button>
 
           <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-line" />
-            <span className="text-tiny text-fg-subtle">or sign in with email</span>
-            <div className="flex-1 h-px bg-line" />
+            <div className="flex-1 h-px bg-ink/[0.10]" />
+            <span className="eyebrow text-ink-400">or sign in with email</span>
+            <div className="flex-1 h-px bg-ink/[0.10]" />
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-tiny text-fg font-medium mb-2">
+              <label htmlFor="email" className="block text-xs text-ink font-medium mb-2">
                 Email address
               </label>
               <input
@@ -172,16 +167,16 @@ export default function LoginPage() {
                 required
                 autoComplete="email"
                 placeholder="you@example.com"
-                className="w-full h-11 bg-white/[0.04] border border-line rounded-xl px-4 text-small text-fg placeholder:text-fg-faint focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/40 transition-all duration-200"
+                className="w-full h-11 bg-white border border-ink/[0.14] rounded-xl px-4 text-sm text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="block text-tiny text-fg font-medium">
+                <label htmlFor="password" className="block text-xs text-ink font-medium">
                   Password
                 </label>
-                <Link href="/forgot-password" className="text-tiny text-brand hover:text-brand-hover transition-colors duration-200">
+                <Link href="/forgot-password" className="text-xs text-ember hover:text-ember-deep transition-colors duration-200">
                   Forgot password?
                 </Link>
               </div>
@@ -194,12 +189,12 @@ export default function LoginPage() {
                   required
                   autoComplete="current-password"
                   placeholder="Enter your password"
-                  className="w-full h-11 bg-white/[0.04] border border-line rounded-xl px-4 pr-12 text-small text-fg placeholder:text-fg-faint focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/40 transition-all duration-200"
+                  className="w-full h-11 bg-white border border-ink/[0.14] rounded-xl px-4 pr-12 text-sm text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-fg-subtle hover:text-fg cursor-pointer transition-colors duration-200"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink cursor-pointer transition-colors duration-200"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -208,18 +203,18 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="bg-danger/[0.08] border border-danger/25 rounded-xl px-4 py-3">
-                <p className="text-danger text-small">{error}</p>
+              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                <p className="text-red-700 text-sm">{error}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading || !email || !password}
-              className="w-full h-12 bg-grad-brand text-white text-small font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:brightness-110 active:brightness-95 transition-all duration-150 shadow-[0_8px_24px_-8px_rgba(232,90,44,0.4)]"
+              className="w-full h-12 bg-ink text-paper text-sm font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:bg-ink-900 active:scale-[0.99] transition-all duration-150"
             >
               {loading ? (
-                <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                <div className="w-4 h-4 rounded-full border-2 border-paper/30 border-t-paper animate-spin" />
               ) : (
                 <>
                   Sign in
@@ -229,9 +224,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-small text-fg-muted mt-8">
+          <p className="text-center text-sm text-ink-500 mt-8">
             Don&rsquo;t have an account?{" "}
-            <Link href="/signup" className="text-brand hover:text-brand-hover font-medium transition-colors duration-200">
+            <Link href="/signup" className="text-ember hover:text-ember-deep font-medium transition-colors duration-200">
               Start free trial
             </Link>
           </p>

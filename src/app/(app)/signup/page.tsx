@@ -38,9 +38,9 @@ function PasswordStrength({ password }: { password: string }) {
           {c.valid ? (
             <Check className="w-3.5 h-3.5 text-success" />
           ) : (
-            <XIcon className="w-3.5 h-3.5 text-fg-subtle" />
+            <XIcon className="w-3.5 h-3.5 text-ink-400" />
           )}
-          <span className={`text-tiny ${c.valid ? "text-success" : "text-fg-subtle"}`}>{c.label}</span>
+          <span className={`text-tiny ${c.valid ? "text-success" : "text-ink-400"}`}>{c.label}</span>
         </div>
       ))}
     </div>
@@ -119,8 +119,8 @@ function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
   return (
     <div className="w-full max-w-3xl">
       <div className="mb-8">
-        <h2 className="text-h1 text-fg">Choose your plan</h2>
-        <p className="text-fg-muted text-small mt-1.5">
+        <h2 className="text-h1 text-ink">Choose your plan</h2>
+        <p className="text-ink-500 text-small mt-1.5">
           30-day money-back guarantee on Pro and Premium. Pay annually and get 2 months free.
         </p>
       </div>
@@ -135,17 +135,17 @@ function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
               onClick={() => setSelected(plan.id)}
               className={`relative text-left rounded-2xl border p-5 transition-all duration-200 cursor-pointer flex flex-col gap-4 ${
                 isSelected
-                  ? "border-brand bg-brand/[0.06] ring-1 ring-brand/30"
-                  : "border-line hover:border-line-strong bg-white/[0.03]"
+                  ? "border-ember bg-ember/[0.06] ring-1 ring-brand/30"
+                  : "border-line hover:border-ink/[0.20] bg-white/70"
               }`}
             >
               {plan.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-brand text-white text-[10px] font-bold tracking-wide whitespace-nowrap">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-ember text-white text-[10px] font-bold tracking-wide whitespace-nowrap">
                   {plan.badge}
                 </span>
               )}
               {isSelected && (
-                <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-brand flex items-center justify-center">
+                <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-ember flex items-center justify-center">
                   <Check className="w-3 h-3 text-white" />
                 </div>
               )}
@@ -153,14 +153,14 @@ function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
                 <p className="text-fg text-small font-semibold">{plan.name}</p>
                 <p className="text-fg mt-1">
                   <span className="text-2xl font-bold num">{plan.price}</span>
-                  <span className="text-fg-subtle text-tiny ml-1">{plan.sub}</span>
+                  <span className="text-ink-400 text-tiny ml-1">{plan.sub}</span>
                 </p>
               </div>
               <ul className="space-y-2 flex-1">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-2">
-                    <Check className="w-3.5 h-3.5 text-brand mt-0.5 shrink-0" />
-                    <span className="text-tiny text-fg-muted leading-relaxed">{f}</span>
+                    <Check className="w-3.5 h-3.5 text-ember mt-0.5 shrink-0" />
+                    <span className="text-tiny text-ink-500 leading-relaxed">{f}</span>
                   </li>
                 ))}
               </ul>
@@ -178,7 +178,7 @@ function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
         <ArrowRight className="w-4 h-4" />
       </button>
 
-      <p className="text-center text-tiny text-fg-subtle mt-4">
+      <p className="text-center text-tiny text-ink-400 mt-4">
         No setup fee · No per-lead fees · Cancel anytime
       </p>
     </div>
@@ -266,8 +266,8 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
           <CheckCircle className="w-8 h-8 text-success" />
         </div>
         <div>
-          <h2 className="text-h1 text-fg">Check your email</h2>
-          <p className="text-fg-muted text-small mt-3 leading-relaxed">
+          <h2 className="text-h1 text-ink">Check your email</h2>
+          <p className="text-ink-500 text-small mt-3 leading-relaxed">
             We sent a confirmation link to{" "}
             <span className="text-fg font-medium">{email}</span>.
             Click it to activate your account, then sign in.
@@ -290,17 +290,17 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
       <button
         type="button"
         onClick={onBack}
-        className="flex items-center gap-1 text-tiny text-fg-muted hover:text-fg transition-colors duration-150 cursor-pointer mb-6"
+        className="flex items-center gap-1 text-tiny text-ink-500 hover:text-fg transition-colors duration-150 cursor-pointer mb-6"
       >
         <XIcon className="w-3.5 h-3.5" /> Change plan
       </button>
 
       <div className="mb-6">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand/10 border border-brand/20 text-tiny font-semibold text-brand mb-3">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ember/10 border border-ember/20 text-tiny font-semibold text-ember mb-3">
           <Check className="w-3 h-3" /> {planLabel}
         </div>
-        <h2 className="text-h1 text-fg">Create your account</h2>
-        <p className="text-fg-muted text-small mt-1.5">
+        <h2 className="text-h1 text-ink">Create your account</h2>
+        <p className="text-ink-500 text-small mt-1.5">
           {plan === "starter" ? "No card needed. Live in 5 minutes." : "30-day money-back guarantee."}
         </p>
       </div>
@@ -310,28 +310,28 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
         type="button"
         onClick={handleGoogleSignIn}
         disabled={googleLoading}
-        className="w-full flex items-center justify-center gap-3 h-12 bg-white/[0.06] border border-line-strong rounded-xl text-fg text-small font-medium hover:bg-white/[0.10] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-200"
+        className="w-full flex items-center justify-center gap-3 h-12 bg-white border border-ink/[0.14] rounded-xl text-ink text-small font-medium hover:bg-ink/[0.04] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-colors duration-200"
       >
         {googleLoading ? (
-          <div className="w-4 h-4 rounded-full border-2 border-fg-subtle border-t-fg animate-spin" />
+          <div className="w-4 h-4 rounded-full border-2 border-ink/20 border-t-ink animate-spin" />
         ) : (
           <GoogleIcon />
         )}
         {googleLoading ? "Redirecting…" : "Continue with Google"}
         {!googleLoading && (
-          <span className="ml-auto text-tiny text-brand font-semibold">Recommended</span>
+          <span className="ml-auto text-tiny text-ember font-semibold">Recommended</span>
         )}
       </button>
 
       <div className="flex items-center gap-3 my-5">
-        <div className="flex-1 h-px bg-line" />
-        <span className="text-tiny text-fg-subtle">or sign up with email</span>
-        <div className="flex-1 h-px bg-line" />
+        <div className="flex-1 h-px bg-ink/[0.10]" />
+        <span className="text-tiny text-ink-400">or sign up with email</span>
+        <div className="flex-1 h-px bg-ink/[0.10]" />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="business_name" className="block text-tiny text-fg font-medium mb-2">
+          <label htmlFor="business_name" className="block text-tiny text-ink font-medium mb-2">
             Business name
           </label>
           <input
@@ -342,12 +342,12 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
             required
             autoComplete="organization"
             placeholder="Acme Plumbing"
-            className="w-full h-11 bg-white/[0.04] border border-line rounded-xl px-4 text-small text-fg placeholder:text-fg-faint focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/40 transition-all duration-200"
+            className="w-full h-11 bg-white border border-ink/[0.14]rounded-xl px-4 text-small text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-tiny text-fg font-medium mb-2">
+          <label htmlFor="email" className="block text-tiny text-ink font-medium mb-2">
             Email address
           </label>
           <input
@@ -358,12 +358,12 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
             required
             autoComplete="email"
             placeholder="you@example.com"
-            className="w-full h-11 bg-white/[0.04] border border-line rounded-xl px-4 text-small text-fg placeholder:text-fg-faint focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/40 transition-all duration-200"
+            className="w-full h-11 bg-white border border-ink/[0.14]rounded-xl px-4 text-small text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-tiny text-fg font-medium mb-2">
+          <label htmlFor="password" className="block text-tiny text-ink font-medium mb-2">
             Password
           </label>
           <div className="relative">
@@ -375,12 +375,12 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
               required
               autoComplete="new-password"
               placeholder="At least 8 characters"
-              className="w-full h-11 bg-white/[0.04] border border-line rounded-xl px-4 pr-12 text-small text-fg placeholder:text-fg-faint focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand/40 transition-all duration-200"
+              className="w-full h-11 bg-white border border-ink/[0.14]rounded-xl px-4 pr-12 text-small text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-fg-subtle hover:text-fg cursor-pointer transition-colors duration-200"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-400 hover:text-fg cursor-pointer transition-colors duration-200"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -390,8 +390,8 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
         </div>
 
         {error && (
-          <div className="bg-danger/[0.08] border border-danger/25 rounded-xl px-4 py-3">
-            <p className="text-danger text-small">{error}</p>
+          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+            <p className="text-red-700 text-sm">{error}</p>
           </div>
         )}
 
@@ -408,14 +408,14 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
         </button>
       </form>
 
-      <p className="text-center text-small text-fg-muted mt-8">
+      <p className="text-center text-small text-ink-500 mt-8">
         Already have an account?{" "}
-        <Link href="/login" className="text-brand hover:text-brand-hover font-medium transition-colors duration-200">
+        <Link href="/login" className="text-ember hover:text-ember-deep font-medium transition-colors duration-200">
           Sign in
         </Link>
       </p>
 
-      <p className="text-center text-tiny text-fg-subtle mt-4">
+      <p className="text-center text-tiny text-ink-400 mt-4">
         POPIA compliant · No setup fee · Cancel anytime
       </p>
     </div>
@@ -441,33 +441,31 @@ function SignupContent() {
   };
 
   return (
-    <main className="dark min-h-screen [min-height:100dvh] flex bg-[#07080B]">
+    <main className="min-h-screen [min-height:100dvh] flex bg-paper">
       {/* Left panel */}
-      <div className="hidden lg:flex lg:w-[40%] shrink-0 flex-col justify-between p-12 bg-[#0D111A] border-r border-white/[0.06] relative overflow-hidden">
-        <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full bg-brand/[0.08] blur-3xl pointer-events-none" />
+      <div className="hidden lg:flex lg:w-[40%] shrink-0 flex-col justify-between p-12 bg-paper-deep border-r border-ink/[0.08] relative overflow-hidden">
+        <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full bg-ember/[0.06] blur-3xl pointer-events-none" />
 
         <div>
           <a href="/" className="inline-flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-grad-brand flex items-center justify-center shadow-glow">
+            <div className="w-9 h-9 rounded-xl bg-grad-brand flex items-center justify-center ">
               <Zap className="w-4 h-4 text-white" strokeWidth={2.5} />
             </div>
-            <span className="text-h3 text-fg font-semibold">Qwikly</span>
+            <span className="font-heading text-base text-ink font-semibold tracking-tight">Qwikly</span>
           </a>
         </div>
 
         <div className="space-y-8 relative">
           <div>
-            <p className="text-tiny uppercase tracking-wider text-fg-subtle font-semibold mb-4">
-              The AI assistant for your website
-            </p>
-            <h1 className="font-display text-3xl text-fg leading-tight">
+            <p className="eyebrow text-ink-500 mb-4">The digital assistant for your website</p>
+            <h1 className="font-display text-[2.6rem] text-ink leading-[1.05] tracking-[-0.03em]">
               Captures every lead.
               <br />
               Qualifies them.
               <br />
-              <span className="text-brand italic font-light">Books them in.</span>
+              <em className="text-ember italic font-light">Books them in.</em>
             </h1>
-            <p className="text-fg-muted mt-4 text-sm leading-relaxed max-w-sm">
+            <p className="text-ink-500 mt-4 text-sm leading-relaxed max-w-sm">
               Even when you&rsquo;re asleep. Paste one script tag — live in 5 minutes. No per-job fees. Ever.
             </p>
           </div>
@@ -481,23 +479,23 @@ function SignupContent() {
               "30-day money-back on Pro and Premium",
             ].map((point, i) => (
               <div key={i} className="flex items-start gap-3">
-                <div className="w-5 h-5 rounded-full bg-brand/15 border border-brand/25 flex items-center justify-center shrink-0 mt-0.5">
-                  <Check className="w-3 h-3 text-brand" />
+                <div className="w-5 h-5 rounded-full bg-ember/10 border border-ember/20 flex items-center justify-center shrink-0 mt-0.5">
+                  <Check className="w-3 h-3 text-ember" />
                 </div>
-                <span className="text-fg-muted text-small">{point}</span>
+                <span className="text-ink-500 text-small">{point}</span>
               </div>
             ))}
           </div>
 
-          <div className="p-4 rounded-2xl bg-white/[0.03] border border-line">
-            <p className="text-small text-fg italic leading-relaxed">
+          <div className="p-4 rounded-2xl bg-white/70 border border-ink/[0.10]">
+            <p className="text-small text-ink italic leading-relaxed">
               &ldquo;We picked up 4 leads in our first week that came in after hours. None of them would have called back.&rdquo;
             </p>
-            <p className="text-tiny text-fg-subtle mt-2">Thabo M. · Electrician · Johannesburg</p>
+            <p className="text-tiny text-ink-400 mt-2">Thabo M. · Electrician · Johannesburg</p>
           </div>
         </div>
 
-        <p className="text-fg-subtle text-tiny relative">POPIA compliant · Data stays in South Africa</p>
+        <p className="eyebrow text-ink-400 relative">POPIA compliant · Data stays in South Africa</p>
       </div>
 
       {/* Right panel */}
@@ -506,10 +504,10 @@ function SignupContent() {
           {/* Mobile logo */}
           <div className="lg:hidden absolute top-6 left-6">
             <a href="/" className="inline-flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-grad-brand flex items-center justify-center shadow-glow">
+              <div className="w-8 h-8 rounded-xl bg-grad-brand flex items-center justify-center ">
                 <Zap className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
               </div>
-              <span className="text-h3 text-fg font-semibold">Qwikly</span>
+              <span className="font-heading text-base text-ink font-semibold tracking-tight">Qwikly</span>
             </a>
           </div>
 
