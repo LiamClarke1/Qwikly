@@ -603,7 +603,7 @@ export default function Home() {
           {/* Right fade */}
           <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 z-10 pointer-events-none" style={{ background: "linear-gradient(to left, #F4EEE4, transparent)" }} />
 
-          <div className="ticker-scroll flex items-center gap-3">
+          <div className="ticker-scroll flex items-center gap-3 w-max">
             {[...businessLogos, ...businessLogos].map((b, i) => (
               <div
                 key={i}
