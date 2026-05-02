@@ -88,12 +88,12 @@ export default function LoginPage() {
           <div>
             <p className="eyebrow text-ink-500 mb-4">Your digital front desk</p>
             <h1 className="font-display text-[2.6rem] text-ink leading-[1.05] tracking-[-0.03em]">
-              Your phone rings while you&rsquo;re up a ladder.
+              A customer texts while you&rsquo;re up a ladder.
               <br />
-              <em className="text-ember italic font-light">We answer it.</em>
+              <em className="text-ember italic font-light">We reply instantly.</em>
             </h1>
             <p className="text-ink-500 mt-4 text-sm leading-relaxed max-w-sm">
-              While you&rsquo;re on the job, Qwikly handles every enquiry, qualifies the lead, and fills your calendar automatically.
+              While you&rsquo;re on the job, Qwikly handles every text enquiry, qualifies the lead, and fills your calendar automatically.
             </p>
           </div>
 
