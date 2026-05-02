@@ -639,21 +639,21 @@ export default function Home() {
       </section>
 
       {/* ═══════ 04 · FEATURES ═══════════════════════════════════ */}
-      <section className="relative py-28 md:py-40 bg-ink overflow-hidden grain-dark">
-        <div className="dot-grid absolute inset-0 opacity-30" />
+      <section className="relative py-28 md:py-40 overflow-hidden grain">
+        <div className="dot-grid-ink absolute inset-0 opacity-40" />
 
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           {/* Header */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-20 md:mb-28">
             <div className="md:col-span-5">
-              <p className="eyebrow text-paper/40 mb-6 reveal-up">What it does</p>
-              <h2 className="display-lg text-paper reveal-up">
+              <p className="eyebrow text-ink-500 mb-6 reveal-up">What it does</p>
+              <h2 className="display-lg text-ink reveal-up">
                 Everything your{" "}
-                <em className="italic font-light text-ember">front desk would do</em>.
+                <em className="italic font-light">front desk would do</em>.
               </h2>
             </div>
             <div className="md:col-span-6 md:col-start-7 md:pt-2 reveal-up">
-              <p className="text-lg text-paper/55 leading-relaxed">
+              <p className="text-lg text-ink-700 leading-relaxed">
                 Qwikly handles every incoming enquiry on your behalf. It qualifies, books, and delivers warm leads to your inbox. Around the clock.
               </p>
             </div>
@@ -662,14 +662,14 @@ export default function Home() {
           {/* Feature rows — chain reveal */}
           <div className="reveal-chain">
             {features.map((f, i) => (
-              <div key={f.title} className="relative group border-t border-paper/[0.07] py-10 overflow-hidden cursor-default">
+              <div key={f.title} className="relative group border-t border-ink/[0.08] py-10 overflow-hidden cursor-default">
                 {/* Ember line draws across bottom on reveal */}
-                <div className="feature-draw-line absolute bottom-0 left-0 h-px bg-gradient-to-r from-ember/60 via-ember/20 to-transparent" />
+                <div className="feature-draw-line absolute bottom-0 left-0 h-px bg-gradient-to-r from-ember/50 via-ember/15 to-transparent" />
 
                 <div className="flex items-center gap-6 md:gap-10">
                   {/* Ghost step number */}
                   <span
-                    className="font-display italic shrink-0 leading-none select-none text-paper/[0.06] group-hover:text-ember/[0.18] transition-colors duration-700"
+                    className="font-display italic shrink-0 leading-none select-none text-ink/[0.07] group-hover:text-ember/25 transition-colors duration-700"
                     style={{ fontSize: "clamp(4rem, 9vw, 8rem)" }}
                   >
                     0{i + 1}
@@ -677,23 +677,23 @@ export default function Home() {
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-display text-2xl md:text-3xl lg:text-[2.25rem] text-paper mb-2.5 leading-tight group-hover:text-ember transition-colors duration-500">
+                    <h3 className="font-display text-2xl md:text-3xl lg:text-[2.25rem] text-ink mb-2.5 leading-tight group-hover:text-ember transition-colors duration-500">
                       {f.title}
                     </h3>
-                    <p className="text-paper/50 text-sm md:text-base leading-relaxed max-w-[52ch]">
+                    <p className="text-ink-700 text-sm md:text-base leading-relaxed max-w-[52ch]">
                       {f.body}
                     </p>
                   </div>
 
                   {/* Icon badge */}
-                  <div className="shrink-0 hidden sm:flex w-14 h-14 rounded-2xl border border-paper/[0.07] group-hover:border-ember/35 group-hover:bg-ember/[0.07] items-center justify-center text-paper/20 group-hover:text-ember transition-all duration-500">
+                  <div className="shrink-0 hidden sm:flex w-14 h-14 rounded-2xl border border-ink/[0.10] group-hover:border-ember/35 group-hover:bg-ember/[0.06] items-center justify-center text-ink/30 group-hover:text-ember transition-all duration-500">
                     {f.icon}
                   </div>
                 </div>
               </div>
             ))}
             {/* Final closing line */}
-            <div className="border-t border-paper/[0.07]" />
+            <div className="border-t border-ink/[0.08]" />
           </div>
         </div>
       </section>
