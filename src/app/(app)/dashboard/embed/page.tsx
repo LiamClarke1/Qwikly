@@ -2,91 +2,235 @@
 
 export const dynamic = "force-dynamic";
 
-import { Code2, Globe, Lock, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Code2, ArrowRight, Copy, Check, Mail, MessageSquare, X, Send, Sparkles, PauseCircle, Clock } from "lucide-react";
 import Link from "next/link";
 import { useClient } from "@/lib/use-client";
-import { resolvePlan } from "@/lib/plan";
 import { EmbedActions } from "./_components/EmbedActions";
 
+interface SubData {
+  plan: string;
+  trialEndsAt: string | null;
+  status: string;
+}
+
 function SkeletonLine({ className }: { className?: string }) {
+  return <div className={`rounded bg-ink/[0.07] animate-pulse ${className ?? ""}`} />;
+}
+
+function ChatPreview({ businessName }: { businessName: string }) {
+  const [open, setOpen] = useState(false);
+  const name = businessName || "Your Business";
+
   return (
-    <div className={`rounded bg-ink/[0.07] animate-pulse ${className ?? ""}`} />
+    <div className="relative w-full bg-[#f8f9fb]" style={{ height: 580 }}>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-8 select-none">
+        <div className="w-10 h-10 rounded-xl bg-ink/[0.06] flex items-center justify-center mb-1">
+          <Sparkles className="w-5 h-5 text-ink-400" />
+        </div>
+        <p className="text-[15px] font-semibold text-ink text-center leading-snug">{name}</p>
+        <p className="text-[13px] text-ink-400 text-center max-w-[200px] leading-relaxed">
+          Professional service you can count on. Get a quote today.
+        </p>
+        <button className="px-5 py-2.5 bg-ink text-paper text-[13px] font-semibold rounded-xl cursor-default">
+          Get a free quote
+        </button>
+        <p className="text-[11px] text-ink-300 mt-4">Click the chat button →</p>
+      </div>
+
+      {!open && (
+        <button
+          onClick={() => setOpen(true)}
+          className="absolute bottom-5 right-5 w-14 h-14 bg-ember rounded-full flex items-center justify-center shadow-lg hover:bg-ember-deep transition-colors duration-150 cursor-pointer"
+          aria-label="Open chat"
+        >
+          <MessageSquare className="w-6 h-6 text-white" />
+        </button>
+      )}
+
+      {open && (
+        <div className="absolute bottom-5 right-5 w-[300px] rounded-2xl bg-white shadow-2xl border border-ink/[0.08] overflow-hidden flex flex-col">
+          <div className="bg-ember px-4 py-3 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-white font-semibold text-[13px] leading-none">{name}</p>
+                <p className="text-white/70 text-[11px] mt-0.5">Typically replies instantly</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-[#f8f9fb]" style={{ minHeight: 200, maxHeight: 260 }}>
+            <div className="flex gap-2 items-end">
+              <div className="w-6 h-6 rounded-full bg-ember/10 flex items-center justify-center shrink-0 mb-0.5">
+                <Sparkles className="w-3 h-3 text-ember" />
+              </div>
+              <div className="bg-white rounded-2xl rounded-bl-sm px-3 py-2 shadow-sm text-[13px] text-ink max-w-[210px] leading-relaxed">
+                Hi! I&apos;m {name}&apos;s digital assistant. How can I help you today?
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <div className="bg-ember text-white rounded-2xl rounded-br-sm px-3 py-2 text-[13px] max-w-[190px] leading-relaxed">
+                Do you service Sandton?
+              </div>
+            </div>
+            <div className="flex gap-2 items-end">
+              <div className="w-6 h-6 rounded-full bg-ember/10 flex items-center justify-center shrink-0 mb-0.5">
+                <Sparkles className="w-3 h-3 text-ember" />
+              </div>
+              <div className="bg-white rounded-2xl rounded-bl-sm px-3 py-2 shadow-sm text-[13px] text-ink max-w-[210px] leading-relaxed">
+                Yes, we cover Sandton and surrounding areas! Would you like to book a visit or get a quote?
+              </div>
+            </div>
+          </div>
+
+          <div className="p-3 border-t border-ink/[0.06] flex gap-2 shrink-0 bg-white">
+            <input
+              readOnly
+              placeholder="Type a message…"
+              className="flex-1 bg-ink/[0.04] border border-ink/[0.08] rounded-xl px-3 py-2 text-[13px] text-ink-400 outline-none cursor-default"
+            />
+            <button className="w-8 h-8 rounded-xl bg-ember flex items-center justify-center shrink-0 cursor-default">
+              <Send className="w-3.5 h-3.5 text-white" />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
 export default function EmbedPage() {
   const { client, loading } = useClient();
-  const tier = resolvePlan(client?.plan);
-  const canUseWidget = tier === "pro" || tier === "premium" || tier === "starter";
+  const [sub, setSub] = useState<SubData | null>(null);
+  const [subLoading, setSubLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/subscription")
+      .then((r) => r.json())
+      .then((data) => {
+        setSub({ plan: data.plan ?? "trial", trialEndsAt: data.trialEndsAt ?? null, status: data.status ?? "active" });
+        setSubLoading(false);
+      })
+      .catch(() => setSubLoading(false));
+  }, []);
+
+  const isLoading = loading || subLoading;
+
+  const isTrialPlan = !sub || sub.plan === "trial";
+  const trialEndsAt = sub?.trialEndsAt ? new Date(sub.trialEndsAt) : null;
+  const now = new Date();
+  const trialExpired = isTrialPlan && trialEndsAt !== null && trialEndsAt < now;
+  const trialDaysLeft = isTrialPlan && trialEndsAt && trialEndsAt > now
+    ? Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+  const trialUrgent = isTrialPlan && !trialExpired && trialDaysLeft <= 3;
 
   const publicKey = client?.public_key ?? "";
-  const tenantName = client?.business_name ?? "Your business";
-
-  if (!loading && !canUseWidget) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div>
-          <h1 className="text-h2 font-display text-ink font-bold tracking-tight">
-            Get embed code
-          </h1>
-          <p className="text-small text-ink-500 mt-1">
-            Drop this snippet on any website to activate your digital assistant.
-          </p>
-        </div>
-        <div className="rounded-2xl bg-white border border-ink/[0.08] shadow-sm p-10 flex flex-col items-center text-center gap-5">
-          <div className="w-14 h-14 rounded-2xl bg-ink/[0.05] border border-ink/[0.08] flex items-center justify-center">
-            <Lock className="w-6 h-6 text-ink-400" />
-          </div>
-          <div className="max-w-sm">
-            <p className="text-h3 font-semibold text-ink">Digital assistant is a Pro feature</p>
-            <p className="text-small text-ink-500 mt-2 leading-relaxed">
-              Upgrade to Pro to embed your Qwikly digital assistant on any website. Get the snippet, customise the widget, and go live in minutes.
-            </p>
-          </div>
-          <Link
-            href="/dashboard/billing"
-            className="inline-flex items-center gap-2 px-5 h-10 rounded-xl bg-ember text-paper text-small font-medium hover:bg-ember-deep transition-colors duration-150 cursor-pointer"
-          >
-            Upgrade to Pro <ArrowRight className="w-4 h-4" />
-          </Link>
-          <p className="text-tiny text-ink-400">Pro from R599/month · No per-lead fees. Cancel anytime.</p>
-        </div>
-      </div>
-    );
-  }
+  const tenantName = client?.business_name ?? "Your Business";
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
 
-      {/* ── Page header ─────────────────────────────────────────────────────── */}
+      {/* Page header */}
       <div>
         <h1 className="text-h2 font-display text-ink font-bold tracking-tight">
-          Get embed code
+          Install on your website
         </h1>
         <p className="text-small text-ink-500 mt-1">
-          Drop this snippet on any website to activate your digital assistant.
+          Paste this snippet before{" "}
+          <code className="font-mono text-[13px] text-ink-600 bg-ink/[0.05] px-1 rounded">&lt;/body&gt;</code>{" "}
+          on every page of your website to activate your digital assistant.
         </p>
       </div>
 
-      {/* ── Two-column grid ──────────────────────────────────────────────────── */}
+      {/* ── Trial expired: paused banner ── */}
+      {!isLoading && trialExpired && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0 mt-0.5">
+              <PauseCircle className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-amber-900">Your digital assistant is paused</p>
+              <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+                Your 14-day trial has ended. Your assistant is off and visitors can&apos;t reach it. Your data and settings are safe. Pick a plan to reactivate.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/settings/billing"
+            className="inline-flex items-center gap-2 px-4 h-9 rounded-xl bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 transition-colors duration-150 cursor-pointer shrink-0"
+          >
+            Pick a plan <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      )}
+
+      {/* ── Trial active: info/warning banner ── */}
+      {!isLoading && isTrialPlan && !trialExpired && (
+        <div className={`rounded-2xl border p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+          trialUrgent
+            ? "border-amber-200 bg-amber-50"
+            : "border-sky-200 bg-sky-50"
+        }`}>
+          <div className="flex items-center gap-3">
+            <Clock className={`w-4 h-4 shrink-0 ${trialUrgent ? "text-amber-600" : "text-sky-600"}`} />
+            <p className={`text-sm ${trialUrgent ? "text-amber-800" : "text-sky-800"}`}>
+              <span className="font-semibold">
+                {trialDaysLeft === 1 ? "1 day left" : `${trialDaysLeft} days left`} in your trial.
+              </span>{" "}
+              {trialUrgent
+                ? "Add a plan now to keep your digital assistant running without interruption."
+                : "Your assistant is live and fully active. Add a plan before your trial ends to keep it running."}
+            </p>
+          </div>
+          <Link
+            href="/dashboard/settings/billing"
+            className={`inline-flex items-center gap-2 px-4 h-8 rounded-xl text-sm font-semibold transition-colors duration-150 cursor-pointer shrink-0 ${
+              trialUrgent
+                ? "bg-amber-600 text-white hover:bg-amber-700"
+                : "bg-sky-600 text-white hover:bg-sky-700"
+            }`}
+          >
+            View plans <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      )}
+
+      {/* ── Main content grid ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
-        {/* ── LEFT: Snippet card ─────────────────────────────────────────────── */}
-        <div className="rounded-2xl bg-white border border-ink/[0.08] shadow-sm p-5">
+        {/* LEFT: Snippet card */}
+        <div className={`rounded-2xl bg-white border border-ink/[0.08] shadow-sm p-5 relative ${trialExpired ? "opacity-60" : ""}`}>
+          {trialExpired && (
+            <div className="absolute inset-0 rounded-2xl flex items-center justify-center z-10 bg-white/60 backdrop-blur-[1px]">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-100 border border-amber-200">
+                <PauseCircle className="w-4 h-4 text-amber-600" />
+                <span className="text-sm font-semibold text-amber-800">Assistant paused</span>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-2.5 mb-1">
             <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
               <Code2 className="w-4 h-4 text-ember" />
             </div>
-            <h2 className="text-h3 font-semibold text-ink">Your embed snippet</h2>
+            <h2 className="text-h3 font-semibold text-ink">Your snippet</h2>
           </div>
           <p className="text-tiny text-ink-400 mb-4 ml-[2.625rem]">
-            1 line of HTML. Paste it before{" "}
-            <code className="font-mono text-ink-600 bg-ink/[0.05] px-1 rounded">&lt;/body&gt;</code>{" "}
-            on any page.
+            1 line of HTML. Works on WordPress, Wix, Squarespace, and any custom site.
           </p>
 
-          {/* Dark code block */}
-          {loading ? (
+          {isLoading ? (
             <div className="rounded-xl bg-[#0f172a] p-4 space-y-2">
               <SkeletonLine className="h-4 w-24 bg-white/10" />
               <SkeletonLine className="h-4 w-56 bg-white/10" />
@@ -98,18 +242,15 @@ export default function EmbedPage() {
             <div className="rounded-xl bg-[#0f172a] p-4 overflow-x-auto">
               <pre className="font-mono text-[13px] leading-relaxed whitespace-pre">
                 <span className="text-pink-400">&lt;script</span>
-                {"\n"}
-                {"  "}
+                {"\n"}{"  "}
                 <span className="text-sky-300">src</span>
-                <span className="text-ink-400">=</span>
+                <span className="text-slate-400">=</span>
                 <span className="text-green-300">&quot;https://cdn.qwikly.co.za/embed.js&quot;</span>
-                {"\n"}
-                {"  "}
+                {"\n"}{"  "}
                 <span className="text-sky-300">data-qwikly-id</span>
-                <span className="text-ink-400">=</span>
+                <span className="text-slate-400">=</span>
                 <span className="text-green-300">&quot;{publicKey}&quot;</span>
-                {"\n"}
-                {"  "}
+                {"\n"}{"  "}
                 <span className="text-sky-300">async</span>
                 {"\n"}
                 <span className="text-pink-400">&gt;&lt;/script&gt;</span>
@@ -117,60 +258,43 @@ export default function EmbedPage() {
             </div>
           )}
 
-          {/* Buttons + platform tags */}
-          {!loading && (
+          {!isLoading && (
             <EmbedActions publicKey={publicKey} tenantName={tenantName} />
           )}
         </div>
 
-        {/* ── RIGHT: Live preview card ────────────────────────────────────────── */}
+        {/* RIGHT: Preview card */}
         <div className="rounded-2xl bg-white border border-ink/[0.08] shadow-sm p-5">
           <div className="flex items-center gap-2.5 mb-1">
             <div className="w-8 h-8 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
-              <Globe className="w-4 h-4 text-green-600" />
+              <MessageSquare className="w-4 h-4 text-green-600" />
             </div>
-            <h2 className="text-h3 font-semibold text-ink">Live preview</h2>
+            <h2 className="text-h3 font-semibold text-ink">Preview</h2>
           </div>
           <p className="text-tiny text-ink-400 mb-4 ml-[2.625rem]">
-            Exactly how your widget looks to visitors.
+            Click the chat button to see how your visitors experience it.
           </p>
 
-          {/* Browser chrome mockup */}
-          <div className="rounded-xl border border-ink/[0.10] overflow-hidden bg-[#f8f9fa]">
-            {/* Chrome bar */}
+          <div className="rounded-xl border border-ink/[0.10] overflow-hidden">
             <div className="flex items-center gap-2 px-3 py-2.5 bg-[#e8e8e8] border-b border-ink/[0.08]">
-              {/* Window dots */}
               <div className="flex gap-1.5 shrink-0">
                 <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
                 <div className="w-2.5 h-2.5 rounded-full bg-[#FEBC2E]" />
                 <div className="w-2.5 h-2.5 rounded-full bg-[#28C840]" />
               </div>
-              {/* Fake URL bar */}
               <div className="flex-1 mx-2 px-3 py-1 rounded-md bg-white border border-ink/[0.10] text-[11px] text-ink-400 font-mono truncate">
                 yourwebsite.co.za
               </div>
             </div>
 
-            {/* iframe */}
-            {loading ? (
-              <div className="w-full bg-white animate-pulse" style={{ height: 660 }} />
+            {isLoading ? (
+              <div className="w-full bg-[#f8f9fb] animate-pulse" style={{ height: 580 }} />
             ) : (
-              <iframe
-                src={`/embed/preview?key=${publicKey}`}
-                title="Widget preview"
-                style={{ border: "none", width: "100%", height: 660 }}
-              />
+              <ChatPreview businessName={tenantName} />
             )}
           </div>
-
-          {/* Status indicator */}
-          <div className="flex items-center gap-2 mt-3 ml-1">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
-            <span className="text-tiny text-ink-500 font-medium">
-              Widget verified and live
-            </span>
-          </div>
         </div>
+
       </div>
     </div>
   );

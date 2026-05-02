@@ -22,7 +22,7 @@ export async function GET(
   const { data } = await db
     .from("clients")
     .select(
-      "business_name, web_widget_color, web_widget_greeting, web_widget_launcher_label, web_widget_position, web_widget_enabled"
+      "business_name, web_widget_color, web_widget_greeting, web_widget_launcher_label, web_widget_position, web_widget_enabled, auth_user_id"
     )
     .eq("public_key", tenantId)
     .maybeSingle();
@@ -32,6 +32,24 @@ export async function GET(
   }
   if (!data.web_widget_enabled) {
     return NextResponse.json({ error: "disabled" }, { status: 403, headers: CORS });
+  }
+
+  // Block if trial has expired and no paid plan is active
+  if (data.auth_user_id) {
+    const { data: sub } = await db
+      .from("subscriptions")
+      .select("plan, trial_ends_at")
+      .eq("user_id", data.auth_user_id)
+      .maybeSingle();
+
+    const trialExpired =
+      (sub?.plan === "trial" || !sub) &&
+      sub?.trial_ends_at &&
+      new Date(sub.trial_ends_at) < new Date();
+
+    if (trialExpired) {
+      return NextResponse.json({ error: "paused" }, { status: 403, headers: CORS });
+    }
   }
 
   return NextResponse.json(

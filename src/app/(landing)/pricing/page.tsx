@@ -20,16 +20,16 @@ const tiers: {
   {
     id: "trial",
     name: "Trial",
-    tagline: "14 days free. No card required.",
+    tagline: "14 days free. Identical to Pro.",
     highlight: false,
     cta: "Start 14-day trial",
     features: [
       "25 qualified leads during trial",
-      "Full Premium features included",
-      "Digital assistant platform",
+      "Full Pro features — identical",
+      "Digital assistant + embed snippet",
       "Email lead delivery",
-      "Custom branding + questions",
       "POPIA compliant",
+      "No card required",
     ],
   },
   {
