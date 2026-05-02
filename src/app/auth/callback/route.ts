@@ -73,14 +73,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Check if this user has any clients yet; if not, send them to onboarding.
+    // Redirect to onboarding if the user hasn't completed it yet
     const { data: client } = await supabase
       .from("clients")
-      .select("id")
+      .select("id, onboarding_completed_at")
       .limit(1)
       .maybeSingle();
 
-    if (!client) {
+    if (!client || !client.onboarding_completed_at) {
       const onboardingPath = plan
         ? `/onboarding/website?plan=${plan}`
         : "/onboarding/website";
