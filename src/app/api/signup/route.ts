@@ -6,17 +6,20 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  let body: { email?: string; password?: string; businessName?: string };
+  let body: { email?: string; password?: string; businessName?: string; plan?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "invalid_json" }, { status: 400 });
   }
 
-  const { email, password, businessName } = body;
+  const { email, password, businessName, plan: planParam } = body;
   if (!email || !password) {
     return NextResponse.json({ error: "email and password are required" }, { status: 400 });
   }
+
+  const validPlans = ["trial", "starter", "pro", "premium", "billions"];
+  const resolvedPlan = validPlans.includes(planParam ?? "") ? planParam! : "trial";
 
   const cookieStore = cookies();
   const supabase = createServerClient(
@@ -49,11 +52,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "account_setup_failed" }, { status: 500 });
     }
 
+    const trialEndsAt = resolvedPlan === "trial"
+      ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+      : null;
+
     const { error: subError } = await db.from("subscriptions").upsert({
       user_id: data.user.id,
-      plan: "starter",
+      plan: resolvedPlan,
       billing_cycle: "monthly",
       status: "active",
+      ...(trialEndsAt ? { trial_ends_at: trialEndsAt } : {}),
     }, { onConflict: "user_id" });
 
     if (subError) {
@@ -72,6 +80,7 @@ export async function POST(req: NextRequest) {
         auth_user_id: data.user.id,
         business_name: businessName ?? "",
         onboarding_step: 1,
+        web_widget_enabled: false,
       });
     }
   }

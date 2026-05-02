@@ -68,6 +68,7 @@ export async function GET(request: NextRequest) {
             auth_user_id: user.id,
             business_name: name,
             onboarding_step: 1,
+            web_widget_enabled: false,
           });
         }
       }
