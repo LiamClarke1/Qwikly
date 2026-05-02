@@ -53,6 +53,17 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
+// Keep clients.plan in sync whenever subscriptions.plan changes.
+async function syncClientPlan(db: ReturnType<typeof supabaseAdmin>, customerCode: string) {
+  const { data: sub } = await db
+    .from("subscriptions")
+    .select("user_id, plan")
+    .eq("paystack_customer_code", customerCode)
+    .maybeSingle();
+  if (!sub?.user_id || !sub?.plan) return;
+  await db.from("clients").update({ plan: sub.plan }).eq("auth_user_id", sub.user_id);
+}
+
 async function handleSubscriptionCreate(
   db: ReturnType<typeof supabaseAdmin>,
   data: Record<string, unknown>
@@ -105,6 +116,7 @@ async function handleSubscriptionCreate(
     throw error;
   }
 
+  await syncClientPlan(db, customerCode);
   console.log("[paystack-webhook] subscription.create processed:", subscriptionCode);
 }
 
@@ -143,6 +155,7 @@ async function handleChargeSuccess(
     .update(updateData)
     .eq("paystack_customer_code", customerCode);
 
+  await syncClientPlan(db, customerCode);
   console.log("[paystack-webhook] charge.success processed for customer:", customerCode);
 }
 

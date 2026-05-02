@@ -116,6 +116,7 @@ export function useClient() {
     const { data } = await supabase
       .from("clients")
       .select("*")
+      .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
     setClient((data as ClientRow) ?? null);

@@ -52,8 +52,8 @@ const config: Config = {
         "border-light": "#D6D2C8",
 
         line: {
-          DEFAULT: "rgba(14,14,12,0.08)",
-          strong: "rgba(14,14,12,0.16)",
+          DEFAULT: "var(--border)",
+          strong: "var(--border-strong)",
         },
         ghost: {
           DEFAULT: "rgba(255,255,255,0.03)",

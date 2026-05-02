@@ -4,7 +4,7 @@ export const maxDuration = 30;
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin as createSupabaseAdmin } from "@/lib/supabase-server";
-import { ensureKbEmbeddings, searchKb } from "@/lib/embeddings";
+import { ensureKbEmbeddings, searchKb, embedText } from "@/lib/embeddings";
 import { enrollLeadInSequences } from "@/lib/email/sequences";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   // Resolve public_key → client
   const { data: client } = await db
     .from("clients")
-    .select("id, system_prompt, web_widget_enabled")
+    .select("id, system_prompt, web_widget_enabled, business_name, ai_tone, auth_user_id")
     .eq("public_key", tenantId)
     .maybeSingle();
 
@@ -66,9 +66,10 @@ export async function POST(req: NextRequest) {
     console.error("ensureKbEmbeddings error:", err);
   }
 
-  // RAG: search KB for relevant articles
+  // RAG: search kb_articles (manual Q&A) + knowledge_chunks (URL/file/paste ingestions)
   let retrievedSources: { id: number; title: string; similarity: number }[] = [];
-  let kbContext = "";
+  const kbParts: string[] = [];
+
   try {
     const articles = await searchKb(db, client.id, message);
     if (articles.length > 0) {
@@ -77,15 +78,49 @@ export async function POST(req: NextRequest) {
         title: a.title,
         similarity: Math.round(a.similarity * 1000) / 1000,
       }));
-      kbContext =
-        "\n\n## Knowledge Base\n\nUse the following only when directly relevant to the visitor's question. Do not recite unprompted. If the answer is not covered here, say so honestly.\n\n" +
-        articles.map((a) => `Q: ${a.title}\nA: ${a.body}`).join("\n\n");
+      kbParts.push(articles.map((a) => `Q: ${a.title}\nA: ${a.body}`).join("\n\n"));
     }
   } catch (err) {
     console.error("searchKb error:", err);
   }
 
-  const systemPrompt = (client.system_prompt ?? "") + kbContext;
+  // Also search knowledge_chunks ingested during onboarding (URL/file/paste)
+  if (client.auth_user_id) {
+    try {
+      const queryEmbedding = await embedText(message);
+      const { data: chunks } = await db.rpc("match_chunks", {
+        query_embedding: queryEmbedding,
+        match_tenant_id: client.auth_user_id,
+        match_count: 5,
+        similarity_threshold: 0.3,
+      });
+      if (chunks && chunks.length > 0) {
+        kbParts.push(
+          (chunks as { content: string }[]).map((c) => c.content).join("\n\n")
+        );
+      }
+    } catch (err) {
+      console.error("knowledge_chunks search error:", err);
+    }
+  }
+
+  const kbContext = kbParts.length > 0
+    ? "\n\n## Knowledge Base\n\nUse the following only when directly relevant to the visitor's question. Do not recite unprompted. If the answer is not covered here, say so honestly.\n\n" + kbParts.join("\n\n")
+    : "";
+
+  const TONE_MAP: Record<string, string> = {
+    friendly_casual:    "Warm, approachable, and conversational. Use contractions, keep things light, and be personable.",
+    professional_formal:"Precise, professional, and formal. Be respectful and thorough. Avoid casual language.",
+    warm_empathetic:    "Caring, empathetic, and reassuring. Acknowledge concerns, be patient, and show genuine care.",
+    direct_efficient:   "Direct and efficient. Give concise answers, skip small talk, and focus on solving the problem fast.",
+  };
+  const toneInstruction = TONE_MAP[client.ai_tone ?? ""] ?? "Friendly and professional.";
+
+  const basePrompt = client.system_prompt?.trim()
+    ? client.system_prompt
+    : `You are the digital assistant for ${client.business_name ?? "this business"}. Help visitors with their enquiries, collect their name and contact details, and let them know the team will follow up.`;
+
+  const systemPrompt = `${basePrompt}\n\nTONE: ${toneInstruction}${kbContext}`;
 
   const validSessionId = sessionId && sessionId.trim() ? sessionId.trim() : null;
 

@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
 import { enrollLeadInSequences } from "@/lib/email/sequences";
 import { resolvePlan, PLAN_CONFIG } from "@/lib/plan";
+import { embedText } from "@/lib/embeddings";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -278,15 +279,33 @@ export async function POST(req: NextRequest) {
   let systemPrompt = QWIKLY_SYSTEM;
   let atStarterCap = false;
   let isTopUp = false;
+  let clientAuthUserId: string | null = null;
 
   if (client_id !== "1") {
+    const TONE_MAP: Record<string, string> = {
+      friendly_casual:    "Warm, approachable, and conversational. Use contractions and be personable.",
+      professional_formal:"Precise, professional, and formal. Be respectful and thorough.",
+      warm_empathetic:    "Caring, empathetic, and reassuring. Acknowledge concerns and show genuine care.",
+      direct_efficient:   "Direct and efficient. Concise answers, no small talk, solve the problem fast.",
+    };
+
     const { data: clientRow } = await supabaseAdmin
       .from("clients")
-      .select("system_prompt, business_name, trade, web_widget_greeting, address, working_hours_text, services_offered, after_hours, plan")
+      .select("system_prompt, business_name, trade, web_widget_greeting, address, working_hours_text, services_offered, after_hours, plan, ai_tone, auth_user_id")
       .eq("id", client_id)
       .maybeSingle();
+
+    clientAuthUserId = clientRow?.auth_user_id ?? null;
+    const toneInstruction = TONE_MAP[clientRow?.ai_tone ?? ""] ?? "";
+
     if (clientRow?.system_prompt) {
-      systemPrompt = clientRow.system_prompt;
+      systemPrompt = toneInstruction
+        ? `${clientRow.system_prompt}\n\nTONE: ${toneInstruction}`
+        : clientRow.system_prompt;
+    } else {
+      // Safe neutral fallback — never expose Qwikly's own sales prompt on a client's website
+      const biz = clientRow?.business_name ?? "this business";
+      systemPrompt = `You are the digital assistant for ${biz}. Help visitors with their enquiries. Be friendly, concise, and professional. Collect the visitor's name and contact details so the team can follow up.${toneInstruction ? `\n\nTONE: ${toneInstruction}` : ""}`;
     }
 
     // ── Lead cap check ─────────────────────────────────────────
@@ -310,7 +329,9 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // ── Inject KB articles ─────────────────────────────────────
+  // ── Inject KB articles + knowledge_chunks ─────────────────
+  const kbParts: string[] = [];
+
   const { data: kbArticles } = await supabaseAdmin
     .from("kb_articles")
     .select("title, body")
@@ -318,8 +339,29 @@ export async function POST(req: NextRequest) {
     .eq("is_active", true)
     .limit(25);
   if (kbArticles && kbArticles.length > 0) {
-    const kbBlock = kbArticles.map((a: { title: string; body: string }) => `Q: ${a.title}\nA: ${a.body}`).join("\n\n");
-    systemPrompt = systemPrompt + "\n\n## Knowledge Base\n\nUse the following information to answer specific questions accurately. Do not recite it unprompted — only use it when directly relevant to what the visitor asks.\n\n" + kbBlock;
+    kbParts.push(kbArticles.map((a: { title: string; body: string }) => `Q: ${a.title}\nA: ${a.body}`).join("\n\n"));
+  }
+
+  // Also search knowledge_chunks (URL/file/paste ingestions from onboarding)
+  if (clientAuthUserId) {
+    try {
+      const queryEmbedding = await embedText(message);
+      const { data: chunks } = await supabaseAdmin.rpc("match_chunks", {
+        query_embedding: queryEmbedding,
+        match_tenant_id: clientAuthUserId,
+        match_count: 5,
+        similarity_threshold: 0.3,
+      });
+      if (chunks && chunks.length > 0) {
+        kbParts.push((chunks as { content: string }[]).map((c) => c.content).join("\n\n"));
+      }
+    } catch (err) {
+      console.error("knowledge_chunks search error:", err);
+    }
+  }
+
+  if (kbParts.length > 0) {
+    systemPrompt = systemPrompt + "\n\n## Knowledge Base\n\nUse the following information to answer specific questions accurately. Do not recite it unprompted — only use it when directly relevant to what the visitor asks.\n\n" + kbParts.join("\n\n");
   }
 
   // ── Get or create conversation ─────────────────────────────

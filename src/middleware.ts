@@ -37,6 +37,9 @@ const PUBLIC_PREFIXES = [
   "/api/webhooks/yoco",
   "/api/signup",
   "/api/login",
+  // Public widget endpoints — must be accessible from any external site
+  "/api/chat",
+  "/embed.js",
 ];
 
 export async function middleware(request: NextRequest) {

@@ -441,7 +441,7 @@ function SignupContent() {
   };
 
   return (
-    <main className="min-h-screen [min-height:100dvh] flex bg-[#07080B]">
+    <main className="dark min-h-screen [min-height:100dvh] flex bg-[#07080B]">
       {/* Left panel */}
       <div className="hidden lg:flex lg:w-[40%] shrink-0 flex-col justify-between p-12 bg-[#0D111A] border-r border-white/[0.06] relative overflow-hidden">
         <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full bg-brand/[0.08] blur-3xl pointer-events-none" />

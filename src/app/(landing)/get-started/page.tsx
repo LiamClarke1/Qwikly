@@ -472,6 +472,8 @@ ${f.ai_never_say || "Not specified"}
     setSubmitting(true);
     setSubmitError(null);
 
+    const { data: { user } } = await supabase.auth.getUser();
+
     const { error } = await supabase.from("clients").insert([{
       business_name: form.business_name,
       owner_name: form.owner_name,
@@ -480,6 +482,7 @@ ${f.ai_never_say || "Not specified"}
       google_calendar_id: form.google_calendar_email,
       system_prompt: buildSystemPrompt(),
       status: "pending_setup",
+      ...(user?.id ? { auth_user_id: user.id } : {}),
     }]);
 
     setSubmitting(false);

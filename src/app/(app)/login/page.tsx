@@ -70,7 +70,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen [min-height:100dvh] flex bg-[#07080B]">
+    <main className="dark min-h-screen [min-height:100dvh] flex bg-[#07080B]">
       {/* Left panel — brand */}
       <div className="hidden lg:flex lg:w-[45%] shrink-0 flex-col justify-between p-12 bg-[#0D111A] border-r border-white/[0.06] relative overflow-hidden">
         {/* Subtle ember glow */}
