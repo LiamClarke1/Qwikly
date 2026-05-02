@@ -102,7 +102,17 @@
     "@media(max-width:600px){" +
       "#launcher{bottom:max(16px,calc(env(safe-area-inset-bottom) + 12px));right:max(16px,calc(env(safe-area-inset-right) + 8px));padding:11px 18px;font-size:13px}" +
       "#panel{left:8px;right:8px;width:auto;bottom:max(72px,calc(env(safe-area-inset-bottom) + 68px));height:auto;max-height:60vh;border-radius:18px;transition:none}" +
+      "#nudge{bottom:max(80px,calc(env(safe-area-inset-bottom) + 76px));right:max(12px,calc(env(safe-area-inset-right) + 8px))}" +
     "}",
+
+    // ── Nudge callout bubble ──
+    "#nudge{position:fixed;bottom:88px;right:24px;z-index:2147483646;background:#fff;color:#1F2937;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.14),0 2px 8px rgba(0,0,0,.07);padding:12px 14px 12px 16px;max-width:230px;display:flex;align-items:flex-start;gap:10px;cursor:pointer;opacity:0;transform:translateY(10px);transition:" + (prefersReduced ? "none" : "opacity .3s ease,transform .3s ease") + ";border:1px solid rgba(0,0,0,.06)}",
+    "#nudge.show{opacity:1;transform:translateY(0)}",
+    "#nudge::after{content:'';position:absolute;bottom:-7px;right:28px;width:13px;height:13px;background:#fff;transform:rotate(45deg);border-right:1px solid rgba(0,0,0,.06);border-bottom:1px solid rgba(0,0,0,.06)}",
+    "#nudge-txt{font-size:13px;font-weight:600;line-height:1.45;flex:1}",
+    "#nudge-sub{font-size:11px;font-weight:400;color:#6B7280;margin-top:2px}",
+    "#nudge-x{background:none;border:none;color:#9CA3AF;cursor:pointer;font-size:18px;line-height:1;flex-shrink:0;padding:0;margin-top:-1px;transition:color .15s}",
+    "#nudge-x:hover{color:#6B7280}",
   ].join("");
   shadow.appendChild(style);
 
@@ -308,6 +318,7 @@
   function openPanel() {
     if (panelOpen) return;
     panelOpen = true;
+    dismissNudge();
     buildPanel();
     panel.classList.add("open");
 
@@ -394,6 +405,47 @@
   })();
   window.addEventListener("popstate", checkRoute);
 
+  // ── Nudge callout bubble ───────────────────────────────────
+  function dismissNudge() {
+    var n = shadow.getElementById("nudge");
+    if (!n) return;
+    n.classList.remove("show");
+    setTimeout(function () { if (n.parentNode) n.parentNode.removeChild(n); }, 320);
+  }
+
+  function showNudge() {
+    if (sessionStorage.getItem("qwikly_nudge") || panelOpen) return;
+    sessionStorage.setItem("qwikly_nudge", "1");
+
+    var n = document.createElement("div");
+    n.id = "nudge";
+    n.setAttribute("role", "status");
+    n.setAttribute("aria-label", "Try the Qwikly demo");
+    n.innerHTML =
+      '<div id="nudge-txt">Try it — see how Qwikly works<div id="nudge-sub">We reply in 30 seconds</div></div>' +
+      '<button id="nudge-x" aria-label="Dismiss">×</button>';
+    shadow.appendChild(n);
+
+    // Trigger animation after paint
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { n.classList.add("show"); });
+    });
+
+    var timer = setTimeout(dismissNudge, 8000);
+
+    shadow.getElementById("nudge-x").addEventListener("click", function (e) {
+      e.stopPropagation();
+      clearTimeout(timer);
+      dismissNudge();
+    });
+
+    n.addEventListener("click", function () {
+      clearTimeout(timer);
+      dismissNudge();
+      openPanel();
+    });
+  }
+
   // ── Init ───────────────────────────────────────────────────
   function init() {
     checkRoute();
@@ -405,6 +457,11 @@
       .catch(function () {});
     launcher.addEventListener("click", openPanel);
     fireEvent("widget_loaded");
+
+    // Show nudge once after 3 s to draw attention to the launcher
+    if (!sessionStorage.getItem("qwikly_nudge")) {
+      setTimeout(showNudge, 3000);
+    }
   }
 
   // ── Public API ─────────────────────────────────────────────
