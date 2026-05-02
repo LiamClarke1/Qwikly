@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Zap, AlertTriangle, ArrowRight, TrendingUp, CheckCircle2,
-  X, Users, Clock, ChevronRight, WifiOff,
+  X, Users, Clock, ChevronRight, WifiOff, Rocket,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
@@ -31,6 +31,32 @@ interface Lead {
 function SkeletonCard({ className }: { className?: string }) {
   return (
     <div className={cn("rounded-2xl bg-ink/[0.05] border border-ink/[0.08] animate-pulse", className)} />
+  );
+}
+
+// ─── Onboarding reminder ─────────────────────────────────────────────────────
+
+function OnboardingBanner({ businessName }: { businessName: string | null }) {
+  return (
+    <div className="rounded-2xl bg-ember/[0.07] border border-ember/[0.20] p-5 flex items-start gap-4">
+      <div className="w-10 h-10 rounded-xl bg-ember/10 border border-ember/20 flex items-center justify-center shrink-0">
+        <Rocket className="w-5 h-5 text-ember" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-small font-semibold text-ink">
+          {businessName ? `${businessName} isn't live yet` : "Your assistant isn't live yet"}
+        </p>
+        <p className="text-tiny text-ink-500 mt-1 leading-relaxed">
+          Complete your setup to connect your digital assistant to your website and start capturing leads.
+        </p>
+        <Link
+          href="/onboarding/website"
+          className="inline-flex items-center gap-1.5 mt-3 px-4 h-9 rounded-xl bg-ember text-paper text-tiny font-semibold hover:bg-ember-deep transition-colors duration-150 cursor-pointer"
+        >
+          Complete setup <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -294,8 +320,13 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* ── Onboarding reminder ──────────────────────────────────── */}
+      {!loading && client && !client.onboarding_completed_at && (
+        <OnboardingBanner businessName={client.business_name} />
+      )}
+
       {/* ── Status bar ───────────────────────────────────────────── */}
-      {!loading && (
+      {!loading && client?.onboarding_completed_at && (
         <StatusBar widgetLive={widgetLive} tier={tier} leadsMonth={leadsMonth} />
       )}
       {loading && <SkeletonCard className="h-28" />}

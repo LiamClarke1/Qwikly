@@ -5,9 +5,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { Home, MessageSquare, CalendarCheck, Settings, Sparkles, LogOut, Rocket, Users, Code2, ScrollText } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useUser } from "@/lib/use-user";
+
+const ADMIN_EMAIL = "liamclarke21@outlook.com";
 
 type NavIcon = React.ComponentType<{ className?: string }>;
-type NavItem = { href: string; label: string; icon: NavIcon };
+type NavItem = { href: string; label: string; icon: NavIcon; adminOnly?: boolean };
 
 const NAV: NavItem[] = [
   { href: "/dashboard",               label: "Home",      icon: Home as NavIcon },
@@ -15,7 +18,7 @@ const NAV: NavItem[] = [
   { href: "/dashboard/embed",          label: "Embed",     icon: Code2 as NavIcon },
   { href: "/dashboard/logs",           label: "Logs",      icon: ScrollText as NavIcon },
   { href: "/dashboard/bookings",      label: "Calendar",  icon: CalendarCheck as NavIcon },
-  { href: "/admin/clients",            label: "CRM",       icon: Users as NavIcon },
+  { href: "/admin/clients",            label: "CRM",       icon: Users as NavIcon, adminOnly: true },
   { href: "/dashboard/settings",      label: "Settings",  icon: Settings as NavIcon },
   { href: "/dashboard/setup",         label: "Setup",     icon: Rocket as NavIcon },
 ];
@@ -23,6 +26,9 @@ const NAV: NavItem[] = [
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { user } = useUser();
+  const isAdmin = user?.email === ADMIN_EMAIL;
+  const visibleNav = NAV.filter((item) => !item.adminOnly || isAdmin);
   const isActive = (href: string) =>
     href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
 
@@ -46,7 +52,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto scrollbar-thin pb-4">
-        {NAV.map((item) => {
+        {visibleNav.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
           return (
