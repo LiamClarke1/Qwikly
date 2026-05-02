@@ -415,6 +415,8 @@
 
   function showNudge() {
     if (panelOpen) return;
+    // Don't stack duplicates
+    if (shadow.querySelector("#nudge")) return;
 
     var n = document.createElement("div");
     n.id = "nudge";
@@ -425,18 +427,21 @@
       '<button id="nudge-x" aria-label="Dismiss">×</button>';
     shadow.appendChild(n);
 
-    // Trigger animation after paint
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () { n.classList.add("show"); });
-    });
+    // Use querySelector on the element directly — more reliable than shadow.getElementById for descendants
+    var closeBtn = n.querySelector("#nudge-x");
+
+    // Small delay so the element is painted before the transition fires
+    setTimeout(function () { n.classList.add("show"); }, 20);
 
     var timer = setTimeout(dismissNudge, 8000);
 
-    shadow.getElementById("nudge-x").addEventListener("click", function (e) {
-      e.stopPropagation();
-      clearTimeout(timer);
-      dismissNudge();
-    });
+    if (closeBtn) {
+      closeBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        clearTimeout(timer);
+        dismissNudge();
+      });
+    }
 
     n.addEventListener("click", function () {
       clearTimeout(timer);
@@ -457,8 +462,8 @@
     launcher.addEventListener("click", openPanel);
     fireEvent("widget_loaded");
 
-    // Show nudge 5 s after page load to draw attention to the launcher
-    setTimeout(showNudge, 5000);
+    // Show nudge 10 s after page load to draw attention to the launcher
+    setTimeout(showNudge, 10000);
   }
 
   // ── Public API ─────────────────────────────────────────────
