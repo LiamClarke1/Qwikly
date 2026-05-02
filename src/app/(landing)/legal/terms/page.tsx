@@ -147,12 +147,13 @@ export default function TermsPage() {
                 </p>
                 <ul className="space-y-2 mt-2 ml-4">
                   {[
-                    "Lite — R399/month (up to 25 confirmed bookings per month)",
-                    "Pro — R799/month (unlimited confirmed bookings)",
-                    "Business — R1,499/month (unlimited bookings, multi-user, custom branding, integrations)",
+                    "Starter — Free (up to 25 qualified leads per month, 'Powered by Qwikly' branding)",
+                    "Pro — R599/month (up to 200 qualified leads per month, custom branding)",
+                    "Premium — R1,299/month (unlimited qualified leads, API access, dedicated support)",
                     "Annual billing is available at a discounted rate equivalent to 10 months' fees (2 months free)",
                     "Subscription fees are billed monthly in advance on the anniversary of your sign-up date",
                     "Payment is due on the billing date; failure to pay may result in suspension of the Service",
+                    "Top-up leads over your monthly cap are billed at R20 per qualified lead",
                   ].map((item) => (
                     <li key={item} className="flex gap-3 text-sm leading-relaxed">
                       <span className="text-ember mt-0.5 shrink-0">·</span>
@@ -163,7 +164,7 @@ export default function TermsPage() {
 
                 <h3 className="font-display font-medium text-lg text-ink mt-6">Money-Back Guarantee</h3>
                 <p>
-                  All plans include a 30-day money-back guarantee from the date of your first payment.
+                  Pro and Premium plans include a 30-day money-back guarantee from the date of your first payment. The Starter plan is free and no guarantee is required.
                   If you are not satisfied with the Service within the first 30 days, contact us at{" "}
                   <a
                     href="mailto:hello@qwikly.co.za"

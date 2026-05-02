@@ -6,10 +6,10 @@ import CTAButton from "@/components/CTAButton";
 export const metadata: Metadata = {
   title: "Connect Your Website | Book Leads Directly From Your Site",
   description:
-    "Paste one line of code into your Wix, Squarespace, or WordPress site. Qwikly's digital assistant answers visitors in 30 seconds, qualifies leads, and books into your Google Calendar automatically.",
+    "Paste one line of code into your Wix, Squarespace, or WordPress site. Qwikly's digital assistant answers visitors in seconds, qualifies leads, and delivers them straight to your inbox.",
   openGraph: {
     title: "Connect Your Website | Qwikly",
-    description: "Qwikly's digital assistant answers visitors in 30 seconds, qualifies them, and books the job.",
+    description: "Qwikly's digital assistant answers visitors in seconds, qualifies them, and delivers leads to your inbox.",
     url: "https://www.qwikly.co.za/connect-your-website",
     type: "website",
   },
@@ -26,21 +26,21 @@ const HOW_STEPS = [
     Icon: Zap,
     num: "02",
     title: "Your digital assistant answers visitors",
-    body: "Qualifies the job, asks for area and timing, pre-screens before anything reaches your calendar.",
+    body: "Qualifies the lead, captures their name, contact details, and what they need. All in seconds, 24/7.",
   },
   {
     Icon: Calendar,
     num: "03",
-    title: "Bookings land in your calendar",
-    body: "Real slots from your Google Calendar are offered and confirmed. You get a WhatsApp alert with full details.",
+    title: "Leads land in your inbox",
+    body: "Every qualified lead is emailed to you instantly. Reply and confirm in one click. Calendar booking coming soon.",
   },
 ];
 
 const COMPARISON = [
   { label: "Reply speed",              form: "2–24 hrs",  chatbot: "Instant", qwikly: "30 sec" },
-  { label: "Books into your calendar", form: "No",        chatbot: "No",      qwikly: "Yes" },
+  { label: "Captures contact details", form: "Yes",       chatbot: "Rarely",  qwikly: "Yes" },
+  { label: "Qualifies the lead",       form: "No",        chatbot: "No",      qwikly: "Yes" },
   { label: "Knows your services",      form: "No",        chatbot: "No",      qwikly: "Yes" },
-  { label: "Trained for your trade",   form: "No",        chatbot: "No",      qwikly: "Yes" },
   { label: "24/7 availability",        form: "No",        chatbot: "Yes",     qwikly: "Yes" },
 ];
 
@@ -48,12 +48,12 @@ const PLATFORMS = ["Wix", "Squarespace", "WordPress", "Webflow", "Shopify", "Cus
 
 const FAQS = [
   { q: "Will it slow my site down?", a: "The widget script is under 14 KB and loads after your page. Your visitors won't notice any difference." },
-  { q: "What does it look like to my visitors?", a: "A small chat launcher in the corner of your site. When clicked, it opens a clean intake form then a conversation, styled to match your brand colour." },
+  { q: "What does it look like to my visitors?", a: "A small chat launcher in the corner of your site. When clicked, it opens a clean conversation, styled to match your brand colour." },
   { q: "Can I customise the colour to match my brand?", a: "Yes. During setup you pick any accent colour and it applies across the launcher and chat bubbles." },
   { q: "What if I don't have a developer?", a: "You don't need one. The install is a single copy-paste into your site's Custom Code settings. If you get stuck, book a free 15-minute install call and we'll do it for you." },
-  { q: "Does this replace my contact form?", a: "It can sit alongside it. Most clients find the widget converts better because it qualifies and books immediately rather than waiting for a follow-up." },
-  { q: "Do I still need WhatsApp?", a: "WhatsApp remains a separate channel. The widget handles visitors on your own site specifically." },
-  { q: "What happens if my Google Calendar is full?", a: "The AI offers the next available slot the following business day. If after-hours mode is on, it queues overnight and offers slots first thing." },
+  { q: "Does this replace my contact form?", a: "It can sit alongside it. Most clients find the widget converts better because it qualifies visitors and captures details immediately rather than waiting for a follow-up." },
+  { q: "Will WhatsApp be supported?", a: "WhatsApp routing is on the roadmap and coming soon. The widget handles visitors on your website right now." },
+  { q: "Will calendar booking be supported?", a: "Calendar integration is coming soon. Right now, qualified leads are emailed to you instantly so you can follow up and confirm." },
   { q: "How do I cancel?", a: "Cancel any time from your dashboard. No contracts, no lock-in." },
 ];
 
@@ -73,11 +73,11 @@ export default function ConnectYourWebsitePage() {
             <span className="text-ember">Now your replies don&rsquo;t either.</span>
           </h1>
           <p className="text-ink-500 text-xl leading-relaxed mb-10 max-w-2xl">
-            Connect your existing website to a Qwikly digital assistant. Visitors get answers in 30 seconds,
-            jobs get qualified, bookings go straight into your calendar. Even at 11 pm.
+            Connect your existing website to a Qwikly digital assistant. Visitors get a response in seconds,
+            leads get qualified, and their details land in your inbox. Even at 11 pm.
           </p>
           <div className="flex flex-wrap gap-4 items-center">
-            <CTAButton href="/pricing" size="lg">
+            <CTAButton href="/signup?plan=pro" size="lg">
               Start with Pro
             </CTAButton>
             <Link
@@ -88,7 +88,7 @@ export default function ConnectYourWebsitePage() {
             </Link>
           </div>
           <p className="mt-4 text-sm text-ink-500">
-            Web widget included in <strong className="text-ink">Pro</strong> and <strong className="text-ink">Business</strong> plans. Not available on Lite. No per-job fees, ever.
+            Web widget included in <strong className="text-ink">Starter</strong>, <strong className="text-ink">Pro</strong>, and <strong className="text-ink">Premium</strong> plans. No per-job fees, ever.
           </p>
         </div>
       </section>
@@ -197,8 +197,8 @@ export default function ConnectYourWebsitePage() {
               style={{ letterSpacing: "-0.03em" }}>
             Get your assistant live in 10 minutes.
           </h2>
-          <p className="text-paper/60 mb-10 text-lg">Included in Pro and Business plans. No per-job fees, ever. One line of code.</p>
-          <CTAButton href="/pricing" size="lg">
+          <p className="text-paper/60 mb-10 text-lg">Included in all plans. No per-job fees, ever. One line of code.</p>
+          <CTAButton href="/signup" size="lg">
             See plans
           </CTAButton>
         </div>
