@@ -24,7 +24,7 @@ export function useScrollReveal() {
   useEffect(() => {
     const elements = Array.from(
       document.querySelectorAll<HTMLElement>(
-        ".reveal, .reveal-up, .reveal-left, .reveal-right, .reveal-scale, .reveal-stagger, .reveal-words"
+        ".reveal, .reveal-up, .reveal-left, .reveal-right, .reveal-scale, .reveal-stagger, .reveal-chain, .reveal-words"
       )
     );
 

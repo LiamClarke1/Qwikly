@@ -280,6 +280,29 @@
 .reveal-stagger.visible > *:nth-child(9) { transition-delay: 720ms; opacity: 1; transform: translateY(0); }
 .reveal-stagger.visible > *:nth-child(10) { transition-delay: 810ms; opacity: 1; transform: translateY(0); }
 
+/* Chain reveal — strong sequential stagger (220 ms gaps), used for feature rows */
+.reveal-chain > * {
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-chain.visible > *:nth-child(1) { transition-delay:   0ms; opacity: 1; transform: translateY(0); }
+.reveal-chain.visible > *:nth-child(2) { transition-delay: 220ms; opacity: 1; transform: translateY(0); }
+.reveal-chain.visible > *:nth-child(3) { transition-delay: 440ms; opacity: 1; transform: translateY(0); }
+.reveal-chain.visible > *:nth-child(4) { transition-delay: 660ms; opacity: 1; transform: translateY(0); }
+.reveal-chain.visible > *:nth-child(5) { transition-delay: 880ms; opacity: 1; transform: translateY(0); }
+
+/* Ember line that draws across the bottom of each chained feature row */
+.reveal-chain > * .feature-draw-line {
+  width: 0;
+  transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal-chain.visible > *:nth-child(1) .feature-draw-line { width: 100%; transition-delay: 600ms; }
+.reveal-chain.visible > *:nth-child(2) .feature-draw-line { width: 100%; transition-delay: 820ms; }
+.reveal-chain.visible > *:nth-child(3) .feature-draw-line { width: 100%; transition-delay: 1040ms; }
+.reveal-chain.visible > *:nth-child(4) .feature-draw-line { width: 100%; transition-delay: 1260ms; }
+
 /* Word-by-word reveal (SplitText style). Wrap each word in a span with .reveal-word. */
 .reveal-words .reveal-word {
   display: inline-block;
