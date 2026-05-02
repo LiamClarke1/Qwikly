@@ -38,7 +38,7 @@ export default function EmbedPage() {
             <Lock className="w-6 h-6 text-ink-400" />
           </div>
           <div className="max-w-sm">
-            <p className="text-h3 font-semibold text-ink">Web widget is a Pro feature</p>
+            <p className="text-h3 font-semibold text-ink">Digital assistant is a Pro feature</p>
             <p className="text-small text-ink-500 mt-2 leading-relaxed">
               Upgrade to Pro to embed your Qwikly digital assistant on any website. Get the snippet, customise the widget, and go live in minutes.
             </p>

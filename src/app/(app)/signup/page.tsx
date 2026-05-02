@@ -68,7 +68,7 @@ const PLANS: {
     noCard: true,
     features: [
       "25 qualified leads/month",
-      "Website chat widget",
+      "Digital assistant",
       "Email lead delivery",
       '"Powered by Qwikly" branding',
       "Email support",

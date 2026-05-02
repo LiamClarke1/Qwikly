@@ -90,7 +90,7 @@ const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean;
     highlight: false,
     features: [
       "75 qualified leads/month",
-      "Website chat widget",
+      "Digital assistant",
       "Email lead delivery",
       '"Powered by Qwikly" branding',
       "Email support",

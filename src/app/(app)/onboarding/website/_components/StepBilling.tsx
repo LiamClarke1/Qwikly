@@ -35,7 +35,7 @@ export default function StepBilling({ plan, onAdvance, onBack }: Props) {
           <ul className="space-y-2.5">
             {[
               "25 qualified leads/month",
-              "Website chat widget",
+              "Digital assistant",
               "Email lead delivery",
               '"Powered by Qwikly" branding',
               "Email support",
