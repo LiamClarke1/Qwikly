@@ -7,7 +7,7 @@ export const FAQ_DATA = [
   {
     question: "How much does it cost?",
     answer:
-      "Qwikly offers three plans: Starter at R0/month (25 qualified leads, free forever), Pro at R599/month (200 qualified leads, custom branding, CSV exports), and Premium at R1,299/month (unlimited leads, API access, dedicated support). Pay annually and get 2 months free. No per-job fees, no commissions.",
+      "Qwikly offers four plans. Trial is free for 14 days with full Pro features and up to 25 leads. Starter is R399/month for 75 qualified leads. Pro is R999/month for 250 qualified leads with custom branding and CSV exports. Premium is R2,499/month for up to 1,000 qualified leads with API access and dedicated support. Pay annually and save 15%. No per-job fees, no commissions.",
   },
   {
     question: "What counts as a qualified lead?",
@@ -15,9 +15,14 @@ export const FAQ_DATA = [
       "A qualified lead is a visitor who has provided their contact details and answered your qualifying questions: service type, location, and buying intent. Bounced chats and spam are not counted against your monthly cap.",
   },
   {
-    question: "What happens if I exceed my monthly lead limit?",
+    question: "What happens when I hit my monthly lead limit?",
     answer:
       "We'll notify you before you hit your cap. You can upgrade your plan or add extra leads at R20 each. No automatic billing, no surprise charges. Your digital assistant keeps working either way.",
+  },
+  {
+    question: "What happens after my 14-day trial?",
+    answer:
+      "At the end of your trial, you choose a paid plan to continue. If you don't upgrade, your account pauses and no further leads are captured. You keep access to your dashboard and all lead history. Upgrade at any time to reactivate.",
   },
   {
     question: "What businesses is Qwikly built for?",
@@ -60,9 +65,9 @@ export const FAQ_DATA = [
       "Yes. Qwikly is fully POPIA-compliant. All visitor data is processed and stored in South Africa. We never sell your data or your customers' data to third parties.",
   },
   {
-    question: "When will WhatsApp routing and calendar integration launch?",
+    question: "When will calendar integration launch?",
     answer:
-      "Both are on the roadmap for Q3 2026. Premium plan subscribers will get early access. You'll be notified by email when they're available.",
+      "Calendar integration is on the roadmap for Q3 2026. Premium plan subscribers will get early access. You'll be notified by email when it's available.",
   },
 ];
 

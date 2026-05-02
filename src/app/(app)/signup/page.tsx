@@ -228,25 +228,30 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
       return;
     }
     setLoading(true);
-    const { data, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `https://www.qwikly.co.za/auth/callback?plan=${plan}`,
-        data: { business_name: businessName, plan },
-      },
-    });
-    if (authError) {
-      const msg = authError.message.toLowerCase();
-      if (msg.includes("already registered") || msg.includes("already exists") || msg.includes("user already")) {
-        setError("An account with this email already exists. Try signing in instead.");
-      } else {
-        setError("Something went wrong. Please try again or message us.");
+    let json: { error?: string; needsConfirmation?: boolean };
+    try {
+      const res = await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, businessName }),
+      });
+      json = await res.json();
+      if (!res.ok) {
+        const msg = (json.error ?? "").toLowerCase();
+        if (msg.includes("already registered") || msg.includes("already exists") || msg.includes("user already")) {
+          setError("An account with this email already exists. Try signing in instead.");
+        } else {
+          setError("Something went wrong. Please try again or message us.");
+        }
+        setLoading(false);
+        return;
       }
+    } catch {
+      setError("Something went wrong. Please try again or message us.");
       setLoading(false);
       return;
     }
-    if (data.session) {
+    if (!json.needsConfirmation) {
       router.push(`/onboarding/website?plan=${plan}`);
       return;
     }

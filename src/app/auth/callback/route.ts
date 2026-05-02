@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase-server";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -26,9 +27,37 @@ export async function GET(request: NextRequest) {
     );
     await supabase.auth.exchangeCodeForSession(code);
 
-    // After exchanging, check if this user has a clients row yet.
-    // If not, send them to setup regardless of the `next` param.
-    // Use the session-bound client so RLS scopes the query to this user only
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      const db = supabaseAdmin();
+      const { data: existingBiz } = await db
+        .from("businesses")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!existingBiz) {
+        const name =
+          user.user_metadata?.business_name ??
+          user.user_metadata?.full_name ??
+          user.user_metadata?.name ??
+          "";
+        await db.from("businesses").insert({
+          user_id: user.id,
+          name,
+          contact_email: user.email ?? "",
+        });
+        await db.from("subscriptions").insert({
+          user_id: user.id,
+          plan: "starter",
+          billing_cycle: "monthly",
+          status: "active",
+        });
+      }
+    }
+
+    // Check if this user has any clients yet; if not, send them to setup.
     const { data: client } = await supabase
       .from("clients")
       .select("id")

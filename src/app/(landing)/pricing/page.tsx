@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Check, Minus, Plus, Shield, MapPin } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 
-const MONTHLY = { starter: 0, pro: 599, premium: 1299 } as const;
-const ANNUAL  = { starter: 0, pro: 5990, premium: 12990 } as const;
+const MONTHLY = { trial: 0, starter: 399, pro: 999, premium: 2499 } as const;
+const ANNUAL  = { trial: 0, starter: 4068, pro: 10188, premium: 25490 } as const;
 
 type TierId = keyof typeof MONTHLY;
 
@@ -15,14 +15,31 @@ const tiers: {
   tagline: string;
   features: string[];
   highlight: boolean;
+  cta: string;
 }[] = [
+  {
+    id: "trial",
+    name: "Trial",
+    tagline: "14 days free. Full Pro features.",
+    highlight: false,
+    cta: "Start 14-day trial",
+    features: [
+      "25 qualified leads during trial",
+      "Full Pro features included",
+      "Digital assistant platform",
+      "Email lead delivery",
+      "Custom branding + questions",
+      "POPIA compliant",
+    ],
+  },
   {
     id: "starter",
     name: "Starter",
-    tagline: "Free forever. No card needed.",
+    tagline: "For businesses just getting started",
     highlight: false,
+    cta: "Start with Starter",
     features: [
-      "25 qualified leads/month",
+      "75 qualified leads/month",
       "Digital assistant platform",
       "Email lead delivery",
       '"Powered by Qwikly" branding',
@@ -35,8 +52,9 @@ const tiers: {
     name: "Pro",
     tagline: "For businesses ready to grow",
     highlight: true,
+    cta: "Start with Pro",
     features: [
-      "200 qualified leads/month",
+      "250 qualified leads/month",
       "Everything in Starter, plus:",
       "Custom branding (your logo, no Qwikly)",
       "Custom greeting + qualifying questions",
@@ -49,10 +67,10 @@ const tiers: {
     name: "Premium",
     tagline: "Unlimited leads, full control",
     highlight: false,
+    cta: "Start with Premium",
     features: [
-      "Unlimited qualified leads",
+      "Up to 1,000 qualified leads/month",
       "Everything in Pro, plus:",
-      "WhatsApp routing (coming soon)",
       "Calendar integration (coming soon)",
       "API access",
       "Dedicated support",
@@ -67,13 +85,12 @@ const featureRows: { label: string; starter: FeatureCell; pro: FeatureCell; prem
   { label: "Email lead delivery",              starter: true,        pro: true,        premium: true        },
   { label: "POPIA compliant",                  starter: true,        pro: true,        premium: true        },
   { label: "Email support",                    starter: true,        pro: true,        premium: true        },
-  { label: "Qualified leads / month",          starter: "25",        pro: "200",       premium: "Unlimited" },
+  { label: "Qualified leads / month",          starter: "75",        pro: "250",       premium: "1,000"     },
   { label: '"Powered by Qwikly" branding',    starter: true,        pro: false,       premium: false       },
   { label: "Custom branding (your logo)",      starter: false,       pro: true,        premium: true        },
   { label: "Custom greeting & questions",      starter: false,       pro: true,        premium: true        },
   { label: "Lead exports (CSV)",               starter: false,       pro: true,        premium: true        },
   { label: "Priority email support",           starter: false,       pro: true,        premium: true        },
-  { label: "WhatsApp routing",                 starter: false,       pro: false,       premium: "Soon"      },
   { label: "Calendar integration",             starter: false,       pro: false,       premium: "Soon"      },
   { label: "API access",                       starter: false,       pro: false,       premium: true        },
   { label: "Dedicated support",               starter: false,       pro: false,       premium: true        },
@@ -86,9 +103,14 @@ const pricingFAQs = [
       "A qualified lead is a visitor who has provided their contact details and answered your qualifying questions: service type, location, and buying intent. Bounced chats and spam are not counted.",
   },
   {
-    question: "What happens if I exceed my monthly limit?",
+    question: "What happens when I hit my monthly limit?",
     answer:
       "We'll notify you before you hit the cap. You can upgrade your plan, or add extra leads at R20 each. No automatic billing, no surprise charges, and your digital assistant keeps working until you decide.",
+  },
+  {
+    question: "What happens after my 14-day trial?",
+    answer:
+      "At the end of your trial, you choose a paid plan to continue. If you don't upgrade, your account pauses. You keep your dashboard and all lead history. Upgrade at any time to reactivate.",
   },
   {
     question: "Can I switch plans anytime?",
@@ -101,9 +123,9 @@ const pricingFAQs = [
       "Never. Qwikly charges a flat monthly rate only. We earn nothing from your bookings. Every rand you earn stays yours. That's the whole point of flat pricing.",
   },
   {
-    question: "When will WhatsApp routing and calendar sync launch?",
+    question: "When will calendar integration launch?",
     answer:
-      "Both features are on the roadmap for Q3 2026. Premium plan subscribers will get early access when they launch. You'll be notified by email.",
+      "Calendar integration is on the roadmap for Q3 2026. Premium plan subscribers will get early access when it launches. You'll be notified by email.",
   },
 ];
 
@@ -136,7 +158,7 @@ export default function PricingPage() {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
 
   function displayPrice(id: TierId) {
-    if (id === "starter") return 0;
+    if (id === "trial") return 0;
     return annual ? Math.round(ANNUAL[id] / 12) : MONTHLY[id];
   }
 
@@ -152,8 +174,8 @@ export default function PricingPage() {
             <em className="italic font-light">Ever.</em>
           </h1>
           <p className="mt-8 text-lg text-ink-700 max-w-xl leading-relaxed">
-            Flat monthly pricing in ZAR. No commissions, no setup fees, no lock-in.
-            Start free and upgrade only when you need more leads.
+            Start with a 14-day trial. Scale when you&apos;re ready.
+            Flat ZAR pricing, no commissions, no setup fees, cancel anytime.
           </p>
         </div>
       </section>
@@ -193,12 +215,12 @@ export default function PricingPage() {
             <span
               className={`eyebrow bg-ember text-paper px-3 py-1.5 rounded-full transition-all duration-300 ${annual ? "opacity-100 scale-100" : "opacity-0 scale-90 pointer-events-none"}`}
             >
-              Save 2 months
+              Save 15%
             </span>
           </div>
 
           {/* Tier cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
             {tiers.map((tier) => {
               const price = displayPrice(tier.id);
 
@@ -237,22 +259,22 @@ export default function PricingPage() {
                         className={`font-display font-medium leading-none ${tier.highlight ? "text-paper" : "text-ink"}`}
                         style={{ fontSize: "clamp(2.4rem, 4vw, 3rem)" }}
                       >
-                        {tier.id === "starter" ? "Free" : `R${price.toLocaleString()}`}
+                        {tier.id === "trial" ? "Free" : `R${price.toLocaleString()}`}
                       </span>
-                      {tier.id !== "starter" && (
+                      {tier.id !== "trial" && (
                         <span className={`text-sm ${tier.highlight ? "text-paper/50" : "text-ink-500"}`}>/mo</span>
                       )}
                     </div>
-                    {tier.id !== "starter" && (
+                    {tier.id !== "trial" && (
                       <p className={`text-xs mt-2 ${tier.highlight ? "text-paper/45" : "text-ink-400"}`}>
                         {annual
                           ? `Billed R${ANNUAL[tier.id].toLocaleString()}/year`
                           : "Billed monthly"}
                       </p>
                     )}
-                    {tier.id === "starter" && (
+                    {tier.id === "trial" && (
                       <p className={`text-xs mt-2 ${tier.highlight ? "text-paper/45" : "text-ink-400"}`}>
-                        No credit card required
+                        14 days · No card required
                       </p>
                     )}
                   </div>
@@ -292,7 +314,7 @@ export default function PricingPage() {
                     size="md"
                     className="w-full justify-center"
                   >
-                    {tier.id === "starter" ? "Start Free" : `Choose ${tier.name}`}
+                    {tier.cta}
                   </CTAButton>
                 </div>
               );
@@ -300,7 +322,7 @@ export default function PricingPage() {
           </div>
 
           <p className="text-center eyebrow text-ink-500 mt-10">
-            30-day money-back guarantee on Pro &amp; Premium · No setup fees · Cancel anytime
+            30-day money-back guarantee on Pro &amp; Premium · Top-ups at R20/extra lead · Cancel anytime · All prices excl. VAT
           </p>
         </div>
       </section>

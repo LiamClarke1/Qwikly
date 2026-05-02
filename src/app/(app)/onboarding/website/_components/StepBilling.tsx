@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ClientRow } from "@/lib/use-client";
 import { ArrowRight, Check, Loader2, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PLAN_CONFIG, PLAN_ANNUAL_DISCOUNT_MONTHS, type PlanTier } from "@/lib/plan";
+import { PLAN_CONFIG, PLAN_ANNUAL_DISCOUNT_PCT, type PlanTier } from "@/lib/plan";
 
 interface Props {
   client: ClientRow;
@@ -61,7 +61,7 @@ export default function StepBilling({ plan, onAdvance, onBack }: Props) {
   }
 
   const monthly = config.priceMonthly;
-  const annualTotal = monthly * (12 - PLAN_ANNUAL_DISCOUNT_MONTHS);
+  const annualTotal = Math.round(monthly * 12 * (1 - PLAN_ANNUAL_DISCOUNT_PCT));
   const annualMonthly = Math.round(annualTotal / 12);
 
   async function handleCheckout(cycle: "monthly" | "annual") {
@@ -145,7 +145,7 @@ export default function StepBilling({ plan, onAdvance, onBack }: Props) {
 
       <div className="flex items-center gap-2 text-tiny text-fg-subtle mb-8">
         <CreditCard className="w-3.5 h-3.5 shrink-0" />
-        Secure payment via Stripe. Your card details are never stored by Qwikly.
+        Secure payment via Paystack. Your card details are never stored by Qwikly.
       </div>
 
       <div className="flex gap-3">

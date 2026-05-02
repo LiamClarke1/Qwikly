@@ -9,9 +9,10 @@ export type V2AuthContext = {
   businessId: string;
   plan: PlanTier;
   subscriptionStatus: string;
-  stripeCustomerId: string | null;
-  stripeSubscriptionId: string | null;
-  stripeTopupItemId: string | null;
+  paystackCustomerCode: string | null;
+  paystackSubscriptionCode: string | null;
+  paystackEmailToken: string | null;
+  cancelAtPeriodEnd: boolean;
 };
 
 export async function v2Auth(): Promise<V2AuthContext | null> {
@@ -40,7 +41,7 @@ export async function v2Auth(): Promise<V2AuthContext | null> {
   const [{ data: business }, { data: sub }] = await Promise.all([
     db.from("businesses").select("id").eq("user_id", user.id).maybeSingle(),
     db.from("subscriptions")
-      .select("plan, status, stripe_customer_id, stripe_subscription_id, stripe_topup_item_id")
+      .select("plan, status, paystack_customer_code, paystack_subscription_code, paystack_email_token, cancel_at_period_end")
       .eq("user_id", user.id)
       .maybeSingle(),
   ]);
@@ -55,8 +56,9 @@ export async function v2Auth(): Promise<V2AuthContext | null> {
     businessId: business.id,
     plan: (sub?.plan as PlanTier) ?? "starter",
     subscriptionStatus: sub?.status ?? "active",
-    stripeCustomerId: sub?.stripe_customer_id ?? null,
-    stripeSubscriptionId: sub?.stripe_subscription_id ?? null,
-    stripeTopupItemId: sub?.stripe_topup_item_id ?? null,
+    paystackCustomerCode: sub?.paystack_customer_code ?? null,
+    paystackSubscriptionCode: sub?.paystack_subscription_code ?? null,
+    paystackEmailToken: sub?.paystack_email_token ?? null,
+    cancelAtPeriodEnd: sub?.cancel_at_period_end ?? false,
   };
 }

@@ -64,7 +64,10 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json(
-    { user: { id: data.user?.id, email: data.user?.email } },
+    {
+      user: { id: data.user?.id, email: data.user?.email },
+      needsConfirmation: !data.session,
+    },
     { status: 201 }
   );
 }

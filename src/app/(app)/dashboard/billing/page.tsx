@@ -24,6 +24,8 @@ interface SubscriptionData {
   cycle: BillingCycle;
   renewsAt: string;
   paymentMethod: { brand: string; last4: string } | null;
+  status: string;
+  cancelAtPeriodEnd: boolean;
 }
 
 interface SubscriptionInvoice {
@@ -53,29 +55,21 @@ async function fetchInvoices(): Promise<SubscriptionInvoice[]> {
   return invoices ?? [];
 }
 
-// TODO: wire to subscription service — POST /api/subscription/change
-// Body:    { plan: PlanId; cycle: BillingCycle }
-// Returns: { effectiveDate: string; prorated: number | null }
-// Rules:   Annual → monthly downgrade: defer to renewal, no refund.
-//          Upgrade: prorate immediately.
-//          Same tier cycle change: defer to renewal.
-async function requestPlanChange(plan: PlanId, cycle: BillingCycle): Promise<void> {
-  await fetch("/api/subscription/change", {
+async function requestPlanChange(plan: PlanId, cycle: BillingCycle): Promise<string | null> {
+  const res = await fetch("/api/subscription/change", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ plan, cycle }),
   });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.url ?? null;
 }
 
-// TODO: wire to subscription service — POST /api/subscription/cancel
-// Returns: { cancelAt: string }
-// Rules:   Access continues until renewsAt. No refund outside 30-day window.
 async function requestCancel(): Promise<void> {
   await fetch("/api/subscription/cancel", { method: "POST" });
 }
 
-// TODO: wire to Yoco — POST /api/subscription/payment-method
-// Returns: { url: string }  (Yoco hosted card update URL)
 async function requestPaymentMethodUpdate(): Promise<string | null> {
   const res = await fetch("/api/subscription/payment-method", { method: "POST" });
   if (!res.ok) return null;
@@ -307,27 +301,29 @@ export default function BillingPage() {
     );
   }
 
-  if (!sub) {
-    return (
-      <div className="animate-fade-in max-w-4xl">
-        <PageHeader eyebrow="Account" title="Billing" />
-        <p className="text-body text-fg-muted">
-          No active subscription found.{" "}
-          <a href="/signup" className="text-brand hover:underline">Get started</a>
-        </p>
-      </div>
-    );
-  }
+  // Starter users have no paid subscription row — show them on the free plan
+  const effectiveSub = sub ?? {
+    plan: "starter" as PlanId,
+    cycle: "monthly" as BillingCycle,
+    renewsAt: null,
+    paymentMethod: null,
+    status: "active",
+    cancelAtPeriodEnd: false,
+  };
 
   const currentPlanId: PlanId = resolvedPlan ?? "starter";
   const plan = PLANS[currentPlanId];
-  const isMonthly = sub.cycle === "monthly";
+  const isMonthly = effectiveSub.cycle === "monthly";
   const monthlyPrice = MONTHLY[currentPlanId];
   const displayPrice = isMonthly ? monthlyPrice : Math.round(ANNUAL[currentPlanId] / 12);
   const annualSaving = monthlyPrice * 2;
 
   async function handlePlanChange(plan: PlanId, cycle: BillingCycle) {
-    await requestPlanChange(plan, cycle);
+    const url = await requestPlanChange(plan, cycle);
+    if (url) {
+      window.location.href = url;
+      return;
+    }
     await loadData();
   }
 
@@ -357,7 +353,7 @@ export default function BillingPage() {
           <p className="text-small font-semibold text-fg">Current subscription</p>
           {isMonthly && (
             <button
-              onClick={() => setPendingChange({ plan: sub.plan, cycle: "annual" })}
+              onClick={() => setPendingChange({ plan: effectiveSub.plan, cycle: "annual" })}
               className="flex items-center gap-1 text-tiny font-medium text-brand hover:underline cursor-pointer transition-colors"
             >
               Switch to annual — save {fmt(annualSaving)}/yr
@@ -378,7 +374,7 @@ export default function BillingPage() {
                 )}
               </div>
               <p className="text-small text-fg-muted">{plan.tagline}</p>
-              <p className="text-tiny text-fg-subtle mt-1 capitalize">{sub.cycle} billing</p>
+              <p className="text-tiny text-fg-subtle mt-1 capitalize">{effectiveSub.cycle} billing</p>
             </div>
             <div className="text-right">
               <p className="text-display-2 font-display text-fg">
@@ -387,17 +383,26 @@ export default function BillingPage() {
               </p>
               {!isMonthly && (
                 <p className="text-tiny text-fg-muted mt-0.5">
-                  Billed {fmt(ANNUAL[sub.plan])}/year
+                  Billed {fmt(ANNUAL[effectiveSub.plan])}/year
                 </p>
               )}
             </div>
           </div>
 
           <div className="mt-5 pt-4 border-t border-line/50 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-fg-muted shrink-0" />
+            <Calendar className={cn("w-4 h-4 shrink-0", effectiveSub.cancelAtPeriodEnd ? "text-warning" : "text-fg-muted")} />
             <p className="text-small text-fg-muted">
-              Next renewal{" "}
-              <span className="text-fg font-medium">{fmtDateLong(sub.renewsAt)}</span>
+              {effectiveSub.cancelAtPeriodEnd ? (
+                <>
+                  <span className="text-warning font-medium">Cancels on</span>{" "}
+                  <span className="text-fg font-medium">{fmtDateLong(effectiveSub.renewsAt ?? "")}</span>
+                </>
+              ) : (
+                <>
+                  Next renewal{" "}
+                  <span className="text-fg font-medium">{fmtDateLong(effectiveSub.renewsAt ?? "")}</span>
+                </>
+              )}
             </p>
           </div>
         </div>
@@ -482,7 +487,7 @@ export default function BillingPage() {
                       variant={isUpgrade ? "primary" : "outline"}
                       size="sm"
                       className="w-full justify-center"
-                      onClick={() => setPendingChange({ plan: planId, cycle: sub.cycle })}
+                      onClick={() => setPendingChange({ plan: planId, cycle: effectiveSub.cycle })}
                     >
                       {isUpgrade ? "Upgrade" : "Downgrade"}
                     </Button>
@@ -499,13 +504,13 @@ export default function BillingPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-small font-semibold text-fg mb-2">Payment method</p>
-            {sub.paymentMethod ? (
+            {effectiveSub.paymentMethod ? (
               <div className="flex items-center gap-3">
                 <div className="w-10 h-7 bg-white/8 border border-line rounded flex items-center justify-center">
                   <CreditCard className="w-4 h-4 text-fg-muted" aria-hidden="true" />
                 </div>
                 <p className="text-small text-fg capitalize">
-                  {sub.paymentMethod.brand} ending in {sub.paymentMethod.last4}
+                  {effectiveSub.paymentMethod!.brand} ending in {effectiveSub.paymentMethod!.last4}
                 </p>
               </div>
             ) : (
@@ -617,7 +622,7 @@ export default function BillingPage() {
         <PlanChangeModal
           from={currentPlanId}
           to={pendingChange.plan}
-          fromCycle={sub.cycle}
+          fromCycle={effectiveSub.cycle}
           toCycle={pendingChange.cycle}
           onClose={() => setPendingChange(null)}
           onConfirm={() => handlePlanChange(pendingChange.plan, pendingChange.cycle)}
@@ -625,7 +630,7 @@ export default function BillingPage() {
       )}
       {showCancel && (
         <CancelModal
-          renewsAt={sub.renewsAt}
+          renewsAt={effectiveSub.renewsAt ?? ""}
           onClose={() => setShowCancel(false)}
           onConfirm={handleCancel}
         />

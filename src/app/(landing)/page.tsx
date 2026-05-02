@@ -437,29 +437,29 @@ const differentiators = [
 const teaserTiers = [
   {
     name: "Starter",
-    price: "R0",
+    price: "R399",
     period: "/month",
-    tagline: "Free forever",
+    tagline: "For businesses getting started",
     highlight: false,
     features: [
-      "25 qualified leads/month",
+      "75 qualified leads/month",
       "Digital assistant platform",
       "Email lead delivery",
       '"Powered by Qwikly" branding',
       "Email support",
     ],
-    cta: "Start Free",
+    cta: "Start with Starter",
     href: "/signup?plan=starter",
     variant: "primary" as const,
   },
   {
     name: "Pro",
-    price: "R599",
+    price: "R999",
     period: "/month",
     tagline: "Most popular",
     highlight: true,
     features: [
-      "200 qualified leads/month",
+      "250 qualified leads/month",
       "Custom branding (your logo)",
       "Custom greeting & questions",
       "Lead exports (CSV)",
@@ -471,18 +471,17 @@ const teaserTiers = [
   },
   {
     name: "Premium",
-    price: "R1,299",
+    price: "R2,499",
     period: "/month",
-    tagline: "Unlimited everything",
+    tagline: "Unlimited leads, full control",
     highlight: false,
     features: [
-      "Unlimited qualified leads",
+      "Up to 1,000 qualified leads/month",
       "Everything in Pro",
-      "WhatsApp routing (coming soon)",
       "Calendar integration (coming soon)",
       "API access + dedicated support",
     ],
-    cta: "Get Premium",
+    cta: "Start with Premium",
     href: "/signup?plan=premium",
     variant: "outline" as const,
   },
@@ -559,7 +558,7 @@ export default function Home() {
                   </CTAButton>
                 </div>
                 <p className="text-sm text-ink-500">
-                  No credit card. Free forever on Starter. Upgrade when you need more.
+                  Free 14-day trial. No credit card required. Upgrade when you&apos;re ready.
                 </p>
               </div>
             </div>
@@ -794,7 +793,7 @@ export default function Home() {
               <p className="text-sm font-medium">30-day money-back guarantee on Pro and Premium</p>
             </div>
             <p className="text-sm text-ink-500">
-              Pay annually and get 2 months free · Top-ups at R20/extra lead
+              Save 15% with annual billing · Top-ups at R20/extra lead · All prices excl. VAT
             </p>
             <CTAButton variant="outline" size="md" href="/pricing">
               See full pricing and comparison table

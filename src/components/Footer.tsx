@@ -98,17 +98,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Meta Partner Disclosure */}
-        <div className="mt-10 mb-8 py-6 border-b border-paper/10">
-          <p className="text-xs text-paper/35 leading-relaxed max-w-2xl">
-            Qwikly connects your business to the WhatsApp Business Platform via Meta&rsquo;s official
-            Cloud API. Qwikly is not affiliated with, endorsed by, or a representative of Meta
-            Platforms, Inc. WhatsApp is a trademark of Meta Platforms, Inc. All product names,
-            logos, and brands are property of their respective owners.
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-paper/40">
+        <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs text-paper/40">
           <p className="eyebrow">POPIA compliant &middot; Customer data stays in South Africa</p>
           <p className="eyebrow">&copy; {new Date().getFullYear()} Qwikly (Clarke Agency). All rights reserved.</p>
         </div>
