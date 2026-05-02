@@ -114,13 +114,13 @@ export const PLAN_MAP: Record<string, string | undefined> = {
 // Amount in ZAR cents — monthly × 12 × 0.85 for annual (15% off)
 export const PLAN_AMOUNTS: Record<string, number> = {
   starter_monthly: 39900,
-  starter_annual: 406800,   // R399 × 12 × 0.85 = R4,068
+  starter_annual: 406800,    // legacy — no longer sold
   pro_monthly: 99900,
-  pro_annual: 1018800,      // R999 × 12 × 0.85 = R10,188
-  premium_monthly: 249900,
-  premium_annual: 2549000,  // R2,499 × 12 × 0.85 = R25,490
-  billions_monthly: 499900,
-  billions_annual: 5099000, // R4,999 × 12 × 0.85 = R50,990
+  pro_annual: 1018800,       // R999 × 12 × 0.85 = R10,188
+  premium_monthly: 199900,
+  premium_annual: 2038800,   // R1,999 × 12 × 0.85 = R20,390
+  billions_monthly: 299900,
+  billions_annual: 3059000,  // R2,999 × 12 × 0.85 = R30,590
 };
 
 // Reverse lookup: plan_code → { plan, cycle }

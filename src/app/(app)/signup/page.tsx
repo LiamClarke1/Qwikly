@@ -76,11 +76,11 @@ const PLANS: {
     ],
   },
   {
-    id: "starter",
-    name: "Starter",
-    price: "R399",
+    id: "pro",
+    name: "Pro",
+    price: "R999",
     sub: "/month",
-    cta: "Start with Starter",
+    cta: "Start with Pro",
     noCard: false,
     features: [
       "75 qualified leads/month",
@@ -91,12 +91,12 @@ const PLANS: {
     ],
   },
   {
-    id: "pro",
-    name: "Pro",
-    price: "R999",
+    id: "premium",
+    name: "Premium",
+    price: "R1,999",
     sub: "/month",
     badge: "Most Popular",
-    cta: "Choose Pro",
+    cta: "Choose Premium",
     noCard: false,
     features: [
       "250 qualified leads/month",
@@ -107,15 +107,15 @@ const PLANS: {
     ],
   },
   {
-    id: "premium",
-    name: "Premium",
-    price: "R2,499",
+    id: "billions",
+    name: "Billions",
+    price: "R2,999",
     sub: "/month",
-    cta: "Choose Premium",
+    cta: "Choose Billions",
     noCard: false,
     features: [
-      "Up to 1,000 qualified leads/month",
-      "Everything in Pro, plus:",
+      "1,000 qualified leads/month",
+      "Everything in Premium, plus:",
       "Calendar integration (coming soon)",
       "API access",
       "Dedicated support",
@@ -304,10 +304,10 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
 
   const planLabel =
     plan === "trial" ? "Free Trial — 14 days, no card required" :
-    plan === "starter" ? "Starter — R399/mo" :
     plan === "pro" ? "Pro — R999/mo" :
-    plan === "billions" ? "Billions — R4,999/mo" :
-    "Premium — R2,499/mo";
+    plan === "premium" ? "Premium — R1,999/mo" :
+    plan === "billions" ? "Billions — R2,999/mo" :
+    "Free Trial — 14 days, no card required";
 
   return (
     <div className="w-full max-w-md">
@@ -453,7 +453,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
 function SignupContent() {
   const searchParams = useSearchParams();
   const rawPlan = searchParams.get("plan");
-  const validPlans: PlanTier[] = ["trial", "starter", "pro", "premium", "billions"];
+  const validPlans: PlanTier[] = ["trial", "pro", "premium", "billions"];
   const initialPlan: PlanTier | null = validPlans.includes(rawPlan as PlanTier)
     ? (rawPlan as PlanTier)
     : null;

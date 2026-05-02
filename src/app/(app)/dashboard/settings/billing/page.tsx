@@ -80,14 +80,14 @@ async function requestPaymentMethodUpdate(): Promise<string | null> {
 
 // ─── Pricing constants ────────────────────────────────────────────────────────
 
-const MONTHLY: Record<PlanId, number> = { starter: 399, pro: 999, premium: 2499, billions: 4999 };
+const MONTHLY: Record<PlanId, number> = { starter: 399, pro: 999, premium: 1999, billions: 2999 };
 // Annual = 15% discount
-const ANNUAL:  Record<PlanId, number> = { starter: 4069, pro: 10190, premium: 25490, billions: 50990 };
+const ANNUAL:  Record<PlanId, number> = { starter: 4069, pro: 10188, premium: 20390, billions: 30590 };
 
 const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean; features: string[] }> = {
   starter: {
     name: "Starter",
-    tagline: "Most affordable entry point",
+    tagline: "Legacy plan",
     highlight: false,
     features: [
       "75 qualified leads/month",
@@ -99,6 +99,18 @@ const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean;
   },
   pro: {
     name: "Pro",
+    tagline: "For businesses just getting started",
+    highlight: false,
+    features: [
+      "75 qualified leads/month",
+      "Digital assistant",
+      "Email lead delivery",
+      '"Powered by Qwikly" branding',
+      "Email support",
+    ],
+  },
+  premium: {
+    name: "Premium",
     tagline: "Most popular for growing businesses",
     highlight: true,
     features: [
@@ -109,28 +121,16 @@ const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean;
       "Priority email support",
     ],
   },
-  premium: {
-    name: "Premium",
-    tagline: "Maximum leads, dedicated support",
+  billions: {
+    name: "Billions",
+    tagline: "Maximum leads, full control",
     highlight: false,
     features: [
       "1,000 qualified leads/month",
-      "Everything in Pro, plus:",
+      "Everything in Premium, plus:",
       "Calendar integration (coming soon)",
       "API access",
       "Dedicated support",
-    ],
-  },
-  billions: {
-    name: "Billions",
-    tagline: "Enterprise scale, full white-label",
-    highlight: false,
-    features: [
-      "5,000 qualified leads/month",
-      "Everything in Premium, plus:",
-      "White-label (no Qwikly branding)",
-      "Dedicated account manager",
-      "Custom integrations",
     ],
   },
 };
@@ -481,8 +481,8 @@ export default function BillingPage() {
           </p>
         </div>
         <div className="p-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-            {(["starter", "pro", "premium", "billions"] as PlanId[]).map((planId) => {
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {(["pro", "premium", "billions"] as PlanId[]).map((planId) => {
               const meta = PLANS[planId];
               const isCurrent = !isTrialPlan && planId === currentPlanId;
               const price = isMonthly ? MONTHLY[planId] : Math.round(ANNUAL[planId] / 12);

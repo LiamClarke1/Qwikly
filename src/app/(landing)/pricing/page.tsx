@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Check, Minus, Plus, Shield, MapPin } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 
-const MONTHLY = { trial: 0, starter: 399, pro: 999, premium: 2499, billions: 4999 } as const;
-const ANNUAL  = { trial: 0, starter: 4068, pro: 10188, premium: 25490, billions: 50990 } as const;
+const MONTHLY = { trial: 0, pro: 999, premium: 1999, billions: 2999 } as const;
+const ANNUAL  = { trial: 0, pro: 10188, premium: 20390, billions: 30590 } as const;
 
 type TierId = keyof typeof MONTHLY;
 
@@ -20,12 +20,12 @@ const tiers: {
   {
     id: "trial",
     name: "Trial",
-    tagline: "14 days free. Full Pro features.",
+    tagline: "14 days free. No card required.",
     highlight: false,
     cta: "Start 14-day trial",
     features: [
       "25 qualified leads during trial",
-      "Full Pro features included",
+      "Full Premium features included",
       "Digital assistant platform",
       "Email lead delivery",
       "Custom branding + questions",
@@ -33,11 +33,11 @@ const tiers: {
     ],
   },
   {
-    id: "starter",
-    name: "Starter",
-    tagline: "For businesses just getting started",
+    id: "pro",
+    name: "Pro",
+    tagline: "For businesses getting started",
     highlight: false,
-    cta: "Start with Starter",
+    cta: "Start with Pro",
     features: [
       "75 qualified leads/month",
       "Digital assistant platform",
@@ -48,14 +48,14 @@ const tiers: {
     ],
   },
   {
-    id: "pro",
-    name: "Pro",
+    id: "premium",
+    name: "Premium",
     tagline: "For businesses ready to grow",
     highlight: true,
-    cta: "Start with Pro",
+    cta: "Start with Premium",
     features: [
       "250 qualified leads/month",
-      "Everything in Starter, plus:",
+      "Everything in Pro, plus:",
       "Custom branding (your logo, no Qwikly)",
       "Custom greeting + qualifying questions",
       "Lead exports (CSV)",
@@ -63,53 +63,37 @@ const tiers: {
     ],
   },
   {
-    id: "premium",
-    name: "Premium",
-    tagline: "Unlimited leads, full control",
-    highlight: false,
-    cta: "Start with Premium",
-    features: [
-      "Up to 1,000 qualified leads/month",
-      "Everything in Pro, plus:",
-      "Calendar integration (coming soon)",
-      "API access",
-      "Dedicated support",
-    ],
-  },
-  {
-    id: "billions" as TierId,
+    id: "billions",
     name: "Billions",
-    tagline: "Enterprise scale, white-label",
+    tagline: "Full scale, full control",
     highlight: false,
     cta: "Start with Billions",
     features: [
-      "5,000 qualified leads/month",
+      "1,000 qualified leads/month",
       "Everything in Premium, plus:",
-      "White-label (no Qwikly branding)",
-      "Dedicated account manager",
-      "Custom integrations",
+      "Calendar integration (coming soon)",
+      "API access",
+      "Dedicated support",
     ],
   },
 ];
 
 type FeatureCell = boolean | string;
 
-const featureRows: { label: string; starter: FeatureCell; pro: FeatureCell; premium: FeatureCell; billions: FeatureCell }[] = [
-  { label: "Digital assistant platform",       starter: true,   pro: true,    premium: true,    billions: true     },
-  { label: "Email lead delivery",             starter: true,   pro: true,    premium: true,    billions: true     },
-  { label: "POPIA compliant",                 starter: true,   pro: true,    premium: true,    billions: true     },
-  { label: "Email support",                   starter: true,   pro: true,    premium: true,    billions: true     },
-  { label: "Qualified leads / month",         starter: "75",   pro: "250",   premium: "1,000", billions: "5,000"  },
-  { label: '"Powered by Qwikly" branding',   starter: true,   pro: false,   premium: false,   billions: false    },
-  { label: "Custom branding (your logo)",     starter: false,  pro: true,    premium: true,    billions: true     },
-  { label: "Custom greeting & questions",     starter: false,  pro: true,    premium: true,    billions: true     },
-  { label: "Lead exports (CSV)",              starter: false,  pro: true,    premium: true,    billions: true     },
-  { label: "Priority email support",          starter: false,  pro: true,    premium: true,    billions: true     },
-  { label: "Calendar integration",            starter: false,  pro: false,   premium: "Soon",  billions: true     },
-  { label: "API access",                      starter: false,  pro: false,   premium: true,    billions: true     },
-  { label: "Dedicated support",              starter: false,  pro: false,   premium: true,    billions: true     },
-  { label: "White-label (no Qwikly)",        starter: false,  pro: false,   premium: false,   billions: true     },
-  { label: "Dedicated account manager",      starter: false,  pro: false,   premium: false,   billions: true     },
+const featureRows: { label: string; pro: FeatureCell; premium: FeatureCell; billions: FeatureCell }[] = [
+  { label: "Digital assistant platform",       pro: true,    premium: true,    billions: true     },
+  { label: "Email lead delivery",              pro: true,    premium: true,    billions: true     },
+  { label: "POPIA compliant",                  pro: true,    premium: true,    billions: true     },
+  { label: "Email support",                    pro: true,    premium: true,    billions: true     },
+  { label: "Qualified leads / month",          pro: "75",    premium: "250",   billions: "1,000"  },
+  { label: '"Powered by Qwikly" branding',    pro: true,    premium: false,   billions: false    },
+  { label: "Custom branding (your logo)",      pro: false,   premium: true,    billions: true     },
+  { label: "Custom greeting & questions",      pro: false,   premium: true,    billions: true     },
+  { label: "Lead exports (CSV)",               pro: false,   premium: true,    billions: true     },
+  { label: "Priority email support",           pro: false,   premium: true,    billions: true     },
+  { label: "Calendar integration",             pro: false,   premium: false,   billions: "Soon"   },
+  { label: "API access",                       pro: false,   premium: false,   billions: true     },
+  { label: "Dedicated support",               pro: false,   premium: false,   billions: true     },
 ];
 
 const pricingFAQs = [
@@ -145,10 +129,10 @@ const pricingFAQs = [
   },
 ];
 
-function TableCell({ value, isProCol }: { value: FeatureCell; isProCol?: boolean }) {
+function TableCell({ value, isPremiumCol }: { value: FeatureCell; isPremiumCol?: boolean }) {
   if (typeof value === "string") {
     return (
-      <span className={`font-display text-lg leading-none ${isProCol ? "text-ember" : "text-ink"}`}>
+      <span className={`font-display text-lg leading-none ${isPremiumCol ? "text-ember" : "text-ink"}`}>
         {value}
       </span>
     );
@@ -236,7 +220,7 @@ export default function PricingPage() {
           </div>
 
           {/* Tier cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
             {tiers.map((tier) => {
               const price = displayPrice(tier.id);
 
@@ -244,11 +228,7 @@ export default function PricingPage() {
                 <div
                   key={tier.id}
                   className={`relative flex flex-col ${
-                    tier.highlight
-                      ? "ed-card-ink"
-                      : tier.id === "premium"
-                      ? "ed-card"
-                      : "ed-card-ghost"
+                    tier.highlight ? "ed-card-ink" : "ed-card-ghost"
                   } ${tier.highlight ? "pt-10" : ""}`}
                 >
                   {/* Most Popular badge */}
@@ -338,7 +318,7 @@ export default function PricingPage() {
           </div>
 
           <p className="text-center eyebrow text-ink-500 mt-10">
-            30-day money-back guarantee on Pro &amp; Premium · Top-ups at R20/extra lead · Cancel anytime · All prices excl. VAT
+            30-day money-back guarantee on all paid plans · Top-ups at R20/extra lead · Cancel anytime · All prices excl. VAT
           </p>
         </div>
       </section>
@@ -359,17 +339,14 @@ export default function PricingPage() {
             <table className="w-full border-collapse min-w-[620px]">
               <thead>
                 <tr className="border-b border-ink/10">
-                  <th className="text-left pb-5 pr-6 font-normal eyebrow text-ink-500 w-[38%]">
+                  <th className="text-left pb-5 pr-6 font-normal eyebrow text-ink-500 w-[40%]">
                     Feature
                   </th>
                   <th className="pb-5 px-4 text-center font-normal eyebrow text-ink-500">
-                    Starter
+                    Pro
                   </th>
                   <th className="pb-5 px-4 text-center font-normal">
-                    <span className="eyebrow text-ember">Pro</span>
-                  </th>
-                  <th className="pb-5 px-4 text-center font-normal eyebrow text-ink-500">
-                    Premium
+                    <span className="eyebrow text-ember">Premium</span>
                   </th>
                   <th className="pb-5 px-4 text-center font-normal eyebrow text-ink-500">
                     Billions
@@ -383,13 +360,10 @@ export default function PricingPage() {
                       {row.label}
                     </td>
                     <td className="py-4 px-4 text-center">
-                      <TableCell value={row.starter} />
+                      <TableCell value={row.pro} />
                     </td>
                     <td className="py-4 px-4 text-center">
-                      <TableCell value={row.pro} isProCol />
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <TableCell value={row.premium} />
+                      <TableCell value={row.premium} isPremiumCol />
                     </td>
                     <td className="py-4 px-4 text-center">
                       <TableCell value={row.billions} />
@@ -416,9 +390,8 @@ export default function PricingPage() {
               <em className="italic font-light">you pay nothing</em>.
             </h2>
             <p className="text-ink-700 leading-relaxed max-w-lg mx-auto">
-              Try Pro or Premium for 30 days. If you&rsquo;re not happy for any reason,
+              Try any paid plan for 30 days. If you&rsquo;re not happy for any reason,
               we&rsquo;ll refund every cent. No hoops, no questions asked.
-              (Starter is free. No guarantee needed.)
             </p>
           </div>
         </div>
@@ -544,10 +517,10 @@ export default function PricingPage() {
             Free to start. Live in 5 minutes. No per-job fees, ever.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <CTAButton size="lg" variant="solid" href="/signup?plan=pro">
-              Start with Pro
+            <CTAButton size="lg" variant="solid" href="/signup?plan=premium">
+              Start with Premium
             </CTAButton>
-            <CTAButton size="lg" variant="outline-light" href="/signup?plan=starter" withArrow={false}>
+            <CTAButton size="lg" variant="outline-light" href="/signup?plan=trial" withArrow={false}>
               Start Free
             </CTAButton>
           </div>

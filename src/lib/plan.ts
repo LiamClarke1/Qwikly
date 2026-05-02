@@ -1,3 +1,4 @@
+// 'starter' kept as a legacy type only — no longer offered to new users
 export type PlanTier = 'trial' | 'starter' | 'pro' | 'premium' | 'billions';
 
 interface PlanConfig {
@@ -24,6 +25,7 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     apiAccess: false,
     supportTier: 'priority',
   },
+  // Legacy — existing subscribers only, no longer shown in UI
   starter: {
     name: 'Starter',
     priceMonthly: 399,
@@ -38,6 +40,17 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
   pro: {
     name: 'Pro',
     priceMonthly: 999,
+    leadLimit: 75,
+    removeBranding: false,
+    customGreeting: false,
+    csvExport: false,
+    calendarIntegration: false,
+    apiAccess: false,
+    supportTier: 'email',
+  },
+  premium: {
+    name: 'Premium',
+    priceMonthly: 1999,
     leadLimit: 250,
     removeBranding: true,
     customGreeting: true,
@@ -46,21 +59,10 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     apiAccess: false,
     supportTier: 'priority',
   },
-  premium: {
-    name: 'Premium',
-    priceMonthly: 2499,
-    leadLimit: 1000,
-    removeBranding: true,
-    customGreeting: true,
-    csvExport: true,
-    calendarIntegration: true,
-    apiAccess: true,
-    supportTier: 'dedicated',
-  },
   billions: {
     name: 'Billions',
-    priceMonthly: 4999,
-    leadLimit: 5000,
+    priceMonthly: 2999,
+    leadLimit: 1000,
     removeBranding: true,
     customGreeting: true,
     csvExport: true,
@@ -74,9 +76,9 @@ export function resolvePlan(raw: string | null | undefined): PlanTier {
   if (raw === 'trial') return 'trial';
   if (raw === 'pro') return 'pro';
   if (raw === 'premium' || raw === 'business') return 'premium';
-  if (raw === 'starter' || raw === 'lite') return 'starter';
   if (raw === 'billions') return 'billions';
-  return 'starter';
+  if (raw === 'starter' || raw === 'lite') return 'starter';
+  return 'trial';
 }
 
 export function nextRenewalDate(): Date {
