@@ -106,6 +106,16 @@ export interface ClientRow {
   ga_measurement_id?: string | null;
   meta_pixel_id?: string | null;
   public_key?: string | null;
+  // scrape-populated fields (20260504_scrape_fields.sql)
+  phone?: string | null;
+  facebook_url?: string | null;
+  instagram_url?: string | null;
+  testimonials?: string | null;
+  star_rating?: string | null;
+  review_count?: string | null;
+  scraped_at?: string | null;
+  scrape_confidence?: Record<string, string> | null;
+  auth_user_id?: string | null;
 }
 
 export function useClient() {

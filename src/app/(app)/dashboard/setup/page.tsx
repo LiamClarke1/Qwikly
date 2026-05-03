@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 
 import { useState, useEffect, FormEvent, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
 import Link from "next/link";
 import {
@@ -90,6 +89,9 @@ interface FormData {
   ai_tone: string; ai_language: string; ai_response_style: string; ai_greeting: string;
   ai_escalation_triggers: string; ai_escalation_custom: string;
   ai_unhappy_customer: string; ai_always_do: string; ai_never_say: string; ai_sign_off: string;
+  notification_phone: string; notification_email: string;
+  facebook_url: string; instagram_url: string;
+  star_rating: string; review_count: string; testimonials: string;
 }
 
 const empty: FormData = {
@@ -104,6 +106,9 @@ const empty: FormData = {
   ai_tone: "", ai_language: "", ai_response_style: "", ai_greeting: "",
   ai_escalation_triggers: "", ai_escalation_custom: "",
   ai_unhappy_customer: "", ai_always_do: "", ai_never_say: "", ai_sign_off: "",
+  notification_phone: "", notification_email: "",
+  facebook_url: "", instagram_url: "",
+  star_rating: "", review_count: "", testimonials: "",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -121,6 +126,10 @@ function applyAutoFill(data: Record<string, string>, base: FormData): { form: Fo
     response_time: "response_time", team_size2: "team_size",
     unique_selling_point: "unique_selling_point", guarantees: "guarantees",
     common_questions: "common_questions",
+    phone: "notification_phone", email: "notification_email",
+    facebook_url: "facebook_url", instagram_url: "instagram_url",
+    star_rating: "star_rating", review_count: "review_count",
+    testimonials: "testimonials",
   };
 
   const next = { ...base };
@@ -135,7 +144,9 @@ function applyAutoFill(data: Record<string, string>, base: FormData): { form: Fo
 function buildHighlights(data: Record<string, string>): string[] {
   const out: string[] = [];
   if (data.business_name) out.push(`Business: ${data.business_name}`);
-  if (data.trade) out.push(`Trade: ${data.trade}`);
+  if (data.phone) out.push(`Phone: ${data.phone}`);
+  if (data.star_rating && data.review_count) out.push(`${data.star_rating}★ from ${data.review_count} reviews`);
+  else if (data.star_rating) out.push(`${data.star_rating}★ star rating found`);
   if (data.services_offered) {
     const lines = data.services_offered.split("\n").filter((l) => l.trim()).length;
     if (lines > 0) out.push(`${lines} service${lines > 1 ? "s" : ""} found`);
@@ -144,11 +155,12 @@ function buildHighlights(data: Record<string, string>): string[] {
     const lines = data.example_prices.split("\n").filter((l) => l.trim()).length;
     if (lines > 0) out.push(`${lines} price example${lines > 1 ? "s" : ""} found`);
   }
-  if (data.areas) out.push(`Service areas: ${data.areas.split(",").slice(0, 3).join(", ")}${data.areas.split(",").length > 3 ? "…" : ""}`);
+  if (data.areas) out.push(`Areas: ${data.areas.split(",").slice(0, 3).join(", ")}${data.areas.split(",").length > 3 ? "…" : ""}`);
+  if (data.testimonials) out.push("Customer testimonials found");
   if (data.certifications) out.push("Certifications detected");
+  if (data.facebook_url || data.instagram_url) out.push("Social profiles found");
   if (data.guarantees) out.push("Guarantees detected");
-  if (data.unique_selling_point) out.push("Selling points found");
-  return out.slice(0, 6);
+  return out.slice(0, 7);
 }
 
 function buildSystemPrompt(f: FormData): string {
@@ -1123,6 +1135,13 @@ export default function SetupPage() {
     trade: client?.trade ?? "",
     whatsapp_number: client?.whatsapp_number ?? "",
     google_calendar_email: client?.google_calendar_id ?? "",
+    notification_phone: client?.phone ?? client?.notification_phone ?? "",
+    notification_email: client?.notification_email ?? client?.support_email ?? "",
+    facebook_url: client?.facebook_url ?? "",
+    instagram_url: client?.instagram_url ?? "",
+    star_rating: client?.star_rating ?? "",
+    review_count: client?.review_count ?? "",
+    testimonials: client?.testimonials ?? "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1197,7 +1216,7 @@ export default function SetupPage() {
     setSaving(true);
     setError(null);
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       business_name: form.business_name,
       owner_name: form.owner_name,
       trade: form.trade.toLowerCase(),
@@ -1239,19 +1258,30 @@ export default function SetupPage() {
       ai_never_say: form.ai_never_say,
       ai_sign_off: form.ai_sign_off,
       onboarding_complete: true,
+      // scrape-populated fields
+      phone: form.notification_phone.trim() || null,
+      notification_phone: form.notification_phone.trim() || null,
+      notification_email: form.notification_email.trim() || null,
+      facebook_url: form.facebook_url.trim() || null,
+      instagram_url: form.instagram_url.trim() || null,
+      star_rating: form.star_rating.trim() || null,
+      review_count: form.review_count.trim() || null,
+      testimonials: form.testimonials.trim() || null,
     };
 
-    let dbError;
-    if (client?.id) {
-      const res = await supabase.from("clients").update(payload).eq("id", client.id);
-      dbError = res.error;
-    } else {
-      const res = await supabase.from("clients").insert([{ ...payload, status: "active" }]);
-      dbError = res.error;
+    if (autoFillResult) {
+      payload.scraped_at = new Date().toISOString();
     }
 
+    const res = await fetch("/api/setup/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json().catch(() => ({}));
+
     setSaving(false);
-    if (dbError) { setError("Failed to save. Please try again."); return; }
+    if (!res.ok) { setError((json as { error?: string }).error ?? "Failed to save. Please try again."); return; }
     router.push("/dashboard");
   };
 
@@ -1420,6 +1450,12 @@ export default function SetupPage() {
               </Field>
               <Field label="Team size" optional>
                 <WInput value={form.team_size} onChange={set("team_size")} placeholder="e.g. Just me, or a team of 4" />
+              </Field>
+              <Field label="Contact phone" optional hint="Shown to customers who prefer to call.">
+                <WInput value={form.notification_phone} onChange={set("notification_phone")} placeholder="+27 82 000 0000" type="tel" />
+              </Field>
+              <Field label="Contact email" optional hint="Leads and enquiries are sent here.">
+                <WInput value={form.notification_email} onChange={set("notification_email")} placeholder="you@example.com" type="email" />
               </Field>
             </div>
           )}
@@ -1590,6 +1626,9 @@ export default function SetupPage() {
               </Field>
               <Field label="Common objections and how to handle them" optional>
                 <WTextarea value={form.common_objections} onChange={set("common_objections")} placeholder={"- 'You're too expensive' → Our price includes a 1-year guarantee\n- 'Let me get another quote' → Availability fills fast, want me to pencil you in?"} rows={5} />
+              </Field>
+              <Field label="Customer testimonials" optional hint="Your assistant can share these when customers ask for references. Separate each one with ---">
+                <WTextarea value={form.testimonials} onChange={set("testimonials")} placeholder={"\"Pete sorted our burst pipe within the hour. Will use again!\" — John S.\n---\n\"Brilliant service, arrived on time and priced fairly.\" — Lisa M."} rows={5} />
               </Field>
             </div>
           )}
