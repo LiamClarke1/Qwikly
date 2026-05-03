@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
 
   const { data: overdueBilling } = await db
     .from("qwikly_billing_invoices")
-    .select("*, qwikly_billing_periods(client_id, period_start, period_end), clients(id, business_name, whatsapp_number, billing_email, notification_email, status, ai_paused)")
+    .select("*, qwikly_billing_periods(client_id, period_start, period_end), clients(id, business_name, whatsapp_number, billing_email, notification_email, crm_status, ai_paused)")
     .eq("status", "sent") // not yet paid
     .lt("due_at", today);
 
@@ -59,8 +59,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Day 7: read-only mode
-    if (daysOverdue >= 7 && clientRow.status !== "paused" && clientRow.status !== "churned") {
-      await db.from("clients").update({ status: "paused" }).eq("id", clientId);
+    if (daysOverdue >= 7 && clientRow.crm_status !== "paused" && clientRow.crm_status !== "churned") {
+      await db.from("clients").update({ crm_status: "paused" }).eq("id", clientId);
       const emailTo = (clientRow.billing_email ?? clientRow.notification_email) as string | null;
       if (emailTo) {
         resend.emails.send({
@@ -89,8 +89,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Day 30: account suspended
-    if (daysOverdue >= 30 && clientRow.status !== "churned") {
-      await db.from("clients").update({ status: "churned", ai_paused: true }).eq("id", clientId);
+    if (daysOverdue >= 30 && clientRow.crm_status !== "churned") {
+      await db.from("clients").update({ crm_status: "churned", ai_paused: true }).eq("id", clientId);
       const emailTo = (clientRow.billing_email ?? clientRow.notification_email) as string | null;
       if (emailTo) {
         resend.emails.send({
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
   for (const paid of recentlyPaid ?? []) {
     const cid = ((paid.qwikly_billing_periods as unknown) as Record<string, unknown>)?.client_id;
     if (cid) {
-      await db.from("clients").update({ status: "active", ai_paused: false }).eq("id", cid).eq("status", "paused");
+      await db.from("clients").update({ crm_status: "active", ai_paused: false }).eq("id", cid).eq("crm_status", "paused");
     }
   }
 

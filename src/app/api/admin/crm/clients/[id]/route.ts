@@ -122,7 +122,7 @@ export async function DELETE(
 
   const db = supabaseAdmin();
   // Soft-delete: mark churned + inactive
-  await db.from("clients").update({ active: false, crm_status: "churned" }).eq("id", id);
+  await db.from("clients").update({ crm_status: "churned" }).eq("id", id);
   await db.from("crm_events").insert({
     client_id: id,
     actor_id: auth.userId,

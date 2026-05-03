@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   } else {
     const { error } = await db
       .from("clients")
-      .insert([{ ...body, auth_user_id: userId, status: "active" }]);
+      .insert([{ ...body, auth_user_id: userId, crm_status: "active" }]);
     dbError = error;
   }
 
