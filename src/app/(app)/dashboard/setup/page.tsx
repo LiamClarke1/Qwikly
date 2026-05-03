@@ -1365,7 +1365,6 @@ export default function SetupPage() {
       whatsapp_number: form.whatsapp_number,
       google_calendar_id: form.google_calendar_email,
       address: form.areas.trim() || null,
-      areas: form.areas.trim() || null,
       system_prompt: buildSystemPrompt(form),
       years_in_business: form.years_in_business,
       certifications: form.certifications,
