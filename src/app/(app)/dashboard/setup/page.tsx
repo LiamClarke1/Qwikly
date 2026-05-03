@@ -10,9 +10,10 @@ import {
   ChevronRight, ChevronLeft, Check, Copy, Loader2, Sparkles,
   Building2, Wrench, DollarSign, Clock, Star, Bot,
   Globe, Upload, FileText, X, Zap, AlertCircle, ArrowRight, Clock3, MessageSquare,
-  Phone, PlusCircle, Mail,
+  Phone, PlusCircle, Mail, Key, Pencil,
 } from "lucide-react";
 import { ClientRow } from "@/lib/use-client";
+import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/cn";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -432,6 +433,25 @@ function OverviewView({
   const [waOpen, setWaOpen] = useState(false);
   const [webOpen, setWebOpen] = useState(false);
   const [webCopied, setWebCopied] = useState(false);
+  const [editingDomain, setEditingDomain] = useState(false);
+  const [domainInput, setDomainInput] = useState(client?.web_widget_domain ?? "");
+  const [domainSaving, setDomainSaving] = useState(false);
+  const [domainError, setDomainError] = useState<string | null>(null);
+  const [apiOpen, setApiOpen] = useState(false);
+
+  async function saveDomain() {
+    setDomainError(null);
+    const raw = domainInput.trim();
+    if (!raw) { setDomainError("Please enter a domain."); return; }
+    let hostname = raw;
+    try { hostname = new URL(raw.startsWith("http") ? raw : `https://${raw}`).hostname; } catch { /* use as-is */ }
+    if (!hostname) { setDomainError("Invalid domain."); return; }
+    setDomainSaving(true);
+    const { error } = await supabase.from("clients").update({ web_widget_domain: hostname }).eq("id", client!.id);
+    setDomainSaving(false);
+    if (error) { setDomainError(error.message); return; }
+    setEditingDomain(false);
+  }
 
   const handleWebCopy = async () => {
     const snippet = `<script\n  src="https://cdn.qwikly.co.za/embed.js"\n  data-qwikly-id="${client?.public_key ?? ""}"\n  async\n></script>`;
@@ -581,10 +601,20 @@ function OverviewView({
                 </p>
               </div>
               {hasWebWidget ? (
-                <span className="flex items-center gap-1.5 text-tiny text-success font-semibold shrink-0">
-                  <Check className="w-3.5 h-3.5" />
-                  Active
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => { setEditingDomain((o) => !o); setDomainError(null); }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-line text-tiny text-fg-muted font-medium hover:text-fg hover:border-line-strong transition-all duration-150 cursor-pointer"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    Edit
+                  </button>
+                  <span className="flex items-center gap-1.5 text-tiny text-success font-semibold">
+                    <Check className="w-3.5 h-3.5" />
+                    Active
+                  </span>
+                </div>
               ) : (
                 <button
                   type="button"
@@ -596,6 +626,37 @@ function OverviewView({
                 </button>
               )}
             </div>
+            {editingDomain && hasWebWidget && (
+              <div className="mt-5 pt-5 border-t border-line space-y-3">
+                <p className="text-tiny text-fg-muted">Update the domain your widget is installed on.</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={domainInput}
+                    onChange={(e) => setDomainInput(e.target.value)}
+                    placeholder="yoursite.co.za"
+                    className="flex-1 bg-white/[0.03] border border-line rounded-xl px-4 py-2.5 text-fg text-small placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand/60 transition-colors duration-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={saveDomain}
+                    disabled={domainSaving}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand text-white text-tiny font-semibold hover:bg-brand/90 transition-colors duration-150 cursor-pointer disabled:opacity-50"
+                  >
+                    {domainSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingDomain(false)}
+                    className="px-3 py-2.5 rounded-xl border border-line text-tiny text-fg-muted hover:text-fg hover:border-line-strong transition-all duration-150 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                {domainError && <p className="text-tiny text-danger">{domainError}</p>}
+              </div>
+            )}
             {webOpen && !hasWebWidget && (
               <div className="mt-5 pt-5 border-t border-line space-y-3">
                 <p className="text-tiny text-fg-muted">
@@ -623,6 +684,46 @@ function OverviewView({
                     <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* API Integration */}
+          <div className="panel !p-5">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-line flex items-center justify-center shrink-0">
+                <Key className="w-5 h-5 text-fg-muted" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-fg text-small">API access</p>
+                <p className="text-tiny text-fg-muted mt-0.5">Connect external tools using your API keys</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setApiOpen((o) => !o)}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand text-white text-tiny font-semibold hover:bg-brand/90 transition-colors duration-150 cursor-pointer shrink-0"
+              >
+                Connect
+                <ChevronRight className={cn("w-3.5 h-3.5 transition-transform duration-200", apiOpen && "rotate-90")} />
+              </button>
+            </div>
+            {apiOpen && (
+              <div className="mt-5 pt-5 border-t border-line space-y-3">
+                <p className="text-tiny text-fg-muted">
+                  Generate an API key to integrate Qwikly with your CRM, Zapier, or any other tool.
+                  Pass the key in your request headers as{" "}
+                  <code className="font-mono text-fg-subtle bg-white/[0.05] px-1 rounded">Authorization: Bearer qw_live_…</code>
+                </p>
+                <p className="text-tiny text-fg-muted">
+                  Base URL: <span className="font-mono text-fg">https://app.qwikly.co.za/api/v1</span>
+                </p>
+                <Link
+                  href="/dashboard/settings/api-keys"
+                  className="inline-flex items-center gap-2 px-4 h-9 rounded-xl bg-brand text-white text-tiny font-semibold hover:bg-brand/90 transition-colors duration-150 cursor-pointer"
+                >
+                  <Key className="w-3.5 h-3.5" />
+                  Manage API keys
+                </Link>
               </div>
             )}
           </div>
