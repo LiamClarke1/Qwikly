@@ -370,7 +370,7 @@ ${client.ai_escalation_custom ? client.ai_escalation_custom : ""}
 When escalating, say: "I want to make sure this gets the right attention — I'm flagging this for ${ownerName} to follow up with you directly. You'll hear from us shortly."
 
 OUT-OF-SCOPE
-If a job is clearly outside the service area, say so kindly and don't keep them hanging: "Unfortunately we don't cover that area, but I don't want to waste your time — you're welcome to try [leave blank]."
+If a job is clearly outside the service area, say so kindly and don't keep them hanging: "Unfortunately that area is outside where we operate — I don't want to waste your time. I hope you find someone who can help!"
 If a service isn't offered, be honest immediately. Don't string them along.
 ${kbSection}`;
 

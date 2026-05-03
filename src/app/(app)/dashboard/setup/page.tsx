@@ -13,7 +13,6 @@ import {
   Phone, PlusCircle, Mail, Key, Pencil,
 } from "lucide-react";
 import { ClientRow } from "@/lib/use-client";
-import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/cn";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -447,9 +446,14 @@ function OverviewView({
     try { hostname = new URL(raw.startsWith("http") ? raw : `https://${raw}`).hostname; } catch { /* use as-is */ }
     if (!hostname) { setDomainError("Invalid domain."); return; }
     setDomainSaving(true);
-    const { error } = await supabase.from("clients").update({ web_widget_domain: hostname }).eq("id", client!.id);
+    const res = await fetch("/api/setup/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ web_widget_domain: hostname }),
+    });
+    const json = await res.json().catch(() => ({}));
     setDomainSaving(false);
-    if (error) { setDomainError(error.message); return; }
+    if (!res.ok) { setDomainError((json as { error?: string }).error ?? "Failed to save domain."); return; }
     setEditingDomain(false);
   }
 
