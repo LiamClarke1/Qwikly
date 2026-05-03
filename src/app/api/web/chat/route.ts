@@ -153,7 +153,7 @@ If they're always on the phone: "Qwikly takes the back-and-forth off your hands.
 Only after the fix has been shown. Two paths. Default to signup. Offer the call only if they hesitate.
 
 PATH A — DEFAULT (always try this first):
-"Want to get started? Starter is free, Pro is R599/month. 30-day money-back guarantee, no lock-in. Head to qwikly.co.za/pricing to pick the right one."
+"Want to get started? 14-day free trial, no card needed. Pro is R999/month for 75 leads, Premium is R1,999/month for 250 leads. 30-day money-back guarantee, no lock-in. Head to qwikly.co.za/pricing to pick the right one."
 
 If they say yes to signing up: direct them to qwikly.co.za/pricing. Do NOT ask for their name and number, they'll enter it themselves at signup. Your job is done. Say: "Head to qwikly.co.za/pricing whenever you're ready. Takes about 5 minutes to set up."
 
@@ -174,7 +174,7 @@ You must go: Discovery, Quantify loss, Show fix, Close. Never collapse these int
 
 Reply in 1 to 2 sentences. Confident. Never defensive.
 
-"How much does it cost?" -> "14-day free trial to start, no card needed. Starter is R399/month for 75 leads. Pro is R999/month for 250 leads with custom branding. Premium is R2,499/month for up to 1,000 leads. No per-job fees, no commissions. 30-day money-back on Pro and Premium. Want me to send you the link?"
+"How much does it cost?" -> "14-day free trial, no card needed. Pro is R999/month for 75 leads. Premium is R1,999/month for 250 leads with custom branding. Billions is R2,999/month for up to 1,000 leads. No per-job fees, no commissions. 30-day money-back on all paid plans. Want me to send you the link?"
 
 "I don't trust AI." -> "Fair. It's transparent, the whole conversation is logged in your dashboard and every lead comes to your email. You stay in control. Want to see it in action? qwikly.co.za/pricing, 30-day money-back."
 
@@ -236,6 +236,247 @@ If they're leaving without converting: "All good. We're here whenever. If you ch
 
 Don't say goodbye until they say it first. Don't keep selling once the sale is done.`;
 
+// ── Client assistant prompt builder ───────────────────────
+
+const CLIENT_TONE_MAP: Record<string, string> = {
+  friendly:     "Warm and conversational. Use contractions, match their energy. Friendly without being over-the-top.",
+  professional: "Precise and professional. Complete sentences, respectful throughout.",
+  brief:        "Direct and efficient. Shortest path to the answer or booking. No small talk.",
+  warm:         "Caring and empathetic. Acknowledge the visitor's situation before offering solutions.",
+};
+
+const RESPONSE_STYLE_MAP: Record<string, string> = {
+  short:          "1-2 sentences per message maximum. Punchy and direct.",
+  detailed:       "2-3 sentences per message. Enough context to build confidence, never full paragraphs.",
+  conversational: "2-3 natural sentences. Like a real person talking.",
+};
+
+function getTradeQuestion(trade: string): string {
+  const t = (trade ?? "").toLowerCase();
+  if (t.includes("plumb"))                                         return "What's the issue, is it a leak, a blocked drain, or something else?";
+  if (t.includes("electr"))                                        return "What's the fault, a trip, wiring issue, or something else?";
+  if (t.includes("clean"))                                         return "What type of clean do you need, regular, once-off, or a deep clean?";
+  if (t.includes("dental") || t.includes("dentist"))              return "Is this for a routine check-up or do you have a specific concern?";
+  if (t.includes("doctor") || t.includes("medical") || t.includes("gp")) return "Is this for a new appointment or a follow-up?";
+  if (t.includes("pest"))                                          return "What type of pest are you dealing with and where on the property?";
+  if (t.includes("garden") || t.includes("landscap"))             return "What do you need done, regular maintenance, a once-off tidy, or a full project?";
+  if (t.includes("paint"))                                         return "Is this interior, exterior, or both, and roughly how big is the space?";
+  if (t.includes("tile") || t.includes("floor"))                  return "Is this a new installation or a repair, and what type of surface?";
+  if (t.includes("pool"))                                          return "Is it a maintenance issue, a repair, or are you looking to install?";
+  if (t.includes("air") || t.includes("hvac") || t.includes("condition")) return "Is the unit not cooling, making a noise, or do you need a service?";
+  if (t.includes("build") || t.includes("construct") || t.includes("renovat")) return "What's the project, a renovation, new build, or a repair?";
+  if (t.includes("legal") || t.includes("law") || t.includes("attorney")) return "What type of matter do you need help with?";
+  if (t.includes("account") || t.includes("tax") || t.includes("bookkeep")) return "Is this for tax returns, monthly bookkeeping, or something specific?";
+  if (t.includes("salon") || t.includes("hair") || t.includes("beauty") || t.includes("nail")) return "What treatment are you looking to book?";
+  if (t.includes("gym") || t.includes("fitness") || t.includes("personal train")) return "Are you looking for personal training, a membership, or a specific class?";
+  if (t.includes("restaurant") || t.includes("cafe") || t.includes("cater")) return "Is this for a table booking or a catering enquiry?";
+  if (t.includes("photog"))                                        return "What type of shoot are you after, portrait, event, commercial, or something else?";
+  if (t.includes("security") || t.includes("alarm"))              return "Is this for a new installation, a repair, or a monitoring enquiry?";
+  if (t.includes("move") || t.includes("removal"))                return "Is this a local move or long distance, and roughly how big is the load?";
+  return "Tell me a bit more about what you need so I can point you in the right direction.";
+}
+
+type ClientPromptData = {
+  business_name?: string | null;
+  trade?: string | null;
+  tone?: string | null;
+  ai_tone?: string | null;
+  ai_language?: string | null;
+  ai_response_style?: string | null;
+  ai_greeting?: string | null;
+  ai_sign_off?: string | null;
+  ai_always_do?: string | null;
+  ai_never_say?: string | null;
+  ai_unhappy_customer?: string | null;
+  ai_escalation_triggers?: string | null;
+  ai_escalation_custom?: string | null;
+  services_offered?: string | null;
+  services_excluded?: string | null;
+  working_hours_text?: string | null;
+  after_hours?: string | null;
+  address?: string | null;
+  callout_fee?: string | null;
+  example_prices?: string | null;
+  charge_type?: string | null;
+  booking_lead_time?: string | null;
+  response_time?: string | null;
+  unique_selling_point?: string | null;
+  guarantees?: string | null;
+  payment_methods?: string | null;
+  common_questions?: string | null;
+  common_objections?: string | null;
+};
+
+function buildClientSystemPrompt(c: ClientPromptData, customSystemPrompt?: string | null): string {
+  const biz = c.business_name ?? "this business";
+  const trade = c.trade ?? "service business";
+
+  const toneBase = CLIENT_TONE_MAP[c.tone ?? ""] ?? CLIENT_TONE_MAP.friendly;
+  const toneDetail = c.ai_tone ? ` ${c.ai_tone}.` : "";
+  const styleNote = RESPONSE_STYLE_MAP[c.ai_response_style ?? ""] ?? RESPONSE_STYLE_MAP.conversational;
+  const langNote = c.ai_language ? `Communicate in ${c.ai_language}.` : "";
+
+  const ctx: string[] = [];
+  if (c.services_offered)      ctx.push(`Services: ${c.services_offered}`);
+  if (c.services_excluded)     ctx.push(`Not offered: ${c.services_excluded}`);
+  if (c.working_hours_text)    ctx.push(`Working hours: ${c.working_hours_text}`);
+  if (c.address)               ctx.push(`Location: ${c.address}`);
+  if (c.callout_fee)           ctx.push(`Call-out fee: ${c.callout_fee}`);
+  if (c.example_prices)        ctx.push(`Example pricing: ${c.example_prices}`);
+  if (c.charge_type)           ctx.push(`How we charge: ${c.charge_type}`);
+  if (c.booking_lead_time)     ctx.push(`Booking lead time: ${c.booking_lead_time}`);
+  if (c.response_time)         ctx.push(`Typical response time: ${c.response_time}`);
+  if (c.unique_selling_point)  ctx.push(`What makes us different: ${c.unique_selling_point}`);
+  if (c.guarantees)            ctx.push(`Guarantees: ${c.guarantees}`);
+  if (c.payment_methods)       ctx.push(`Payment methods: ${c.payment_methods}`);
+
+  let escalation: string;
+  const trig = c.ai_escalation_triggers;
+  if (trig === "custom" && c.ai_escalation_custom) {
+    escalation = c.ai_escalation_custom;
+  } else {
+    const parts: string[] = [];
+    if (trig === "angry"   || trig === "all") parts.push("visitor is clearly angry or distressed");
+    if (trig === "complex" || trig === "all") parts.push("question is outside your knowledge");
+    if (trig === "price"   || trig === "all") parts.push("visitor wants detailed pricing negotiation");
+    escalation = parts.length
+      ? `Escalate when the ${parts.join(", or ")}.`
+      : "Escalate when you cannot answer accurately. Offer to have a team member call the visitor back.";
+    if (c.ai_escalation_custom) escalation += ` ${c.ai_escalation_custom}`;
+  }
+
+  const unhappy = c.ai_unhappy_customer
+    ?? "Stay calm. Acknowledge their frustration in one sentence, then offer to have a real person call them back. Capture their number before the conversation ends.";
+
+  const alwaysDo = c.ai_always_do  ? `\nAlways do:\n${c.ai_always_do}` : "";
+  const neverSay = c.ai_never_say  ? `\nNever say:\n${c.ai_never_say}` : "";
+  const afterHours = c.after_hours ?? "Let the visitor know the team is unavailable right now, but capture their details for a callback first thing.";
+  const signOff    = c.ai_sign_off ?? "The team will be in touch with you shortly.";
+  const hours      = c.working_hours_text ?? "during business hours";
+
+  const greetingNote = c.ai_greeting
+    ? `Opening message template: "${c.ai_greeting}"`
+    : `Start with: "Hi, welcome to ${biz}. What's your name and how can I help you today?"`;
+
+  const tradeQ = getTradeQuestion(trade);
+
+  const commonQnA  = c.common_questions  ? `\n\n## COMMON QUESTIONS\n${c.common_questions}`   : "";
+  const objections = c.common_objections ? `\n\n## COMMON OBJECTIONS\nHandle each in 1-2 sentences:\n${c.common_objections}` : "";
+  const custom     = customSystemPrompt  ? `\n\n## ADDITIONAL INSTRUCTIONS FROM THE BUSINESS\nLayer these on top of the framework. They override general guidance but never override contact capture or the booking close:\n\n${customSystemPrompt}` : "";
+
+  return `You are the digital assistant for ${biz}. You are the first and most important point of contact for every visitor on the website.
+
+## YOUR ONE JOB
+
+Convert every visitor into a confirmed booking or a qualified lead. Do not browse, educate endlessly, or go back and forth without progress.
+
+Every conversation must end with one of:
+(a) A confirmed booking or appointment time agreed
+(b) A callback request confirmed, with name AND phone or email saved
+(c) A clear agreed next step
+
+If a conversation reaches 5 exchanges without contact details captured or a booking confirmed, immediately pivot: "I want to make sure the team can reach you. What's the best number or email for you?"
+
+## ABOUT ${biz.toUpperCase()}
+
+${ctx.length > 0 ? ctx.join("\n") : `Industry: ${trade}`}
+
+## CONVERSION ARC
+
+Follow these stages in order, every conversation. Skip ahead if the visitor is clearly already further along.
+
+### Stage 1 — Open
+
+${greetingNote}
+
+Ask for the visitor's first name and what they need in one message. Two questions maximum, never more.
+
+The moment they give their name, IMMEDIATELY call update_visitor with their name. Do not wait for phone or email. Call it instantly, then continue.
+
+### Stage 2 — Capture Contact
+
+After saving the name, ask for their phone number or email. Natural and low-pressure, never form-like.
+
+"Thanks [Name]. What's the best number or email to reach you on?"
+"What's a good number for you, [Name]? So the team can follow up properly."
+
+Call update_visitor the moment you have their contact details. If they skip it, move on, and ask again naturally after Stage 3 if the conversation allows.
+
+### Stage 3 — Discover the Need
+
+Ask ONE targeted question to understand their exact problem. Never ask two at once.
+
+Default for this trade: "${tradeQ}"
+
+After they answer, acknowledge in ONE sentence to show you understood. Move to Stage 4 immediately.
+
+### Stage 4 — Present the Solution
+
+Two sentences maximum. Show how ${biz} solves their exact problem. Focus on the outcome, not features. No bullet points.
+
+"We handle that all the time. The team can get to you [timeframe if known]."
+"That's exactly what ${biz} specialises in. We'll get it sorted for you."
+
+Two sentences, then move directly to Stage 5.
+
+### Stage 5 — Close (MANDATORY)
+
+Ask for the booking or callback every single time. No exceptions.
+
+"When works for you? We're available ${hours} and can come to you."
+"Want to lock in a time? Give me a day that works and we'll confirm."
+"Want the team to call you back to confirm the details?"
+
+If they hesitate: "No stress. I can have someone call you back within the hour if that's easier."
+
+If they ask another question: Answer in ONE sentence, then: "Anything else, or shall we lock in a time?"
+
+After they confirm: "${signOff}"
+
+You cannot leave Stage 5 without asking for the booking or callback. This is a hard rule.
+
+## AFTER HOURS
+
+${afterHours}
+
+## MESSAGE RULES
+
+Length: ${styleNote}
+Tone: ${toneBase}${toneDetail}
+${langNote}
+
+Every single message must end with either a question that advances the conversation, or a direct CTA: book now, call back, confirm time. The only exception is the final confirmation after a booking or callback is agreed.
+
+Never repeat a question already answered. If they told you something, move forward.
+
+## SAVING VISITOR INFO — CRITICAL
+
+Call update_visitor IMMEDIATELY when the visitor gives you their name, phone, or email. Do not wait. Do not batch. One piece of info, one call, right away.
+
+## ESCALATION
+
+${escalation}
+
+When escalating: "Let me get someone from the ${biz} team to reach out directly. What's the best number or email?" Then call update_visitor.
+
+## UNHAPPY CUSTOMERS
+
+${unhappy}
+
+## HARD RULES
+${alwaysDo}${neverSay}
+
+Never say: "I'd be happy to", "Certainly!", "Absolutely!", "Great question!", "I understand your concern", "I'm here to help", "How may I assist you today?"
+
+Never use bullet points or numbered lists in your replies to visitors.
+
+Never refer to yourself as ChatGPT, Claude, an AI model, or any underlying technology. If asked: "I'm the digital assistant for ${biz}. Want me to connect you with the team directly?"
+
+Never leave a message without a question or CTA at the end.
+
+NEVER use em dashes (—). Use a comma or full stop instead.${commonQnA}${objections}${custom}`;
+}
+
 // ── Tool definition ────────────────────────────────────────
 // Called as soon as name is known, then again if phone/email is collected.
 const TOOLS: Anthropic.Tool[] = [
@@ -281,16 +522,9 @@ export async function POST(req: NextRequest) {
   let clientAuthUserId: string | null = null;
 
   if (client_id !== "1") {
-    const TONE_MAP: Record<string, string> = {
-      friendly_casual:    "Warm, approachable, and conversational. Use contractions and be personable.",
-      professional_formal:"Precise, professional, and formal. Be respectful and thorough.",
-      warm_empathetic:    "Caring, empathetic, and reassuring. Acknowledge concerns and show genuine care.",
-      direct_efficient:   "Direct and efficient. Concise answers, no small talk, solve the problem fast.",
-    };
-
     const { data: clientRow } = await supabaseAdmin
       .from("clients")
-      .select("system_prompt, business_name, trade, web_widget_greeting, address, working_hours_text, services_offered, after_hours, plan, ai_tone, auth_user_id")
+      .select("system_prompt, business_name, trade, tone, ai_tone, ai_language, ai_response_style, ai_greeting, ai_sign_off, ai_always_do, ai_never_say, ai_unhappy_customer, ai_escalation_triggers, ai_escalation_custom, web_widget_greeting, address, working_hours_text, services_offered, services_excluded, after_hours, callout_fee, example_prices, charge_type, booking_lead_time, response_time, unique_selling_point, guarantees, payment_methods, common_questions, common_objections, plan, auth_user_id")
       .eq("id", client_id)
       .maybeSingle();
 
@@ -312,17 +546,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const toneInstruction = TONE_MAP[clientRow?.ai_tone ?? ""] ?? "";
-
-    if (clientRow?.system_prompt) {
-      systemPrompt = toneInstruction
-        ? `${clientRow.system_prompt}\n\nTONE: ${toneInstruction}`
-        : clientRow.system_prompt;
-    } else {
-      // Safe neutral fallback — never expose Qwikly's own sales prompt on a client's website
-      const biz = clientRow?.business_name ?? "this business";
-      systemPrompt = `You are the digital assistant for ${biz}. Help visitors with their enquiries. Be friendly, concise, and professional. Collect the visitor's name and contact details so the team can follow up.${toneInstruction ? `\n\nTONE: ${toneInstruction}` : ""}`;
-    }
+    // Always use the conversion-first builder. Custom system_prompt is layered in as additional instructions.
+    systemPrompt = buildClientSystemPrompt(clientRow ?? {}, clientRow?.system_prompt);
 
     // ── Lead cap check ─────────────────────────────────────────
     const tier = resolvePlan(clientRow?.plan);
@@ -417,7 +642,7 @@ export async function POST(req: NextRequest) {
   try {
     const response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 120,
+      max_tokens: 160,
       system: systemPrompt,
       tools: TOOLS,
       messages: claudeMessages,
@@ -436,7 +661,7 @@ export async function POST(req: NextRequest) {
       if (toolUseBlock && toolUseBlock.type === "tool_use") {
         const followUp = await anthropic.messages.create({
           model: "claude-haiku-4-5-20251001",
-          max_tokens: 80,
+          max_tokens: 120,
           system: systemPrompt,
           messages: [
             ...claudeMessages,
