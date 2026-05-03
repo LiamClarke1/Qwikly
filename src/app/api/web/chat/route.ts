@@ -290,6 +290,7 @@ type ClientPromptData = {
   // identity
   business_name?: string | null;
   owner_name?: string | null;
+  faq?: { q: string; a: string }[] | null;
   trade?: string | null;
   address?: string | null;
   phone?: string | null;
@@ -454,6 +455,10 @@ function buildClientSystemPrompt(c: ClientPromptData, customSystemPrompt?: strin
     ? `\nFree quotes: ${c.free_quotes}. Use this to answer "do you charge for a quote?"`
     : "";
 
+  const faqBlock = (c.faq && c.faq.length > 0)
+    ? `\n\n## FAQ — EXACT ANSWERS TO GIVE\nWhen a visitor asks any of these questions, use the exact answer provided:\n\n` +
+      c.faq.map((item) => `Q: ${item.q}\nA: ${item.a}`).join("\n\n")
+    : "";
   const commonQnA  = c.common_questions  ? `\n\n## COMMON QUESTIONS\n${c.common_questions}`   : "";
   const objections = c.common_objections ? `\n\n## COMMON OBJECTIONS\nHandle each in 1-2 sentences:\n${c.common_objections}` : "";
   const custom     = customSystemPrompt
@@ -569,7 +574,7 @@ Never refer to yourself as ChatGPT, Claude, an AI model, or any underlying techn
 
 Never leave a message without a question or CTA at the end.
 
-NEVER use em dashes (—). Use a comma or full stop instead.${commonQnA}${objections}${custom}`;
+NEVER use em dashes (—). Use a comma or full stop instead.${faqBlock}${commonQnA}${objections}${custom}`;
 }
 
 // ── Tool definition ────────────────────────────────────────
@@ -619,7 +624,7 @@ export async function POST(req: NextRequest) {
   if (client_id !== "1") {
     const { data: clientRow } = await supabaseAdmin
       .from("clients")
-      .select("system_prompt, business_name, owner_name, trade, phone, address, years_in_business, certifications, brands_used, team_size, services_offered, services_excluded, emergency_response, charge_type, callout_fee, example_prices, minimum_job, free_quotes, payment_methods, payment_terms, working_hours_text, booking_lead_time, booking_preference, response_time, after_hours, unique_selling_point, guarantees, star_rating, review_count, testimonials, common_questions, common_objections, tone, ai_tone, ai_language, ai_response_style, ai_greeting, ai_sign_off, ai_always_do, ai_never_say, ai_unhappy_customer, ai_escalation_triggers, ai_escalation_custom, web_widget_greeting, plan, auth_user_id")
+      .select("system_prompt, business_name, owner_name, trade, phone, address, years_in_business, certifications, brands_used, team_size, services_offered, services_excluded, emergency_response, charge_type, callout_fee, example_prices, minimum_job, free_quotes, payment_methods, payment_terms, working_hours_text, booking_lead_time, booking_preference, response_time, after_hours, unique_selling_point, guarantees, star_rating, review_count, testimonials, common_questions, common_objections, faq, tone, ai_tone, ai_language, ai_response_style, ai_greeting, ai_sign_off, ai_always_do, ai_never_say, ai_unhappy_customer, ai_escalation_triggers, ai_escalation_custom, web_widget_greeting, plan, auth_user_id")
       .eq("id", client_id)
       .maybeSingle();
 
