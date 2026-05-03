@@ -238,16 +238,26 @@ Don't say goodbye until they say it first. Don't keep selling once the sale is d
 
 // ── Client assistant prompt builder ───────────────────────
 
+// Covers both the settings-page dropdown (friendly/professional/brief/warm)
+// and the setup-wizard dropdown (friendly_casual/professional_formal/warm_empathetic/direct_efficient)
 const CLIENT_TONE_MAP: Record<string, string> = {
-  friendly:     "Warm and conversational. Use contractions, match their energy. Friendly without being over-the-top.",
-  professional: "Precise and professional. Complete sentences, respectful throughout.",
-  brief:        "Direct and efficient. Shortest path to the answer or booking. No small talk.",
-  warm:         "Caring and empathetic. Acknowledge the visitor's situation before offering solutions.",
+  friendly:            "Warm and conversational. Use contractions, match their energy. Friendly without being over-the-top.",
+  friendly_casual:     "Warm and conversational. Use contractions, match their energy. Friendly without being over-the-top.",
+  professional:        "Precise and professional. Complete sentences, respectful throughout.",
+  professional_formal: "Precise and professional. Complete sentences, respectful throughout.",
+  brief:               "Direct and efficient. Shortest path to the answer or booking. No small talk.",
+  direct_efficient:    "Direct and efficient. Shortest path to the answer or booking. No small talk.",
+  warm:                "Caring and empathetic. Acknowledge the visitor's situation before offering solutions.",
+  warm_empathetic:     "Caring and empathetic. Acknowledge the visitor's situation before offering solutions.",
 };
+
+const SETUP_TONE_KEYS = new Set(["friendly_casual","professional_formal","warm_empathetic","direct_efficient"]);
 
 const RESPONSE_STYLE_MAP: Record<string, string> = {
   short:          "1-2 sentences per message maximum. Punchy and direct.",
+  brief:          "1-2 sentences per message maximum. Punchy and direct.",
   detailed:       "2-3 sentences per message. Enough context to build confidence, never full paragraphs.",
+  balanced:       "2-3 sentences per message. Helpful detail without overwhelming.",
   conversational: "2-3 natural sentences. Like a real person talking.",
 };
 
@@ -277,8 +287,45 @@ function getTradeQuestion(trade: string): string {
 }
 
 type ClientPromptData = {
+  // identity
   business_name?: string | null;
+  owner_name?: string | null;
   trade?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  // experience & credentials
+  years_in_business?: string | null;
+  certifications?: string | null;
+  brands_used?: string | null;
+  team_size?: string | null;
+  // services
+  services_offered?: string | null;
+  services_excluded?: string | null;
+  // pricing
+  charge_type?: string | null;
+  callout_fee?: string | null;
+  example_prices?: string | null;
+  minimum_job?: string | null;
+  free_quotes?: string | null;
+  payment_methods?: string | null;
+  payment_terms?: string | null;
+  // availability
+  working_hours_text?: string | null;
+  booking_lead_time?: string | null;
+  booking_preference?: string | null;
+  response_time?: string | null;
+  after_hours?: string | null;
+  emergency_response?: string | null;
+  // trust
+  unique_selling_point?: string | null;
+  guarantees?: string | null;
+  star_rating?: string | null;
+  review_count?: string | null;
+  testimonials?: string | null;
+  // Q&A
+  common_questions?: string | null;
+  common_objections?: string | null;
+  // personality (settings page: tone, setup wizard: ai_tone with _key values)
   tone?: string | null;
   ai_tone?: string | null;
   ai_language?: string | null;
@@ -290,46 +337,68 @@ type ClientPromptData = {
   ai_unhappy_customer?: string | null;
   ai_escalation_triggers?: string | null;
   ai_escalation_custom?: string | null;
-  services_offered?: string | null;
-  services_excluded?: string | null;
-  working_hours_text?: string | null;
-  after_hours?: string | null;
-  address?: string | null;
-  callout_fee?: string | null;
-  example_prices?: string | null;
-  charge_type?: string | null;
-  booking_lead_time?: string | null;
-  response_time?: string | null;
-  unique_selling_point?: string | null;
-  guarantees?: string | null;
-  payment_methods?: string | null;
-  common_questions?: string | null;
-  common_objections?: string | null;
 };
 
 function buildClientSystemPrompt(c: ClientPromptData, customSystemPrompt?: string | null): string {
-  const biz = c.business_name ?? "this business";
+  const biz   = c.business_name ?? "this business";
   const trade = c.trade ?? "service business";
 
-  const toneBase = CLIENT_TONE_MAP[c.tone ?? ""] ?? CLIENT_TONE_MAP.friendly;
-  const toneDetail = c.ai_tone ? ` ${c.ai_tone}.` : "";
-  const styleNote = RESPONSE_STYLE_MAP[c.ai_response_style ?? ""] ?? RESPONSE_STYLE_MAP.conversational;
-  const langNote = c.ai_language ? `Communicate in ${c.ai_language}.` : "";
+  // Tone: settings page uses `tone` (friendly/professional/brief/warm)
+  // Setup wizard uses `ai_tone` (friendly_casual/etc); free text ai_tone is used as a detail note
+  const toneBase   = CLIENT_TONE_MAP[c.tone ?? ""] || CLIENT_TONE_MAP[c.ai_tone ?? ""] || CLIENT_TONE_MAP.friendly;
+  const toneDetail = (c.ai_tone && !SETUP_TONE_KEYS.has(c.ai_tone)) ? ` ${c.ai_tone}.` : "";
+  const styleNote  = RESPONSE_STYLE_MAP[c.ai_response_style ?? ""] ?? RESPONSE_STYLE_MAP.conversational;
+  const langNote   = c.ai_language ? `Communicate in ${c.ai_language}.` : "";
 
-  const ctx: string[] = [];
-  if (c.services_offered)      ctx.push(`Services: ${c.services_offered}`);
-  if (c.services_excluded)     ctx.push(`Not offered: ${c.services_excluded}`);
-  if (c.working_hours_text)    ctx.push(`Working hours: ${c.working_hours_text}`);
-  if (c.address)               ctx.push(`Location: ${c.address}`);
-  if (c.callout_fee)           ctx.push(`Call-out fee: ${c.callout_fee}`);
-  if (c.example_prices)        ctx.push(`Example pricing: ${c.example_prices}`);
-  if (c.charge_type)           ctx.push(`How we charge: ${c.charge_type}`);
-  if (c.booking_lead_time)     ctx.push(`Booking lead time: ${c.booking_lead_time}`);
-  if (c.response_time)         ctx.push(`Typical response time: ${c.response_time}`);
-  if (c.unique_selling_point)  ctx.push(`What makes us different: ${c.unique_selling_point}`);
-  if (c.guarantees)            ctx.push(`Guarantees: ${c.guarantees}`);
-  if (c.payment_methods)       ctx.push(`Payment methods: ${c.payment_methods}`);
+  // ── Business context block ─────────────────────────────────────────────────
+  const identity: string[] = [];
+  if (c.owner_name)       identity.push(`Owner / contact: ${c.owner_name}`);
+  if (c.years_in_business) identity.push(`Years in business: ${c.years_in_business}`);
+  if (c.team_size)        identity.push(`Team size: ${c.team_size}`);
+  if (c.address)          identity.push(`Service area / location: ${c.address}`);
+  if (c.phone)            identity.push(`Business phone: ${c.phone}`);
 
+  const credentials: string[] = [];
+  if (c.certifications)   credentials.push(`Certifications: ${c.certifications}`);
+  if (c.brands_used)      credentials.push(`Brands / products used: ${c.brands_used}`);
+
+  const services: string[] = [];
+  if (c.services_offered)  services.push(`Services offered:\n${c.services_offered}`);
+  if (c.services_excluded) services.push(`NOT offered (decline politely if asked): ${c.services_excluded}`);
+
+  const pricing: string[] = [];
+  if (c.charge_type)     pricing.push(`How we charge: ${c.charge_type}`);
+  if (c.callout_fee)     pricing.push(`Call-out fee: ${c.callout_fee}`);
+  if (c.minimum_job)     pricing.push(`Minimum job: ${c.minimum_job}`);
+  if (c.free_quotes)     pricing.push(`Free quotes: ${c.free_quotes}`);
+  if (c.example_prices)  pricing.push(`Price examples:\n${c.example_prices}`);
+  if (c.payment_methods) pricing.push(`Payment methods: ${c.payment_methods}`);
+  if (c.payment_terms)   pricing.push(`Payment terms: ${c.payment_terms}`);
+
+  const availability: string[] = [];
+  if (c.working_hours_text)  availability.push(`Working hours: ${c.working_hours_text}`);
+  if (c.booking_lead_time)   availability.push(`Booking lead time: ${c.booking_lead_time}`);
+  if (c.booking_preference)  availability.push(`Preferred booking method: ${c.booking_preference}`);
+  if (c.response_time)       availability.push(`Response time: ${c.response_time}`);
+  if (c.emergency_response)  availability.push(`Emergency response: ${c.emergency_response}`);
+
+  const trust: string[] = [];
+  if (c.unique_selling_point) trust.push(`What makes us different: ${c.unique_selling_point}`);
+  if (c.guarantees)           trust.push(`Guarantees: ${c.guarantees}`);
+  if (c.star_rating && c.review_count) trust.push(`Ratings: ${c.star_rating}★ from ${c.review_count} reviews`);
+  else if (c.star_rating)              trust.push(`Star rating: ${c.star_rating}★`);
+  if (c.testimonials)         trust.push(`Customer testimonials:\n${c.testimonials}`);
+
+  const ctxSections: string[] = [
+    identity.length    ? identity.join("\n")       : `Trade: ${trade}`,
+    credentials.length ? credentials.join("\n")    : "",
+    services.length    ? services.join("\n\n")     : "",
+    pricing.length     ? pricing.join("\n")        : "",
+    availability.length? availability.join("\n")   : "",
+    trust.length       ? trust.join("\n")          : "",
+  ].filter(Boolean);
+
+  // ── Escalation ─────────────────────────────────────────────────────────────
   let escalation: string;
   const trig = c.ai_escalation_triggers;
   if (trig === "custom" && c.ai_escalation_custom) {
@@ -339,6 +408,10 @@ function buildClientSystemPrompt(c: ClientPromptData, customSystemPrompt?: strin
     if (trig === "angry"   || trig === "all") parts.push("visitor is clearly angry or distressed");
     if (trig === "complex" || trig === "all") parts.push("question is outside your knowledge");
     if (trig === "price"   || trig === "all") parts.push("visitor wants detailed pricing negotiation");
+    // Common setup-wizard escalation options
+    if (trig && trig.toLowerCase().includes("speak to a human"))     parts.push("visitor asks to speak to a human");
+    if (trig && trig.toLowerCase().includes("legal or insurance"))   parts.push("visitor mentions legal or insurance");
+    if (trig && trig.toLowerCase().includes("over r10"))             parts.push("job is over R10,000");
     escalation = parts.length
       ? `Escalate when the ${parts.join(", or ")}.`
       : "Escalate when you cannot answer accurately. Offer to have a team member call the visitor back.";
@@ -348,11 +421,22 @@ function buildClientSystemPrompt(c: ClientPromptData, customSystemPrompt?: strin
   const unhappy = c.ai_unhappy_customer
     ?? "Stay calm. Acknowledge their frustration in one sentence, then offer to have a real person call them back. Capture their number before the conversation ends.";
 
-  const alwaysDo = c.ai_always_do  ? `\nAlways do:\n${c.ai_always_do}` : "";
-  const neverSay = c.ai_never_say  ? `\nNever say:\n${c.ai_never_say}` : "";
-  const afterHours = c.after_hours ?? "Let the visitor know the team is unavailable right now, but capture their details for a callback first thing.";
-  const signOff    = c.ai_sign_off ?? "The team will be in touch with you shortly.";
-  const hours      = c.working_hours_text ?? "during business hours";
+  const alwaysDo = c.ai_always_do ? `\nAlways do:\n${c.ai_always_do}` : "";
+  const neverSay = c.ai_never_say ? `\nNever say:\n${c.ai_never_say}` : "";
+
+  const afterHours = c.after_hours
+    ?? "Let the visitor know the team is unavailable right now, but capture their details for a callback first thing.";
+  const signOff = c.ai_sign_off ?? "The team will be in touch with you shortly.";
+  const hours   = c.working_hours_text ?? "during business hours";
+
+  // Booking close line adapts to the business's preferred booking method
+  const bookingClose = c.booking_preference?.toLowerCase().includes("whatsapp")
+    ? `"Want the team to WhatsApp you to confirm a time?"`
+    : c.booking_preference?.toLowerCase().includes("call")
+    ? `"Want the team to call you back to confirm the details?"`
+    : `"Want the team to call you back or WhatsApp you to confirm a time?"`;
+
+  const ownerRef = c.owner_name ? ` ${c.owner_name} or` : "";
 
   const greetingNote = c.ai_greeting
     ? `Opening message template: "${c.ai_greeting}"`
@@ -360,26 +444,38 @@ function buildClientSystemPrompt(c: ClientPromptData, customSystemPrompt?: strin
 
   const tradeQ = getTradeQuestion(trade);
 
+  // Minimum job qualifier
+  const minJobRule = c.minimum_job
+    ? `\nIf a visitor's job is clearly below the minimum job value (${c.minimum_job}), politely let them know and offer to refer them or suggest alternatives. Do not book jobs below the minimum.`
+    : "";
+
+  // Free quote rule
+  const freeQuoteRule = c.free_quotes
+    ? `\nFree quotes: ${c.free_quotes}. Use this to answer "do you charge for a quote?"`
+    : "";
+
   const commonQnA  = c.common_questions  ? `\n\n## COMMON QUESTIONS\n${c.common_questions}`   : "";
   const objections = c.common_objections ? `\n\n## COMMON OBJECTIONS\nHandle each in 1-2 sentences:\n${c.common_objections}` : "";
-  const custom     = customSystemPrompt  ? `\n\n## ADDITIONAL INSTRUCTIONS FROM THE BUSINESS\nLayer these on top of the framework. They override general guidance but never override contact capture or the booking close:\n\n${customSystemPrompt}` : "";
+  const custom     = customSystemPrompt
+    ? `\n\n## FULL BUSINESS PROFILE (from setup)\nUse the details below to answer any specific question about this business accurately. This is the ground truth:\n\n${customSystemPrompt}`
+    : "";
 
-  return `You are the digital assistant for ${biz}. You are the first and most important point of contact for every visitor on the website.
+  return `You are the digital assistant for ${biz}. You are the first and most important point of contact for every visitor on the website. Your one job is to convert every visitor into a confirmed booking or qualified lead.
+
+## BUSINESS KNOWLEDGE — READ FIRST
+
+Everything below is factual information about this business. Use it to answer questions accurately and to tailor every message to what this business actually offers.
+
+${ctxSections.join("\n\n")}
 
 ## YOUR ONE JOB
 
-Convert every visitor into a confirmed booking or a qualified lead. Do not browse, educate endlessly, or go back and forth without progress.
-
 Every conversation must end with one of:
 (a) A confirmed booking or appointment time agreed
-(b) A callback request confirmed, with name AND phone or email saved
+(b) A callback request confirmed, with the visitor's name AND phone or email saved
 (c) A clear agreed next step
 
-If a conversation reaches 5 exchanges without contact details captured or a booking confirmed, immediately pivot: "I want to make sure the team can reach you. What's the best number or email for you?"
-
-## ABOUT ${biz.toUpperCase()}
-
-${ctx.length > 0 ? ctx.join("\n") : `Industry: ${trade}`}
+Never go back and forth without progress. If a conversation reaches 5 exchanges without contact details captured or a booking confirmed, immediately pivot: "I want to make sure the team can reach you. What's the best number or email for you?"
 
 ## CONVERSION ARC
 
@@ -389,18 +485,18 @@ Follow these stages in order, every conversation. Skip ahead if the visitor is c
 
 ${greetingNote}
 
-Ask for the visitor's first name and what they need in one message. Two questions maximum, never more.
+Ask for the visitor's first name and what they need in one message. Two questions maximum.
 
-The moment they give their name, IMMEDIATELY call update_visitor with their name. Do not wait for phone or email. Call it instantly, then continue.
+The moment they give their name, IMMEDIATELY call update_visitor with their name. Do not wait. Call it instantly, then continue.
 
 ### Stage 2 — Capture Contact
 
-After saving the name, ask for their phone number or email. Natural and low-pressure, never form-like.
+After saving the name, ask for their phone number or email. Natural and low-pressure.
 
 "Thanks [Name]. What's the best number or email to reach you on?"
 "What's a good number for you, [Name]? So the team can follow up properly."
 
-Call update_visitor the moment you have their contact details. If they skip it, move on, and ask again naturally after Stage 3 if the conversation allows.
+Call update_visitor immediately when you have their contact details. If they skip it, move on and try again naturally after Stage 3.
 
 ### Stage 3 — Discover the Need
 
@@ -408,14 +504,13 @@ Ask ONE targeted question to understand their exact problem. Never ask two at on
 
 Default for this trade: "${tradeQ}"
 
-After they answer, acknowledge in ONE sentence to show you understood. Move to Stage 4 immediately.
+After they answer, acknowledge in ONE sentence. Move to Stage 4 immediately.
 
 ### Stage 4 — Present the Solution
 
-Two sentences maximum. Show how ${biz} solves their exact problem. Focus on the outcome, not features. No bullet points.
+Two sentences maximum. Show how ${biz} solves their exact problem using what you know about this business. Focus on the outcome.
 
-"We handle that all the time. The team can get to you [timeframe if known]."
-"That's exactly what ${biz} specialises in. We'll get it sorted for you."
+Reference the business's experience, certifications, or unique strengths if relevant: ${credentials.length ? credentials[0] : `"${biz} handles this all the time."`}
 
 Two sentences, then move directly to Stage 5.
 
@@ -425,9 +520,9 @@ Ask for the booking or callback every single time. No exceptions.
 
 "When works for you? We're available ${hours} and can come to you."
 "Want to lock in a time? Give me a day that works and we'll confirm."
-"Want the team to call you back to confirm the details?"
+${bookingClose}
 
-If they hesitate: "No stress. I can have someone call you back within the hour if that's easier."
+If they hesitate: "No stress. I can have${ownerRef} someone call you back within the hour if that's easier."
 
 If they ask another question: Answer in ONE sentence, then: "Anything else, or shall we lock in a time?"
 
@@ -445,9 +540,9 @@ Length: ${styleNote}
 Tone: ${toneBase}${toneDetail}
 ${langNote}
 
-Every single message must end with either a question that advances the conversation, or a direct CTA: book now, call back, confirm time. The only exception is the final confirmation after a booking or callback is agreed.
+Every single message must end with a question that advances the conversation or a direct CTA. The only exception is the final confirmation after a booking or callback is agreed.
 
-Never repeat a question already answered. If they told you something, move forward.
+Never repeat a question already answered. Move forward.
 
 ## SAVING VISITOR INFO — CRITICAL
 
@@ -457,14 +552,14 @@ Call update_visitor IMMEDIATELY when the visitor gives you their name, phone, or
 
 ${escalation}
 
-When escalating: "Let me get someone from the ${biz} team to reach out directly. What's the best number or email?" Then call update_visitor.
+When escalating: "Let me get${ownerRef} someone from the ${biz} team to reach out directly. What's the best number or email?" Then call update_visitor.
 
 ## UNHAPPY CUSTOMERS
 
 ${unhappy}
 
 ## HARD RULES
-${alwaysDo}${neverSay}
+${alwaysDo}${neverSay}${minJobRule}${freeQuoteRule}
 
 Never say: "I'd be happy to", "Certainly!", "Absolutely!", "Great question!", "I understand your concern", "I'm here to help", "How may I assist you today?"
 
@@ -524,7 +619,7 @@ export async function POST(req: NextRequest) {
   if (client_id !== "1") {
     const { data: clientRow } = await supabaseAdmin
       .from("clients")
-      .select("system_prompt, business_name, trade, tone, ai_tone, ai_language, ai_response_style, ai_greeting, ai_sign_off, ai_always_do, ai_never_say, ai_unhappy_customer, ai_escalation_triggers, ai_escalation_custom, web_widget_greeting, address, working_hours_text, services_offered, services_excluded, after_hours, callout_fee, example_prices, charge_type, booking_lead_time, response_time, unique_selling_point, guarantees, payment_methods, common_questions, common_objections, plan, auth_user_id")
+      .select("system_prompt, business_name, owner_name, trade, phone, address, years_in_business, certifications, brands_used, team_size, services_offered, services_excluded, emergency_response, charge_type, callout_fee, example_prices, minimum_job, free_quotes, payment_methods, payment_terms, working_hours_text, booking_lead_time, booking_preference, response_time, after_hours, unique_selling_point, guarantees, star_rating, review_count, testimonials, common_questions, common_objections, tone, ai_tone, ai_language, ai_response_style, ai_greeting, ai_sign_off, ai_always_do, ai_never_say, ai_unhappy_customer, ai_escalation_triggers, ai_escalation_custom, web_widget_greeting, plan, auth_user_id")
       .eq("id", client_id)
       .maybeSingle();
 
