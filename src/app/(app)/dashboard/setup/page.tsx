@@ -737,12 +737,10 @@ function OverviewView({
 // ─── Intro View ───────────────────────────────────────────────────────────────
 
 function IntroView({
-  onAnalyse, onGoToWizard, form, set,
+  onAnalyse, onGoToWizard,
 }: {
   onAnalyse: (url: string, files: UploadedFile[], pasteText: string) => void;
   onGoToWizard: (step?: Step) => void;
-  form: FormData;
-  set: (field: keyof FormData) => (value: string) => void;
 }) {
   const [url, setUrl] = useState("");
   const [files, setFiles] = useState<UploadedFile[]>([]);
@@ -751,7 +749,6 @@ function IntroView({
   const [dragging, setDragging] = useState(false);
   const [showPaste, setShowPaste] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const step1Ref = useRef<HTMLDivElement>(null);
 
   const addFiles = useCallback(async (raw: FileList | File[]) => {
     setFileError(null);
@@ -784,10 +781,6 @@ function IntroView({
 
   const canAnalyse = url.trim() || files.length > 0 || pasteText.trim();
 
-  const scrollToStep1 = () => {
-    step1Ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
   return (
     <div className="space-y-5">
       {/* Hero */}
@@ -797,14 +790,14 @@ function IntroView({
         </div>
         <h2 className="text-h1 text-fg mb-2">Set up your digital assistant</h2>
         <p className="text-small text-fg-muted leading-relaxed max-w-md mx-auto">
-          Auto-fill from your website in 30 seconds, or fill in the form below yourself.
+          Scan your website to auto-fill your profile, or jump straight to the setup wizard.
         </p>
       </div>
 
-      {/* BIG "Fill it in myself" — top, prominent */}
+      {/* "Fill it in myself" — goes directly to full wizard */}
       <button
         type="button"
-        onClick={scrollToStep1}
+        onClick={() => onGoToWizard(1)}
         className="w-full panel !p-5 flex items-center gap-4 hover:border-brand/30 hover:bg-white/[0.04] transition-all duration-200 cursor-pointer group text-left"
       >
         <div className="w-11 h-11 rounded-xl bg-white/[0.05] border border-line flex items-center justify-center shrink-0 group-hover:border-brand/30 transition-colors duration-200">
@@ -812,7 +805,7 @@ function IntroView({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-base font-semibold text-fg">Fill it in myself</p>
-          <p className="text-tiny text-fg-muted mt-0.5">No website? No problem. Scroll down and fill in your details manually.</p>
+          <p className="text-tiny text-fg-muted mt-0.5">No website? Go straight to the 7-step setup wizard.</p>
         </div>
         <ArrowRight className="w-4 h-4 text-fg-subtle group-hover:text-brand group-hover:translate-x-0.5 transition-all duration-200 shrink-0" />
       </button>
@@ -928,67 +921,6 @@ function IntroView({
         Analyse my business
       </button>
 
-      {/* Step 1 inline — visible on the first page */}
-      <div ref={step1Ref} className="pt-4">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex-1 h-px bg-line" />
-          <span className="text-tiny text-fg-subtle px-1">or fill in step 1 below</span>
-          <div className="flex-1 h-px bg-line" />
-        </div>
-
-        <div className="panel !p-6 space-y-5">
-          <div>
-            <p className="text-base font-semibold text-fg">Step 1 of 6: Your Business</p>
-            <p className="text-tiny text-fg-muted mt-0.5">Start here if you don&apos;t have a website, or fill these in and use auto-fill to complete the rest.</p>
-          </div>
-
-          <Field label="Business name" hint="Your assistant uses this name when greeting customers.">
-            <WInput value={form.business_name} onChange={set("business_name")} placeholder="e.g. Pete's Plumbing" />
-          </Field>
-          <Field label="Your name" optional hint="So we know who to contact.">
-            <WInput value={form.owner_name} onChange={set("owner_name")} placeholder="e.g. Pete Jacobs" />
-          </Field>
-          <Field label="Type of work">
-            <WSelectWithOther value={form.trade} onChange={set("trade")} options={TRADES} placeholder="Select your trade" />
-          </Field>
-          <Field label="Cities and suburbs you cover" hint="Your assistant declines jobs outside these areas automatically.">
-            <WInput value={form.areas} onChange={set("areas")} placeholder="e.g. Sandton, Midrand, Fourways, Randburg" />
-          </Field>
-          <Field label="Years in business" optional>
-            <WInput value={form.years_in_business} onChange={set("years_in_business")} placeholder="e.g. 8 years" />
-          </Field>
-          <Field label="Licences & certifications" optional hint="Your assistant mentions these proactively to build trust.">
-            <WTextarea value={form.certifications} onChange={set("certifications")} placeholder={"One per line:\n- Wireman's licence\n- NHBRC registered"} rows={3} />
-          </Field>
-          <Field label="Brands or products you use" optional>
-            <WInput value={form.brands_used} onChange={set("brands_used")} placeholder="e.g. Defy, Bosch, Crabtree" />
-          </Field>
-          <Field label="Team size" optional>
-            <WInput value={form.team_size} onChange={set("team_size")} placeholder="e.g. Just me, or a team of 4" />
-          </Field>
-
-          <button
-            type="button"
-            onClick={() => onGoToWizard(2)}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-brand text-white text-small font-semibold hover:bg-brand/90 transition-colors duration-200 cursor-pointer"
-          >
-            Continue to step 2
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Small "Fill it in myself" at bottom */}
-      <div className="text-center pb-2">
-        <button
-          type="button"
-          onClick={() => onGoToWizard(1)}
-          className="inline-flex items-center gap-1.5 text-tiny text-fg-subtle hover:text-fg-muted transition-colors duration-150 cursor-pointer"
-        >
-          <ArrowRight className="w-3 h-3" />
-          Skip to full setup wizard
-        </button>
-      </div>
     </div>
   );
 }
@@ -1476,8 +1408,6 @@ export default function SetupPage() {
         <IntroView
           onAnalyse={runAnalyse}
           onGoToWizard={(s = 1) => { setStep(s as Step); setView("wizard"); }}
-          form={form}
-          set={set}
         />
       </div>
     );
