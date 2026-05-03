@@ -124,13 +124,14 @@ export async function POST(req: NextRequest) {
     ai_always_do: string | null;
     ai_never_say: string | null;
     system_prompt: string | null;
+    testimonials: string | null;
   } | null = null;
 
   try {
     const { data, error } = await db
       .from("clients")
       .select(
-        "id, business_name, owner_name, trade, areas, services_offered, services_excluded, after_hours, emergency_response, charge_type, callout_fee, example_prices, free_quotes, payment_methods, payment_terms, working_hours_text, booking_lead_time, booking_preference, response_time, unique_selling_point, guarantees, common_questions, common_objections, ai_tone, ai_language, ai_response_style, ai_greeting, ai_sign_off, ai_escalation_triggers, ai_escalation_custom, ai_unhappy_customer, ai_always_do, ai_never_say, system_prompt"
+        "id, business_name, owner_name, trade, areas, services_offered, services_excluded, after_hours, emergency_response, charge_type, callout_fee, example_prices, free_quotes, payment_methods, payment_terms, working_hours_text, booking_lead_time, booking_preference, response_time, unique_selling_point, guarantees, common_questions, common_objections, ai_tone, ai_language, ai_response_style, ai_greeting, ai_sign_off, ai_escalation_triggers, ai_escalation_custom, ai_unhappy_customer, ai_always_do, ai_never_say, system_prompt, testimonials"
       )
       .eq("whatsapp_number", To)
       .single();
@@ -352,6 +353,7 @@ ${client.payment_terms ? `Payment terms: ${client.payment_terms}` : ""}
 TRUST & CLOSE
 ${client.unique_selling_point ? `When a customer hesitates or says they'll think about it:\n${client.unique_selling_point}` : ""}
 ${client.guarantees ? `Guarantees to mention: ${client.guarantees}` : ""}
+${client.testimonials ? `Real customer testimonials (share one when a customer asks about our reputation or previous work):\n${client.testimonials}` : ""}
 ${client.common_questions ? `Common questions and answers:\n${client.common_questions}` : ""}
 ${client.common_objections ? `Common objections and how to handle them:\n${client.common_objections}` : ""}
 

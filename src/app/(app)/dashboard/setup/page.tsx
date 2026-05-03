@@ -1118,7 +1118,7 @@ function WhatsAppVerifyStep({ phone, clientId }: WhatsAppVerifyStepProps) {
 
 export default function SetupPage() {
   const router = useRouter();
-  const { client } = useClient();
+  const { client, loading: clientLoading } = useClient();
 
   const [view, setView] = useState<View>("overview");
   const [step, setStep] = useState<Step>(1);
@@ -1128,26 +1128,67 @@ export default function SetupPage() {
   const [autoFillError, setAutoFillError] = useState<string | null>(null);
   const [lastAnalyseArgs, setLastAnalyseArgs] = useState<{ url: string; files: UploadedFile[]; text: string } | null>(null);
 
-  const [form, setForm] = useState<FormData>({
-    ...empty,
-    business_name: client?.business_name ?? "",
-    owner_name: client?.owner_name ?? "",
-    trade: client?.trade ?? "",
-    whatsapp_number: client?.whatsapp_number ?? "",
-    google_calendar_email: client?.google_calendar_id ?? "",
-    notification_phone: client?.phone ?? client?.notification_phone ?? "",
-    notification_email: client?.notification_email ?? client?.support_email ?? "",
-    facebook_url: client?.facebook_url ?? "",
-    instagram_url: client?.instagram_url ?? "",
-    star_rating: client?.star_rating ?? "",
-    review_count: client?.review_count ?? "",
-    testimonials: client?.testimonials ?? "",
-  });
+  const [form, setForm] = useState<FormData>(empty);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [numberChoice, setNumberChoice] = useState<"existing" | "new" | "">(
-    form.whatsapp_number === "new_number_requested" ? "new" : form.whatsapp_number ? "existing" : ""
-  );
+  const [numberChoice, setNumberChoice] = useState<"existing" | "new" | "">("");
+
+  // Populate form once client data has loaded from Supabase
+  useEffect(() => {
+    if (!client) return;
+    setForm({
+      ...empty,
+      business_name: client.business_name ?? "",
+      owner_name: client.owner_name ?? "",
+      trade: client.trade ?? "",
+      areas: client.address ?? "",
+      whatsapp_number: client.whatsapp_number ?? "",
+      google_calendar_email: client.google_calendar_id ?? "",
+      years_in_business: client.years_in_business ?? "",
+      certifications: client.certifications ?? "",
+      brands_used: client.brands_used ?? "",
+      team_size: client.team_size ?? "",
+      services_offered: client.services_offered ?? "",
+      services_excluded: client.services_excluded ?? "",
+      after_hours: client.after_hours ?? "",
+      emergency_response: client.emergency_response ?? "",
+      charge_type: client.charge_type ?? "",
+      callout_fee: client.callout_fee ?? "",
+      example_prices: client.example_prices ?? "",
+      minimum_job: client.minimum_job ?? "",
+      free_quotes: client.free_quotes ?? "",
+      payment_methods: client.payment_methods ?? "",
+      payment_terms: client.payment_terms ?? "",
+      working_hours: client.working_hours_text ?? "",
+      booking_lead_time: client.booking_lead_time ?? "",
+      booking_preference: client.booking_preference ?? "",
+      response_time: client.response_time ?? "",
+      unique_selling_point: client.unique_selling_point ?? "",
+      guarantees: client.guarantees ?? "",
+      common_questions: client.common_questions ?? "",
+      common_objections: client.common_objections ?? "",
+      ai_tone: client.ai_tone ?? "",
+      ai_language: client.ai_language ?? "",
+      ai_response_style: client.ai_response_style ?? "",
+      ai_greeting: client.ai_greeting ?? "",
+      ai_escalation_triggers: client.ai_escalation_triggers ?? "",
+      ai_escalation_custom: client.ai_escalation_custom ?? "",
+      ai_unhappy_customer: client.ai_unhappy_customer ?? "",
+      ai_always_do: client.ai_always_do ?? "",
+      ai_never_say: client.ai_never_say ?? "",
+      ai_sign_off: client.ai_sign_off ?? "",
+      notification_phone: client.phone ?? client.notification_phone ?? "",
+      notification_email: client.notification_email ?? client.support_email ?? "",
+      facebook_url: client.facebook_url ?? "",
+      instagram_url: client.instagram_url ?? "",
+      star_rating: client.star_rating ?? "",
+      review_count: client.review_count ?? "",
+      testimonials: client.testimonials ?? "",
+    });
+    const wa = client.whatsapp_number ?? "";
+    setNumberChoice(wa === "new_number_requested" ? "new" : wa ? "existing" : "");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client?.id]);
 
   const set = (field: keyof FormData) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -1223,6 +1264,7 @@ export default function SetupPage() {
       whatsapp_number: form.whatsapp_number,
       google_calendar_id: form.google_calendar_email,
       address: form.areas.trim() || null,
+      areas: form.areas.trim() || null,
       system_prompt: buildSystemPrompt(form),
       years_in_business: form.years_in_business,
       certifications: form.certifications,
@@ -1286,6 +1328,15 @@ export default function SetupPage() {
   };
 
   const progressPct = view === "wizard" ? ((step - 1) / (STEPS.length - 1)) * 100 : 0;
+
+  // Show spinner while initial client data loads (prevents blank form on edit)
+  if (clientLoading && (view === "intro" || view === "wizard")) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="w-7 h-7 text-brand animate-spin" />
+      </div>
+    );
+  }
 
   // ── Non-wizard views ──
   if (view === "overview") {
