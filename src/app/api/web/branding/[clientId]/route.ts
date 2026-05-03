@@ -38,8 +38,30 @@ export async function GET(
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  if (!data.web_widget_enabled) {
-    return NextResponse.json({ error: "disabled" }, { status: 403 });
+  // Check trial expiry for non-hardcoded clients
+  if (clientId !== "1") {
+    const { data: client } = await supabaseAdmin
+      .from("clients")
+      .select("auth_user_id")
+      .eq("id", clientId)
+      .maybeSingle();
+
+    if (client?.auth_user_id) {
+      const { data: sub } = await supabaseAdmin
+        .from("subscriptions")
+        .select("plan, trial_ends_at")
+        .eq("user_id", client.auth_user_id)
+        .maybeSingle();
+
+      const trialExpired =
+        (sub?.plan === "trial" || !sub) &&
+        sub?.trial_ends_at &&
+        new Date(sub.trial_ends_at) < new Date();
+
+      if (trialExpired) {
+        return NextResponse.json({ error: "paused" }, { status: 403 });
+      }
+    }
   }
 
   return NextResponse.json({

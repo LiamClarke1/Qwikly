@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
         auth_user_id: data.user.id,
         business_name: businessName ?? "",
         onboarding_step: 1,
-        web_widget_enabled: false,
+        web_widget_enabled: true,
       });
     }
   }

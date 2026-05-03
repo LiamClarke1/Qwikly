@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { Home, MessageSquare, CalendarCheck, Settings, Sparkles, LogOut, Rocket, Users, Code2, ScrollText } from "lucide-react";
+import { Home, MessageSquare, CalendarCheck, Settings, Sparkles, LogOut, Rocket, Users, ScrollText } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@/lib/use-user";
 
@@ -15,7 +15,6 @@ type NavItem = { href: string; label: string; icon: NavIcon; adminOnly?: boolean
 const NAV: NavItem[] = [
   { href: "/dashboard",               label: "Home",      icon: Home as NavIcon },
   { href: "/dashboard/conversations", label: "Chats",     icon: MessageSquare as NavIcon },
-  { href: "/dashboard/embed",          label: "Embed",     icon: Code2 as NavIcon },
   { href: "/dashboard/logs",           label: "Logs",      icon: ScrollText as NavIcon },
   { href: "/dashboard/bookings",      label: "Calendar",  icon: CalendarCheck as NavIcon },
   { href: "/admin/clients",            label: "CRM",       icon: Users as NavIcon, adminOnly: true },

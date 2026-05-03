@@ -277,7 +277,6 @@ export async function POST(req: NextRequest) {
   }
 
   let systemPrompt = QWIKLY_SYSTEM;
-  let atStarterCap = false;
   let isTopUp = false;
   let clientAuthUserId: string | null = null;
 
@@ -296,6 +295,23 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     clientAuthUserId = clientRow?.auth_user_id ?? null;
+
+    // ── Trial expiry check ─────────────────────────────────────
+    if (clientAuthUserId) {
+      const { data: sub } = await supabaseAdmin
+        .from("subscriptions")
+        .select("plan, trial_ends_at")
+        .eq("user_id", clientAuthUserId)
+        .maybeSingle();
+      const trialExpired =
+        (sub?.plan === "trial" || !sub) &&
+        sub?.trial_ends_at &&
+        new Date(sub.trial_ends_at) < new Date();
+      if (trialExpired) {
+        return NextResponse.json({ error: "trial_expired" }, { status: 403, headers: CORS });
+      }
+    }
+
     const toneInstruction = TONE_MAP[clientRow?.ai_tone ?? ""] ?? "";
 
     if (clientRow?.system_prompt) {
@@ -320,10 +336,7 @@ export async function POST(req: NextRequest) {
         .eq("status", "lead")
         .gte("created_at", startOfMonth);
       const captured = monthLeads ?? 0;
-      if (tier === "starter" && captured >= cap) {
-        atStarterCap = true;
-        systemPrompt += "\n\nIMPORTANT: This business has reached its free plan lead limit for the month. Do NOT collect contact details from the visitor. If they ask about next steps, say: \"We'll be in touch shortly. You can also reach us directly via our contact page.\" Do not call update_visitor.";
-      } else if (tier === "pro" && captured >= cap) {
+      if (captured >= cap) {
         isTopUp = true;
       }
     }
@@ -456,8 +469,7 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Update conversation with visitor info ──────────────────
-  // Starter at cap: don't save as lead, don't enroll in sequences
-  const leadCaptured = !!visitorInfo && !atStarterCap;
+  const leadCaptured = !!visitorInfo;
 
   if (leadCaptured && visitorInfo && convoId) {
     const updates: Record<string, string | boolean> = { status: "lead" };

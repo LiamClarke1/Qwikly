@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
 import Link from "next/link";
 import {
-  ChevronRight, ChevronLeft, Check, Loader2, Sparkles,
+  ChevronRight, ChevronLeft, Check, Copy, Loader2, Sparkles,
   Building2, Wrench, DollarSign, Clock, Star, Bot,
   Globe, Upload, FileText, X, Zap, AlertCircle, ArrowRight, Clock3, MessageSquare,
   Phone, PlusCircle, Mail,
@@ -418,6 +418,25 @@ function OverviewView({
   const hasWhatsApp = !!(client?.whatsapp_number && client.whatsapp_number !== "new_number_requested");
   const hasWebWidget = !!client?.web_widget_enabled;
   const [waOpen, setWaOpen] = useState(false);
+  const [webOpen, setWebOpen] = useState(false);
+  const [webCopied, setWebCopied] = useState(false);
+
+  const handleWebCopy = async () => {
+    const snippet = `<script\n  src="https://cdn.qwikly.co.za/embed.js"\n  data-qwikly-id="${client?.public_key ?? ""}"\n  async\n></script>`;
+    try {
+      await navigator.clipboard.writeText(snippet);
+    } catch {
+      const el = document.createElement("textarea");
+      el.value = snippet;
+      el.style.cssText = "position:fixed;opacity:0";
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    }
+    setWebCopied(true);
+    setTimeout(() => setWebCopied(false), 1500);
+  };
 
   return (
     <div className="max-w-2xl space-y-10">
@@ -532,34 +551,69 @@ function OverviewView({
             </span>
           </div>
 
-          {/* Website Chat */}
-          <Link
-            href="/dashboard/settings"
-            className="panel !p-5 flex items-center gap-4 hover:border-brand/25 hover:bg-white/[0.03] transition-all duration-150 cursor-pointer group block"
-          >
-            <div className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-              hasWebWidget ? "bg-success/12 border border-success/20" : "bg-white/[0.05] border border-line"
-            )}>
-              <Globe className={cn("w-5 h-5", hasWebWidget ? "text-success" : "text-fg-muted group-hover:text-brand transition-colors duration-150")} />
+          {/* Your website */}
+          <div className="panel !p-5">
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                hasWebWidget ? "bg-success/12 border border-success/20" : "bg-white/[0.05] border border-line"
+              )}>
+                <Globe className={cn("w-5 h-5", hasWebWidget ? "text-success" : "text-fg-muted")} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-fg text-small">Your website</p>
+                <p className="text-tiny text-fg-muted mt-0.5">
+                  {hasWebWidget
+                    ? (client?.web_widget_domain || "Digital assistant active on your website")
+                    : "Add your digital assistant to your website"}
+                </p>
+              </div>
+              {hasWebWidget ? (
+                <span className="flex items-center gap-1.5 text-tiny text-success font-semibold shrink-0">
+                  <Check className="w-3.5 h-3.5" />
+                  Active
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setWebOpen((o) => !o)}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand text-white text-tiny font-semibold hover:bg-brand/90 transition-colors duration-150 cursor-pointer shrink-0"
+                >
+                  Get code
+                  <ChevronRight className={cn("w-3.5 h-3.5 transition-transform duration-200", webOpen && "rotate-90")} />
+                </button>
+              )}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-fg text-small">Website chat</p>
-              <p className="text-tiny text-fg-muted mt-0.5">
-                {hasWebWidget
-                  ? (client?.web_widget_domain || "Chat widget active")
-                  : "Add a chat widget to your website"}
-              </p>
-            </div>
-            {hasWebWidget ? (
-              <span className="flex items-center gap-1.5 text-tiny text-success font-semibold shrink-0">
-                <Check className="w-3.5 h-3.5" />
-                Active
-              </span>
-            ) : (
-              <ChevronRight className="w-4 h-4 text-fg-subtle group-hover:text-brand transition-colors duration-150 shrink-0" />
+            {webOpen && !hasWebWidget && (
+              <div className="mt-5 pt-5 border-t border-line space-y-3">
+                <p className="text-tiny text-fg-muted">
+                  Paste this before <code className="font-mono text-fg-subtle bg-white/[0.05] px-1 rounded">&lt;/body&gt;</code> on every page of your website.
+                </p>
+                <div className="rounded-xl bg-[#0f172a] p-4 overflow-x-auto">
+                  <pre className="font-mono text-[12px] leading-relaxed whitespace-pre text-slate-300">
+                    {`<script\n  src="https://cdn.qwikly.co.za/embed.js"\n  data-qwikly-id="${client?.public_key ?? ""}"\n  async\n></script>`}
+                  </pre>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleWebCopy}
+                    className="inline-flex items-center gap-2 px-4 h-9 rounded-xl bg-brand text-white text-tiny font-semibold hover:bg-brand/90 transition-colors duration-150 cursor-pointer"
+                  >
+                    {webCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {webCopied ? "Copied!" : "Copy snippet"}
+                  </button>
+                  <Link
+                    href="/dashboard/embed"
+                    className="inline-flex items-center gap-1.5 px-4 h-9 rounded-xl border border-line text-tiny font-medium text-fg-muted hover:text-fg hover:border-line-strong transition-all duration-150 cursor-pointer"
+                  >
+                    View preview
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
             )}
-          </Link>
+          </div>
 
         </div>
       </section>

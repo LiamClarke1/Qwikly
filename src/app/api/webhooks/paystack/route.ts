@@ -173,9 +173,9 @@ async function handleSubscriptionDisable(
     .select("user_id")
     .maybeSingle();
 
-  // Downgrade clients.plan to starter when subscription is cancelled
+  // Downgrade to trial when subscription is cancelled
   if (sub?.user_id) {
-    await db.from("clients").update({ plan: "starter" }).eq("auth_user_id", sub.user_id);
+    await db.from("clients").update({ plan: "trial" }).eq("auth_user_id", sub.user_id);
   }
 
   console.log("[paystack-webhook] subscription.disable processed:", subscriptionCode);
