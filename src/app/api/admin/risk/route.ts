@@ -25,7 +25,7 @@ export async function GET() {
   const db = supabaseAdmin();
   const { data: clients } = await db
     .from("clients")
-    .select("id, business_name, risk_score, risk_flags, status, created_at")
+    .select("id, business_name, risk_score, risk_flags, crm_status, created_at")
     .order("risk_score", { ascending: false });
 
   if (!clients) return NextResponse.json({ clients: [] });

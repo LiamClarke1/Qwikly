@@ -78,6 +78,7 @@ export interface ClientRow {
   commission_rate?: number | null;
   risk_score?: number | null;
   risk_flags?: string[] | null;
+  crm_status?: "onboarding" | "active" | "at_risk" | "paused" | "churned" | null;
   allow_cash_invoices?: boolean | null;
   reminder_tone?: string | null;
   // website widget fields
