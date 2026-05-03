@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { ClientRow } from "@/lib/use-client";
 import { Loader2, Plus, Trash2, Lock } from "lucide-react";
 import { Input, Textarea, Field } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { WidgetPreview } from "./WidgetPreview";
 import { type PlanTier } from "@/lib/plan";
+import { saveAssistantStep } from "../actions";
 
 // ─── Industry default greetings ───────────────────────────────────────────────
 
@@ -101,19 +101,19 @@ export default function StepAssistant({ client, plan, onAdvance, onBack }: Props
       .filter((q) => q.trim())
       .map((q) => ({ q, a: "" }));
 
-    const { error: dbErr } = await supabase
-      .from("clients")
-      .update({
+    try {
+      await saveAssistantStep({
         web_widget_color: color,
         web_widget_greeting: greeting,
         brand_color: color,
         faq: qualifyingFaq.length > 0 ? qualifyingFaq : null,
-      })
-      .eq("id", client.id);
-
-    setSaving(false);
-    if (dbErr) { setError(dbErr.message); return; }
-    await onAdvance();
+      });
+      await onAdvance();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save — please try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

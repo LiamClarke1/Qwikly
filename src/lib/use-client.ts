@@ -113,11 +113,15 @@ export function useClient() {
   const [loading, setLoading] = useState(true);
 
   async function load() {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setLoading(false);
+      return;
+    }
     const { data } = await supabase
       .from("clients")
       .select("*")
-      .order("created_at", { ascending: true })
-      .limit(1)
+      .eq("auth_user_id", session.user.id)
       .maybeSingle();
     setClient((data as ClientRow) ?? null);
     setLoading(false);

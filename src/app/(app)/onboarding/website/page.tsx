@@ -5,8 +5,8 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useClient } from "@/lib/use-client";
-import { supabase } from "@/lib/supabase";
 import { type PlanTier } from "@/lib/plan";
+import { advanceOnboardingStep, completeOnboarding } from "./actions";
 import { WizardShell } from "./_components/WizardShell";
 import StepBusiness from "./_components/StepBusiness";
 import StepAssistant from "./_components/StepAssistant";
@@ -49,16 +49,10 @@ function OnboardingContent() {
     if (!client) return;
     const next = currentStep + 1;
     if (next > STEPS.length) {
-      await supabase
-        .from("clients")
-        .update({ onboarding_completed_at: new Date().toISOString() })
-        .eq("id", client.id);
+      await completeOnboarding();
       router.push("/dashboard?welcome=true");
     } else {
-      await supabase
-        .from("clients")
-        .update({ onboarding_step: next })
-        .eq("id", client.id);
+      await advanceOnboardingStep(next);
       setCurrentStep(next);
       await refresh();
     }
@@ -70,10 +64,7 @@ function OnboardingContent() {
 
   const saveLater = useCallback(async () => {
     if (!client) return;
-    await supabase
-      .from("clients")
-      .update({ onboarding_step: currentStep })
-      .eq("id", client.id);
+    await advanceOnboardingStep(currentStep);
     router.push("/dashboard");
   }, [currentStep, client, router]);
 

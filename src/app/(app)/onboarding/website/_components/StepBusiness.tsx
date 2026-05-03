@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { ClientRow } from "@/lib/use-client";
 import { Loader2 } from "lucide-react";
 import { Input, Select, Field } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { type PlanTier } from "@/lib/plan";
+import { saveBusinessStep } from "../actions";
 
 const INDUSTRIES = [
   "Restaurant / Café",
@@ -58,19 +58,20 @@ export default function StepBusiness({ client, onAdvance }: Props) {
     }
     setSaving(true);
     setError(null);
-    const { error: dbErr } = await supabase
-      .from("clients")
-      .update({
+    try {
+      await saveBusinessStep({
         business_name: form.business_name.trim(),
         industry: form.industry || null,
         support_email: form.support_email.trim() || null,
         notification_email: form.support_email.trim() || null,
         notification_phone: form.contact_phone.trim() || null,
-      })
-      .eq("id", client.id);
-    setSaving(false);
-    if (dbErr) { setError(dbErr.message); return; }
-    await onAdvance();
+      });
+      await onAdvance();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save — please try again.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
