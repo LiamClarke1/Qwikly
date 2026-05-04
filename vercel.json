@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/client-cleanup",
+      "schedule": "0 1 * * *"
+    },
+    {
       "path": "/api/automations/run",
       "schedule": "0 8 * * *"
     },

@@ -1,4 +1,4 @@
-export type CrmStatus    = "onboarding" | "active" | "at_risk" | "paused" | "churned";
+export type CrmStatus    = "onboarding" | "active" | "at_risk" | "paused" | "churned" | "pending_deletion";
 export type CrmPlan      = "trial" | "starter" | "pro" | "premium" | "billions";
 export type BillingCycle = "monthly" | "annual";
 export type TaskStatus   = "open" | "in_progress" | "done" | "cancelled";
@@ -35,6 +35,7 @@ export interface CrmClientListItem {
   tags: CrmTag[];
   conversation_count: number;
   channels: string[];
+  deletion_scheduled_at: string | null;
 }
 
 export interface CrmClientDetail extends CrmClientListItem {
@@ -44,6 +45,7 @@ export interface CrmClientDetail extends CrmClientListItem {
   next_renewal_at: string | null;
   trial_ends_at: string | null;
   leads_used_mtd: number | null;
+  // deletion_scheduled_at inherited from CrmClientListItem
   web_widget_domain: string | null;
   web_widget_enabled: boolean | null;
   services_offered: string | null;

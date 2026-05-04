@@ -6,23 +6,25 @@ import { z } from "zod";
 export const dynamic = "force-dynamic";
 
 const PatchSchema = z.object({
-  business_name:      z.string().optional(),
-  owner_name:         z.string().optional(),
-  client_email:       z.string().email().optional(),
-  whatsapp_number:    z.string().optional(),
-  logo_url:           z.string().url().nullable().optional(),
-  industry:           z.string().nullable().optional(),
-  website:            z.string().nullable().optional(),
-  address:            z.string().nullable().optional(),
-  crm_status:         z.enum(["onboarding","active","at_risk","paused","churned"]).optional(),
-  plan:               z.enum(["trial","starter","pro","premium","billions"]).optional(),
-  billing_cycle:      z.enum(["monthly","annual"]).nullable().optional(),
-  mrr_zar:            z.number().int().min(0).optional(),
-  health_score:       z.number().int().min(0).max(100).optional(),
-  account_manager_id: z.string().uuid().nullable().optional(),
-  ltv_zar:            z.number().int().min(0).optional(),
-  next_renewal_at:    z.string().nullable().optional(),
-  trial_ends_at:      z.string().nullable().optional(),
+  business_name:          z.string().optional(),
+  owner_name:             z.string().optional(),
+  client_email:           z.string().email().optional(),
+  whatsapp_number:        z.string().optional(),
+  logo_url:               z.string().url().nullable().optional(),
+  industry:               z.string().nullable().optional(),
+  website:                z.string().nullable().optional(),
+  address:                z.string().nullable().optional(),
+  crm_status:             z.enum(["onboarding","active","at_risk","paused","churned","pending_deletion"]).optional(),
+  plan:                   z.enum(["trial","starter","pro","premium","billions"]).optional(),
+  billing_cycle:          z.enum(["monthly","annual"]).nullable().optional(),
+  mrr_zar:                z.number().int().min(0).optional(),
+  health_score:           z.number().int().min(0).max(100).optional(),
+  account_manager_id:     z.string().uuid().nullable().optional(),
+  ltv_zar:                z.number().int().min(0).optional(),
+  next_renewal_at:        z.string().nullable().optional(),
+  trial_ends_at:          z.string().nullable().optional(),
+  deletion_scheduled_at:  z.string().nullable().optional(),
+  web_widget_enabled:     z.boolean().optional(),
 }).strict();
 
 export async function GET(
@@ -97,7 +99,6 @@ export async function PATCH(
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data)  return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Log events
   if (parsed.data.crm_status) {
     await db.from("crm_events").insert({
       client_id: id,
@@ -118,6 +119,9 @@ export async function PATCH(
   return NextResponse.json({ ok: true });
 }
 
+// DELETE — schedules the client for deletion in 30 days.
+// Immediately revokes widget access and marks them pending_deletion.
+// The /api/cron/client-cleanup job hard-deletes after 30 days.
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: { id: string } }
@@ -128,15 +132,21 @@ export async function DELETE(
   const id = parseInt(params.id, 10);
   if (isNaN(id)) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
+  const deletionScheduledAt = new Date().toISOString();
+
   const db = supabaseAdmin();
-  // Soft-delete: mark churned + inactive
-  await db.from("clients").update({ crm_status: "churned" }).eq("id", id);
+  await db.from("clients").update({
+    crm_status:            "pending_deletion",
+    deletion_scheduled_at: deletionScheduledAt,
+    web_widget_enabled:    false,
+  }).eq("id", id);
+
   await db.from("crm_events").insert({
-    client_id: id,
-    actor_id: auth.userId,
-    event_type: "client_archived",
-    payload: {},
+    client_id:  id,
+    actor_id:   auth.userId,
+    event_type: "client_deletion_scheduled",
+    payload:    { deletion_scheduled_at: deletionScheduledAt },
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, deletion_scheduled_at: deletionScheduledAt });
 }

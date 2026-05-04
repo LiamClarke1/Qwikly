@@ -18,11 +18,12 @@ import type { CrmClientListItem, CrmTag, CrmSavedView } from "@/lib/crm-types";
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  onboarding: { label: "Onboarding", icon: Clock,          cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  active:     { label: "Active",     icon: CheckCircle2,   cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  at_risk:    { label: "At Risk",    icon: AlertTriangle,  cls: "bg-red-50 text-red-600 border-red-200" },
-  paused:     { label: "Paused",     icon: PauseCircle,    cls: "bg-slate-100 text-slate-500 border-slate-200" },
-  churned:    { label: "Churned",    icon: XCircle,        cls: "bg-slate-100 text-slate-400 border-slate-200" },
+  onboarding:       { label: "Onboarding",  icon: Clock,          cls: "bg-amber-50 text-amber-700 border-amber-200" },
+  active:           { label: "Active",      icon: CheckCircle2,   cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  at_risk:          { label: "At Risk",     icon: AlertTriangle,  cls: "bg-red-50 text-red-600 border-red-200" },
+  paused:           { label: "Paused",      icon: PauseCircle,    cls: "bg-slate-100 text-slate-500 border-slate-200" },
+  churned:          { label: "Churned",     icon: XCircle,        cls: "bg-slate-100 text-slate-400 border-slate-200" },
+  pending_deletion: { label: "Deleting…",   icon: Trash2,         cls: "bg-red-50 text-red-600 border-red-200" },
 } as const;
 
 // Starter excluded from filters — legacy only, no longer offered
@@ -166,15 +167,35 @@ function TagPills({ tags }: { tags: CrmTag[] }) {
   );
 }
 
+// ─── Deletion countdown ───────────────────────────────────────────────────────
+function DeletionCountdown({ scheduledAt }: { scheduledAt: string | null }) {
+  if (!scheduledAt) return null;
+  const deletionDate = new Date(new Date(scheduledAt).getTime() + 30 * 24 * 60 * 60 * 1000);
+  const daysLeft = Math.max(0, Math.ceil((deletionDate.getTime() - Date.now()) / 86_400_000));
+  return (
+    <span className={cn(
+      "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap",
+      daysLeft <= 3
+        ? "bg-red-100 text-red-700 border-red-300"
+        : "bg-red-50 text-red-600 border-red-200"
+    )}>
+      <Trash2 className="w-2.5 h-2.5" />
+      {daysLeft}d left
+    </span>
+  );
+}
+
 // ─── Row action menu ──────────────────────────────────────────────────────────
 function RowActions({
-  clientId, clientName,
-  onArchive, onDelete,
+  clientId, clientName, isPendingDeletion,
+  onArchive, onDelete, onRestore,
 }: {
   clientId: number;
   clientName: string | null;
+  isPendingDeletion: boolean;
   onArchive: (id: number) => void;
   onDelete: (id: number) => void;
+  onRestore: (id: number) => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -197,7 +218,7 @@ function RowActions({
         <MoreVertical className="w-4 h-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-30 py-1 overflow-hidden">
+        <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-30 py-1 overflow-hidden">
           <Link
             href={`/admin/clients/${clientId}`}
             className="flex items-center gap-2 px-3 py-2 text-[13px] text-slate-700 hover:bg-slate-50 cursor-pointer"
@@ -206,20 +227,31 @@ function RowActions({
             <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
             View profile
           </Link>
-          <button
-            onClick={e => { e.stopPropagation(); setOpen(false); onArchive(clientId); }}
-            className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-amber-700 hover:bg-amber-50 cursor-pointer"
-          >
-            <Archive className="w-3.5 h-3.5" />
-            Archive client
-          </button>
+          {isPendingDeletion ? (
+            <button
+              onClick={e => { e.stopPropagation(); setOpen(false); onRestore(clientId); }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-emerald-700 hover:bg-emerald-50 cursor-pointer"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Restore client
+            </button>
+          ) : (
+            <button
+              onClick={e => { e.stopPropagation(); setOpen(false); onArchive(clientId); }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-amber-700 hover:bg-amber-50 cursor-pointer"
+            >
+              <Archive className="w-3.5 h-3.5" />
+              Archive client
+            </button>
+          )}
           <div className="border-t border-slate-100 my-1" />
           <button
             onClick={e => { e.stopPropagation(); setOpen(false); onDelete(clientId); }}
             className="w-full flex items-center gap-2 px-3 py-2 text-[13px] text-red-600 hover:bg-red-50 cursor-pointer"
+            disabled={isPendingDeletion}
           >
             <Trash2 className="w-3.5 h-3.5" />
-            Remove client
+            {isPendingDeletion ? "Deletion scheduled" : "Remove client"}
           </button>
         </div>
       )}
@@ -251,7 +283,7 @@ function StatCard({
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 type SortCol = "business_name" | "mrr_zar" | "health_score" | "created_at" | "plan" | "crm_status";
-type ConfirmAction = { type: "archive" | "delete"; id: number; name: string | null } | null;
+type ConfirmAction = { type: "archive" | "delete" | "restore"; id: number; name: string | null } | null;
 
 interface Filters {
   status: string[];
@@ -323,11 +355,22 @@ export default function CrmClientsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ crm_status: "churned" }),
       });
+      setClients(cs => cs.filter(c => c.id !== confirmAction.id));
+    } else if (confirmAction.type === "restore") {
+      await fetch(`/api/admin/crm/clients/${confirmAction.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ crm_status: "paused", deletion_scheduled_at: null }),
+      });
+      // Refresh list so restored client shows updated status
+      await fetchClients();
     } else {
+      // Schedule for deletion — 30-day grace period
       await fetch(`/api/admin/crm/clients/${confirmAction.id}`, { method: "DELETE" });
+      // Update local state to show pending_deletion (don't remove from list)
+      await fetchClients();
     }
 
-    setClients(cs => cs.filter(c => c.id !== confirmAction.id));
     setSelected(s => { const n = new Set(s); n.delete(confirmAction.id); return n; });
     setConfirmAction(null);
     setActionLoading(false);
@@ -438,13 +481,19 @@ export default function CrmClientsPage() {
       {/* Confirm modal */}
       {confirmAction && (
         <ConfirmModal
-          title={confirmAction.type === "archive" ? "Archive this client?" : "Remove this client?"}
+          title={
+            confirmAction.type === "archive"  ? "Archive this client?" :
+            confirmAction.type === "restore"  ? "Restore this client?" :
+            "Remove this client?"
+          }
           body={
             confirmAction.type === "archive"
-              ? `"${confirmAction.name ?? "This client"}" will be marked as churned and hidden from active views. You can still find them by filtering for Churned status.`
-              : `"${confirmAction.name ?? "This client"}" will be permanently removed from the CRM. This cannot be undone.`
+              ? `"${confirmAction.name ?? "This client"}" will be marked as churned and hidden from active views.`
+              : confirmAction.type === "restore"
+              ? `"${confirmAction.name ?? "This client"}" will be restored to Paused status. Their scheduled deletion will be cancelled. You can re-enable their widget from their profile.`
+              : `"${confirmAction.name ?? "This client"}" will lose access to Qwikly immediately. Their data is preserved for 30 days, then permanently deleted. You can restore them within that window.`
           }
-          confirmLabel={actionLoading ? "Working…" : confirmAction.type === "archive" ? "Archive" : "Remove permanently"}
+          confirmLabel={actionLoading ? "Working…" : confirmAction.type === "archive" ? "Archive" : confirmAction.type === "restore" ? "Restore" : "Remove client"}
           danger={confirmAction.type === "delete"}
           onConfirm={executeAction}
           onCancel={() => !actionLoading && setConfirmAction(null)}
@@ -647,26 +696,16 @@ export default function CrmClientsPage() {
                 onSelectAll={toggleSelectAll}
                 onSelect={id => setSelected(s => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; })}
                 ColHeader={ColHeader}
-                onArchive={(id) => {
-                  const c = clients.find(x => x.id === id);
-                  setConfirmAction({ type: "archive", id, name: c?.business_name ?? null });
-                }}
-                onDelete={(id) => {
-                  const c = clients.find(x => x.id === id);
-                  setConfirmAction({ type: "delete", id, name: c?.business_name ?? null });
-                }}
+                onArchive={(id) => { const c = clients.find(x => x.id === id); setConfirmAction({ type: "archive", id, name: c?.business_name ?? null }); }}
+                onDelete={(id)  => { const c = clients.find(x => x.id === id); setConfirmAction({ type: "delete",  id, name: c?.business_name ?? null }); }}
+                onRestore={(id) => { const c = clients.find(x => x.id === id); setConfirmAction({ type: "restore", id, name: c?.business_name ?? null }); }}
               />
             ) : (
               <GridView
                 clients={clients}
-                onArchive={(id) => {
-                  const c = clients.find(x => x.id === id);
-                  setConfirmAction({ type: "archive", id, name: c?.business_name ?? null });
-                }}
-                onDelete={(id) => {
-                  const c = clients.find(x => x.id === id);
-                  setConfirmAction({ type: "delete", id, name: c?.business_name ?? null });
-                }}
+                onArchive={(id) => { const c = clients.find(x => x.id === id); setConfirmAction({ type: "archive", id, name: c?.business_name ?? null }); }}
+                onDelete={(id)  => { const c = clients.find(x => x.id === id); setConfirmAction({ type: "delete",  id, name: c?.business_name ?? null }); }}
+                onRestore={(id) => { const c = clients.find(x => x.id === id); setConfirmAction({ type: "restore", id, name: c?.business_name ?? null }); }}
               />
             )}
           </div>
@@ -697,7 +736,7 @@ export default function CrmClientsPage() {
 type ColHeaderFC = React.FC<{ col: SortCol; label: string; className?: string }>;
 
 function TableView({
-  clients, selected, allSelected, onSelectAll, onSelect, ColHeader, onArchive, onDelete,
+  clients, selected, allSelected, onSelectAll, onSelect, ColHeader, onArchive, onDelete, onRestore,
 }: {
   clients: CrmClientListItem[];
   selected: Set<number>;
@@ -707,6 +746,7 @@ function TableView({
   ColHeader: ColHeaderFC;
   onArchive: (id: number) => void;
   onDelete: (id: number) => void;
+  onRestore: (id: number) => void;
 }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
@@ -744,10 +784,15 @@ function TableView({
                 }
               </div>
               <div className="min-w-0">
-                <Link href={`/admin/clients/${c.id}`}
-                  className="text-[13px] font-semibold text-slate-800 hover:text-[#E85A2C] truncate block transition-colors cursor-pointer leading-tight">
-                  {c.business_name ?? "Unnamed"}
-                </Link>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Link href={`/admin/clients/${c.id}`}
+                    className="text-[13px] font-semibold text-slate-800 hover:text-[#E85A2C] truncate transition-colors cursor-pointer leading-tight">
+                    {c.business_name ?? "Unnamed"}
+                  </Link>
+                  {c.crm_status === "pending_deletion" && (
+                    <DeletionCountdown scheduledAt={c.deletion_scheduled_at} />
+                  )}
+                </div>
                 {c.client_email && (
                   <p className="text-[11px] text-slate-400 truncate leading-tight">{c.client_email}</p>
                 )}
@@ -780,8 +825,10 @@ function TableView({
           <RowActions
             clientId={c.id}
             clientName={c.business_name}
+            isPendingDeletion={c.crm_status === "pending_deletion"}
             onArchive={onArchive}
             onDelete={onDelete}
+            onRestore={onRestore}
           />
         </div>
       ))}
@@ -791,11 +838,12 @@ function TableView({
 
 // ─── Grid view ────────────────────────────────────────────────────────────────
 function GridView({
-  clients, onArchive, onDelete,
+  clients, onArchive, onDelete, onRestore,
 }: {
   clients: CrmClientListItem[];
   onArchive: (id: number) => void;
   onDelete: (id: number) => void;
+  onRestore: (id: number) => void;
 }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -819,7 +867,7 @@ function GridView({
             </Link>
             <div className="flex items-center gap-1.5 shrink-0">
               <StatusPill status={c.crm_status} />
-              <RowActions clientId={c.id} clientName={c.business_name} onArchive={onArchive} onDelete={onDelete} />
+              <RowActions clientId={c.id} clientName={c.business_name} isPendingDeletion={c.crm_status === "pending_deletion"} onArchive={onArchive} onDelete={onDelete} onRestore={onRestore} />
             </div>
           </div>
 

@@ -299,9 +299,14 @@ export async function POST(req: NextRequest) {
   if (client_id !== "1") {
     const { data: clientRow } = await supabaseAdmin
       .from("clients")
-      .select("system_prompt, business_name, owner_name, trade, phone, address, years_in_business, certifications, brands_used, team_size, services_offered, services_excluded, emergency_response, charge_type, callout_fee, example_prices, minimum_job, free_quotes, payment_methods, payment_terms, working_hours_text, booking_lead_time, booking_preference, response_time, after_hours, unique_selling_point, guarantees, star_rating, review_count, testimonials, common_questions, common_objections, faq, tone, ai_tone, ai_language, ai_response_style, ai_greeting, ai_sign_off, ai_always_do, ai_never_say, ai_unhappy_customer, ai_escalation_triggers, ai_escalation_custom, web_widget_greeting, plan, auth_user_id")
+      .select("system_prompt, business_name, owner_name, trade, phone, address, years_in_business, certifications, brands_used, team_size, services_offered, services_excluded, emergency_response, charge_type, callout_fee, example_prices, minimum_job, free_quotes, payment_methods, payment_terms, working_hours_text, booking_lead_time, booking_preference, response_time, after_hours, unique_selling_point, guarantees, star_rating, review_count, testimonials, common_questions, common_objections, faq, tone, ai_tone, ai_language, ai_response_style, ai_greeting, ai_sign_off, ai_always_do, ai_never_say, ai_unhappy_customer, ai_escalation_triggers, ai_escalation_custom, web_widget_greeting, plan, auth_user_id, crm_status")
       .eq("id", client_id)
       .maybeSingle();
+
+    // ── Pending deletion — access immediately revoked ──────────
+    if (clientRow?.crm_status === "pending_deletion") {
+      return NextResponse.json({ error: "service_suspended" }, { status: 403, headers: CORS });
+    }
 
     clientAuthUserId = clientRow?.auth_user_id ?? null;
 

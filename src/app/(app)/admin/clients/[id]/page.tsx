@@ -143,11 +143,60 @@ export default function CrmClientDetailPage() {
   if (loading) return <DetailSkeleton />;
   if (!client) return <div className="text-center py-20 text-slate-400 text-[13px]">Client not found.</div>;
 
+  const isPendingDeletion = client.crm_status === "pending_deletion";
+
+  async function restoreClient() {
+    await fetch(`/api/admin/crm/clients/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ crm_status: "paused", deletion_scheduled_at: null }),
+    });
+    await loadClient();
+  }
+
+  const deletionDaysLeft = isPendingDeletion && client.deletion_scheduled_at
+    ? Math.max(0, Math.ceil(
+        (new Date(client.deletion_scheduled_at).getTime() + 30 * 24 * 60 * 60 * 1000 - Date.now())
+        / 86_400_000
+      ))
+    : null;
+
   return (
     <div className="max-w-6xl">
       <Link href="/admin/clients" className="inline-flex items-center gap-1.5 text-[13px] text-slate-500 hover:text-slate-800 mb-5 cursor-pointer transition-colors">
         <ArrowLeft className="w-4 h-4" /> All clients
       </Link>
+
+      {/* Deletion banner */}
+      {isPendingDeletion && (
+        <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-red-100 flex items-center justify-center shrink-0 mt-0.5">
+              <Trash2 className="w-4 h-4 text-red-600" />
+            </div>
+            <div>
+              <p className="text-[14px] font-bold text-red-800">
+                Scheduled for permanent deletion
+                {deletionDaysLeft !== null && ` — ${deletionDaysLeft} day${deletionDaysLeft !== 1 ? "s" : ""} remaining`}
+              </p>
+              <p className="text-[12px] text-red-600 mt-0.5">
+                This client's access has been revoked. All data will be permanently deleted
+                {client.deletion_scheduled_at
+                  ? ` on ${new Date(new Date(client.deletion_scheduled_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}.`
+                  : " after 30 days."
+                }
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={restoreClient}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-red-200 text-[13px] font-semibold text-red-700 hover:bg-red-100 cursor-pointer transition-colors shrink-0"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            Restore client
+          </button>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-start gap-4 mb-6">
