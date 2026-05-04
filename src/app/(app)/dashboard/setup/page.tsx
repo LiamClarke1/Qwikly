@@ -1385,6 +1385,7 @@ export default function SetupPage() {
       ai_never_say: form.ai_never_say,
       ai_sign_off: form.ai_sign_off,
       onboarding_complete: true,
+      onboarding_completed_at: new Date().toISOString(),
       // scrape-populated fields
       phone: form.notification_phone.trim() || null,
       notification_phone: form.notification_phone.trim() || null,

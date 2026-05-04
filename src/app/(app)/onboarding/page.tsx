@@ -511,7 +511,7 @@ export default function OnboardingPage() {
   const handleGoLive = async () => {
     setSaving(true); setError(null);
     try {
-      await upsert({ onboarding_complete: true, setup_step: STEPS.length });
+      await upsert({ onboarding_complete: true, onboarding_completed_at: new Date().toISOString(), setup_step: STEPS.length });
       router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed. Please try again.");

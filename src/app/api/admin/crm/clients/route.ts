@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
       crm_status, plan, mrr_zar, health_score, ltv_zar,
       onboarding_step, onboarding_complete, onboarding_completed_at,
       web_widget_status, web_widget_enabled,
-      account_manager_id, created_at, active
+      account_manager_id, created_at
     `, { count: "exact" });
 
   if (status.length)          query = query.in("crm_status", status);
