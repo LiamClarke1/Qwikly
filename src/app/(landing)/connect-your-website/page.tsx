@@ -198,7 +198,7 @@ export default function ConnectYourWebsitePage() {
             Get your assistant live in 10 minutes.
           </h2>
           <p className="text-paper/60 mb-10 text-lg">Included in all plans. No per-job fees, ever. One line of code.</p>
-          <CTAButton href="/signup" size="lg">
+          <CTAButton href="/#pricing" size="lg">
             See plans
           </CTAButton>
         </div>
