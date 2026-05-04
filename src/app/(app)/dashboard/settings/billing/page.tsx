@@ -15,7 +15,7 @@ import { fmt, fmtDateLong } from "@/lib/money";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type PlanId = "starter" | "pro" | "premium" | "billions";
+type PlanId = "pro" | "premium" | "billions";
 type BillingCycle = "monthly" | "annual";
 type InvoiceStatus = "paid" | "open" | "overdue";
 
@@ -80,23 +80,11 @@ async function requestPaymentMethodUpdate(): Promise<string | null> {
 
 // ─── Pricing constants ────────────────────────────────────────────────────────
 
-const MONTHLY: Record<PlanId, number> = { starter: 399, pro: 999, premium: 1999, billions: 2999 };
+const MONTHLY: Record<PlanId, number> = { pro: 999, premium: 1999, billions: 2999 };
 // Annual = 15% discount
-const ANNUAL:  Record<PlanId, number> = { starter: 4069, pro: 10188, premium: 20390, billions: 30590 };
+const ANNUAL:  Record<PlanId, number> = { pro: 10188, premium: 20390, billions: 30590 };
 
 const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean; features: string[] }> = {
-  starter: {
-    name: "Starter",
-    tagline: "Legacy plan",
-    highlight: false,
-    features: [
-      "75 qualified leads/month",
-      "Digital assistant",
-      "Email lead delivery",
-      '"Powered by Qwikly" branding',
-      "Email support",
-    ],
-  },
   pro: {
     name: "Pro",
     tagline: "For businesses just getting started",
@@ -286,10 +274,10 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true);
   const [pendingChange, setPendingChange] = useState<{ plan: PlanId; cycle: BillingCycle } | null>(null);
   const isTrialPlan = (sub?.plan as string) === "trial";
-  // Resolve legacy plan IDs for display — never map trial to a paid plan
-  const resolvedPlan = (sub?.plan as string) === "lite" ? "starter" as PlanId :
+  const isLegacyStarter = !isTrialPlan && ((sub?.plan as string) === "starter" || (sub?.plan as string) === "lite");
+  const resolvedPlan = isLegacyStarter ? "pro" as PlanId :
     (sub?.plan as string) === "business" ? "premium" as PlanId :
-    isTrialPlan ? "starter" as PlanId : (sub?.plan as PlanId);
+    isTrialPlan ? "pro" as PlanId : (sub?.plan as PlanId);
   const [showCancel, setShowCancel] = useState(false);
   const [paymentLoading, setPaymentLoading] = useState(false);
 
@@ -322,9 +310,8 @@ export default function BillingPage() {
     );
   }
 
-  // Starter users have no paid subscription row — show them on the free plan
   const effectiveSub = sub ?? {
-    plan: "starter" as PlanId,
+    plan: "pro" as PlanId,
     cycle: "monthly" as BillingCycle,
     renewsAt: null,
     paymentMethod: null,
@@ -332,7 +319,7 @@ export default function BillingPage() {
     cancelAtPeriodEnd: false,
   };
 
-  const currentPlanId: PlanId = resolvedPlan ?? "starter";
+  const currentPlanId: PlanId = resolvedPlan ?? "pro";
   const plan = PLANS[currentPlanId];
   const isMonthly = effectiveSub.cycle === "monthly";
   const monthlyPrice = MONTHLY[currentPlanId];
@@ -396,8 +383,31 @@ export default function BillingPage() {
         </div>
       )}
 
+      {/* ── Legacy Starter Banner ────────────────────────────────────────── */}
+      {isLegacyStarter && (
+        <div className="bg-amber-500/10 border border-amber-500/25 rounded-2xl p-5 flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <Clock className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" aria-hidden="true" />
+            <div>
+              <p className="text-small font-semibold text-fg">
+                You&apos;re on our legacy Starter plan (R399/mo)
+              </p>
+              <p className="text-tiny text-fg-muted mt-0.5">
+                This plan is no longer available to new customers. Upgrade to Pro or higher to keep your digital assistant running with our latest features.
+              </p>
+            </div>
+          </div>
+          <a
+            href="#choose-plan"
+            className="shrink-0 inline-flex items-center gap-1.5 text-tiny font-semibold text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+          >
+            Upgrade now <ChevronRight className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      )}
+
       {/* ── A: Current Subscription ──────────────────────────────────────── */}
-      {!isTrialPlan && <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
+      {!isTrialPlan && !isLegacyStarter && <div className="bg-surface-card border border-line rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-line flex flex-wrap items-center justify-between gap-3">
           <p className="text-small font-semibold text-fg">Current subscription</p>
           {isMonthly && (
@@ -473,10 +483,12 @@ export default function BillingPage() {
       {/* ── B: Choose / Change Plan ──────────────────────────────────────── */}
       <div id="choose-plan" className="bg-surface-card border border-line rounded-2xl overflow-hidden">
         <div className="px-5 py-4 border-b border-line">
-          <p className="text-small font-semibold text-fg">{isTrialPlan ? "Choose your plan" : "Change plan"}</p>
+          <p className="text-small font-semibold text-fg">{isTrialPlan || isLegacyStarter ? "Choose your plan" : "Change plan"}</p>
           <p className="text-tiny text-fg-muted mt-0.5">
             {isTrialPlan
               ? "Pick a plan to activate after your trial. Payment is collected when you confirm."
+              : isLegacyStarter
+              ? "Upgrade to one of our current plans to keep your assistant running."
               : "No per-lead fees. Flat monthly pricing."}
           </p>
         </div>
@@ -484,9 +496,9 @@ export default function BillingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {(["pro", "premium", "billions"] as PlanId[]).map((planId) => {
               const meta = PLANS[planId];
-              const isCurrent = !isTrialPlan && planId === currentPlanId;
+              const isCurrent = !isTrialPlan && !isLegacyStarter && planId === currentPlanId;
               const price = isMonthly ? MONTHLY[planId] : Math.round(ANNUAL[planId] / 12);
-              const isUpgrade = isTrialPlan || MONTHLY[planId] > MONTHLY[currentPlanId];
+              const isUpgrade = isTrialPlan || isLegacyStarter || MONTHLY[planId] > MONTHLY[currentPlanId];
 
               return (
                 <div
