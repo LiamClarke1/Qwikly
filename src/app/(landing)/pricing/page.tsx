@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Minus, Plus, Shield, MapPin, Clock, Zap, Users, TrendingDown } from "lucide-react";
+import { Check, Minus, Plus, Shield, MapPin, Clock, Zap, Users, TrendingDown, MessageSquare, Phone, X } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 
 const MONTHLY = { trial: 0, pro: 999, premium: 1999, billions: 2999 } as const;
@@ -100,7 +100,7 @@ const pricingFAQs = [
   {
     question: "What counts as a qualified lead?",
     answer:
-      "A qualified lead is a visitor who has provided their contact details and answered your qualifying questions: service type, location, and buying intent. Bounced chats and spam are not counted.",
+      "A lead is counted only when a visitor shares their phone number or email address. Someone who opens the chat, says hi, or gives only their name does not count. Bounced chats, bots, and your own test messages never count. You only pay for people you can actually reach.",
   },
   {
     question: "What happens when I hit my monthly limit?",
@@ -490,6 +490,119 @@ export default function PricingPage() {
               </CTAButton>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ─── WHAT IS A LEAD ─── */}
+      <section className="py-28 bg-paper grain">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+
+          {/* Header */}
+          <div className="mb-16">
+            <p className="eyebrow text-ink-500 mb-6">Lead definition</p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-end">
+              <h2 className="display-lg text-ink">
+                Not every chat<br />
+                <em className="italic font-light">counts as a lead</em>.
+              </h2>
+              <p className="text-ink-700 text-base leading-relaxed">
+                Your plan includes a monthly lead limit. We only count a conversation as a lead
+                once a visitor shares their phone number or email. Curiosity is free.
+                You only pay for people you can actually reach.
+              </p>
+            </div>
+          </div>
+
+          {/* Three stages */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+
+            {/* Stage 1 */}
+            <div className="rounded-2xl border border-ink/[0.08] bg-white p-8">
+              <div className="w-10 h-10 rounded-xl bg-ink/[0.05] flex items-center justify-center mb-6">
+                <MessageSquare className="w-5 h-5 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+              </div>
+              <p className="eyebrow text-ink-400 mb-3">Stage 1</p>
+              <h3 className="font-display text-2xl text-ink mb-3">Conversation</h3>
+              <p className="text-ink-600 text-sm leading-relaxed mb-6">
+                Visitor opens the chat and asks a question or says hello. The assistant responds naturally.
+                No contact info has been shared yet.
+              </p>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ink/[0.05] border border-ink/[0.08]">
+                <span className="w-2 h-2 rounded-full bg-ink/25 flex-shrink-0" />
+                <span className="eyebrow text-xs text-ink-500">Not a lead</span>
+              </span>
+            </div>
+
+            {/* Stage 2 */}
+            <div className="rounded-2xl border border-ember/25 bg-ember/[0.04] p-8">
+              <div className="w-10 h-10 rounded-xl bg-ember/15 flex items-center justify-center mb-6">
+                <Phone className="w-5 h-5 text-ember" strokeWidth={1.75} aria-hidden="true" />
+              </div>
+              <p className="eyebrow text-ember mb-3">Stage 2</p>
+              <h3 className="font-display text-2xl text-ink mb-3">Lead captured</h3>
+              <p className="text-ink-600 text-sm leading-relaxed mb-6">
+                Visitor shares their phone number or email address. The assistant saves it and delivers
+                it to your inbox. This is when one lead counts against your monthly limit.
+              </p>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ember/10 border border-ember/20">
+                <span className="w-2 h-2 rounded-full bg-ember flex-shrink-0" />
+                <span className="eyebrow text-xs text-ember">Counts as 1 lead</span>
+              </span>
+            </div>
+
+            {/* Stage 3 */}
+            <div className="rounded-2xl border border-ink/[0.08] bg-white p-8">
+              <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center mb-6">
+                <Zap className="w-5 h-5 text-green-600" strokeWidth={1.75} aria-hidden="true" />
+              </div>
+              <p className="eyebrow text-ink-400 mb-3">Stage 3</p>
+              <h3 className="font-display text-2xl text-ink mb-3">Booking intent</h3>
+              <p className="text-ink-600 text-sm leading-relaxed mb-6">
+                Visitor confirms they want a callback, meeting, or is heading to sign up. Flagged as
+                "Hot" in your dashboard so you know who to call first. Still only 1 lead, no extra charge.
+              </p>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
+                <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+                <span className="eyebrow text-xs text-green-700">Hot, still 1 lead</span>
+              </span>
+            </div>
+
+          </div>
+
+          {/* What doesn't count */}
+          <div className="rounded-2xl border border-ink/[0.08] bg-ink/[0.02] p-8 md:p-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+              <div>
+                <p className="eyebrow text-ink-500 mb-4">What never counts</p>
+                <h3 className="font-display text-2xl text-ink mb-4">
+                  Bounced chats don&rsquo;t touch your limit.
+                </h3>
+                <p className="text-ink-700 text-sm leading-relaxed">
+                  If a visitor opens the chat and leaves without sharing contact details, we don&rsquo;t count it.
+                  Spam, bots, test messages, and visitors who only give their name — none of these
+                  come out of your monthly allowance. Your plan only goes down when a real,
+                  reachable person comes through.
+                </p>
+              </div>
+              <div className="space-y-4">
+                {[
+                  "Visitor opens the chat but doesn't reply",
+                  "Gives only their name, no phone or email",
+                  "Leaves before sharing contact details",
+                  "Spam or automated bot traffic",
+                  "Your own test conversations",
+                ].map((text, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="w-6 h-6 rounded-full border border-ink/20 flex items-center justify-center flex-shrink-0">
+                      <X className="w-3 h-3 text-ink-400" strokeWidth={2.5} aria-hidden="true" />
+                    </span>
+                    <p className="text-ink-600 text-sm">{text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
