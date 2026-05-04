@@ -2,17 +2,11 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Code2, ArrowRight, Copy, Check, Mail, MessageSquare, X, Send, Sparkles, PauseCircle, Clock } from "lucide-react";
 import Link from "next/link";
 import { useClient } from "@/lib/use-client";
 import { EmbedActions } from "./_components/EmbedActions";
-
-interface SubData {
-  plan: string;
-  trialEndsAt: string | null;
-  status: string;
-}
 
 function SkeletonLine({ className }: { className?: string }) {
   return <div className={`rounded bg-ink/[0.07] animate-pulse ${className ?? ""}`} />;
@@ -110,29 +104,19 @@ function ChatPreview({ businessName }: { businessName: string }) {
 
 export default function EmbedPage() {
   const { client, loading } = useClient();
-  const [sub, setSub] = useState<SubData | null>(null);
-  const [subLoading, setSubLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/subscription")
-      .then((r) => r.json())
-      .then((data) => {
-        setSub({ plan: data.plan ?? "trial", trialEndsAt: data.trialEndsAt ?? null, status: data.status ?? "active" });
-        setSubLoading(false);
-      })
-      .catch(() => setSubLoading(false));
-  }, []);
+  const isLoading = loading;
 
-  const isLoading = loading || subLoading;
-
-  const isTrialPlan = !sub || sub.plan === "trial";
-  const trialEndsAt = sub?.trialEndsAt ? new Date(sub.trialEndsAt) : null;
+  // Read plan from clients table — same source as the dashboard StatusBar
+  const isTrialPlan = !client?.plan || client.plan === "trial";
+  const trialEndsAt = client?.trial_ends_at ? new Date(client.trial_ends_at) : null;
   const now = new Date();
   const trialExpired = isTrialPlan && trialEndsAt !== null && trialEndsAt < now;
-  const trialDaysLeft = isTrialPlan && trialEndsAt && trialEndsAt > now
-    ? Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+  const trialActive = isTrialPlan && trialEndsAt !== null && !trialExpired;
+  const trialDaysLeft = trialActive
+    ? Math.ceil((trialEndsAt!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
-  const trialUrgent = isTrialPlan && !trialExpired && trialDaysLeft <= 3;
+  const trialUrgent = trialActive && trialDaysLeft <= 3;
 
   const publicKey = client?.public_key ?? "";
   const tenantName = client?.business_name ?? "Your Business";
@@ -176,7 +160,7 @@ export default function EmbedPage() {
       )}
 
       {/* ── Trial active: info/warning banner ── */}
-      {!isLoading && isTrialPlan && !trialExpired && (
+      {!isLoading && trialActive && (
         <div className={`rounded-2xl border p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
           trialUrgent
             ? "border-amber-200 bg-amber-50"
