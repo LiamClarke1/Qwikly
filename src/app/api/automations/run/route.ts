@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
           .from("clients")
           .select("business_name")
           .eq("id", clientId)
-          .single();
+          .maybeSingle();
 
         for (const booking of bookings) {
           const { data: existing } = await supabase
@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
           .from("clients")
           .select("business_name")
           .eq("id", clientId)
-          .single();
+          .maybeSingle();
 
         for (const booking of bookings) {
           const { data: existing } = await supabase
@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
           .from("clients")
           .select("business_name")
           .eq("id", clientId)
-          .single();
+          .maybeSingle();
 
         for (const contact of contacts) {
           const { data: existing } = await supabase
@@ -216,7 +216,7 @@ export async function POST(req: NextRequest) {
           .from("clients")
           .select("business_name")
           .eq("id", clientId)
-          .single();
+          .maybeSingle();
 
         for (const booking of bookings) {
           const { data: existing } = await supabase
@@ -275,7 +275,7 @@ export async function POST(req: NextRequest) {
           .from("clients")
           .select("business_name")
           .eq("id", clientId)
-          .single();
+          .maybeSingle();
 
         for (const invoice of invoices) {
           const { data: existing } = await supabase
@@ -328,7 +328,7 @@ export async function POST(req: NextRequest) {
           .from("clients")
           .select("business_name")
           .eq("id", clientId)
-          .single();
+          .maybeSingle();
 
         for (const invoice of invoices) {
           const { data: existing } = await supabase

@@ -243,10 +243,10 @@ export default function BookingsPage() {
       notes: addForm.notes || null,
     };
 
-    let { data, error } = await supabase.from("bookings").insert([{ ...bookingBase, price_display }]).select().single();
+    let { data, error } = await supabase.from("bookings").insert([{ ...bookingBase, price_display }]).select().maybeSingle();
     // If price_display column doesn't exist yet, retry without it
     if (error?.message?.includes("price_display")) {
-      ({ data, error } = await supabase.from("bookings").insert([bookingBase]).select().single());
+      ({ data, error } = await supabase.from("bookings").insert([bookingBase]).select().maybeSingle());
     }
     if (!error && data) {
       setBookings((bs) => [data as Booking, ...bs]);

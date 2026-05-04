@@ -68,7 +68,7 @@ async function buildAndEmailExport(clientId: number, requestId: string, email: s
 
   try {
     // Gather all data for this client — individual awaits so a missing table doesn't abort the export
-    const clientRes  = await db.from("clients").select("*").eq("id", clientId).single();
+    const clientRes  = await db.from("clients").select("*").eq("id", clientId).maybeSingle();
     const convsRes   = await db.from("conversations").select("*").eq("client_id", clientId).limit(5000);
     const contactsRes = await db.from("contacts").select("*").eq("client_id", clientId).limit(5000);
     const bookingsRes = await db.from("bookings").select("*").eq("client_id", clientId).limit(5000);

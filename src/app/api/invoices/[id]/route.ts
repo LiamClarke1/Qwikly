@@ -126,9 +126,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .update(updates)
     .eq("id", params.id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   await db.from("audit_events").insert({
     actor_id: auth.userId,

@@ -36,7 +36,8 @@ export default function EmailLinksPage() {
   useEffect(() => {
     fetch("/api/email-links")
       .then(r => r.json())
-      .then(data => { setLinks(data); setLoading(false); });
+      .then(data => { setLinks(data); setLoading(false); })
+      .catch(() => setLoading(false));
   }, []);
 
   const remove = async (link: EmailLink) => {

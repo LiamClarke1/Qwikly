@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     .from("bookings")
     .select("customer_name, customer_email, job_type, area, booking_datetime")
     .eq("id", bookingId)
-    .single();
+    .maybeSingle();
 
   if (!booking?.customer_email) {
     return NextResponse.json({ error: "No email on booking" }, { status: 400 });
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     .from("clients")
     .select("business_name")
     .eq("id", clientId)
-    .single();
+    .maybeSingle();
 
   const businessName = client?.business_name ?? "Your service provider";
 

@@ -68,7 +68,7 @@ export async function completeOnboarding(): Promise<void> {
   const db = supabaseAdmin();
   const { error } = await db
     .from("clients")
-    .update({ onboarding_completed_at: new Date().toISOString() })
+    .update({ onboarding_complete: true, onboarding_completed_at: new Date().toISOString() })
     .eq("auth_user_id", userId);
   if (error) throw new Error(error.message);
 }

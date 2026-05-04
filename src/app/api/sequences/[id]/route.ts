@@ -44,9 +44,10 @@ export async function PATCH(
     .eq("id", params.id)
     .eq("client_id", clientId)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(data);
 }
 

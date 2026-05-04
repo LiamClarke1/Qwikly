@@ -61,8 +61,8 @@ export async function POST(req: NextRequest) {
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   // Check account restrictions
-  if ((auth.client as Record<string, unknown>).status === "suspended") {
-    return NextResponse.json({ error: "Account suspended. Please settle your outstanding Qwikly balance." }, { status: 403 });
+  if ((auth.client as Record<string, unknown>).crm_status === "paused") {
+    return NextResponse.json({ error: "Account paused. Please settle your outstanding Qwikly balance." }, { status: 403 });
   }
 
   const body = await req.json();

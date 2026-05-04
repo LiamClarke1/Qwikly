@@ -432,14 +432,14 @@ export default function OnboardingPage() {
 
     if (client?.id) {
       const { data, error: err } = await supabase
-        .from("clients").update(payload).eq("id", client.id).select().single();
+        .from("clients").update(payload).eq("id", client.id).select().maybeSingle();
       if (err) throw err;
       if (data) setClient((prev) => ({ ...prev, ...data }));
     } else {
       const { data, error: err } = await supabase
         .from("clients")
         .insert([{ ...payload, auth_user_id: user.id, crm_status: "onboarding" }])
-        .select().single();
+        .select().maybeSingle();
       if (err) throw err;
       if (data) setClient(data);
     }

@@ -66,7 +66,7 @@ export async function POST(
     .from("clients")
     .select("business_name")
     .eq("id", campaign.client_id)
-    .single();
+    .maybeSingle();
 
   let contactQuery = supabase
     .from("contacts")

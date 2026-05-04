@@ -45,9 +45,10 @@ export async function PATCH(_req: NextRequest, { params }: { params: { id: strin
     .eq("client_id", auth.clientId)
     .is("revoked_at", null)
     .select("id, name, key_prefix, scopes, created_at")
-    .single();
+    .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json({ ...data, full_key: raw });
 }
 
