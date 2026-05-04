@@ -56,6 +56,17 @@ If you later collect their phone number or email address (for a call booking), c
 
 Never skip calling update_visitor when you have a name. Every conversation where the visitor gave their name must have it saved.
 
+## BOOKING INTENT — MARK WHEN THEY COMMIT
+
+Set booking_intent: true on the update_visitor call when the visitor commits to a concrete next step:
+- They say yes to the 15-minute call with Liam (Path B close)
+- They confirm they are heading to qwikly.co.za/pricing to sign up
+- An enterprise visitor gives their name and number for Liam to contact them
+
+Do not set booking_intent: true for general interest or questions. Only set it when a firm commitment to meet or buy has been made.
+
+If they commit AND you already have their contact details, include booking_intent: true and their phone or email in the same call. If they commit but you only have their name so far, still set booking_intent: true — it signals intent even without contact info yet.
+
 ## WHAT QWIKLY DOES — ALWAYS
 
 Qwikly is a digital assistant. It sits on the business owner's website and captures leads 24/7. Visitors click the chat bubble, the digital assistant greets them, asks qualifying questions, captures their name and contact details, and offers a time to be contacted. Leads land in the business owner's email inbox. Every time you describe the product, describe it as the digital assistant. Do not pitch WhatsApp integration as a current feature — it is coming soon.
@@ -553,6 +564,8 @@ Never repeat a question already answered. Move forward.
 
 Call update_visitor IMMEDIATELY when the visitor gives you their name, phone, or email. Do not wait. Do not batch. One piece of info, one call, right away.
 
+Set booking_intent: true when the visitor confirms a callback, agrees on a booking time, or asks to be contacted by the team. Do not set it for general questions. Only set it when they have committed to a concrete next step that requires the business to follow up.
+
 ## ESCALATION
 
 ${escalation}
@@ -578,17 +591,18 @@ NEVER use em dashes (—). Use a comma or full stop instead.${faqBlock}${commonQ
 }
 
 // ── Tool definition ────────────────────────────────────────
-// Called as soon as name is known, then again if phone/email is collected.
+// Called as soon as name is known, then again if phone/email is collected or booking intent confirmed.
 const TOOLS: Anthropic.Tool[] = [
   {
     name: "update_visitor",
-    description: "Save what you know about this visitor. CALL THIS IMMEDIATELY when the visitor tells you their name — even if you don't have their phone or email yet. Call it again later if you get their phone number or email address.",
+    description: "Save what you know about this visitor. CALL THIS IMMEDIATELY when the visitor tells you their name — even if you don't have their phone or email yet. Call it again when you get their phone number, email address, or when they commit to a call or booking.",
     input_schema: {
       type: "object" as const,
       properties: {
-        name:  { type: "string", description: "Visitor's first name or full name" },
-        phone: { type: "string", description: "Phone or WhatsApp number — only include if provided" },
-        email: { type: "string", description: "Email address — only include if provided" },
+        name:           { type: "string",  description: "Visitor's first name or full name" },
+        phone:          { type: "string",  description: "Phone or WhatsApp number — only include if provided" },
+        email:          { type: "string",  description: "Email address — only include if provided" },
+        booking_intent: { type: "boolean", description: "Set to true when the visitor confirms they want a call with Liam, agrees to sign up at qwikly.co.za/pricing, or commits to a booking. Never set this for general questions or curiosity." },
       },
       required: [],
     },
@@ -658,7 +672,7 @@ export async function POST(req: NextRequest) {
         .from("conversations")
         .select("id", { count: "exact", head: true })
         .eq("client_id", Number(client_id))
-        .eq("status", "lead")
+        .eq("is_lead", true)
         .gte("created_at", startOfMonth);
       const captured = monthLeads ?? 0;
       if (captured >= cap) {
@@ -737,7 +751,7 @@ export async function POST(req: NextRequest) {
   ];
 
   let reply = "Sorry, I ran into a technical issue. Please try again in a moment.";
-  let visitorInfo: { name?: string; phone?: string; email?: string } | null = null;
+  let visitorInfo: { name?: string; phone?: string; email?: string; booking_intent?: boolean } | null = null;
 
   try {
     const response = await anthropic.messages.create({
@@ -751,7 +765,7 @@ export async function POST(req: NextRequest) {
     for (const block of response.content) {
       if (block.type === "text") reply = block.text;
       if (block.type === "tool_use" && block.name === "update_visitor") {
-        visitorInfo = block.input as { name?: string; phone?: string; email?: string };
+        visitorInfo = block.input as { name?: string; phone?: string; email?: string; booking_intent?: boolean };
       }
     }
 
@@ -794,20 +808,35 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Update conversation with visitor info ──────────────────
-  const leadCaptured = !!visitorInfo;
+  // A lead is only counted when contact info (phone or email) is captured.
+  // Name alone saves the customer_name but does not flip to "lead" or count against the cap.
+  const hasContact = !!(visitorInfo?.phone || visitorInfo?.email);
+  const leadCaptured = hasContact;
 
-  if (leadCaptured && visitorInfo && convoId) {
-    const updates: Record<string, string | boolean> = { status: "lead" };
-    if (visitorInfo.name)  updates.customer_name  = visitorInfo.name;
-    if (visitorInfo.phone) updates.customer_phone = visitorInfo.phone;
-    if (visitorInfo.email) updates.customer_email = visitorInfo.email;
-    if (isTopUp) updates.is_top_up = true;
-    await supabaseAdmin.from("conversations").update(updates).eq("id", convoId);
+  if (visitorInfo && convoId) {
+    if (hasContact) {
+      // Contact info captured — this is a real lead, count against cap
+      const updates: Record<string, string | boolean> = { status: "lead", is_lead: true };
+      if (visitorInfo.name)           updates.customer_name  = visitorInfo.name;
+      if (visitorInfo.phone)          updates.customer_phone = visitorInfo.phone;
+      if (visitorInfo.email)          updates.customer_email = visitorInfo.email;
+      if (visitorInfo.booking_intent) updates.booking_intent = true;
+      if (isTopUp)                    updates.is_top_up      = true;
+      await supabaseAdmin.from("conversations").update(updates).eq("id", convoId);
 
-    if (visitorInfo.email && client_id) {
-      enrollLeadInSequences(Number(client_id), visitorInfo.email, visitorInfo.name ?? null, convoId).catch(
-        (err) => console.error("[sequences] enroll error", err)
-      );
+      if (visitorInfo.email && client_id) {
+        enrollLeadInSequences(Number(client_id), visitorInfo.email, visitorInfo.name ?? null, convoId).catch(
+          (err) => console.error("[sequences] enroll error", err)
+        );
+      }
+    } else {
+      // Name only (or booking_intent without contact) — save name and intent but do not count as a lead
+      const nameUpdate: Record<string, string | boolean> = {};
+      if (visitorInfo.name)           nameUpdate.customer_name = visitorInfo.name;
+      if (visitorInfo.booking_intent) nameUpdate.booking_intent = true;
+      if (Object.keys(nameUpdate).length > 0) {
+        await supabaseAdmin.from("conversations").update(nameUpdate).eq("id", convoId);
+      }
     }
   }
 

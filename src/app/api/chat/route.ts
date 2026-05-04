@@ -256,6 +256,7 @@ export async function POST(req: NextRequest) {
             if (leadPattern.test(fullReply)) {
               leadUpdate.lead_captured = true;
               leadUpdate.status = "lead";
+              leadUpdate.is_lead = true;
               // Fire-and-forget enrollment
               db.from("conversations").select("customer_email, customer_name").eq("id", convoId).maybeSingle().then(({ data: cv }) => {
                 if (cv?.customer_email) {

@@ -7,7 +7,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Users, Download, X, Clock, Phone, Mail,
-  MessageSquare, ArrowLeft, Loader2, AlertTriangle, CheckCircle2,
+  MessageSquare, ArrowLeft, Loader2, AlertTriangle, CheckCircle2, Flame,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
@@ -28,6 +28,7 @@ interface Lead {
   updated_at: string;
   preferred_time: string | null;
   area: string | null;
+  booking_intent: boolean | null;
 }
 
 interface Message {
@@ -129,6 +130,11 @@ function DetailPanel({
           <span className={cn("px-2.5 py-1 rounded-lg text-tiny font-semibold border", s.cls)}>
             {s.label}
           </span>
+          {lead.booking_intent && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-tiny font-semibold border bg-ember/10 text-ember border-ember/20">
+              <Flame className="w-3 h-3" /> Booking intent
+            </span>
+          )}
           {lead.job_type && (
             <span className="px-2.5 py-1 rounded-lg text-tiny font-medium bg-ink/[0.05] text-ink-500 border border-ink/[0.08]">
               {lead.job_type}
@@ -242,7 +248,8 @@ function LeadsContent() {
     setLoading(true);
     let q = supabase
       .from("conversations")
-      .select("id,customer_name,customer_phone,customer_email,job_type,status,created_at,updated_at,preferred_time,area")
+      .select("id,customer_name,customer_phone,customer_email,job_type,status,created_at,updated_at,preferred_time,area,booking_intent")
+      .eq("is_lead", true)
       .order("created_at", { ascending: false })
       .limit(200);
     if (statusFilter !== "all") q = q.eq("status", statusFilter);
@@ -431,10 +438,15 @@ function LeadsContent() {
                     ) : "—"}
                   </div>
                   {/* Status */}
-                  <div className="sm:text-right">
+                  <div className="sm:text-right flex sm:flex-col items-center sm:items-end gap-1.5">
                     <span className={cn("px-2.5 py-1 rounded-lg text-tiny font-semibold border inline-block", s.cls)}>
                       {s.label}
                     </span>
+                    {lead.booking_intent && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-tiny font-semibold border bg-ember/10 text-ember border-ember/20">
+                        <Flame className="w-3 h-3" /> Hot
+                      </span>
+                    )}
                   </div>
                 </button>
               );
