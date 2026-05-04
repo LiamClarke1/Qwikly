@@ -1027,13 +1027,6 @@ export default function Home() {
           </div>
 
           <div className="mt-10 flex flex-col items-center gap-4 reveal-up">
-            <div className="inline-flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 px-6 py-3 rounded-2xl">
-              <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <polyline points="9 12 11 14 15 10" />
-              </svg>
-              <p className="text-sm font-medium">30-day money-back guarantee on Pro and Premium</p>
-            </div>
             <p className="text-sm text-ink-500">
               Save 15% with annual billing · Top-ups at R20/extra lead · All prices excl. VAT
             </p>
