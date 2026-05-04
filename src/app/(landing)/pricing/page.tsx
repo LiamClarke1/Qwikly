@@ -153,9 +153,12 @@ function TableCell({ value, isPremiumCol }: { value: FeatureCell; isPremiumCol?:
   );
 }
 
+type CompareTab = "pro" | "premium" | "billions";
+
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+  const [compareTab, setCompareTab] = useState<CompareTab>("premium");
 
   function displayPrice(id: TierId) {
     if (id === "trial") return 0;
@@ -431,8 +434,43 @@ export default function PricingPage() {
             </h2>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse min-w-[620px]">
+          {/* ── Mobile: tabbed comparison ── */}
+          <div className="sm:hidden">
+            {/* Plan tabs */}
+            <div className="flex rounded-xl border border-ink/10 overflow-hidden mb-8">
+              {(["pro", "premium", "billions"] as CompareTab[]).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setCompareTab(tab)}
+                  className={`flex-1 py-3 text-center transition-colors duration-200 cursor-pointer ${
+                    compareTab === tab
+                      ? "bg-ink text-paper"
+                      : "text-ink-500 hover:text-ink"
+                  }`}
+                >
+                  <span className={`eyebrow text-[10px] ${compareTab === tab && tab === "premium" ? "text-ember" : tab === "premium" ? "text-ember/70" : ""}`}>
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Feature rows for selected plan */}
+            <div className="divide-y divide-ink/[0.06] border-t border-ink/[0.06]">
+              {featureRows.map((row) => (
+                <div key={row.label} className="flex items-center justify-between py-4 gap-4">
+                  <span className="text-sm text-ink-700 leading-snug">{row.label}</span>
+                  <div className="flex-shrink-0">
+                    <TableCell value={row[compareTab]} isPremiumCol={compareTab === "premium"} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Desktop: full side-by-side table ── */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full border-collapse min-w-[560px]">
               <thead>
                 <tr className="border-b border-ink/10">
                   <th className="text-left pb-5 pr-6 font-normal eyebrow text-ink-500 w-[40%]">
