@@ -5,6 +5,9 @@ export type VisitorToolInput = {
   phone?: string;
   email?: string;
   booking_intent?: boolean;
+  job_type?: string;
+  area?: string;
+  preferred_time?: string;
 };
 
 export type ClientPromptData = {

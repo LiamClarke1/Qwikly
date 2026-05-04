@@ -264,6 +264,9 @@ const TOOLS: Anthropic.Tool[] = [
         phone:          { type: "string",  description: "Phone or WhatsApp number — only include if provided" },
         email:          { type: "string",  description: "Email address — only include if provided" },
         booking_intent: { type: "boolean", description: "Set to true when the visitor confirms they want a call with Liam, agrees to sign up at qwikly.co.za/pricing, or commits to a booking. Never set this for general questions or curiosity." },
+        job_type:       { type: "string",  description: "Type of work or service the visitor needs (e.g. 'burst pipe', 'new installation', 'quote for electrical')" },
+        area:           { type: "string",  description: "Area, suburb, or city the visitor is located in or needs service at" },
+        preferred_time: { type: "string",  description: "When the visitor prefers to be contacted or have the job done (e.g. 'mornings', 'this week', 'ASAP')" },
       },
       required: [],
     },
@@ -487,6 +490,9 @@ export async function POST(req: NextRequest) {
       if (visitorInfo.phone)          updates.customer_phone = visitorInfo.phone;
       if (visitorInfo.email)          updates.customer_email = visitorInfo.email;
       if (visitorInfo.booking_intent) updates.booking_intent = true;
+      if (visitorInfo.job_type)       updates.job_type       = visitorInfo.job_type;
+      if (visitorInfo.area)           updates.area           = visitorInfo.area;
+      if (visitorInfo.preferred_time) updates.preferred_time = visitorInfo.preferred_time;
       if (isTopUp)                    updates.is_top_up      = true;
       await supabaseAdmin.from("conversations").update(updates).eq("id", convoId);
 
@@ -498,8 +504,11 @@ export async function POST(req: NextRequest) {
     } else {
       // Name only (or booking_intent without contact) — save name and intent but do not count as a lead
       const nameUpdate: Record<string, string | boolean> = {};
-      if (visitorInfo.name)           nameUpdate.customer_name = visitorInfo.name;
+      if (visitorInfo.name)           nameUpdate.customer_name  = visitorInfo.name;
       if (visitorInfo.booking_intent) nameUpdate.booking_intent = true;
+      if (visitorInfo.job_type)       nameUpdate.job_type       = visitorInfo.job_type;
+      if (visitorInfo.area)           nameUpdate.area           = visitorInfo.area;
+      if (visitorInfo.preferred_time) nameUpdate.preferred_time = visitorInfo.preferred_time;
       if (Object.keys(nameUpdate).length > 0) {
         await supabaseAdmin.from("conversations").update(nameUpdate).eq("id", convoId);
       }

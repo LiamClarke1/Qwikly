@@ -322,6 +322,9 @@ export async function POST(req: NextRequest) {
               if (visitorInfo.phone)          updates.customer_phone = visitorInfo.phone;
               if (visitorInfo.email)          updates.customer_email = visitorInfo.email;
               if (visitorInfo.booking_intent) updates.booking_intent = true;
+              if (visitorInfo.job_type)       updates.job_type       = visitorInfo.job_type;
+              if (visitorInfo.area)           updates.area           = visitorInfo.area;
+              if (visitorInfo.preferred_time) updates.preferred_time = visitorInfo.preferred_time;
               if (isTopUp)                    updates.is_top_up      = true;
               await db.from("conversations").update(updates).eq("id", convoId);
 

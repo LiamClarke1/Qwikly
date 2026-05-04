@@ -253,7 +253,8 @@ function LeadsContent() {
       .order("created_at", { ascending: false })
       .limit(200);
     if (statusFilter !== "all") q = q.eq("status", statusFilter);
-    const { data } = await q;
+    const { data, error } = await q;
+    if (error) console.error("[leads] query error:", error.message, error.details);
     setLeads((data as Lead[]) ?? []);
     setLoading(false);
   }
