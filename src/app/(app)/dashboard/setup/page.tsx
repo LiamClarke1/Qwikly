@@ -434,16 +434,38 @@ function OverviewView({
   const [webCopied, setWebCopied] = useState(false);
   const [editingDomain, setEditingDomain] = useState(false);
   const [domainInput, setDomainInput] = useState(client?.web_widget_domain ?? "");
+  const [domainChecking, setDomainChecking] = useState(false);
+  const [domainPreview, setDomainPreview] = useState<{ title: string; reachable: boolean } | null>(null);
   const [domainSaving, setDomainSaving] = useState(false);
   const [domainError, setDomainError] = useState<string | null>(null);
   const [apiOpen, setApiOpen] = useState(false);
 
+  function parseDomainHostname(raw: string): string | null {
+    try { return new URL(raw.startsWith("http") ? raw : `https://${raw}`).hostname; } catch { return null; }
+  }
+
+  async function checkDomain() {
+    setDomainError(null);
+    setDomainPreview(null);
+    const raw = domainInput.trim();
+    if (!raw) { setDomainError("Please enter a domain."); return; }
+    const hostname = parseDomainHostname(raw);
+    if (!hostname) { setDomainError("Please enter a valid domain, e.g. yoursite.co.za"); return; }
+    setDomainChecking(true);
+    try {
+      const res = await fetch(`/api/onboarding/site-preview?url=${encodeURIComponent(`https://${hostname}`)}`);
+      const data = await res.json();
+      setDomainPreview({ title: data.title ?? hostname, reachable: !!data.reachable });
+    } catch {
+      setDomainPreview({ title: hostname, reachable: false });
+    }
+    setDomainChecking(false);
+  }
+
   async function saveDomain() {
     setDomainError(null);
     const raw = domainInput.trim();
-    if (!raw) { setDomainError("Please enter a domain."); return; }
-    let hostname = raw;
-    try { hostname = new URL(raw.startsWith("http") ? raw : `https://${raw}`).hostname; } catch { /* use as-is */ }
+    const hostname = parseDomainHostname(raw);
     if (!hostname) { setDomainError("Invalid domain."); return; }
     setDomainSaving(true);
     const res = await fetch("/api/setup/save", {
@@ -455,6 +477,7 @@ function OverviewView({
     setDomainSaving(false);
     if (!res.ok) { setDomainError((json as { error?: string }).error ?? "Failed to save domain."); return; }
     setEditingDomain(false);
+    setDomainPreview(null);
   }
 
   const handleWebCopy = async () => {
@@ -632,32 +655,58 @@ function OverviewView({
             </div>
             {editingDomain && hasWebWidget && (
               <div className="mt-5 pt-5 border-t border-line space-y-3">
-                <p className="text-tiny text-fg-muted">Update the domain your widget is installed on.</p>
+                <p className="text-tiny text-fg-muted">Enter the domain and verify it exists before saving.</p>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={domainInput}
-                    onChange={(e) => setDomainInput(e.target.value)}
+                    onChange={(e) => { setDomainInput(e.target.value); setDomainPreview(null); }}
+                    onKeyDown={(e) => e.key === "Enter" && checkDomain()}
                     placeholder="yoursite.co.za"
                     className="flex-1 bg-white/[0.03] border border-line rounded-xl px-4 py-2.5 text-fg text-small placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand/60 transition-colors duration-200"
                   />
                   <button
                     type="button"
-                    onClick={saveDomain}
-                    disabled={domainSaving}
-                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand text-white text-tiny font-semibold hover:bg-brand/90 transition-colors duration-150 cursor-pointer disabled:opacity-50"
+                    onClick={checkDomain}
+                    disabled={domainChecking || !domainInput.trim()}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-line text-tiny font-semibold text-fg-muted hover:text-fg hover:border-line-strong transition-all duration-150 cursor-pointer disabled:opacity-50"
                   >
-                    {domainSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                    Save
+                    {domainChecking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Check"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setEditingDomain(false)}
+                    onClick={() => { setEditingDomain(false); setDomainPreview(null); setDomainError(null); }}
                     className="px-3 py-2.5 rounded-xl border border-line text-tiny text-fg-muted hover:text-fg hover:border-line-strong transition-all duration-150 cursor-pointer"
                   >
                     Cancel
                   </button>
                 </div>
+                {domainPreview && (
+                  <div className={cn(
+                    "flex items-start gap-3 p-3 rounded-xl border",
+                    domainPreview.reachable ? "bg-success/[0.06] border-success/20" : "bg-warning/[0.06] border-warning/20"
+                  )}>
+                    {domainPreview.reachable
+                      ? <Check className="w-4 h-4 text-success mt-0.5 shrink-0" />
+                      : <AlertCircle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+                    }
+                    <div className="flex-1 min-w-0">
+                      <p className="text-small font-semibold text-fg truncate">{domainPreview.title}</p>
+                      <p className="text-tiny text-fg-muted mt-0.5">
+                        {domainPreview.reachable ? "Website verified and reachable." : "Could not reach this site — double-check the URL."}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={saveDomain}
+                      disabled={domainSaving}
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-brand text-white text-tiny font-semibold hover:bg-brand/90 transition-colors duration-150 cursor-pointer disabled:opacity-50 shrink-0"
+                    >
+                      {domainSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                      Save
+                    </button>
+                  </div>
+                )}
                 {domainError && <p className="text-tiny text-danger">{domainError}</p>}
               </div>
             )}

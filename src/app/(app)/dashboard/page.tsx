@@ -404,7 +404,7 @@ export default function HomePage() {
       <TrialBanner />
 
       {/* ── Onboarding reminder ──────────────────────────────────── */}
-      {!loading && client && !client.onboarding_completed_at && (
+      {!loading && client && !client.onboarding_complete && !client.onboarding_completed_at && (
         <OnboardingBanner businessName={client.business_name} />
       )}
 
