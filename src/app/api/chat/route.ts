@@ -279,7 +279,10 @@ export async function POST(req: NextRequest) {
             ],
           });
 
+          const phase1Text = fullReply;
           fullReply = ""; // Phase 2 is the real conversational reply
+          // If Phase 1 had any text, prepend it so the DB has the complete reply
+          if (phase1Text) fullReply = phase1Text + " ";
           for await (const event of stream2) {
             if (
               event.type === "content_block_delta" &&
