@@ -318,7 +318,7 @@ export default function PricingPage() {
           </div>
 
           <p className="text-center eyebrow text-ink-500 mt-10">
-            30-day money-back guarantee on all paid plans · Top-ups at R20/extra lead · Cancel anytime · All prices excl. VAT
+            Top-ups at R20/extra lead · Cancel anytime · All prices excl. VAT
           </p>
         </div>
       </section>
@@ -372,27 +372,6 @@ export default function PricingPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── 30-DAY GUARANTEE ─── */}
-      <section className="py-28 grain">
-        <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="ed-card max-w-3xl mx-auto text-center">
-            <div className="w-12 h-12 rounded-full bg-ember/10 flex items-center justify-center mx-auto mb-6">
-              <Shield className="w-6 h-6 text-ember" strokeWidth={1.5} />
-            </div>
-            <p className="eyebrow text-ember mb-4">30-day money-back guarantee</p>
-            <h2 className="display-md text-ink mb-6">
-              If Qwikly doesn&rsquo;t deliver,
-              <br className="hidden md:block" />{" "}
-              <em className="italic font-light">you pay nothing</em>.
-            </h2>
-            <p className="text-ink-700 leading-relaxed max-w-lg mx-auto">
-              Try any paid plan for 30 days. If you&rsquo;re not happy for any reason,
-              we&rsquo;ll refund every cent. No hoops, no questions asked.
-            </p>
           </div>
         </div>
       </section>

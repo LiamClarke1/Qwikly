@@ -3,12 +3,12 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Qwikly offers three flat monthly plans: Starter (free), Pro at R599/month, Premium at R1,299/month. No per-job fees, no commissions. 30-day money-back guarantee.",
+    "Qwikly offers three flat monthly plans: Starter (free), Pro at R599/month, Premium at R1,299/month. No per-job fees, no commissions. Cancel anytime.",
   alternates: { canonical: "https://www.qwikly.co.za/pricing" },
   openGraph: {
     title: "Qwikly Pricing: Flat Monthly Plans. No Per-Job Fees.",
     description:
-      "Starter Free · Pro R599/mo · Premium R1,299/mo. No commissions, no setup fees, no lock-in. 30-day money-back guarantee on Pro and Premium.",
+      "Starter Free · Pro R599/mo · Premium R1,299/mo. No commissions, no setup fees, no lock-in. Cancel anytime.",
     url: "https://www.qwikly.co.za/pricing",
   },
 };
