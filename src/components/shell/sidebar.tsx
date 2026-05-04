@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
-import { Home, MessageSquare, CalendarCheck, Settings, Sparkles, LogOut, Rocket, Users, ScrollText } from "lucide-react";
+import { Home, MessageSquare, CalendarCheck, Settings, Sparkles, LogOut, Rocket, Users, ScrollText, Code2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useUser } from "@/lib/use-user";
 
@@ -18,6 +18,7 @@ const NAV: NavItem[] = [
   { href: "/dashboard/logs",           label: "Logs",      icon: ScrollText as NavIcon },
   { href: "/dashboard/bookings",      label: "Calendar",  icon: CalendarCheck as NavIcon },
   { href: "/admin/clients",            label: "CRM",       icon: Users as NavIcon, adminOnly: true },
+  { href: "/dashboard/embed",          label: "Install",   icon: Code2 as NavIcon },
   { href: "/dashboard/settings",      label: "Settings",  icon: Settings as NavIcon },
   { href: "/dashboard/setup",         label: "Setup",     icon: Rocket as NavIcon },
 ];

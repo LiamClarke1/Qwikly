@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageSquare, CalendarCheck, Settings } from "lucide-react";
+import { Home, MessageSquare, CalendarCheck, Settings, Code2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const TABS = [
   { href: "/dashboard",               label: "Home",      icon: Home },
   { href: "/dashboard/conversations", label: "Chats",     icon: MessageSquare },
   { href: "/dashboard/bookings",      label: "Calendar",  icon: CalendarCheck },
+  { href: "/dashboard/embed",         label: "Install",   icon: Code2 },
   { href: "/dashboard/settings",      label: "Settings",  icon: Settings },
 ];
 
