@@ -15,13 +15,14 @@ const PatchSchema = z.object({
   website:            z.string().nullable().optional(),
   address:            z.string().nullable().optional(),
   crm_status:         z.enum(["onboarding","active","at_risk","paused","churned"]).optional(),
-  plan:               z.enum(["starter","growth","pro","enterprise"]).optional(),
+  plan:               z.enum(["trial","starter","pro","premium","billions"]).optional(),
+  billing_cycle:      z.enum(["monthly","annual"]).nullable().optional(),
   mrr_zar:            z.number().int().min(0).optional(),
   health_score:       z.number().int().min(0).max(100).optional(),
   account_manager_id: z.string().uuid().nullable().optional(),
   ltv_zar:            z.number().int().min(0).optional(),
   next_renewal_at:    z.string().nullable().optional(),
-  commission_rate:    z.number().min(0).max(1).optional(),
+  trial_ends_at:      z.string().nullable().optional(),
 }).strict();
 
 export async function GET(
@@ -96,14 +97,21 @@ export async function PATCH(
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data)  return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Log event
-  const prevStatus = parsed.data.crm_status;
-  if (prevStatus) {
+  // Log events
+  if (parsed.data.crm_status) {
     await db.from("crm_events").insert({
       client_id: id,
       actor_id: auth.userId,
       event_type: "status_changed",
-      payload: { to: prevStatus },
+      payload: { to: parsed.data.crm_status },
+    });
+  }
+  if (parsed.data.plan) {
+    await db.from("crm_events").insert({
+      client_id: id,
+      actor_id: auth.userId,
+      event_type: "plan_changed",
+      payload: { to: parsed.data.plan },
     });
   }
 

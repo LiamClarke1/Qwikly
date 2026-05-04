@@ -24,10 +24,11 @@ const STATUS_CONFIG = {
 } as const;
 
 const PLAN_CONFIG = {
-  starter:    { label: "Starter",    cls: "bg-slate-100 text-slate-600 border-slate-200" },
-  growth:     { label: "Growth",     cls: "bg-blue-50 text-blue-700 border-blue-200" },
-  pro:        { label: "Pro",        cls: "bg-violet-50 text-violet-700 border-violet-200" },
-  enterprise: { label: "Enterprise", cls: "bg-amber-50 text-amber-700 border-amber-200" },
+  trial:    { label: "Trial",    cls: "bg-slate-100 text-slate-500 border-slate-200" },
+  starter:  { label: "Starter",  cls: "bg-slate-100 text-slate-600 border-slate-300" },
+  pro:      { label: "Pro",      cls: "bg-violet-50 text-violet-700 border-violet-200" },
+  premium:  { label: "Premium",  cls: "bg-amber-50 text-amber-700 border-amber-200" },
+  billions: { label: "Billions", cls: "bg-[#E85A2C]/10 text-[#E85A2C] border-[#E85A2C]/30" },
 } as const;
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -43,7 +44,7 @@ function StatusPill({ status }: { status: string }) {
 }
 
 function PlanPill({ plan }: { plan: string }) {
-  const cfg = PLAN_CONFIG[plan as keyof typeof PLAN_CONFIG] ?? PLAN_CONFIG.starter;
+  const cfg = PLAN_CONFIG[plan as keyof typeof PLAN_CONFIG] ?? PLAN_CONFIG.trial;
   return (
     <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border", cfg.cls)}>
       {cfg.label}
@@ -90,11 +91,11 @@ function HealthRing({ score }: { score: number }) {
 }
 
 function OnboardingBar({ step, complete }: { step: number | null; complete: boolean | null }) {
-  const pct = complete ? 100 : Math.min(100, Math.round(((step ?? 1) / 6) * 100));
+  const pct = complete ? 100 : Math.min(100, Math.round(((step ?? 0) / 5) * 100));
   return (
     <div className="flex items-center gap-1.5">
       <div className="w-16 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-        <div className="h-full rounded-full bg-[#E85A2C]" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-[#E85A2C] transition-all duration-300" style={{ width: `${pct}%` }} />
       </div>
       <span className="text-[10px] text-slate-400 tabular-nums">{pct}%</span>
     </div>

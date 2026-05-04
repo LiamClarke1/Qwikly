@@ -19,6 +19,7 @@ import {
 } from "recharts";
 import { cn } from "@/lib/cn";
 import { timeAgo, formatDate, formatZAR, initials } from "@/lib/format";
+import { PLAN_CONFIG, resolvePlan } from "@/lib/plan";
 import type {
   CrmClientDetail, CrmNote, CrmTask, CrmContact, CrmFile,
   CrmEvent, CrmReport, CrmTag, CrmStatsSummary, CrmStatsDay,
@@ -44,14 +45,15 @@ const PRIORITY_CONFIG = {
 } as const;
 
 const EVENT_LABELS: Record<string, string> = {
-  status_changed:   "Status changed",
-  plan_upgraded:    "Plan upgraded",
-  report_generated: "Report generated",
-  report_requested: "Report requested",
-  note_added:       "Note added",
-  task_created:     "Task created",
-  client_archived:  "Client archived",
-  integration_connected: "Integration connected",
+  status_changed:       "Status changed",
+  plan_changed:         "Plan changed",
+  plan_upgraded:        "Plan upgraded",
+  report_generated:     "Report generated",
+  report_requested:     "Report requested",
+  note_added:           "Note added",
+  task_created:         "Task created",
+  client_archived:      "Client archived",
+  integration_connected:"Integration connected",
 };
 
 // ─── Shared pieces ────────────────────────────────────────────────────────────
@@ -241,58 +243,231 @@ function StatusSelect({ current, onChange }: { current: string; onChange: (v: st
 function isRealPhone(v: string | null | undefined): boolean {
   if (!v) return false;
   const stripped = v.replace(/^whatsapp:/, "");
-  // Must start with + or 0 and be mostly digits
   return /^(\+|0)\d{7,}/.test(stripped);
 }
 
-function formatPlan(plan: string | null | undefined): string | null {
-  if (!plan) return null;
-  return plan.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+// ─── Plan select ──────────────────────────────────────────────────────────────
+const PLAN_UI_CONFIG = {
+  trial:    { label: "Trial",    cls: "bg-slate-100 text-slate-500 border-slate-200" },
+  starter:  { label: "Starter",  cls: "bg-slate-100 text-slate-600 border-slate-300" },
+  pro:      { label: "Pro",      cls: "bg-violet-50 text-violet-700 border-violet-200" },
+  premium:  { label: "Premium",  cls: "bg-amber-50 text-amber-700 border-amber-200" },
+  billions: { label: "Billions", cls: "bg-[#E85A2C]/10 text-[#E85A2C] border-[#E85A2C]/30" },
+} as const;
+
+function PlanBadge({ plan }: { plan: string }) {
+  const cfg = PLAN_UI_CONFIG[plan as keyof typeof PLAN_UI_CONFIG] ?? PLAN_UI_CONFIG.trial;
+  return (
+    <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-[12px] font-semibold border", cfg.cls)}>
+      {cfg.label}
+    </span>
+  );
+}
+
+function InlinePlanSelect({ current, onChange }: { current: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const plans: Array<keyof typeof PLAN_UI_CONFIG> = ["trial", "pro", "premium", "billions"];
+  return (
+    <div className="relative inline-block">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 cursor-pointer group"
+      >
+        <PlanBadge plan={current} />
+        <Pencil className="w-3 h-3 text-slate-300 group-hover:text-slate-500 transition-colors" />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1">
+          {plans.map(p => (
+            <button key={p} onClick={() => { onChange(p); setOpen(false); }}
+              className={cn("w-full text-left flex items-center gap-2 px-3 py-2 text-[12px] hover:bg-slate-50 cursor-pointer",
+                current === p && "font-semibold text-[#E85A2C]")}>
+              <PlanBadge plan={p} />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Lead usage bar ───────────────────────────────────────────────────────────
+function LeadUsageBar({ used, limit }: { used: number | null; limit: number | null }) {
+  if (!limit) return <span className="text-[13px] text-slate-400">Unlimited</span>;
+  const pct = used != null ? Math.min(100, Math.round((used / limit) * 100)) : null;
+  const color = pct != null && pct >= 90 ? "#ef4444" : pct != null && pct >= 70 ? "#f59e0b" : "#10b981";
+  return (
+    <div className="flex flex-col gap-1 flex-1">
+      <div className="flex items-center justify-between text-[12px]">
+        <span className="text-slate-700 font-medium">{used != null ? `${used} / ${limit}` : `— / ${limit}`} leads</span>
+        {pct != null && <span className="text-slate-400">{pct}%</span>}
+      </div>
+      <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden w-full">
+        {pct != null && (
+          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Risk badge ───────────────────────────────────────────────────────────────
+function RiskBadge({ score }: { score: number | null }) {
+  if (score == null) return <span className="text-[13px] text-slate-400">—</span>;
+  const { label, cls } = score >= 70
+    ? { label: "High risk",   cls: "bg-red-50 text-red-600 border-red-200" }
+    : score >= 40
+    ? { label: "Medium risk", cls: "bg-amber-50 text-amber-600 border-amber-200" }
+    : { label: "Low risk",    cls: "bg-emerald-50 text-emerald-600 border-emerald-200" };
+  return (
+    <div className="flex items-center gap-2">
+      <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border", cls)}>{label}</span>
+      <span className="text-[12px] text-slate-400">{score}/100</span>
+    </div>
+  );
+}
+
+// ─── Trial countdown badge ────────────────────────────────────────────────────
+function TrialCountdown({ endsAt }: { endsAt: string | null }) {
+  if (!endsAt) return null;
+  const days = Math.ceil((new Date(endsAt).getTime() - Date.now()) / 86_400_000);
+  if (days < 0) return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-50 text-red-600 border border-red-200">
+      Trial expired
+    </span>
+  );
+  return (
+    <span className={cn(
+      "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border",
+      days <= 3 ? "bg-red-50 text-red-600 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"
+    )}>
+      {days}d left in trial
+    </span>
+  );
 }
 
 // ─── Overview tab ─────────────────────────────────────────────────────────────
 function OverviewTab({ client, onPatch }: { client: CrmClientDetail; onPatch: (u: Record<string, unknown>) => void }) {
   const whatsappConnected = isRealPhone(client.whatsapp_number);
+  const planTier          = resolvePlan(client.plan);
+  const planCfg           = PLAN_CONFIG[planTier];
+  const leadLimit         = planCfg.leadLimit;
 
   const onboardingSteps = [
-    { label: "Kickoff call",          done: (client.onboarding_step ?? 0) >= 1 },
-    { label: "Brand assets uploaded", done: (client.onboarding_step ?? 0) >= 2 },
+    { label: "Account created",       done: true },
+    { label: "Assistant configured",  done: !!client.system_prompt?.trim() },
     { label: "WhatsApp connected",    done: whatsappConnected },
-    { label: "System prompt set",     done: !!client.system_prompt?.trim() },
     { label: "Web widget installed",  done: client.web_widget_status === "verified" },
     { label: "First conversation",    done: client.conversation_count > 0 },
   ];
+
+  const completedSteps = onboardingSteps.filter(s => s.done).length;
+  const onboardingPct  = Math.round((completedSteps / onboardingSteps.length) * 100);
 
   return (
     <div className="grid md:grid-cols-2 gap-4">
       {/* Business info */}
       <SectionCard title="Business info">
-        <InfoRow label="Owner" value={client.owner_name} />
-        <InfoRow label="Email" value={client.client_email} />
-        <InfoRow label="WhatsApp" value={whatsappConnected ? client.whatsapp_number : null} />
-        <InfoRow label="Website" value={client.website ?? client.web_widget_domain} />
-        <InfoRow label="Industry" value={client.industry} />
-        <InfoRow label="Address" value={client.address} />
-        <InfoRow label="Joined" value={formatDate(client.created_at)} />
+        <InfoRow label="Owner"     value={client.owner_name} />
+        <InfoRow label="Email"     value={client.client_email} />
+        <InfoRow label="WhatsApp"  value={whatsappConnected ? client.whatsapp_number?.replace(/^whatsapp:/, "") : null} />
+        <InfoRow label="Website"   value={client.website ?? client.web_widget_domain} />
+        <InfoRow label="Industry"  value={client.industry} />
+        <InfoRow label="Address"   value={client.address} />
+        <InfoRow label="Joined"    value={formatDate(client.created_at)} />
       </SectionCard>
 
-      {/* Plan & billing */}
+      {/* Plan & subscription */}
       <SectionCard title="Plan & billing">
-        <InfoRow label="Plan" value={formatPlan(client.plan)} />
-        <InfoRow label="MRR" value={client.mrr_zar ? formatZAR(client.mrr_zar / 100) + " /mo" : null} />
-        <InfoRow label="LTV" value={client.ltv_zar ? formatZAR(client.ltv_zar / 100) : null} />
-        <InfoRow label="Commission" value={client.commission_rate != null ? `${(client.commission_rate * 100).toFixed(0)}%` : null} />
-        <InfoRow label="Next renewal" value={client.next_renewal_at ? formatDate(client.next_renewal_at) : null} />
-        <InfoRow label="Risk score" value={client.risk_score != null ? `${client.risk_score}/100` : null} />
+        {/* Plan row — inline editable */}
+        <div className="flex items-start gap-3 py-2 border-b border-slate-50">
+          <p className="text-[12px] text-slate-400 w-28 shrink-0 mt-0.5">Plan</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <InlinePlanSelect
+              current={client.plan ?? "trial"}
+              onChange={v => onPatch({ plan: v })}
+            />
+            {client.plan === "trial" && <TrialCountdown endsAt={client.trial_ends_at ?? null} />}
+          </div>
+        </div>
+
+        {/* Billing cycle */}
+        <div className="flex items-start gap-3 py-2 border-b border-slate-50">
+          <p className="text-[12px] text-slate-400 w-28 shrink-0 mt-0.5">Billing</p>
+          <div className="flex items-center gap-2">
+            {client.billing_cycle ? (
+              <span className={cn(
+                "px-2 py-0.5 rounded-full text-[11px] font-semibold border",
+                client.billing_cycle === "annual"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  : "bg-slate-100 text-slate-600 border-slate-200"
+              )}>
+                {client.billing_cycle === "annual" ? "Annual (15% off)" : "Monthly"}
+              </span>
+            ) : (
+              <span className="text-[13px] text-slate-400">—</span>
+            )}
+          </div>
+        </div>
+
+        {/* MRR */}
+        <div className="flex items-start gap-3 py-2 border-b border-slate-50">
+          <p className="text-[12px] text-slate-400 w-28 shrink-0">MRR</p>
+          <p className="text-[13px] text-slate-700 font-semibold">
+            {client.mrr_zar
+              ? formatZAR(client.mrr_zar / 100) + " /mo"
+              : planCfg.priceMonthly > 0
+              ? formatZAR(planCfg.priceMonthly) + " /mo"
+              : <span className="text-slate-400 font-normal">Free trial</span>}
+          </p>
+        </div>
+
+        {/* Lead usage */}
+        <div className="flex items-start gap-3 py-2 border-b border-slate-50">
+          <p className="text-[12px] text-slate-400 w-28 shrink-0 mt-0.5">Lead usage</p>
+          <LeadUsageBar used={client.leads_used_mtd ?? null} limit={leadLimit} />
+        </div>
+
+        {/* LTV */}
+        {client.ltv_zar ? (
+          <div className="flex items-start gap-3 py-2 border-b border-slate-50">
+            <p className="text-[12px] text-slate-400 w-28 shrink-0">LTV</p>
+            <p className="text-[13px] text-slate-700">{formatZAR(client.ltv_zar / 100)}</p>
+          </div>
+        ) : null}
+
+        {/* Next renewal */}
+        {client.next_renewal_at && (
+          <div className="flex items-start gap-3 py-2 border-b border-slate-50">
+            <p className="text-[12px] text-slate-400 w-28 shrink-0">Next renewal</p>
+            <p className="text-[13px] text-slate-700">{formatDate(client.next_renewal_at)}</p>
+          </div>
+        )}
+
+        {/* Risk score */}
+        <div className="flex items-start gap-3 py-2">
+          <p className="text-[12px] text-slate-400 w-28 shrink-0 mt-0.5">Risk</p>
+          <RiskBadge score={client.risk_score} />
+        </div>
       </SectionCard>
 
       {/* Onboarding checklist */}
       <SectionCard title="Onboarding checklist">
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[12px] text-slate-400">{completedSteps} of {onboardingSteps.length} complete</span>
+            <span className="text-[12px] font-semibold text-slate-600">{onboardingPct}%</span>
+          </div>
+          <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-full rounded-full bg-[#E85A2C] transition-all duration-500"
+              style={{ width: `${onboardingPct}%` }} />
+          </div>
+        </div>
         <div className="space-y-2.5">
           {onboardingSteps.map(s => (
             <div key={s.label} className="flex items-center gap-2.5">
-              <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0",
-                s.done ? "bg-emerald-500 border-emerald-500" : "border-slate-200")}>
+              <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                s.done ? "bg-emerald-500 border-emerald-500" : "border-slate-200 bg-white")}>
                 {s.done && <CheckCircle2 className="w-3 h-3 text-white" />}
               </div>
               <span className={cn("text-[13px]", s.done ? "text-slate-700" : "text-slate-400")}>{s.label}</span>
