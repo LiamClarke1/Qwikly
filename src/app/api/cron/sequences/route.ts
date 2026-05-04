@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
         .from("email_sequence_sends")
         .insert({ enrollment_id: enrollment.id, step_id: step.id })
         .select("id")
-        .single();
+        .maybeSingle();
 
       if (!sendRecord) continue;
 

@@ -18,11 +18,11 @@ export async function POST(req: NextRequest) {
 
   const db = supabaseAdmin();
 
-  // Get all active clients
+  // Get all non-churned clients
   const { data: clients } = await db
     .from("clients")
     .select("id")
-    .eq("active", true);
+    .neq("crm_status", "churned");
 
   if (!clients?.length) return NextResponse.json({ ok: true, processed: 0 });
 
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
   // Fetch all conversations + bookings for yesterday across all clients
   const [convosRes, bookingsRes, aiMsgsRes] = await Promise.all([
-    db.from("conversations").select("client_id, channel, status").in("client_id", ids)
+    db.from("conversations").select("client_id, channel, status, is_lead").in("client_id", ids)
       .gte("created_at", fromISO).lte("created_at", toISO),
     db.from("bookings").select("client_id").in("client_id", ids)
       .gte("created_at", fromISO).lte("created_at", toISO),
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     if (c.channel === "whatsapp") byClient[c.client_id].conversations_whatsapp++;
     else if (c.channel === "email") byClient[c.client_id].conversations_email++;
     else if (c.channel === "web_chat") byClient[c.client_id].conversations_web++;
-    if (c.status === "lead" || c.status === "converted") byClient[c.client_id].leads_captured++;
+    if (c.is_lead || c.status === "converted") byClient[c.client_id].leads_captured++;
     if (c.status === "converted") byClient[c.client_id].leads_converted++;
   }
 

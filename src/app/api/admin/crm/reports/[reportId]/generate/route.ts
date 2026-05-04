@@ -39,7 +39,11 @@ export async function POST(
   // Mark as generating
   await db.from("crm_reports").update({ status: "generating" }).eq("id", params.reportId);
 
-  const client = report.clients as Record<string, unknown>;
+  const client = report.clients as Record<string, unknown> | null;
+  if (!client) {
+    await db.from("crm_reports").update({ status: "failed" }).eq("id", params.reportId);
+    return NextResponse.json({ error: "Client not found" }, { status: 404 });
+  }
   const clientId = report.client_id;
   const fromISO  = `${report.period_start}T00:00:00Z`;
   const toISO    = `${report.period_end}T23:59:59Z`;

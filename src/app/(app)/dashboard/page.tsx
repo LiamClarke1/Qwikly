@@ -268,13 +268,13 @@ function UpgradePrompt({
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (sessionStorage.getItem(dismissKey) === "1") return;
+    if (localStorage.getItem(dismissKey) === "1") return;
     if (tier === "starter" && leadsMonth >= 20) setVisible(true);
     if (tier === "pro" && csvExportsUsed) setVisible(true);
   }, [tier, leadsMonth, csvExportsUsed, dismissKey]);
 
   const dismiss = () => {
-    sessionStorage.setItem(dismissKey, "1");
+    localStorage.setItem(dismissKey, "1");
     setVisible(false);
   };
 
@@ -348,15 +348,18 @@ export default function HomePage() {
         supabase
           .from("conversations")
           .select("id", { count: "exact", head: true })
+          .eq("is_lead", true)
           .gte("created_at", startMonth),
         supabase
           .from("conversations")
           .select("id,customer_name,customer_phone,status,updated_at,job_type")
+          .eq("is_lead", true)
           .order("updated_at", { ascending: false })
           .limit(6),
         supabase
           .from("conversations")
           .select("id", { count: "exact", head: true })
+          .eq("is_lead", true)
           .gte("created_at", startDay),
       ]);
 
@@ -409,7 +412,7 @@ export default function HomePage() {
       )}
 
       {/* ── Status bar ───────────────────────────────────────────── */}
-      {!loading && client?.onboarding_completed_at && (
+      {!loading && (client?.onboarding_complete || !!client?.onboarding_completed_at) && (
         <StatusBar widgetLive={widgetLive} tier={tier} leadsMonth={leadsMonth} />
       )}
       {loading && <SkeletonCard className="h-28" />}

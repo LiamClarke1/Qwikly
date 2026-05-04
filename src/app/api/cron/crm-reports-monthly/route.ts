@@ -22,13 +22,12 @@ export async function POST(req: NextRequest) {
   const { data: clients } = await db
     .from("clients")
     .select("id, business_name, client_email, crm_status")
-    .eq("active", true)
     .in("crm_status", ["active", "onboarding"]);
 
   if (!clients?.length) return NextResponse.json({ ok: true, triggered: 0 });
 
   let triggered = 0;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL!;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.qwikly.co.za";
 
   for (const client of clients) {
     // Create or reset the report record

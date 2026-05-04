@@ -48,7 +48,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     clientRow = cr;
   }
 
-  if (clientRow.status === "suspended") {
+  if (clientRow.crm_status === "suspended") {
     return NextResponse.json({ error: "Account suspended. Settle your Qwikly balance to resume sending." }, { status: 403 });
   }
 

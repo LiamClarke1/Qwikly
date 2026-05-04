@@ -95,8 +95,12 @@ async function buildAndEmailExport(clientId: number, requestId: string, email: s
     });
 
     // Create a signed URL valid for 7 days
-    const { data: signed } = await db.storage.from("exports").createSignedUrl(path, 7 * 24 * 60 * 60);
-    const downloadUrl = signed?.signedUrl ?? "";
+    const { data: signed, error: signedError } = await db.storage.from("exports").createSignedUrl(path, 7 * 24 * 60 * 60);
+    if (signedError || !signed?.signedUrl) {
+      await db.from("export_requests").update({ status: "failed" }).eq("id", requestId);
+      return;
+    }
+    const downloadUrl = signed.signedUrl;
 
     await db.from("export_requests").update({
       status: "done",

@@ -40,7 +40,7 @@ export async function POST(
         .from("conversations")
         .select("customer_name, channel")
         .eq("id", id)
-        .single(),
+        .maybeSingle(),
     ]);
 
     if (!messages || messages.length === 0) {
