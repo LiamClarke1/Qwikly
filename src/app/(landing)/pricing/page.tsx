@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Minus, Plus, Shield, MapPin } from "lucide-react";
+import { Check, Minus, Plus, Shield, MapPin, Clock, Zap, Users, TrendingDown } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 
 const MONTHLY = { trial: 0, pro: 999, premium: 1999, billions: 2999 } as const;
@@ -320,6 +320,102 @@ export default function PricingPage() {
           <p className="text-center eyebrow text-ink-500 mt-10">
             Top-ups at R20/extra lead · Cancel anytime · All prices excl. VAT
           </p>
+        </div>
+      </section>
+
+      {/* ─── VALUE JUSTIFICATION ─── */}
+      <section className="py-28 bg-paper-deep grain overflow-hidden">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+
+          <div className="mb-16 max-w-2xl">
+            <p className="eyebrow text-ink-500 mb-6">What your money is actually buying</p>
+            <h2 className="display-lg text-ink">
+              Not signing up
+              <br />
+              <em className="italic font-light">is the more expensive choice.</em>
+            </h2>
+            <p className="mt-6 text-lg text-ink-700 leading-relaxed max-w-xl">
+              Every enquiry that goes unanswered is a job you didn&apos;t book.
+              The question isn&apos;t whether R999 a month is worth it — it&apos;s how much losing leads is costing you right now.
+            </p>
+          </div>
+
+          {/* Cost comparison */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-20">
+
+            {/* Without Qwikly */}
+            <div className="ed-card space-y-5">
+              <p className="eyebrow text-ink-500 mb-6">Without Qwikly</p>
+              {[
+                { Icon: Users,        text: "Hiring someone to answer enquiries: R4,000 – R8,000/month" },
+                { Icon: Clock,        text: "After-hours enquiries wait until morning — your competitor picks up the phone" },
+                { Icon: TrendingDown, text: "No record of leads lost, no visibility on what you're missing" },
+                { Icon: Zap,          text: "First to respond wins the job. If it isn't you, it's your competitor" },
+              ].map(({ Icon, text }, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="w-8 h-8 rounded-full bg-ink/8 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Icon className="w-4 h-4 text-ink-400" strokeWidth={2} aria-hidden="true" />
+                  </span>
+                  <p className="text-ink-700 text-sm leading-relaxed">{text}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* With Qwikly */}
+            <div className="ed-card-ink space-y-5">
+              <p className="eyebrow text-ember mb-6">With Qwikly Pro — R999/month</p>
+              {[
+                "Qualified leads land in your inbox — no staff required",
+                "Responds instantly, 24/7, including weekends and public holidays",
+                "No sick days, no lunch breaks, no missed calls after 5pm",
+                "Full conversation log and lead history in your dashboard",
+              ].map((text, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="w-8 h-8 rounded-full bg-ember/15 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="w-4 h-4 text-ember" strokeWidth={2.5} aria-hidden="true" />
+                  </span>
+                  <p className="text-paper/85 text-sm leading-relaxed">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Three stat callouts */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-20">
+            {[
+              {
+                stat: "30 min",
+                label: "Most leads go cold within 30 minutes of an unanswered enquiry.",
+              },
+              {
+                stat: "R0",
+                label: "Per-job commission Qwikly takes. Every rand you earn stays yours.",
+              },
+              {
+                stat: "24/7",
+                label: "Your digital assistant is live — even when your phone is off.",
+              },
+            ].map(({ stat, label }, i) => (
+              <div key={i} className="ed-card-ghost text-center py-10">
+                <p
+                  className="font-display font-medium text-ember leading-none mb-4"
+                  style={{ fontSize: "clamp(2.5rem, 5vw, 3.5rem)" }}
+                >
+                  {stat}
+                </p>
+                <p className="text-ink-700 text-sm leading-relaxed max-w-[22ch] mx-auto">{label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Section CTA */}
+          <div className="text-center">
+            <p className="eyebrow text-ink-500 mb-6">14 days free — no card required</p>
+            <CTAButton href="/signup?plan=trial" variant="primary" size="lg">
+              Start your free trial
+            </CTAButton>
+          </div>
+
         </div>
       </section>
 
