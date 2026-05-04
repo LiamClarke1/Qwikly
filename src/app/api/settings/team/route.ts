@@ -21,15 +21,27 @@ async function getAuth() {
   if (!user) return null;
 
   const db = supabaseAdmin();
-  const { data: client } = await db.from("clients").select("id, auth_user_id").eq("auth_user_id", user.id).maybeSingle();
+  const { data: client } = await db
+    .from("clients")
+    .select("id, plan, auth_user_id")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
   if (!client) return null;
 
-  return { userId: user.id, email: user.email ?? "", clientId: client.id as number };
+  return { userId: user.id, email: user.email ?? "", clientId: client.id as number, plan: client.plan as string | null };
+}
+
+function isPremium(plan: string | null): boolean {
+  return plan === "premium" || plan === "billions";
 }
 
 export async function GET() {
   const auth = await getAuth();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (!isPremium(auth.plan)) {
+    return NextResponse.json({ error: "Team features require a Premium plan" }, { status: 403 });
+  }
 
   const db = supabaseAdmin();
   const { data, error } = await db
@@ -47,6 +59,10 @@ export async function POST(req: NextRequest) {
   const auth = await getAuth();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  if (!isPremium(auth.plan)) {
+    return NextResponse.json({ error: "Team features require a Premium plan" }, { status: 403 });
+  }
+
   const body = await req.json().catch(() => ({}));
   const { email, role } = body as { email?: string; role?: string };
 
@@ -55,9 +71,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "role must be admin, editor, or viewer" }, { status: 400 });
   }
 
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+  }
+
   const db = supabaseAdmin();
 
-  // Upsert: allow re-inviting a revoked member
   const { data, error } = await db
     .from("team_members")
     .upsert(
@@ -69,7 +89,6 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-  // Send invite email via Resend if configured
   const resendKey = process.env.RESEND_API_KEY;
   if (resendKey) {
     await fetch("https://api.resend.com/emails", {

@@ -2,9 +2,9 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect, useMemo, ChangeEvent } from "react";
+import { useState, useEffect, useMemo, useRef, ChangeEvent } from "react";
 import {
-  Save, Check, AlertCircle, Plus, Trash2, Search, BookOpen, X as XIcon,
+  Save, Check, AlertCircle, Plus, Trash2, Search, BookOpen, X as XIcon, AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient, ClientRow } from "@/lib/use-client";
@@ -30,6 +30,21 @@ function useToast() {
   return { toast, show };
 }
 
+// Skeleton for initial load
+function AssistantSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      {[200, 160, 120, 80, 100, 280].map((h, i) => (
+        <div key={i} className="rounded-2xl border border-[var(--border)] bg-surface-card p-5">
+          <div className="h-4 w-36 bg-surface-input rounded-lg mb-2" />
+          <div className="h-3 w-56 bg-surface-input rounded-lg mb-5" />
+          <div style={{ height: h }} className="rounded-xl bg-surface-input" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function AssistantPage() {
   const { toast, show } = useToast();
   const { client, setClient, loading, refresh } = useClient();
@@ -39,7 +54,7 @@ export default function AssistantPage() {
     return (
       <>
         <PageHeader title="Assistant" description="Personality, hours, and knowledge base." />
-        <Card><p className="text-small text-fg-muted">Loading…</p></Card>
+        <AssistantSkeleton />
       </>
     );
   }
@@ -87,6 +102,23 @@ export default function AssistantPage() {
 // ─── AI personality card ──────────────────────────────────────────────────────
 
 function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Client>) => void; saving: boolean }) {
+  const initial = useRef({
+    tone:                   client.tone                   ?? "",
+    address:                client.address                ?? "",
+    system_prompt:          client.system_prompt          ?? "",
+    faq:                    JSON.stringify(client.faq     ?? []),
+    ai_tone:                client.ai_tone                ?? "",
+    ai_language:            client.ai_language            ?? "",
+    ai_response_style:      client.ai_response_style      ?? "",
+    ai_greeting:            client.ai_greeting            ?? "",
+    ai_escalation_triggers: client.ai_escalation_triggers ?? "",
+    ai_escalation_custom:   client.ai_escalation_custom   ?? "",
+    ai_unhappy_customer:    client.ai_unhappy_customer     ?? "",
+    ai_always_do:           client.ai_always_do            ?? "",
+    ai_never_say:           client.ai_never_say            ?? "",
+    ai_sign_off:            client.ai_sign_off             ?? "",
+  });
+
   const [tone, setTone] = useState(client.tone ?? "");
   const [areas, setAreas] = useState(client.address ?? "");
   const [prompt, setPrompt] = useState(client.system_prompt ?? "");
@@ -106,13 +138,21 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
   const setp = (k: keyof typeof personality) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setPersonality({ ...personality, [k]: e.target.value });
 
-  const handleSave = () => save({
-    tone,
-    system_prompt: prompt,
-    address: areas.trim() || null,
-    faq,
-    ...personality,
-  } as Partial<Client>);
+  const current = {
+    tone, address: areas, system_prompt: prompt, faq: JSON.stringify(faq), ...personality,
+  };
+  const isDirty = JSON.stringify(current) !== JSON.stringify(initial.current);
+
+  const handleSave = () => {
+    save({
+      tone,
+      system_prompt: prompt,
+      address: areas.trim() || null,
+      faq,
+      ...personality,
+    } as Partial<Client>);
+    initial.current = { ...current };
+  };
 
   return (
     <div className="space-y-6">
@@ -223,7 +263,13 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
         <Textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={16} placeholder="Your business setup answers will appear here after completing setup." />
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        {isDirty && (
+          <span className="text-tiny text-fg-muted flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-ember inline-block" />
+            Unsaved changes
+          </span>
+        )}
         <Button loading={saving} icon={<Save className="w-4 h-4" />} onClick={handleSave}>Update assistant knowledge</Button>
       </div>
     </div>
@@ -233,12 +279,26 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
 // ─── Hours card ───────────────────────────────────────────────────────────────
 
 function HoursCard({ client, save, saving }: { client: Client; save: (p: Partial<Client>) => void; saving: boolean }) {
+  const initialHoursValue = (() => {
+    const base: Hours = {};
+    DAYS.forEach((d) => { base[d] = client.hours?.[d] ?? ["08:00", "17:00"]; });
+    return base;
+  })();
+  const initialHours = useRef<Hours>(initialHoursValue);
+
   const [hours, setHours] = useState<Hours>(() => {
     const base: Hours = {};
     DAYS.forEach((d) => { base[d] = client.hours?.[d] ?? ["08:00", "17:00"]; });
     return base;
   });
+
+  const isDirty = JSON.stringify(hours) !== JSON.stringify(initialHours.current);
   const toggle = (d: string) => setHours({ ...hours, [d]: hours[d] ? null : ["08:00", "17:00"] });
+
+  const handleSave = () => {
+    save({ hours } as Partial<Client>);
+    initialHours.current = { ...hours };
+  };
 
   return (
     <Card>
@@ -270,8 +330,14 @@ function HoursCard({ client, save, saving }: { client: Client; save: (p: Partial
           );
         })}
       </div>
-      <div className="flex justify-end mt-5">
-        <Button loading={saving} icon={<Save className="w-4 h-4" />} onClick={() => save({ hours } as Partial<Client>)}>Save hours</Button>
+      <div className="flex items-center justify-end gap-3 mt-5">
+        {isDirty && (
+          <span className="text-tiny text-fg-muted flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-ember inline-block" />
+            Unsaved changes
+          </span>
+        )}
+        <Button loading={saving} icon={<Save className="w-4 h-4" />} onClick={handleSave}>Save hours</Button>
       </div>
     </Card>
   );
@@ -281,7 +347,7 @@ function HoursCard({ client, save, saving }: { client: Client; save: (p: Partial
 
 interface KbArticle {
   id: string;
-  client_id: number;
+  client_id: string | number;
   title: string;
   body: string;
   is_active: boolean;
@@ -294,6 +360,7 @@ function KnowledgeSection({ clientId }: { clientId: string }) {
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<KbArticle | null>(null);
   const [creating, setCreating] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -315,9 +382,9 @@ function KnowledgeSection({ clientId }: { clientId: string }) {
   }, [articles, query]);
 
   const remove = async (a: KbArticle) => {
-    if (!confirm(`Delete "${a.title}"?`)) return;
     await supabase.from("kb_articles").delete().eq("id", a.id);
     setArticles((list) => list.filter((x) => x.id !== a.id));
+    setPendingDeleteId(null);
   };
 
   return (
@@ -363,16 +430,36 @@ function KnowledgeSection({ clientId }: { clientId: string }) {
       ) : (
         <div className="divide-y divide-[var(--border)] rounded-2xl border border-[var(--border)] bg-surface-card overflow-hidden">
           {filtered.map((a) => (
-            <div key={a.id} onClick={() => setEditing(a)} className="p-5 hover:bg-surface-hover cursor-pointer transition-colors">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <p className="text-body font-semibold text-fg">{a.title}</p>
-                  <p className="text-small text-fg-muted line-clamp-2 mt-1">{a.body}</p>
+            <div key={a.id} className="p-5 hover:bg-surface-hover transition-colors">
+              {pendingDeleteId === a.id ? (
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 text-small text-fg">
+                    <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
+                    Delete &ldquo;{a.title}&rdquo;? This cannot be undone.
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button variant="ghost" size="sm" onClick={() => setPendingDeleteId(null)}>Cancel</Button>
+                    <Button variant="danger" size="sm" icon={<Trash2 className="w-3.5 h-3.5" />} onClick={() => remove(a)}>Delete</Button>
+                  </div>
                 </div>
-                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); remove(a); }}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
+              ) : (
+                <div
+                  onClick={() => setEditing(a)}
+                  className="flex items-start justify-between gap-4 cursor-pointer"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-body font-semibold text-fg">{a.title}</p>
+                    <p className="text-small text-fg-muted line-clamp-2 mt-1">{a.body}</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => { e.stopPropagation(); setPendingDeleteId(a.id); }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -380,7 +467,7 @@ function KnowledgeSection({ clientId }: { clientId: string }) {
 
       {(creating || editing) && (
         <KbEditor
-          clientId={clientId as unknown as number}
+          clientId={clientId}
           initial={editing}
           onClose={() => { setCreating(false); setEditing(null); }}
           onSaved={(a) => {
@@ -398,7 +485,7 @@ function KnowledgeSection({ clientId }: { clientId: string }) {
 }
 
 function KbEditor({ clientId, initial, onClose, onSaved }: {
-  clientId: number;
+  clientId: string | number;
   initial: KbArticle | null;
   onClose: () => void;
   onSaved: (a: KbArticle) => void;
@@ -410,9 +497,10 @@ function KbEditor({ clientId, initial, onClose, onSaved }: {
 
   const save = async () => {
     setErr(null);
-    if (!title.trim() || !body.trim()) return setErr("Question and answer are required.");
+    if (!title.trim()) return setErr("Question is required.");
+    if (!body.trim()) return setErr("Answer is required.");
     setSavingK(true);
-    const payload = { client_id: clientId, title: title.trim(), body, is_active: true, is_public: true, updated_at: new Date().toISOString() };
+    const payload = { client_id: clientId, title: title.trim(), body: body.trim(), is_active: true, is_public: true, updated_at: new Date().toISOString() };
     const q = initial
       ? supabase.from("kb_articles").update(payload).eq("id", initial.id).select().single()
       : supabase.from("kb_articles").insert(payload).select().single();

@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
 import {
   Save, Check, AlertCircle, Plus, Trash2, X as XIcon, Link2, Link2Off,
-  ExternalLink, Calendar, Globe, Zap, Play, Copy, CheckCheck, Shield,
+  ExternalLink, Calendar, Zap, Play, Copy, CheckCheck, Shield, AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
@@ -186,6 +186,7 @@ function EmbedPixelsCard({
 }) {
   const [form, setForm] = useState({ ga_measurement_id: "", meta_pixel_id: "" });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<{ ga?: string; pixel?: string }>({});
 
   useEffect(() => {
     if (!client) return;
@@ -197,8 +198,22 @@ function EmbedPixelsCard({
 
   if (!client) return null;
 
+  const validate = () => {
+    const errs: { ga?: string; pixel?: string } = {};
+    if (form.ga_measurement_id && !/^G-[A-Z0-9]+$/i.test(form.ga_measurement_id)) {
+      errs.ga = "Must match format G-XXXXXXXXXX";
+    }
+    if (form.meta_pixel_id && !/^\d{10,20}$/.test(form.meta_pixel_id)) {
+      errs.pixel = "Must be a numeric pixel ID (10–20 digits)";
+    }
+    return errs;
+  };
+
   const save = async (e: FormEvent) => {
     e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+    setErrors({});
     setSaving(true);
     const { error } = await supabase.from("clients").update(form).eq("id", client.id);
     setSaving(false);
@@ -210,18 +225,20 @@ function EmbedPixelsCard({
     <Card>
       <CardHeader title="Analytics & Pixels" description="Fire events to your analytics tools when customers interact with the embed widget." />
       <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={save}>
-        <Field label="Google Analytics 4" hint="Measurement ID, e.g. G-XXXXXXXXXX">
+        <Field label="Google Analytics 4" hint="Measurement ID, e.g. G-XXXXXXXXXX" error={errors.ga}>
           <Input
             value={form.ga_measurement_id}
-            onChange={(e) => setForm({ ...form, ga_measurement_id: e.target.value })}
+            onChange={(e) => { setForm({ ...form, ga_measurement_id: e.target.value }); setErrors({ ...errors, ga: undefined }); }}
             placeholder="G-XXXXXXXXXX"
+            className={errors.ga ? "border-danger/50 focus:border-danger/70" : ""}
           />
         </Field>
-        <Field label="Meta Pixel ID" hint="15-digit pixel ID from Events Manager">
+        <Field label="Meta Pixel ID" hint="15-digit pixel ID from Events Manager" error={errors.pixel}>
           <Input
             value={form.meta_pixel_id}
-            onChange={(e) => setForm({ ...form, meta_pixel_id: e.target.value })}
+            onChange={(e) => { setForm({ ...form, meta_pixel_id: e.target.value }); setErrors({ ...errors, pixel: undefined }); }}
             placeholder="1234567890123456"
+            className={errors.pixel ? "border-danger/50 focus:border-danger/70" : ""}
           />
         </Field>
         <div>
@@ -244,6 +261,8 @@ function WebhooksSection({ show }: { show: (msg: string, tone?: "success" | "dan
   const [newSecret, setNewSecret] = useState<{ id: string; secret: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [testing, setTesting] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const load = async () => {
     setLoadingW(true);
@@ -255,8 +274,10 @@ function WebhooksSection({ show }: { show: (msg: string, tone?: "success" | "dan
   useEffect(() => { load(); }, []);
 
   const deleteWebhook = async (id: string) => {
-    if (!confirm("Delete this webhook?")) return;
+    setDeleteLoading(true);
     const res = await fetch(`/api/settings/webhooks/${id}`, { method: "DELETE" });
+    setDeleteLoading(false);
+    setPendingDeleteId(null);
     if (res.ok) { setWebhooks((prev) => prev.filter((w) => w.id !== id)); show("Webhook deleted"); }
     else show("Failed to delete", "danger");
   };
@@ -311,42 +332,55 @@ function WebhooksSection({ show }: { show: (msg: string, tone?: "success" | "dan
         <div className="divide-y divide-[var(--border)]">
           {webhooks.map((w) => (
             <div key={w.id} className="py-4 first:pt-0 last:pb-0">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <code className="text-small font-mono text-fg truncate max-w-[300px]">{w.url}</code>
-                    <Badge tone={w.is_active ? "success" : "neutral"}>{w.is_active ? "Active" : "Paused"}</Badge>
-                    {w.last_status !== null && (
-                      <Badge tone={w.last_status >= 200 && w.last_status < 300 ? "success" : "danger"}>
-                        {w.last_status}
-                      </Badge>
+              {pendingDeleteId === w.id ? (
+                <div className="flex items-center justify-between gap-4 p-3 rounded-xl bg-surface-input border border-[var(--border)]">
+                  <div className="flex items-center gap-2 text-small text-fg">
+                    <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
+                    Delete this webhook? Any active subscriptions will stop receiving events.
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Button variant="ghost" size="sm" onClick={() => setPendingDeleteId(null)} disabled={deleteLoading}>Cancel</Button>
+                    <Button variant="danger" size="sm" loading={deleteLoading} icon={<Trash2 className="w-3.5 h-3.5" />} onClick={() => deleteWebhook(w.id)}>Delete</Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <code className="text-small font-mono text-fg truncate max-w-[300px]">{w.url}</code>
+                      <Badge tone={w.is_active ? "success" : "neutral"}>{w.is_active ? "Active" : "Paused"}</Badge>
+                      {w.last_status !== null && (
+                        <Badge tone={w.last_status >= 200 && w.last_status < 300 ? "success" : "danger"}>
+                          {w.last_status}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {w.events.map((ev) => (
+                        <span key={ev} className="text-tiny px-2 py-0.5 bg-surface-input border border-[var(--border)] rounded-md text-fg-muted">{ev}</span>
+                      ))}
+                    </div>
+                    {w.last_fired_at && (
+                      <p className="text-tiny text-fg-subtle mt-1">Last fired {new Date(w.last_fired_at).toLocaleString()}</p>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {w.events.map((ev) => (
-                      <span key={ev} className="text-tiny px-2 py-0.5 bg-surface-input border border-[var(--border)] rounded-md text-fg-muted">{ev}</span>
-                    ))}
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost" size="icon" title="Test fire"
+                      loading={testing === w.id}
+                      onClick={() => testWebhook(w.id)}
+                    >
+                      <Play className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" title={w.is_active ? "Pause" : "Activate"} onClick={() => toggleActive(w)}>
+                      <span className="text-tiny font-semibold">{w.is_active ? "Off" : "On"}</span>
+                    </Button>
+                    <Button variant="ghost" size="icon" title="Delete" onClick={() => setPendingDeleteId(w.id)}>
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
                   </div>
-                  {w.last_fired_at && (
-                    <p className="text-tiny text-fg-subtle mt-1">Last fired {new Date(w.last_fired_at).toLocaleString()}</p>
-                  )}
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    variant="ghost" size="icon" title="Test fire"
-                    loading={testing === w.id}
-                    onClick={() => testWebhook(w.id)}
-                  >
-                    <Play className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" title={w.is_active ? "Pause" : "Activate"} onClick={() => toggleActive(w)}>
-                    <span className="text-tiny font-semibold">{w.is_active ? "Off" : "On"}</span>
-                  </Button>
-                  <Button variant="ghost" size="icon" title="Delete" onClick={() => deleteWebhook(w.id)}>
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </Button>
-                </div>
-              </div>
+              )}
             </div>
           ))}
         </div>

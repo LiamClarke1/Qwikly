@@ -3,10 +3,12 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect, FormEvent } from "react";
-import { Check, AlertCircle, Plus, Copy, RotateCcw, Trash2, X as XIcon, Key, CheckCheck } from "lucide-react";
+import {
+  Check, AlertCircle, Plus, Copy, RotateCcw, Trash2, X as XIcon, Key, CheckCheck, AlertTriangle,
+} from "lucide-react";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input, Select, Field } from "@/components/ui/input";
+import { Input, Field } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page";
 
@@ -28,6 +30,7 @@ const ALL_SCOPES = [
 ];
 
 type Toast = { msg: string; tone: "success" | "danger" };
+type PendingAction = { type: "revoke" | "rotate"; key: ApiKey };
 
 export default function ApiKeysPage() {
   const [keys, setKeys] = useState<ApiKey[]>([]);
@@ -36,6 +39,8 @@ export default function ApiKeysPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newKey, setNewKey] = useState<{ name: string; full_key: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const show = (msg: string, tone: "success" | "danger" = "success") => {
     setToast({ msg, tone });
@@ -57,16 +62,20 @@ export default function ApiKeysPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const revoke = async (k: ApiKey) => {
-    if (!confirm(`Revoke "${k.name}"? Any app using this key will stop working immediately.`)) return;
+  const confirmRevoke = async (k: ApiKey) => {
+    setActionLoading(true);
     const res = await fetch(`/api/settings/api-keys/${k.id}`, { method: "DELETE" });
+    setActionLoading(false);
+    setPendingAction(null);
     if (res.ok) { setKeys((prev) => prev.filter((x) => x.id !== k.id)); show("Key revoked"); }
     else show("Failed to revoke", "danger");
   };
 
-  const rotate = async (k: ApiKey) => {
-    if (!confirm(`Rotate "${k.name}"? The old key will stop working immediately.`)) return;
+  const confirmRotate = async (k: ApiKey) => {
+    setActionLoading(true);
     const res = await fetch(`/api/settings/api-keys/${k.id}`, { method: "PATCH" });
+    setActionLoading(false);
+    setPendingAction(null);
     if (!res.ok) { show("Failed to rotate", "danger"); return; }
     const data = await res.json();
     setKeys((prev) => prev.map((x) => x.id === k.id ? { ...x, key_prefix: data.key_prefix } : x));
@@ -109,43 +118,72 @@ export default function ApiKeysPage() {
       <Card>
         <CardHeader title="Your keys" />
         {loading ? (
-          <div className="space-y-3">
-            {[1, 2].map((i) => <div key={i} className="h-16 rounded-xl bg-surface-input animate-pulse" />)}
+          <div className="space-y-3 animate-pulse">
+            {[1, 2].map((i) => <div key={i} className="h-16 rounded-xl bg-surface-input" />)}
           </div>
         ) : keys.length === 0 ? (
-          <div className="py-8 text-center">
-            <div className="w-10 h-10 rounded-xl bg-surface-input border border-[var(--border)] flex items-center justify-center mx-auto mb-3">
+          <div className="py-10 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-surface-input border border-[var(--border)] flex items-center justify-center mx-auto mb-4">
               <Key className="w-5 h-5 text-fg-muted" />
             </div>
-            <p className="text-small text-fg-muted">No keys yet. Create one to get started.</p>
+            <p className="text-body font-semibold text-fg mb-1">No API keys yet</p>
+            <p className="text-small text-fg-muted mb-5">Create a key to connect external tools to your Qwikly data.</p>
+            <Button variant="primary" size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
+              Create first key
+            </Button>
           </div>
         ) : (
           <div className="divide-y divide-[var(--border)]">
             {keys.map((k) => (
-              <div key={k.id} className="py-4 flex items-center justify-between gap-4 first:pt-0 last:pb-0">
-                <div className="min-w-0">
-                  <p className="text-small font-semibold text-fg">{k.name}</p>
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <code className="text-tiny font-mono text-fg-muted bg-surface-input px-2 py-0.5 rounded-md">
-                      {k.key_prefix}••••••••••••••••
-                    </code>
-                    {k.scopes.map((s) => (
-                      <Badge key={s} tone="neutral">{s}</Badge>
-                    ))}
+              <div key={k.id} className="py-4 first:pt-0 last:pb-0">
+                {pendingAction?.key.id === k.id ? (
+                  <div className="flex items-center justify-between gap-4 p-3 rounded-xl bg-surface-input border border-[var(--border)]">
+                    <div className="flex items-center gap-2 text-small text-fg">
+                      <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
+                      {pendingAction.type === "revoke"
+                        ? `Revoke "${k.name}"? Any app using this key will stop working immediately.`
+                        : `Rotate "${k.name}"? The old key will stop working immediately.`}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button variant="ghost" size="sm" onClick={() => setPendingAction(null)} disabled={actionLoading}>Cancel</Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        loading={actionLoading}
+                        icon={pendingAction.type === "revoke" ? <Trash2 className="w-3.5 h-3.5" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                        onClick={() => pendingAction.type === "revoke" ? confirmRevoke(k) : confirmRotate(k)}
+                      >
+                        {pendingAction.type === "revoke" ? "Revoke" : "Rotate"}
+                      </Button>
+                    </div>
                   </div>
-                  <p className="text-tiny text-fg-subtle mt-1">
-                    Created {new Date(k.created_at).toLocaleDateString()}
-                    {k.last_used_at && ` · Last used ${new Date(k.last_used_at).toLocaleDateString()}`}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" title="Rotate key" onClick={() => rotate(k)}>
-                    <RotateCcw className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" title="Revoke key" onClick={() => revoke(k)}>
-                    <Trash2 className="w-4 h-4 text-red-500" />
-                  </Button>
-                </div>
+                ) : (
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="text-small font-semibold text-fg">{k.name}</p>
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <code className="text-tiny font-mono text-fg-muted bg-surface-input px-2 py-0.5 rounded-md">
+                          {k.key_prefix}••••••••••••••••
+                        </code>
+                        {k.scopes.map((s) => (
+                          <Badge key={s} tone="neutral">{s}</Badge>
+                        ))}
+                      </div>
+                      <p className="text-tiny text-fg-subtle mt-1">
+                        Created {new Date(k.created_at).toLocaleDateString()}
+                        {k.last_used_at && ` · Last used ${new Date(k.last_used_at).toLocaleDateString()}`}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" title="Rotate key" onClick={() => setPendingAction({ type: "rotate", key: k })}>
+                        <RotateCcw className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Revoke key" onClick={() => setPendingAction({ type: "revoke", key: k })}>
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -286,7 +324,7 @@ function RevealModal({ name, fullKey, copied, onCopy, onClose }: {
             </p>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" icon={copied ? <CheckCheck className="w-4 h-4" /> : <Copy className="w-4 h-4" />} onClick={onCopy}>
+            <Button variant="secondary" icon={copied ? <CheckCheck className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />} onClick={onCopy}>
               {copied ? "Copied!" : "Copy key"}
             </Button>
             <Button variant="primary" onClick={onClose}>Done</Button>

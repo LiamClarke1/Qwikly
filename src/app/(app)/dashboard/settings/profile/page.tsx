@@ -39,6 +39,9 @@ function useToast() {
   return { toast, show };
 }
 
+function isValidEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+function isValidPhone(v: string) { return /^[+\d\s\-()]{7,20}$/.test(v); }
+
 export default function ProfilePage() {
   const { toast, show } = useToast();
   const { client, setClient } = useClient();
@@ -74,6 +77,7 @@ export default function ProfilePage() {
 // ─── Account card ─────────────────────────────────────────────────────────────
 
 function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger") => void }) {
+  const [authLoading, setAuthLoading] = useState(true);
   const [user, setUser] = useState<{ email?: string; user_metadata?: Record<string, string> } | null>(null);
   const [form, setForm] = useState({ full_name: "", timezone: "Africa/Johannesburg" });
   const [saving, setSaving] = useState(false);
@@ -89,6 +93,7 @@ function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger"
         timezone: u?.user_metadata?.timezone ?? "Africa/Johannesburg",
       });
       setPhotoUrl(u?.user_metadata?.avatar_url ?? null);
+      setAuthLoading(false);
     });
   }, []);
 
@@ -119,6 +124,26 @@ function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger"
     setPhotoUploading(false);
     show("Photo updated");
   };
+
+  if (authLoading) {
+    return (
+      <Card>
+        <div className="animate-pulse space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-surface-input shrink-0" />
+            <div className="space-y-2">
+              <div className="h-8 w-32 bg-surface-input rounded-lg" />
+              <div className="h-3 w-24 bg-surface-input rounded-lg" />
+            </div>
+          </div>
+          <div className="h-10 bg-surface-input rounded-xl" />
+          <div className="h-10 bg-surface-input rounded-xl" />
+          <div className="h-10 bg-surface-input rounded-xl" />
+          <div className="h-9 w-28 bg-surface-input rounded-xl" />
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -185,41 +210,44 @@ function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger"
 function PasswordCard({ show }: { show: (msg: string, tone?: "success" | "danger") => void }) {
   const [form, setForm] = useState({ password: "", confirm: "" });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<{ password?: string; confirm?: string }>({});
 
   const save = async (e: FormEvent) => {
     e.preventDefault();
-    if (form.password.length < 8) { show("Password must be at least 8 characters", "danger"); return; }
-    if (form.password !== form.confirm) { show("Passwords don't match", "danger"); return; }
+    const errs: typeof errors = {};
+    if (form.password.length < 8) errs.password = "Must be at least 8 characters";
+    if (form.password !== form.confirm) errs.confirm = "Passwords don't match";
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
     const { error } = await supabase.auth.updateUser({ password: form.password });
     setSaving(false);
     if (error) show(error.message, "danger");
-    else { show("Password updated"); setForm({ password: "", confirm: "" }); }
+    else { show("Password updated"); setForm({ password: "", confirm: "" }); setErrors({}); }
   };
 
   return (
     <Card>
       <CardHeader title="Change password" description="Must be at least 8 characters." />
       <form className="space-y-4" onSubmit={save}>
-        <Field label="New password">
+        <Field label="New password" error={errors.password}>
           <Input
             type="password"
             value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            onChange={(e) => { setForm({ ...form, password: e.target.value }); setErrors({ ...errors, password: undefined }); }}
             autoComplete="new-password"
             placeholder="••••••••"
           />
         </Field>
-        <Field label="Confirm password">
+        <Field label="Confirm password" error={errors.confirm}>
           <Input
             type="password"
             value={form.confirm}
-            onChange={(e) => setForm({ ...form, confirm: e.target.value })}
+            onChange={(e) => { setForm({ ...form, confirm: e.target.value }); setErrors({ ...errors, confirm: undefined }); }}
             autoComplete="new-password"
             placeholder="••••••••"
           />
         </Field>
-        <Button type="submit" loading={saving} icon={<Save className="w-4 h-4" />}>Update password</Button>
+        <Button type="submit" loading={saving} icon={<Lock className="w-4 h-4" />}>Update password</Button>
       </form>
     </Card>
   );
@@ -243,9 +271,14 @@ function NotificationsCard({
     notification_phone: client.notification_phone ?? "",
   });
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; phone?: string }>({});
 
   const save = async (e: FormEvent) => {
     e.preventDefault();
+    const errs: typeof errors = {};
+    if (form.notification_email && !isValidEmail(form.notification_email)) errs.email = "Enter a valid email address";
+    if (form.notification_phone && !isValidPhone(form.notification_phone)) errs.phone = "Enter a valid phone number (e.g. +27 82 123 4567)";
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
     const { error } = await supabase
       .from("clients")
@@ -253,25 +286,25 @@ function NotificationsCard({
       .eq("id", client.id);
     setSaving(false);
     if (error) show(error.message, "danger");
-    else { onSave(form); show("Notifications saved"); }
+    else { onSave(form); show("Notifications saved"); setErrors({}); }
   };
 
   return (
     <Card>
       <CardHeader title="Notifications" description="Where to alert you when a lead needs attention." />
       <form className="space-y-4" onSubmit={save}>
-        <Field label="Email" hint="Daily summaries, escalations, and no-shows.">
+        <Field label="Email" hint="Daily summaries, escalations, and no-shows." error={errors.email}>
           <Input
             type="email"
             value={form.notification_email}
-            onChange={(e) => setForm({ ...form, notification_email: e.target.value })}
+            onChange={(e) => { setForm({ ...form, notification_email: e.target.value }); setErrors({ ...errors, email: undefined }); }}
             placeholder="you@business.co.za"
           />
         </Field>
-        <Field label="WhatsApp number" hint="Urgent escalations only.">
+        <Field label="WhatsApp number" hint="Urgent escalations only." error={errors.phone}>
           <Input
             value={form.notification_phone}
-            onChange={(e) => setForm({ ...form, notification_phone: e.target.value })}
+            onChange={(e) => { setForm({ ...form, notification_phone: e.target.value }); setErrors({ ...errors, phone: undefined }); }}
             placeholder="+27 82 123 4567"
           />
         </Field>

@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect, FormEvent } from "react";
-import { Check, AlertCircle, UserPlus, RefreshCw, Trash2, X as XIcon, Crown, Lock, ArrowRight } from "lucide-react";
+import { Check, AlertCircle, UserPlus, RefreshCw, Trash2, X as XIcon, Crown, Lock, ArrowRight, AlertTriangle, Users } from "lucide-react";
 import Link from "next/link";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,8 @@ export default function TeamPage() {
   const [toast, setToast] = useState<Toast | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [pendingRevokeId, setPendingRevokeId] = useState<string | null>(null);
+  const [revokeLoading, setRevokeLoading] = useState(false);
 
   const show = (msg: string, tone: "success" | "danger" = "success") => {
     setToast({ msg, tone });
@@ -88,8 +90,10 @@ export default function TeamPage() {
   };
 
   const revoke = async (m: Member) => {
-    if (!confirm(`Remove ${m.email} from your team?`)) return;
+    setRevokeLoading(true);
     const res = await fetch(`/api/settings/team/${m.id}`, { method: "DELETE" });
+    setRevokeLoading(false);
+    setPendingRevokeId(null);
     if (res.ok) { setMembers((prev) => prev.filter((x) => x.id !== m.id)); show("Member removed"); }
     else show("Failed to remove", "danger");
   };
@@ -181,60 +185,82 @@ export default function TeamPage() {
             {[1, 2].map((i) => <div key={i} className="h-16 rounded-xl bg-surface-input animate-pulse" />)}
           </div>
         ) : members.length === 0 ? (
-          <div className="py-8 text-center">
-            <p className="text-small text-fg-muted">No team members yet. Invite someone to get started.</p>
+          <div className="py-10 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-surface-input border border-[var(--border)] flex items-center justify-center mx-auto mb-4">
+              <Users className="w-5 h-5 text-fg-muted" />
+            </div>
+            <p className="text-body font-semibold text-fg mb-1">No team members yet</p>
+            <p className="text-small text-fg-muted mb-5">Invite a team member to give them access to your workspace.</p>
+            <Button variant="primary" size="sm" icon={<UserPlus className="w-4 h-4" />} onClick={() => setInviteOpen(true)}>
+              Invite first member
+            </Button>
           </div>
         ) : (
           <div className="divide-y divide-[var(--border)]">
             {members.map((m) => (
-              <div key={m.id} className="py-4 flex items-center justify-between gap-4 first:pt-0 last:pb-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-ember/10 border border-ember/20 flex items-center justify-center shrink-0">
-                    <span className="text-small font-semibold text-ember">{m.email.charAt(0).toUpperCase()}</span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-small font-medium text-fg truncate">{m.email}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <Badge tone={STATUS_TONE[m.status]} dot>{m.status}</Badge>
-                      {editingId === m.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <Select
-                            className="!h-7 !py-0.5 !text-tiny !rounded-lg w-28"
-                            defaultValue={m.role}
-                            onChange={(e) => updateRole(m, e.target.value as Role)}
-                          >
-                            {(["admin", "editor", "viewer"] as Role[]).map((r) => (
-                              <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                            ))}
-                          </Select>
-                          <button onClick={() => setEditingId(null)} className="p-1 rounded hover:bg-surface-hover cursor-pointer">
-                            <XIcon className="w-3.5 h-3.5 text-fg-muted" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => m.role !== "owner" && setEditingId(m.id)}
-                          className={cn(
-                            "text-tiny text-fg-muted",
-                            m.role !== "owner" && "hover:text-fg cursor-pointer underline-offset-2 hover:underline"
-                          )}
-                        >
-                          {ROLE_LABELS[m.role]}
-                        </button>
-                      )}
+              <div key={m.id} className="py-4 first:pt-0 last:pb-0">
+                {pendingRevokeId === m.id ? (
+                  <div className="flex items-center justify-between gap-4 p-3 rounded-xl bg-surface-input border border-[var(--border)]">
+                    <div className="flex items-center gap-2 text-small text-fg">
+                      <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
+                      Remove {m.email} from your team?
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Button variant="ghost" size="sm" onClick={() => setPendingRevokeId(null)} disabled={revokeLoading}>Cancel</Button>
+                      <Button variant="danger" size="sm" loading={revokeLoading} icon={<Trash2 className="w-3.5 h-3.5" />} onClick={() => revoke(m)}>Remove</Button>
                     </div>
                   </div>
-                </div>
-                {m.role !== "owner" && (
-                  <div className="flex items-center gap-1 shrink-0">
-                    {m.status === "pending" && (
-                      <Button variant="ghost" size="icon" title="Resend invite" onClick={() => resendInvite(m)}>
-                        <RefreshCw className="w-4 h-4" />
-                      </Button>
+                ) : (
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-ember/10 border border-ember/20 flex items-center justify-center shrink-0">
+                        <span className="text-small font-semibold text-ember">{m.email.charAt(0).toUpperCase()}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-small font-medium text-fg truncate">{m.email}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <Badge tone={STATUS_TONE[m.status]} dot>{m.status}</Badge>
+                          {editingId === m.id ? (
+                            <div className="flex items-center gap-1.5">
+                              <Select
+                                className="!h-7 !py-0.5 !text-tiny !rounded-lg w-28"
+                                defaultValue={m.role}
+                                onChange={(e) => updateRole(m, e.target.value as Role)}
+                              >
+                                {(["admin", "editor", "viewer"] as Role[]).map((r) => (
+                                  <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                                ))}
+                              </Select>
+                              <button onClick={() => setEditingId(null)} className="p-1 rounded hover:bg-surface-hover cursor-pointer">
+                                <XIcon className="w-3.5 h-3.5 text-fg-muted" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => m.role !== "owner" && setEditingId(m.id)}
+                              className={cn(
+                                "text-tiny text-fg-muted",
+                                m.role !== "owner" && "hover:text-fg cursor-pointer underline-offset-2 hover:underline"
+                              )}
+                            >
+                              {ROLE_LABELS[m.role]}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {m.role !== "owner" && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        {m.status === "pending" && (
+                          <Button variant="ghost" size="icon" title="Resend invite" onClick={() => resendInvite(m)}>
+                            <RefreshCw className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" title="Remove" onClick={() => setPendingRevokeId(m.id)}>
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </div>
                     )}
-                    <Button variant="ghost" size="icon" title="Remove" onClick={() => revoke(m)}>
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </Button>
                   </div>
                 )}
               </div>

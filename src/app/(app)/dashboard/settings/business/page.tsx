@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, FormEvent, ChangeEvent } from "react";
+import { useState, useRef, FormEvent, ChangeEvent } from "react";
 import { Save, Check, AlertCircle, Upload } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
@@ -22,8 +22,6 @@ const INDUSTRIES = [
   "Financial Services", "Retail", "Education", "Logistics", "Other",
 ];
 
-const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
-
 type Toast = { msg: string; tone: "success" | "danger" };
 
 function useToast() {
@@ -37,6 +35,20 @@ function useToast() {
 
 type Client = NonNullable<ReturnType<typeof useClient>["client"]>;
 
+function BusinessSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      {[240, 280, 320, 200, 200].map((h, i) => (
+        <div key={i} className="rounded-2xl border border-[var(--border)] bg-surface-card p-5">
+          <div className="h-4 w-32 bg-surface-input rounded-lg mb-2" />
+          <div className="h-3 w-52 bg-surface-input rounded-lg mb-5" />
+          <div style={{ height: h }} className="rounded-xl bg-surface-input" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function BusinessPage() {
   const { toast, show } = useToast();
   const { client, setClient, loading } = useClient();
@@ -45,7 +57,7 @@ export default function BusinessPage() {
     return (
       <>
         <PageHeader title="Business" description="Your brand and service configuration." />
-        <Card><p className="text-small text-fg-muted">Loading…</p></Card>
+        <BusinessSkeleton />
       </>
     );
   }
@@ -79,7 +91,7 @@ export default function BusinessPage() {
       )}
 
       <div className="space-y-8">
-        <BrandCard client={client} save={save} />
+        <BrandCard client={client} save={save} show={show} />
         <ProfileCard client={client} save={save} />
         <ServicesCard client={client} save={save} />
         <PricingCard client={client} save={save} />
@@ -89,10 +101,24 @@ export default function BusinessPage() {
   );
 }
 
+// ─── Validators ────────────────────────────────────────────────────────────────
+
+function isValidEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+function isValidUrl(v: string) {
+  try { const u = new URL(v); return u.protocol === "http:" || u.protocol === "https:"; }
+  catch { return false; }
+}
+function isValidHex(v: string) { return /^#[0-9A-Fa-f]{6}$/.test(v); }
+function isValidPhone(v: string) { return /^[+\d\s\-()]{7,20}$/.test(v); }
+
 // ─── Brand card ───────────────────────────────────────────────────────────────
 
-function BrandCard({ client, save }: { client: Client; save: (p: Partial<Client>) => void }) {
-  const [form, setForm] = useState({
+function BrandCard({ client, save, show }: {
+  client: Client;
+  save: (p: Partial<Client>) => void;
+  show: (msg: string, tone?: "success" | "danger") => void;
+}) {
+  const initial = useRef({
     business_name: client.business_name ?? "",
     website:       client.website       ?? "",
     support_email: client.support_email ?? "",
@@ -100,31 +126,51 @@ function BrandCard({ client, save }: { client: Client; save: (p: Partial<Client>
     address:       client.address       ?? "",
     brand_color:   client.brand_color   ?? "#E85A2C",
   });
+
+  const [form, setForm] = useState({ ...initial.current });
   const [saving, setSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(client.invoice_logo_url ?? null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const set = (k: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initial.current);
+
+  const set = (k: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [k]: e.target.value });
+    if (errors[k]) setErrors({ ...errors, [k]: "" });
+  };
 
   const uploadLogo = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) return;
+    if (file.size > 2 * 1024 * 1024) { show("Logo must be under 2 MB", "danger"); return; }
     setLogoUploading(true);
     const path = `logos/${client.id}/${Date.now()}.${file.name.split(".").pop()}`;
     const { error: upErr } = await supabase.storage.from("media").upload(path, file, { upsert: true });
-    if (upErr) { setLogoUploading(false); return; }
+    if (upErr) { show(upErr.message, "danger"); setLogoUploading(false); return; }
     const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
-    await supabase.from("clients").update({ invoice_logo_url: publicUrl }).eq("id", client.id);
+    const { error: dbErr } = await supabase.from("clients").update({ invoice_logo_url: publicUrl }).eq("id", client.id);
+    if (dbErr) { show(dbErr.message, "danger"); setLogoUploading(false); return; }
     setLogoUrl(publicUrl);
     setLogoUploading(false);
+    show("Logo uploaded");
+  };
+
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    if (form.support_email && !isValidEmail(form.support_email)) errs.support_email = "Enter a valid email address";
+    if (form.website && !isValidUrl(form.website)) errs.website = "Enter a valid URL (https://...)";
+    if (form.brand_color && !isValidHex(form.brand_color)) errs.brand_color = "Must be a hex colour (#RRGGBB)";
+    return errs;
   };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
     await save(form as Partial<Client>);
+    initial.current = { ...form };
     setSaving(false);
   };
 
@@ -163,10 +209,10 @@ function BrandCard({ client, save }: { client: Client; save: (p: Partial<Client>
             {INDUSTRIES.map((i) => <option key={i} value={i}>{i}</option>)}
           </Select>
         </Field>
-        <Field label="Website">
-          <Input value={form.website} onChange={set("website")} placeholder="https://yourbusiness.co.za" type="url" />
+        <Field label="Website" error={errors.website}>
+          <Input value={form.website} onChange={set("website")} placeholder="https://yourbusiness.co.za" />
         </Field>
-        <Field label="Support email" hint="Shown to customers on invoices.">
+        <Field label="Support email" hint="Shown to customers on invoices." error={errors.support_email}>
           <Input value={form.support_email} onChange={set("support_email")} placeholder="support@business.co.za" type="email" />
         </Field>
         <div className="md:col-span-2">
@@ -176,23 +222,32 @@ function BrandCard({ client, save }: { client: Client; save: (p: Partial<Client>
         </div>
         <div className="space-y-1.5">
           <label className="block text-small font-medium text-fg">Brand colour</label>
-          <p className="text-small text-fg-muted -mt-1">Updates the embed widget in real time.</p>
+          <p className="text-tiny text-fg-muted -mt-0.5">Updates the embed widget.</p>
           <div className="flex items-center gap-3">
             <input
               type="color"
-              value={form.brand_color}
-              onChange={(e) => setForm({ ...form, brand_color: e.target.value })}
+              value={isValidHex(form.brand_color) ? form.brand_color : "#E85A2C"}
+              onChange={(e) => { setForm({ ...form, brand_color: e.target.value }); setErrors({ ...errors, brand_color: "" }); }}
               className="h-10 w-16 rounded-lg border border-[var(--border)] cursor-pointer bg-transparent p-1"
             />
-            <Input
-              value={form.brand_color}
-              onChange={(e) => setForm({ ...form, brand_color: e.target.value })}
-              placeholder="#E85A2C"
-              className="font-mono"
-            />
+            <div className="flex-1">
+              <Input
+                value={form.brand_color}
+                onChange={(e) => { setForm({ ...form, brand_color: e.target.value }); setErrors({ ...errors, brand_color: "" }); }}
+                placeholder="#E85A2C"
+                className={`font-mono${errors.brand_color ? " border-danger/50" : ""}`}
+              />
+              {errors.brand_color && <p className="text-tiny text-danger mt-1.5">{errors.brand_color}</p>}
+            </div>
           </div>
         </div>
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 flex items-center gap-3">
+          {isDirty && (
+            <span className="text-tiny text-fg-muted flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-ember inline-block" />
+              Unsaved changes
+            </span>
+          )}
           <Button type="submit" loading={saving} icon={<Save className="w-4 h-4" />}>Save brand</Button>
         </div>
       </form>
@@ -203,10 +258,10 @@ function BrandCard({ client, save }: { client: Client; save: (p: Partial<Client>
 // ─── Profile card ─────────────────────────────────────────────────────────────
 
 function ProfileCard({ client, save }: { client: Client; save: (p: Partial<Client>) => void }) {
-  // Determine if the stored trade value is a known trade or custom "other" text
   const storedTrade = client.trade ?? "";
   const isOtherTrade = storedTrade !== "" && !TRADES.includes(storedTrade) && storedTrade !== "other";
-  const [form, setForm] = useState({
+
+  const initial = useRef({
     trade:             isOtherTrade ? "other" : storedTrade,
     owner_name:        client.owner_name       ?? "",
     whatsapp_number:   client.whatsapp_number  ?? "",
@@ -214,31 +269,41 @@ function ProfileCard({ client, save }: { client: Client; save: (p: Partial<Clien
     team_size:         client.team_size         ?? "",
     certifications:    client.certifications    ?? "",
     brands_used:       client.brands_used       ?? "",
-    google_calendar_id: client.google_calendar_id ?? "",
   });
+
+  const [form, setForm] = useState({ ...initial.current });
   const [otherTrade, setOtherTrade] = useState(isOtherTrade ? storedTrade : "");
   const [saving, setSaving] = useState(false);
-  const set = (k: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initial.current) || otherTrade !== (isOtherTrade ? storedTrade : "");
+
+  const set = (k: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [k]: e.target.value });
+    if (errors[k]) setErrors({ ...errors, [k]: "" });
+  };
 
   const handleSave = async (e: FormEvent) => {
     e.preventDefault();
+    const errs: Record<string, string> = {};
+    if (form.whatsapp_number && !isValidPhone(form.whatsapp_number)) {
+      errs.whatsapp_number = "Enter a valid phone number";
+    }
+    if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
     const patch = {
       ...form,
       trade: form.trade === "other" ? otherTrade || "other" : form.trade,
     };
     await save(patch as Partial<Client>);
+    initial.current = { ...form };
     setSaving(false);
   };
 
   return (
     <Card>
       <CardHeader title="Business profile" description="Basic info your assistant uses when chatting with customers." />
-      <form
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        onSubmit={handleSave}
-      >
+      <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleSave}>
         <Field label="Trade">
           <Select value={form.trade} onChange={(e) => { set("trade")(e); if (e.target.value !== "other") setOtherTrade(""); }}>
             <option value="">Select a trade</option>
@@ -255,7 +320,9 @@ function ProfileCard({ client, save }: { client: Client; save: (p: Partial<Clien
           )}
         </Field>
         <Field label="Owner name"><Input value={form.owner_name} onChange={set("owner_name")} /></Field>
-        <Field label="WhatsApp number"><Input value={form.whatsapp_number} onChange={set("whatsapp_number")} placeholder="+27 82 123 4567" /></Field>
+        <Field label="WhatsApp number" error={errors.whatsapp_number}>
+          <Input value={form.whatsapp_number} onChange={set("whatsapp_number")} placeholder="+27 82 123 4567" />
+        </Field>
         <Field label="Years in business"><Input value={form.years_in_business} onChange={set("years_in_business")} placeholder="e.g. 8 years" /></Field>
         <Field label="Team size"><Input value={form.team_size} onChange={set("team_size")} placeholder="e.g. Solo, 3 technicians" /></Field>
         <div className="md:col-span-2">
@@ -268,7 +335,13 @@ function ProfileCard({ client, save }: { client: Client; save: (p: Partial<Clien
             <Input value={form.brands_used} onChange={set("brands_used")} placeholder="e.g. Schneider Electric, Crabtree, ABB" />
           </Field>
         </div>
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 flex items-center gap-3">
+          {isDirty && (
+            <span className="text-tiny text-fg-muted flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-ember inline-block" />
+              Unsaved changes
+            </span>
+          )}
           <Button type="submit" loading={saving} icon={<Save className="w-4 h-4" />}>Save profile</Button>
         </div>
       </form>
@@ -279,7 +352,7 @@ function ProfileCard({ client, save }: { client: Client; save: (p: Partial<Clien
 // ─── Services card ────────────────────────────────────────────────────────────
 
 function ServicesCard({ client, save }: { client: Client; save: (p: Partial<Client>) => void }) {
-  const [form, setForm] = useState({
+  const initial = useRef({
     services_offered:   client.services_offered   ?? "",
     services_excluded:  client.services_excluded  ?? "",
     after_hours:        client.after_hours        ?? "",
@@ -289,7 +362,11 @@ function ServicesCard({ client, save }: { client: Client; save: (p: Partial<Clie
     booking_preference: client.booking_preference ?? "",
     response_time:      client.response_time      ?? "",
   });
+  const [form, setForm] = useState({ ...initial.current });
   const [saving, setSaving] = useState(false);
+
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initial.current);
+
   const set = (k: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [k]: e.target.value });
 
@@ -341,11 +418,22 @@ function ServicesCard({ client, save }: { client: Client; save: (p: Partial<Clie
         </div>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        {isDirty && (
+          <span className="text-tiny text-fg-muted flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-ember inline-block" />
+            Unsaved changes
+          </span>
+        )}
         <Button
           loading={saving}
           icon={<Save className="w-4 h-4" />}
-          onClick={async () => { setSaving(true); await save(form as Partial<Client>); setSaving(false); }}
+          onClick={async () => {
+            setSaving(true);
+            await save(form as Partial<Client>);
+            initial.current = { ...form };
+            setSaving(false);
+          }}
         >
           Save services
         </Button>
@@ -357,7 +445,7 @@ function ServicesCard({ client, save }: { client: Client; save: (p: Partial<Clie
 // ─── Pricing card ─────────────────────────────────────────────────────────────
 
 function PricingCard({ client, save }: { client: Client; save: (p: Partial<Client>) => void }) {
-  const [form, setForm] = useState({
+  const initial = useRef({
     charge_type:     client.charge_type     ?? "",
     callout_fee:     client.callout_fee     ?? "",
     example_prices:  client.example_prices  ?? "",
@@ -366,7 +454,11 @@ function PricingCard({ client, save }: { client: Client; save: (p: Partial<Clien
     payment_methods: client.payment_methods ?? "",
     payment_terms:   client.payment_terms   ?? "",
   });
+  const [form, setForm] = useState({ ...initial.current });
   const [saving, setSaving] = useState(false);
+
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initial.current);
+
   const set = (k: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm({ ...form, [k]: e.target.value });
 
@@ -423,11 +515,22 @@ function PricingCard({ client, save }: { client: Client; save: (p: Partial<Clien
         </div>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        {isDirty && (
+          <span className="text-tiny text-fg-muted flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-ember inline-block" />
+            Unsaved changes
+          </span>
+        )}
         <Button
           loading={saving}
           icon={<Save className="w-4 h-4" />}
-          onClick={async () => { setSaving(true); await save(form as Partial<Client>); setSaving(false); }}
+          onClick={async () => {
+            setSaving(true);
+            await save(form as Partial<Client>);
+            initial.current = { ...form };
+            setSaving(false);
+          }}
         >
           Save pricing
         </Button>
@@ -439,13 +542,17 @@ function PricingCard({ client, save }: { client: Client; save: (p: Partial<Clien
 // ─── Edge card ────────────────────────────────────────────────────────────────
 
 function EdgeCard({ client, save }: { client: Client; save: (p: Partial<Client>) => void }) {
-  const [form, setForm] = useState({
+  const initial = useRef({
     unique_selling_point: client.unique_selling_point ?? "",
     guarantees:           client.guarantees           ?? "",
     common_questions:     client.common_questions     ?? "",
     common_objections:    client.common_objections    ?? "",
   });
+  const [form, setForm] = useState({ ...initial.current });
   const [saving, setSaving] = useState(false);
+
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initial.current);
+
   const set = (k: keyof typeof form) => (e: ChangeEvent<HTMLTextAreaElement>) =>
     setForm({ ...form, [k]: e.target.value });
 
@@ -475,11 +582,22 @@ function EdgeCard({ client, save }: { client: Client; save: (p: Partial<Client>)
         </div>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        {isDirty && (
+          <span className="text-tiny text-fg-muted flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-ember inline-block" />
+            Unsaved changes
+          </span>
+        )}
         <Button
           loading={saving}
           icon={<Save className="w-4 h-4" />}
-          onClick={async () => { setSaving(true); await save(form as Partial<Client>); setSaving(false); }}
+          onClick={async () => {
+            setSaving(true);
+            await save(form as Partial<Client>);
+            initial.current = { ...form };
+            setSaving(false);
+          }}
         >
           Save edge
         </Button>

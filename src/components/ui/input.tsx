@@ -56,16 +56,19 @@ export function Label({ children, htmlFor, hint }: { children: React.ReactNode; 
 export function Field({
   label,
   hint,
+  error,
   children,
 }: {
   label: string;
   hint?: string;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
     <div>
       <Label hint={hint}>{label}</Label>
       {children}
+      {error && <p className="text-tiny text-danger mt-1.5">{error}</p>}
     </div>
   );
 }

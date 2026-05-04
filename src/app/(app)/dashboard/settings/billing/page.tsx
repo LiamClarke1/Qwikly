@@ -37,18 +37,12 @@ interface SubscriptionInvoice {
   pdfUrl: string | null;
 }
 
-// ─── API stubs (Terminal 6 implements these) ──────────────────────────────────
-
-// TODO: wire to subscription service — GET /api/subscription
-// Returns: SubscriptionData
 async function fetchSubscription(): Promise<SubscriptionData | null> {
   const res = await fetch("/api/subscription");
   if (!res.ok) return null;
   return res.json();
 }
 
-// TODO: wire to subscription service — GET /api/subscription/invoices
-// Returns: { invoices: SubscriptionInvoice[] } (most recent first)
 async function fetchInvoices(): Promise<SubscriptionInvoice[]> {
   const res = await fetch("/api/subscription/invoices");
   if (!res.ok) return [];

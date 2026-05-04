@@ -21,15 +21,27 @@ async function getAuth() {
   if (!user) return null;
 
   const db = supabaseAdmin();
-  const { data: client } = await db.from("clients").select("id").eq("auth_user_id", user.id).maybeSingle();
+  const { data: client } = await db
+    .from("clients")
+    .select("id, plan")
+    .eq("auth_user_id", user.id)
+    .maybeSingle();
   if (!client) return null;
 
-  return { userId: user.id, clientId: client.id as number };
+  return { userId: user.id, clientId: client.id as number, plan: client.plan as string | null };
+}
+
+function isPremium(plan: string | null): boolean {
+  return plan === "premium" || plan === "billions";
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const auth = await getAuth();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (!isPremium(auth.plan)) {
+    return NextResponse.json({ error: "Team features require a Premium plan" }, { status: 403 });
+  }
 
   const body = await req.json().catch(() => ({}));
   const { role } = body as { role?: string };
@@ -54,6 +66,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   const auth = await getAuth();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (!isPremium(auth.plan)) {
+    return NextResponse.json({ error: "Team features require a Premium plan" }, { status: 403 });
+  }
 
   const db = supabaseAdmin();
   const { error } = await db

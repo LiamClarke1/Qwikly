@@ -7,7 +7,6 @@ export async function POST(req: NextRequest) {
   const { clientId } = await req.json();
   if (!clientId) return NextResponse.json({ error: "Missing clientId" }, { status: 400 });
 
-  // Verify session
   const cookieStore = cookies();
   const authClient = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,15 +29,29 @@ export async function POST(req: NextRequest) {
 
   const db = supabaseAdmin();
 
-  // Verify client belongs to this user
   const { data: ownedClient } = await db
     .from("clients")
-    .select("id")
+    .select("id, google_access_token, google_refresh_token")
     .eq("id", clientId)
     .eq("auth_user_id", user.id)
     .maybeSingle();
+
   if (!ownedClient) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Revoke the Google OAuth token so the permission is removed from the user's Google account.
+  // Prefer the refresh token — revoking it invalidates all access tokens derived from it.
+  const tokenToRevoke = ownedClient.google_refresh_token ?? ownedClient.google_access_token;
+  if (tokenToRevoke) {
+    try {
+      await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(tokenToRevoke)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      });
+    } catch {
+      // Non-fatal — token may already be expired. Still clear DB fields.
+    }
   }
 
   await db.from("clients").update({
