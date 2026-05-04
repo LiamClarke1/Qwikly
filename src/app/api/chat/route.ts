@@ -314,7 +314,7 @@ export async function POST(req: NextRequest) {
             if (visitorInfo && hasContact) {
               // Real lead: contact info captured, count against monthly cap
               const updates: Record<string, string | boolean> = {
-                status: "lead",
+                status: "new",
                 is_lead: true,
                 updated_at: new Date().toISOString(),
               };
