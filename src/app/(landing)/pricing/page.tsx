@@ -540,7 +540,7 @@ export default function PricingPage() {
               <h3 className="font-display text-2xl text-ink mb-2">We&rsquo;ll set it up for you. One-time R500 setup fee.</h3>
               <p className="text-ink-700 text-sm leading-relaxed">
                 If you know your way around your website, setup is a single copy-paste and takes about
-                5 minutes. If you&rsquo;d rather hand it off, we handle everything for a one-time R500 fee.
+                do it yourself. If you&rsquo;d rather hand it off, we handle everything for a one-time R500 fee.
                 You&rsquo;ll be live the following business day, no code required.
               </p>
             </div>
@@ -762,7 +762,7 @@ export default function PricingPage() {
             <em className="italic font-light text-ember">losing leads</em>?
           </h2>
           <p className="text-paper/70 text-lg mt-8 max-w-xl mx-auto leading-relaxed">
-            Free to start. Live in 5 minutes. No per-job fees, ever.
+            Free to start. No per-job fees, ever.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
             <CTAButton size="lg" variant="solid" href="/signup?plan=premium">

@@ -20,7 +20,7 @@ const HOW_STEPS = [
     Icon: Code,
     num: "01",
     title: "Paste one line of code",
-    body: "Works with Wix, Squarespace, WordPress, Webflow, Shopify, or any custom site. If you can edit your site, you can install Qwikly. Most people are done in 5 minutes.",
+    body: "Works with Wix, Squarespace, WordPress, Webflow, Shopify, or any custom site. If you can edit your site, you can install Qwikly. No developer needed.",
   },
   {
     Icon: Zap,
@@ -50,7 +50,7 @@ const FAQS = [
   { q: "Will it slow my site down?", a: "The widget script is under 14 KB and loads after your page. Your visitors won't notice any difference." },
   { q: "What does it look like to my visitors?", a: "A small chat launcher in the corner of your site. When clicked, it opens a clean conversation, styled to match your brand colour." },
   { q: "Can I customise the colour to match my brand?", a: "Yes. During setup you pick any accent colour and it applies across the launcher and chat bubbles." },
-  { q: "What if I don't have a developer?", a: "You don't need one. The install is a single copy-paste into your site's Custom Code settings — most people are done in 5 minutes. If you'd rather hand it off, we offer a guided setup service for a one-time R500 fee. You'll be live the following business day. Visit our contact page to book." },
+  { q: "What if I don't have a developer?", a: "You don't need one. The install is a single copy-paste into your site's Custom Code settings — no technical knowledge required. If you'd rather hand it off, we offer a guided setup service for a one-time R500 fee. You'll be live the following business day. Visit our contact page to book." },
   { q: "Does this replace my contact form?", a: "It can sit alongside it. Most clients find the widget converts better because it qualifies visitors and captures details immediately rather than waiting for a follow-up." },
   { q: "Will WhatsApp be supported?", a: "WhatsApp routing is on the roadmap and coming soon. The widget handles visitors on your website right now." },
   { q: "Will calendar booking be supported?", a: "Calendar integration is coming soon. Right now, qualified leads are emailed to you instantly so you can follow up and confirm." },
@@ -164,7 +164,7 @@ export default function ConnectYourWebsitePage() {
             ))}
           </div>
           <p className="mt-6 text-ink-500 text-sm">
-            If you can edit your site, you can install Qwikly. Most people are done in 5 minutes.
+            If you can edit your site, you can install Qwikly. No developer needed.
           </p>
         </div>
       </section>
@@ -182,7 +182,7 @@ export default function ConnectYourWebsitePage() {
               </h2>
               <p className="text-ink-500 leading-relaxed mb-2">
                 If you know your way around your website, setup is a single copy-paste and you&rsquo;re
-                done in 5 minutes. If you&rsquo;d rather not touch it, we handle everything for a one-time
+                do it yourself. If you&rsquo;d rather not touch it, we handle everything for a one-time
                 R500 fee. You&rsquo;ll be live the following business day, no code required.
               </p>
               <p className="text-ink-400 text-sm">Works on any platform. No lock-in.</p>
