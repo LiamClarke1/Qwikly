@@ -3,14 +3,13 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect, FormEvent } from "react";
-import { Check, AlertCircle, UserPlus, RefreshCw, Trash2, X as XIcon, Crown, Lock, ArrowRight, AlertTriangle, Users } from "lucide-react";
+import { Check, AlertCircle, UserPlus, RefreshCw, Trash2, X as XIcon, Lock, ArrowRight, AlertTriangle, Users } from "lucide-react";
 import Link from "next/link";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input, Select, Field } from "@/components/ui/input";
+import { Input, Field } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page";
-import { cn } from "@/lib/cn";
 import { useClient } from "@/lib/use-client";
 import { resolvePlan } from "@/lib/plan";
 
@@ -36,13 +35,6 @@ const ROLE_LABELS: Record<Role, string> = {
   viewer: "Viewer",
 };
 
-const ROLE_DESC: Record<Role, string> = {
-  owner: "Full access including billing and team management",
-  admin: "Full access including billing, cannot transfer ownership",
-  editor: "Can manage content and settings, no billing access",
-  viewer: "Read-only access to all dashboard sections",
-};
-
 const STATUS_TONE: Record<Status, "neutral" | "success" | "warning" | "danger"> = {
   active: "success",
   pending: "warning",
@@ -52,13 +44,12 @@ const STATUS_TONE: Record<Status, "neutral" | "success" | "warning" | "danger"> 
 export default function TeamPage() {
   const { client, loading: clientLoading } = useClient();
   const tier = resolvePlan(client?.plan);
-  const canUseTeam = tier === "premium";
+  const canUseTeam = tier === "premium" || tier === "billions";
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<Toast | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [pendingRevokeId, setPendingRevokeId] = useState<string | null>(null);
   const [revokeLoading, setRevokeLoading] = useState(false);
 
@@ -98,19 +89,6 @@ export default function TeamPage() {
     else show("Failed to remove", "danger");
   };
 
-  const updateRole = async (m: Member, role: Role) => {
-    const res = await fetch(`/api/settings/team/${m.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role }),
-    });
-    if (res.ok) {
-      setMembers((prev) => prev.map((x) => x.id === m.id ? { ...x, role } : x));
-      setEditingId(null);
-      show("Role updated");
-    } else show("Failed to update role", "danger");
-  };
-
   if (!clientLoading && !canUseTeam) {
     return (
       <>
@@ -124,16 +102,16 @@ export default function TeamPage() {
               <Lock className="w-6 h-6 text-ink-400" />
             </div>
             <div className="max-w-sm">
-              <p className="text-h3 font-semibold text-fg">Team accounts are a Premium feature</p>
+              <p className="text-h3 font-semibold text-fg">Team access requires Premium or Billions</p>
               <p className="text-small text-fg-muted mt-2 leading-relaxed">
-                Upgrade to Premium to invite team members, assign roles, and manage access across your workspace.
+                Upgrade to Premium or Billions to invite team members and manage workspace access.
               </p>
             </div>
             <Link
-              href="/dashboard/billing"
+              href="/dashboard/settings/billing"
               className="inline-flex items-center gap-2 px-5 h-10 rounded-xl bg-ember text-paper text-small font-medium hover:bg-ember-deep transition-colors duration-150 cursor-pointer"
             >
-              Upgrade to Premium <ArrowRight className="w-4 h-4" />
+              View plans <ArrowRight className="w-4 h-4" />
             </Link>
             <p className="text-tiny text-fg-subtle">R1,299/month · No per-lead fees. Cancel anytime.</p>
           </div>
@@ -160,22 +138,6 @@ export default function TeamPage() {
           <span className="text-small text-fg">{toast.msg}</span>
         </div>
       )}
-
-      {/* Role descriptions */}
-      <Card className="mb-6">
-        <CardHeader title="Role permissions" description="What each role can access in your workspace." />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {(Object.entries(ROLE_DESC) as [Role, string][]).map(([role, desc]) => (
-            <div key={role} className="flex items-start gap-3 p-3 rounded-xl bg-surface-input border border-[var(--border)]">
-              {role === "owner" && <Crown className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />}
-              <div>
-                <p className="text-small font-semibold text-fg">{ROLE_LABELS[role]}</p>
-                <p className="text-tiny text-fg-muted mt-0.5">{desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
 
       {/* Member list */}
       <Card>
@@ -220,32 +182,7 @@ export default function TeamPage() {
                         <p className="text-small font-medium text-fg truncate">{m.email}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <Badge tone={STATUS_TONE[m.status]} dot>{m.status}</Badge>
-                          {editingId === m.id ? (
-                            <div className="flex items-center gap-1.5">
-                              <Select
-                                className="!h-7 !py-0.5 !text-tiny !rounded-lg w-28"
-                                defaultValue={m.role}
-                                onChange={(e) => updateRole(m, e.target.value as Role)}
-                              >
-                                {(["admin", "editor", "viewer"] as Role[]).map((r) => (
-                                  <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                                ))}
-                              </Select>
-                              <button onClick={() => setEditingId(null)} className="p-1 rounded hover:bg-surface-hover cursor-pointer">
-                                <XIcon className="w-3.5 h-3.5 text-fg-muted" />
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={() => m.role !== "owner" && setEditingId(m.id)}
-                              className={cn(
-                                "text-tiny text-fg-muted",
-                                m.role !== "owner" && "hover:text-fg cursor-pointer underline-offset-2 hover:underline"
-                              )}
-                            >
-                              {ROLE_LABELS[m.role]}
-                            </button>
-                          )}
+                          <span className="text-tiny text-fg-muted">{ROLE_LABELS[m.role]}</span>
                         </div>
                       </div>
                     </div>
@@ -287,19 +224,19 @@ export default function TeamPage() {
 }
 
 function InviteModal({ onClose, onInvited }: { onClose: () => void; onInvited: (m: Member) => void }) {
-  const [form, setForm] = useState({ email: "", role: "editor" });
+  const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setErr(null);
-    if (!form.email.trim()) return setErr("Email is required.");
+    if (!email.trim()) return setErr("Email is required.");
     setSaving(true);
     const res = await fetch("/api/settings/team", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ email: email.trim(), role: "viewer" }),
     });
     setSaving(false);
     if (!res.ok) {
@@ -325,19 +262,15 @@ function InviteModal({ onClose, onInvited }: { onClose: () => void; onInvited: (
             <Field label="Email address">
               <Input
                 type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="team@business.co.za"
                 autoFocus
               />
             </Field>
-            <Field label="Role" hint={ROLE_DESC[form.role as Role]}>
-              <Select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-                <option value="admin">Admin</option>
-                <option value="editor">Editor</option>
-                <option value="viewer">Viewer</option>
-              </Select>
-            </Field>
+            <p className="text-tiny text-fg-muted">
+              Invited members get read-only access to your dashboard.
+            </p>
             {err && <p className="text-small text-danger">{err}</p>}
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="ghost" type="button" onClick={onClose}>Cancel</Button>

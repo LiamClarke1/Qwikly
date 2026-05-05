@@ -92,6 +92,7 @@ interface FormData {
   notification_phone: string; notification_email: string;
   facebook_url: string; instagram_url: string;
   star_rating: string; review_count: string; testimonials: string;
+  industry: string; website_url: string; contact_email: string;
 }
 
 const empty: FormData = {
@@ -109,6 +110,7 @@ const empty: FormData = {
   notification_phone: "", notification_email: "",
   facebook_url: "", instagram_url: "",
   star_rating: "", review_count: "", testimonials: "",
+  industry: "", website_url: "", contact_email: "",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -126,10 +128,11 @@ function applyAutoFill(data: Record<string, string>, base: FormData): { form: Fo
     response_time: "response_time", team_size2: "team_size",
     unique_selling_point: "unique_selling_point", guarantees: "guarantees",
     common_questions: "common_questions",
-    phone: "notification_phone", email: "notification_email",
+    phone: "notification_phone", email: "contact_email",
     facebook_url: "facebook_url", instagram_url: "instagram_url",
     star_rating: "star_rating", review_count: "review_count",
     testimonials: "testimonials",
+    industry: "industry", website_url: "website_url",
   };
 
   const next = { ...base };
@@ -1270,6 +1273,9 @@ export default function SetupPage() {
       star_rating: client.star_rating ?? "",
       review_count: client.review_count ?? "",
       testimonials: client.testimonials ?? "",
+      industry: client.industry ?? "",
+      website_url: client.website_url ?? "",
+      contact_email: client.contact_email ?? "",
     });
     const wa = client.whatsapp_number ?? "";
     setNumberChoice(wa === "new_number_requested" ? "new" : wa ? "existing" : "");
@@ -1395,6 +1401,9 @@ export default function SetupPage() {
       star_rating: form.star_rating.trim() || null,
       review_count: form.review_count.trim() || null,
       testimonials: form.testimonials.trim() || null,
+      industry: form.industry.trim() || null,
+      website_url: form.website_url.trim() || null,
+      contact_email: form.contact_email.trim() || null,
     };
 
     if (autoFillResult) {

@@ -5,7 +5,7 @@ const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
-  "Cache-Control": "public, max-age=300",
+  "Cache-Control": "public, max-age=30",
 };
 
 export async function OPTIONS() {
@@ -22,7 +22,7 @@ export async function GET(
   const { data } = await db
     .from("clients")
     .select(
-      "business_name, web_widget_color, web_widget_greeting, web_widget_launcher_label, web_widget_position, web_widget_enabled, auth_user_id"
+      "business_name, web_widget_color, web_widget_greeting, ai_greeting, web_widget_launcher_label, web_widget_position, web_widget_enabled, auth_user_id, invoice_logo_url"
     )
     .eq("public_key", tenantId)
     .maybeSingle();
@@ -52,13 +52,22 @@ export async function GET(
     }
   }
 
+  // ai_greeting is set via the assistant settings page ("Opening greeting").
+  // web_widget_greeting is set during onboarding. ai_greeting takes priority when present,
+  // so changes made post-onboarding are immediately reflected in the widget.
+  const greeting =
+    data.ai_greeting?.trim() ||
+    data.web_widget_greeting?.trim() ||
+    "Hi! How can we help?";
+
   return NextResponse.json(
     {
       name: data.business_name ?? "Us",
       color: data.web_widget_color ?? "#E85A2C",
-      greeting: data.web_widget_greeting ?? "Hi! How can we help?",
+      greeting,
       launcher_label: data.web_widget_launcher_label ?? "Message us",
       position: data.web_widget_position ?? "bottom-right",
+      logo: data.invoice_logo_url ?? null,
     },
     { headers: CORS }
   );

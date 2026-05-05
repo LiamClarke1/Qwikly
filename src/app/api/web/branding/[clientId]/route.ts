@@ -1,20 +1,19 @@
+// DEPRECATED: used only by the legacy public/widget/widget.js (numeric client ID).
+// New embeds use /api/embed/branding/[tenantId] (public_key) via public/embed.js.
+// Do not add new features here — consolidate into the tenantId endpoint when widget.js is retired.
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Cache-Control": "public, max-age=300",
+  "Cache-Control": "public, max-age=30",
 };
 
 export async function GET(
   _req: NextRequest,
   { params }: { params: { clientId: string } }
 ) {
+  const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { clientId } = params;
 
   // Hardcoded branding for the Qwikly marketing site itself

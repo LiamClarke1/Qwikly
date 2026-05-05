@@ -120,6 +120,7 @@ function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger"
     if (upErr) { show(upErr.message, "danger"); setPhotoUploading(false); return; }
     const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
     await supabase.auth.updateUser({ data: { avatar_url: publicUrl } });
+    await supabase.from("clients").update({ profile_photo_url: publicUrl }).eq("auth_user_id", u.id);
     setPhotoUrl(publicUrl);
     setPhotoUploading(false);
     show("Photo updated");
@@ -293,7 +294,7 @@ function NotificationsCard({
     <Card>
       <CardHeader title="Notifications" description="Where to alert you when a lead needs attention." />
       <form className="space-y-4" onSubmit={save}>
-        <Field label="Email" hint="Daily summaries, escalations, and no-shows." error={errors.email}>
+        <Field label="Email" hint="Where new lead alerts will be sent." error={errors.email}>
           <Input
             type="email"
             value={form.notification_email}
@@ -301,7 +302,7 @@ function NotificationsCard({
             placeholder="you@business.co.za"
           />
         </Field>
-        <Field label="WhatsApp number" hint="Urgent escalations only." error={errors.phone}>
+        <Field label="WhatsApp number" hint="For future WhatsApp alert delivery." error={errors.phone}>
           <Input
             value={form.notification_phone}
             onChange={(e) => { setForm({ ...form, notification_phone: e.target.value }); setErrors({ ...errors, phone: undefined }); }}

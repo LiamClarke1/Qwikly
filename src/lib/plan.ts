@@ -8,7 +8,6 @@ interface PlanConfig {
   removeBranding: boolean;
   customGreeting: boolean;
   csvExport: boolean;
-  calendarIntegration: boolean;
   apiAccess: boolean;
   supportTier: 'email' | 'priority' | 'dedicated';
 }
@@ -21,7 +20,6 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     removeBranding: false,
     customGreeting: false,
     csvExport: false,
-    calendarIntegration: false,
     apiAccess: false,
     supportTier: 'email',
   },
@@ -33,7 +31,6 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     removeBranding: false,
     customGreeting: false,
     csvExport: false,
-    calendarIntegration: false,
     apiAccess: false,
     supportTier: 'email',
   },
@@ -44,7 +41,6 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     removeBranding: false,
     customGreeting: false,
     csvExport: false,
-    calendarIntegration: false,
     apiAccess: false,
     supportTier: 'email',
   },
@@ -55,7 +51,6 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     removeBranding: true,
     customGreeting: true,
     csvExport: true,
-    calendarIntegration: false,
     apiAccess: false,
     supportTier: 'priority',
   },
@@ -66,7 +61,6 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     removeBranding: true,
     customGreeting: true,
     csvExport: true,
-    calendarIntegration: true,
     apiAccess: true,
     supportTier: 'dedicated',
   },

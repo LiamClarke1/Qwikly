@@ -5,8 +5,6 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 import { sendWhatsAppMessage } from "@/lib/twilio-whatsapp";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -80,6 +78,7 @@ export async function POST(
       } else {
         const bizName = ownedClient.business_name || "Qwikly";
         const replyTo = (ownedClient as { notification_email?: string | null }).notification_email ?? undefined;
+        const resend = new Resend(process.env.RESEND_API_KEY);
         const { error: emailErr } = await resend.emails.send({
           from: `${bizName} <noreply@qwikly.co.za>`,
           to: convo.customer_email,

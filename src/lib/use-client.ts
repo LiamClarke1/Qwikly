@@ -117,6 +117,9 @@ export interface ClientRow {
   scraped_at?: string | null;
   scrape_confidence?: Record<string, string> | null;
   auth_user_id?: string | null;
+  // knowledge-base migration fields (migration-knowledge-base.sql)
+  website_url?: string | null;
+  contact_email?: string | null;
 }
 
 export function useClient() {

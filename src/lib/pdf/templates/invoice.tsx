@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  Document, Page, Text, View, StyleSheet,
+  Document, Page, Text, View, Image, StyleSheet,
 } from "@react-pdf/renderer";
 
 interface LineItem {
@@ -81,9 +81,11 @@ export function InvoicePDF({ data }: { data: InvoicePDFData }) {
         {/* Header */}
         <View style={s.header}>
           <View>
-            <Text style={s.logo}>
-              {data.businessName}
-            </Text>
+            {data.logoUrl ? (
+              <Image style={{ maxWidth: 160, maxHeight: 48, objectFit: "contain" }} src={data.logoUrl} />
+            ) : (
+              <Text style={s.logo}>{data.businessName}</Text>
+            )}
           </View>
           <View style={{ alignItems: "flex-end" }}>
             <Text style={s.invoiceLabel}>Tax Invoice</Text>

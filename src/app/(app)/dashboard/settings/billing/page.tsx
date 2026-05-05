@@ -110,7 +110,6 @@ const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean;
     features: [
       "1,000 qualified leads/month",
       "Everything in Premium, plus:",
-      "Calendar integration (coming soon)",
       "API access",
       "Dedicated support",
     ],

@@ -33,14 +33,19 @@ export async function saveBusinessStep(payload: {
   const db = supabaseAdmin();
   const { error } = await db
     .from("clients")
-    .update(payload)
+    .update({
+      business_name:      payload.business_name || null,
+      industry:           payload.industry || null,
+      support_email:      payload.support_email || null,
+      notification_email: payload.notification_email || null,
+      notification_phone: payload.notification_phone || null,
+    })
     .eq("auth_user_id", userId);
   if (error) throw new Error(error.message);
 }
 
 export async function saveAssistantStep(payload: {
   web_widget_color: string;
-  brand_color: string;
   web_widget_greeting: string;
   faq: { q: string; a: string }[] | null;
 }): Promise<void> {
@@ -48,7 +53,11 @@ export async function saveAssistantStep(payload: {
   const db = supabaseAdmin();
   const { error } = await db
     .from("clients")
-    .update(payload)
+    .update({
+      web_widget_color:    payload.web_widget_color || null,
+      web_widget_greeting: payload.web_widget_greeting || null,
+      faq:                 payload.faq ?? null,
+    })
     .eq("auth_user_id", userId);
   if (error) throw new Error(error.message);
 }

@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useRef, FormEvent, ChangeEvent } from "react";
-import { Save, Check, AlertCircle, Upload } from "lucide-react";
+import { Save, Check, AlertCircle, Upload, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -119,12 +119,14 @@ function BrandCard({ client, save, show }: {
   show: (msg: string, tone?: "success" | "danger") => void;
 }) {
   const initial = useRef({
-    business_name: client.business_name ?? "",
-    website:       client.website       ?? "",
-    support_email: client.support_email ?? "",
-    industry:      client.industry      ?? "",
-    address:       client.address       ?? "",
-    brand_color:   client.brand_color   ?? "#E85A2C",
+    business_name:             client.business_name             ?? "",
+    website:                   client.website                   ?? "",
+    support_email:             client.support_email             ?? "",
+    industry:                  client.industry                  ?? "",
+    address:                   client.address                   ?? "",
+    web_widget_color:          client.web_widget_color          ?? "#E85A2C",
+    web_widget_position:       client.web_widget_position       ?? "bottom-right",
+    web_widget_launcher_label: client.web_widget_launcher_label ?? "",
   });
 
   const [form, setForm] = useState({ ...initial.current });
@@ -156,11 +158,20 @@ function BrandCard({ client, save, show }: {
     show("Logo uploaded");
   };
 
+  const removeLogo = async () => {
+    setLogoUploading(true);
+    const { error: dbErr } = await supabase.from("clients").update({ invoice_logo_url: null }).eq("id", client.id);
+    if (dbErr) { show(dbErr.message, "danger"); setLogoUploading(false); return; }
+    setLogoUrl(null);
+    setLogoUploading(false);
+    show("Logo removed");
+  };
+
   const validate = () => {
     const errs: Record<string, string> = {};
     if (form.support_email && !isValidEmail(form.support_email)) errs.support_email = "Enter a valid email address";
     if (form.website && !isValidUrl(form.website)) errs.website = "Enter a valid URL (https://...)";
-    if (form.brand_color && !isValidHex(form.brand_color)) errs.brand_color = "Must be a hex colour (#RRGGBB)";
+    if (form.web_widget_color && !isValidHex(form.web_widget_color)) errs.web_widget_color = "Must be a hex colour (#RRGGBB)";
     return errs;
   };
 
@@ -185,17 +196,29 @@ function BrandCard({ client, save, show }: {
             ? <img src={logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
             : <span className="text-tiny text-fg-muted text-center leading-tight px-1">No logo</span>}
         </div>
-        <div>
-          <label className="cursor-pointer">
-            <span className="inline-flex items-center gap-2 h-8 px-3 text-small font-medium rounded-lg bg-surface-input border border-[var(--border-strong)] text-fg hover:bg-surface-active transition-colors cursor-pointer">
-              {logoUploading
-                ? <div className="w-3.5 h-3.5 border-2 border-fg-muted/30 border-t-fg-muted rounded-full animate-spin" />
-                : <Upload className="w-3.5 h-3.5" />}
-              Upload logo
-            </span>
-            <input type="file" accept="image/*" className="sr-only" onChange={uploadLogo} />
-          </label>
-          <p className="text-tiny text-fg-muted mt-1">PNG or SVG, max 2 MB</p>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <label className="cursor-pointer">
+              <span className="inline-flex items-center gap-2 h-8 px-3 text-small font-medium rounded-lg bg-surface-input border border-[var(--border-strong)] text-fg hover:bg-surface-active transition-colors cursor-pointer">
+                {logoUploading
+                  ? <div className="w-3.5 h-3.5 border-2 border-fg-muted/30 border-t-fg-muted rounded-full animate-spin" />
+                  : <Upload className="w-3.5 h-3.5" />}
+                Upload logo
+              </span>
+              <input type="file" accept="image/*" className="sr-only" onChange={uploadLogo} />
+            </label>
+            {logoUrl && (
+              <button
+                type="button"
+                onClick={removeLogo}
+                disabled={logoUploading}
+                className="inline-flex items-center gap-1.5 h-8 px-3 text-small font-medium rounded-lg bg-surface-input border border-[var(--border)] text-danger hover:bg-danger/10 transition-colors cursor-pointer disabled:opacity-40"
+              >
+                <X className="w-3.5 h-3.5" /> Remove
+              </button>
+            )}
+          </div>
+          <p className="text-tiny text-fg-muted">PNG or SVG, max 2 MB</p>
         </div>
       </div>
 
@@ -221,25 +244,36 @@ function BrandCard({ client, save, show }: {
           </Field>
         </div>
         <div className="space-y-1.5">
-          <label className="block text-small font-medium text-fg">Brand colour</label>
+          <label className="block text-small font-medium text-fg">Widget colour</label>
           <p className="text-tiny text-fg-muted -mt-0.5">Updates the embed widget.</p>
           <div className="flex items-center gap-3">
             <input
               type="color"
-              value={isValidHex(form.brand_color) ? form.brand_color : "#E85A2C"}
-              onChange={(e) => { setForm({ ...form, brand_color: e.target.value }); setErrors({ ...errors, brand_color: "" }); }}
+              value={isValidHex(form.web_widget_color) ? form.web_widget_color : "#E85A2C"}
+              onChange={(e) => { setForm({ ...form, web_widget_color: e.target.value }); setErrors({ ...errors, web_widget_color: "" }); }}
               className="h-10 w-16 rounded-lg border border-[var(--border)] cursor-pointer bg-transparent p-1"
             />
             <div className="flex-1">
               <Input
-                value={form.brand_color}
-                onChange={(e) => { setForm({ ...form, brand_color: e.target.value }); setErrors({ ...errors, brand_color: "" }); }}
+                value={form.web_widget_color}
+                onChange={(e) => { setForm({ ...form, web_widget_color: e.target.value }); setErrors({ ...errors, web_widget_color: "" }); }}
                 placeholder="#E85A2C"
-                className={`font-mono${errors.brand_color ? " border-danger/50" : ""}`}
+                className={`font-mono${errors.web_widget_color ? " border-danger/50" : ""}`}
               />
-              {errors.brand_color && <p className="text-tiny text-danger mt-1.5">{errors.brand_color}</p>}
+              {errors.web_widget_color && <p className="text-tiny text-danger mt-1.5">{errors.web_widget_color}</p>}
             </div>
           </div>
+        </div>
+        <Field label="Widget position">
+          <Select value={form.web_widget_position} onChange={set("web_widget_position")}>
+            <option value="bottom-right">Bottom right</option>
+            <option value="bottom-left">Bottom left</option>
+          </Select>
+        </Field>
+        <div className="md:col-span-2">
+          <Field label="Widget button label" hint="Text shown on the chat launcher button.">
+            <Input value={form.web_widget_launcher_label} onChange={set("web_widget_launcher_label")} placeholder="Chat with us" />
+          </Field>
         </div>
         <div className="md:col-span-2 flex items-center gap-3">
           {isDirty && (

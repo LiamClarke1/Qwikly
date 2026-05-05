@@ -47,7 +47,7 @@ const productSchema = {
       priceCurrency: "ZAR",
       price: "1299",
       priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
-      description: "Unlimited qualified leads. Everything in Pro plus API access, dedicated support, and upcoming WhatsApp routing and calendar integration.",
+      description: "Unlimited qualified leads. Everything in Pro plus API access and dedicated support.",
       availability: "https://schema.org/InStock",
       url: "https://www.qwikly.co.za/pricing",
     },

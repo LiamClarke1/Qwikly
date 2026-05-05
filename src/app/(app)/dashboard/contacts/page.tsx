@@ -174,8 +174,8 @@ function ContactDrawer({
         supabase.from("bookings").select("id, job_type, booking_datetime, status").eq("customer_phone", contact.phone ?? "").limit(5),
       ]);
       const evts: { type: string; at: string; title: string; sub?: string }[] = [];
-      (convos.data ?? []).forEach((c) => evts.push({ type: "chat", at: c.updated_at, title: "Conversation", sub: c.status }));
-      (bookings.data ?? []).forEach((b) => evts.push({ type: "booking", at: b.booking_datetime ?? "", title: `Booking, ${b.job_type ?? "service"}`, sub: b.status }));
+      (convos.data ?? []).forEach((c: { updated_at: string; status: string }) => evts.push({ type: "chat", at: c.updated_at, title: "Conversation", sub: c.status }));
+      (bookings.data ?? []).forEach((b: { booking_datetime?: string | null; job_type?: string | null; status: string }) => evts.push({ type: "booking", at: b.booking_datetime ?? "", title: `Booking, ${b.job_type ?? "service"}`, sub: b.status }));
       evts.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
       setActivity(evts.slice(0, 10));
     })();

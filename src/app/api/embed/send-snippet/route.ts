@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
-
 export async function POST(req: NextRequest) {
   let body: { tenantId?: string; recipientEmail?: string };
   try {
@@ -47,6 +45,7 @@ export async function POST(req: NextRequest) {
     .replace(/"/g, "&quot;");
 
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY!);
     const { error: sendErr } = await resend.emails.send({
       from: "Qwikly <no-reply@qwikly.co.za>",
       to: recipientEmail,

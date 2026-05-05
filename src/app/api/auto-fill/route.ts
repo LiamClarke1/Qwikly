@@ -32,6 +32,7 @@ const JSON_SHAPE = `{
   "business_name": "",
   "owner_name": "",
   "industry": "",
+  "website_url": "",
   "phone": "",
   "email": "",
   "address": "",
@@ -79,8 +80,9 @@ const FIELD_RULES = `Field rules:
 - "guarantees": every guarantee, warranty, promise
 - "unique_selling_point": combine all value propositions, trust signals, years of experience, differentiators
 - "common_questions": FAQ pairs "Q: ...\nA: ..." separated by blank lines
+- "website_url": leave blank — populated automatically from the crawled URL
 - "phone": South African phone number (+27 or 0XX format)
-- "email": primary contact email (not noreply, webmaster, or spam)
+- "email": primary contact or support email (not noreply, webmaster, or spam)
 - "facebook_url": full Facebook page URL if found
 - "instagram_url": full Instagram URL if found
 - "star_rating": numeric rating out of 5 if mentioned
@@ -460,6 +462,7 @@ const FIELD_LABELS: Record<string, string> = {
   business_name: "Business name",
   phone: "Phone number",
   email: "Email address",
+  website_url: "Website URL",
   address: "Physical address",
   industry: "Industry",
   areas: "Service areas",
@@ -529,6 +532,9 @@ export async function POST(req: NextRequest) {
 
     // Merge: structured/regex data wins over Claude (it's authoritative)
     const merged: Record<string, string> = { ...claudeData };
+
+    // Inject the crawled URL as website_url — Claude cannot infer this reliably.
+    if (url) merged.website_url = url.startsWith("http") ? url : `https://${url}`;
     const overrides: Record<string, string> = {
       ...(structuredData as Record<string, string>),
       ...(regexData as Record<string, string>),

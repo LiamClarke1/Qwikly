@@ -69,7 +69,7 @@ export default function StepAssistant({ client, plan, onAdvance, onBack }: Props
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canCustomise = plan === "pro" || plan === "premium";
+  const canCustomise = plan === "premium" || plan === "billions";
 
   const resolvedGreeting = greeting
     .replace(/\{business\}/g, client.business_name ?? "your business")
@@ -105,7 +105,6 @@ export default function StepAssistant({ client, plan, onAdvance, onBack }: Props
       await saveAssistantStep({
         web_widget_color: color,
         web_widget_greeting: greeting,
-        brand_color: color,
         faq: qualifyingFaq.length > 0 ? qualifyingFaq : null,
       });
       await onAdvance();
@@ -159,7 +158,7 @@ export default function StepAssistant({ client, plan, onAdvance, onBack }: Props
             {!canCustomise && (
               <div className="absolute inset-0 z-10 rounded-xl bg-surface/70 backdrop-blur-[2px] flex items-center justify-center gap-2 border border-border">
                 <Lock className="w-4 h-4 text-fg-muted" />
-                <span className="text-small text-fg-muted font-medium">Custom greeting — Pro &amp; Premium</span>
+                <span className="text-small text-fg-muted font-medium">Custom greeting — Premium &amp; Billions</span>
               </div>
             )}
             <Field label="Greeting message" hint='Use {business} for your business name.'>
@@ -178,7 +177,7 @@ export default function StepAssistant({ client, plan, onAdvance, onBack }: Props
             {!canCustomise && (
               <div className="absolute inset-0 z-10 rounded-xl bg-surface/70 backdrop-blur-[2px] flex items-center justify-center gap-2 border border-border">
                 <Lock className="w-4 h-4 text-fg-muted" />
-                <span className="text-small text-fg-muted font-medium">Custom questions — Pro &amp; Premium</span>
+                <span className="text-small text-fg-muted font-medium">Custom questions — Premium &amp; Billions</span>
               </div>
             )}
             <Field label="Qualifying questions" hint="Up to 3 questions your assistant asks every lead.">
@@ -222,7 +221,7 @@ export default function StepAssistant({ client, plan, onAdvance, onBack }: Props
           {!canCustomise && (
             <div className="rounded-xl bg-brand/[0.06] border border-brand/20 px-4 py-3">
               <p className="text-small text-fg-muted leading-relaxed">
-                <span className="font-semibold text-fg">Upgrade to Pro</span> to customise your greeting and qualifying questions. Colour is available on all plans.
+                <span className="font-semibold text-fg">Upgrade to Premium</span> to customise your greeting and qualifying questions. Colour is available on all plans.
               </p>
             </div>
           )}

@@ -116,6 +116,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   }
 
+  // For URL re-scrape: remove previous sources for this URL so stale chunks don't persist.
+  // knowledge_chunks cascade-delete when their parent knowledge_source is deleted.
+  if (type === "url" && body.url) {
+    const { data: oldSources } = await db
+      .from("knowledge_sources")
+      .select("id")
+      .eq("tenant_id", user.id)
+      .eq("source_url", body.url);
+    if (oldSources?.length) {
+      await db.from("knowledge_sources").delete().in("id", oldSources.map((s) => s.id));
+    }
+  }
+
   // Create source record
   const { data: source, error: srcErr } = await db
     .from("knowledge_sources")
