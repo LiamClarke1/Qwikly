@@ -749,7 +749,6 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
               <p className="text-lg md:text-xl text-ink-700 leading-relaxed max-w-lg">
                 Captures every enquiry, qualifies it, and sends it to your inbox. Even when you&rsquo;re asleep.
-                Live in under 10 minutes.
               </p>
               <div className="flex flex-col gap-4 lg:items-end lg:text-right">
                 <div className="flex flex-wrap gap-4 lg:justify-end">
@@ -762,6 +761,13 @@ export default function Home() {
                 </div>
                 <p className="text-sm text-ink-500">
                   14-day free trial. No bank account required. No card needed. Upgrade when you&apos;re ready.
+                </p>
+                <p className="text-sm text-ink-500">
+                  Need help setting up?{" "}
+                  <a href="/contact" className="text-ember underline transition-colors">
+                    We&rsquo;ll do it for you
+                  </a>{" "}
+                  — R500, live the following business day.
                 </p>
               </div>
             </div>
