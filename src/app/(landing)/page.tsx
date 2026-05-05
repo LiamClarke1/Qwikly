@@ -767,7 +767,7 @@ export default function Home() {
                   <a href="/contact" className="text-ember underline transition-colors">
                     We&rsquo;ll do it for you
                   </a>{" "}
-                  — R500, live the following business day.
+                  for R500, live the following business day.
                 </p>
               </div>
             </div>
@@ -1164,7 +1164,7 @@ export default function Home() {
                 <a href="/contact" className="text-ember underline transition-colors">
                   We&rsquo;ll set it up for you
                 </a>{" "}
-                — one-time R500 fee, live the following business day.
+                for a one-time R500 fee, live the following business day.
               </p>
             </div>
 
