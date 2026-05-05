@@ -178,7 +178,7 @@ export default function PricingPage() {
           </h1>
           <p className="mt-8 text-lg text-ink-700 max-w-xl leading-relaxed">
             Start with a 14-day trial. Scale when you&apos;re ready.
-            Flat ZAR pricing, no commissions, no setup fees, cancel anytime.
+            Flat ZAR pricing, no commissions, no lock-in, cancel anytime.
           </p>
         </div>
       </section>
@@ -525,6 +525,28 @@ export default function PricingPage() {
             <div className="flex-shrink-0">
               <CTAButton variant="outline" size="md" href="/signup">
                 Start Free
+              </CTAButton>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── GUIDED SETUP ─── */}
+      <section className="py-16 bg-paper grain border-b border-ink/[0.06]">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="max-w-lg">
+              <p className="eyebrow text-ember mb-3">Not sure how to get started?</p>
+              <h3 className="font-display text-2xl text-ink mb-2">We&rsquo;ll set it up for you. One-time R500 setup fee.</h3>
+              <p className="text-ink-700 text-sm leading-relaxed">
+                Not technical? No problem. We&rsquo;ll install the digital assistant on your website, configure
+                your greeting and qualifying questions, and have you live within one business day. You don&rsquo;t
+                touch a line of code.
+              </p>
+            </div>
+            <div className="flex-shrink-0">
+              <CTAButton variant="outline" size="md" href="/contact">
+                Book setup help
               </CTAButton>
             </div>
           </div>

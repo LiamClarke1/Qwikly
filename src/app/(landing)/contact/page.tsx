@@ -30,10 +30,10 @@ export default function ContactPage() {
               <div>
                 <p className="eyebrow text-ink-500 mb-3">Email</p>
                 <a
-                  href="mailto:hello@qwikly.co.za"
+                  href="mailto:clarkeagency1@outlook.com"
                   className="font-display text-lg text-ink hover:text-ember transition-colors"
                 >
-                  hello@qwikly.co.za
+                  clarkeagency1@outlook.com
                 </a>
               </div>
 

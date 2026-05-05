@@ -50,7 +50,7 @@ const FAQS = [
   { q: "Will it slow my site down?", a: "The widget script is under 14 KB and loads after your page. Your visitors won't notice any difference." },
   { q: "What does it look like to my visitors?", a: "A small chat launcher in the corner of your site. When clicked, it opens a clean conversation, styled to match your brand colour." },
   { q: "Can I customise the colour to match my brand?", a: "Yes. During setup you pick any accent colour and it applies across the launcher and chat bubbles." },
-  { q: "What if I don't have a developer?", a: "You don't need one. The install is a single copy-paste into your site's Custom Code settings. If you get stuck, book a free 15-minute install call and we'll do it for you." },
+  { q: "What if I don't have a developer?", a: "You don't need one. The install is a single copy-paste into your site's Custom Code settings. If you get stuck, we offer a guided setup service — we install and configure everything for you for a one-time R500 fee. Contact us at clarkeagency1@outlook.com to book." },
   { q: "Does this replace my contact form?", a: "It can sit alongside it. Most clients find the widget converts better because it qualifies visitors and captures details immediately rather than waiting for a follow-up." },
   { q: "Will WhatsApp be supported?", a: "WhatsApp routing is on the roadmap and coming soon. The widget handles visitors on your website right now." },
   { q: "Will calendar booking be supported?", a: "Calendar integration is coming soon. Right now, qualified leads are emailed to you instantly so you can follow up and confirm." },
@@ -166,6 +166,41 @@ export default function ConnectYourWebsitePage() {
           <p className="mt-6 text-ink-500 text-sm">
             If you can edit your site, you can install Qwikly. Most people are done in 5 minutes.
           </p>
+        </div>
+      </section>
+
+      {/* ── Setup Service ────────────────────────────────────────────── */}
+      <section className="py-20 px-6 bg-paper-deep border-t border-b border-line">
+        <div className="max-w-site mx-auto">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+            <div className="max-w-lg">
+              <span className="inline-block border border-ember/30 text-ember text-[0.75rem] font-semibold tracking-widest uppercase px-3 py-1 rounded-full mb-5">
+                Optional Add-on
+              </span>
+              <h2 className="font-display font-medium text-3xl md:text-4xl text-ink mb-4" style={{ letterSpacing: "-0.025em" }}>
+                Don&rsquo;t want to do it yourself?
+              </h2>
+              <p className="text-ink-500 leading-relaxed mb-2">
+                We&rsquo;ll install and configure your digital assistant for you, one-time R500 setup fee.
+                We handle everything: installing the widget on your site, writing your greeting,
+                setting your qualifying questions, and confirming the first lead arrives in your inbox.
+                You&rsquo;re live within one business day.
+              </p>
+              <p className="text-ink-400 text-sm">No technical knowledge required. Works on any platform.</p>
+            </div>
+            <div className="flex-shrink-0 flex flex-col items-start md:items-end gap-3">
+              <div className="text-right">
+                <p className="font-display text-4xl font-medium text-ink">R500</p>
+                <p className="text-ink-500 text-sm">one-time fee</p>
+              </div>
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-ember text-paper rounded-xl font-medium text-sm hover:bg-ember/90 transition-colors cursor-pointer"
+              >
+                Book setup help <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
