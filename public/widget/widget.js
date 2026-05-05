@@ -134,6 +134,11 @@
     var _cached = localStorage.getItem("qw_color_" + CLIENT_ID);
     if (_cached) shadow.host.style.setProperty("--qc", _cached);
   } catch (e) {}
+  // Apply cached launcher label immediately so there's no wrong-text flash on load
+  var cachedLabel = null;
+  try { cachedLabel = localStorage.getItem("qw_label_" + CLIENT_ID); } catch (e) {}
+  // Hide launcher until branding loads on first visit (no cache yet)
+  if (!cachedLabel) launcher.style.visibility = "hidden";
 
   // ── Helpers ────────────────────────────────────────────────
   function applyBranding(b) {
@@ -158,7 +163,12 @@
   }
 
   function renderLauncher() {
-    var label = branding ? (branding.launcher_label || "Reply in 30s") : "Reply in 30s";
+    var label = branding
+      ? (branding.launcher_label || "Message us")
+      : (cachedLabel || "Message us");
+    cachedLabel = label;
+    try { localStorage.setItem("qw_label_" + CLIENT_ID, label); } catch (e) {}
+    launcher.style.visibility = "";
     launcher.innerHTML = BOLT_SVG + '<span class="pulse"></span><span>' + label + "</span>";
   }
 
@@ -231,7 +241,7 @@
         '<div class="hd-av" id="qw-av"></div>' +
         '<div class="hd-info">' +
           '<div class="hd-name" id="qw-name">' + biz() + "</div>" +
-          '<div class="hd-sub"><span class="hd-dot"></span>Replies in 30s</div>' +
+          '<div class="hd-sub"><span class="hd-dot"></span>' + (branding && branding.launcher_label ? branding.launcher_label : "Message us") + '</div>' +
         "</div>" +
         '<button class="close" id="qw-x" aria-label="Close chat">×</button>' +
       "</div>" +
@@ -440,7 +450,7 @@
     n.setAttribute("role", "status");
     n.setAttribute("aria-label", "Chat with " + biz());
     n.innerHTML =
-      '<div id="nudge-txt">Chat with ' + biz() + '<div id="nudge-sub">We reply in 30 seconds</div></div>' +
+      '<div id="nudge-txt">Chat with ' + biz() + '<div id="nudge-sub">' + (branding && branding.launcher_label ? branding.launcher_label : cachedLabel || "Message us") + '</div></div>' +
       '<button id="nudge-x" aria-label="Dismiss">×</button>';
     shadow.appendChild(n);
 
@@ -471,11 +481,15 @@
   function init() {
     checkRoute();
     if (!host.parentNode) return; // already destroyed (landed on an app route)
-    renderLauncher();
+    // Render immediately only if we have a cached label — avoids showing wrong default text
+    if (cachedLabel) renderLauncher();
     fetch(API_BASE + "/web/branding/" + CLIENT_ID)
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (b) { if (b) applyBranding(b); })
-      .catch(function () {});
+      .then(function (b) {
+        if (b) applyBranding(b); // applyBranding calls renderLauncher with correct label
+        else renderLauncher();   // branding unavailable — show fallback
+      })
+      .catch(function () { renderLauncher(); }); // fetch failed — show fallback
     launcher.addEventListener("click", openPanel);
     fireEvent("widget_loaded");
 
