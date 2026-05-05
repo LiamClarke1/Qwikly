@@ -99,10 +99,10 @@ export default function AboutPage() {
                 <div className="flex gap-6">
                   <span className="eyebrow text-ink-500 w-28 shrink-0">Email</span>
                   <a
-                    href="mailto:hello@qwikly.co.za"
+                    href="mailto:clarkeagency1@outlook.com"
                     className="text-ember underline transition-colors"
                   >
-                    hello@qwikly.co.za
+                    clarkeagency1@outlook.com
                   </a>
                 </div>
                 <div className="flex gap-6">
