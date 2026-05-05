@@ -60,8 +60,8 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
           })}
         </div>
 
-        {/* Mobile horizontal scroll */}
-        <div className="lg:hidden flex gap-1 overflow-x-auto pb-1 scrollbar-none">
+        {/* Mobile wrapping grid */}
+        <div className="lg:hidden flex flex-wrap gap-1.5 pb-2">
           {NAV.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
             const danger = href.includes("danger");
@@ -70,7 +70,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                 key={href}
                 href={href}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-lg text-tiny font-medium whitespace-nowrap shrink-0 transition-colors duration-150 cursor-pointer",
+                  "flex items-center gap-1.5 px-3 py-2 rounded-lg text-tiny font-medium transition-colors duration-150 cursor-pointer",
                   active
                     ? danger
                       ? "bg-red-500/10 text-red-600"
