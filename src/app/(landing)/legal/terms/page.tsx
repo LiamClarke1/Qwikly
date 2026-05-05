@@ -168,10 +168,10 @@ export default function TermsPage() {
                   Pro, Premium, and Billions plans include a 30-day money-back guarantee from the date of your first payment. The Free Trial requires no payment and no guarantee is applicable.
                   If you are not satisfied with the Service within the first 30 days, contact us at{" "}
                   <a
-                    href="mailto:hello@qwikly.co.za"
+                    href="mailto:clarkeagency1@outlook.com"
                     className="text-ember underline transition-colors"
                   >
-                    hello@qwikly.co.za
+                    clarkeagency1@outlook.com
                   </a>{" "}
                   and we will issue a full refund. After 30 days, subscription fees are non-refundable
                   except where required by the Consumer Protection Act 68 of 2008 or other applicable
@@ -533,10 +533,10 @@ export default function TermsPage() {
                   <p className="text-sm">
                     <span className="eyebrow text-ink-500 mr-3">Also</span>
                     <a
-                      href="mailto:hello@qwikly.co.za"
+                      href="mailto:clarkeagency1@outlook.com"
                       className="text-ember underline transition-colors"
                     >
-                      hello@qwikly.co.za
+                      clarkeagency1@outlook.com
                     </a>
                   </p>
                 </div>

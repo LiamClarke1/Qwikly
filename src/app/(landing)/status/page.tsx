@@ -153,10 +153,10 @@ export default async function StatusPage() {
           <p className="mt-8 text-xs text-ink-400">
             For urgent issues, email{" "}
             <a
-              href="mailto:hello@qwikly.co.za"
+              href="mailto:clarkeagency1@outlook.com"
               className="text-ember underline transition-colors"
             >
-              hello@qwikly.co.za
+              clarkeagency1@outlook.com
             </a>
             .
           </p>

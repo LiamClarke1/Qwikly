@@ -38,10 +38,10 @@ export default function Footer() {
           <div className="md:col-span-4">
             <p className="eyebrow text-paper/50 mb-5">Contact</p>
             <a
-              href="mailto:hello@qwikly.co.za"
+              href="mailto:clarkeagency1@outlook.com"
               className="font-display text-2xl md:text-3xl text-paper hover:text-ember transition-colors cursor-pointer"
             >
-              hello@qwikly.co.za
+              clarkeagency1@outlook.com
             </a>
             <p className="text-sm text-paper/50 mt-4 max-w-xs leading-relaxed">
               Talk to a human in Cape Town. We&rsquo;ll have you live within

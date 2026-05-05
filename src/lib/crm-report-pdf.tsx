@@ -319,7 +319,7 @@ export function CrmReportPDF({ data }: { data: ReportData }) {
             <Text style={s.closingContact}>Your account manager: {accountManager}</Text>
           )}
           {client.client_email && (
-            <Text style={[s.closingContact, { marginTop: 4 }]}>Contact: hello@qwikly.co.za</Text>
+            <Text style={[s.closingContact, { marginTop: 4 }]}>Contact: clarkeagency1@outlook.com</Text>
           )}
           <Text style={{ fontSize: 11, color: WHITE, fontFamily: "Helvetica-Bold", letterSpacing: 2, marginTop: 40 }}>QWIKLY</Text>
         </View>

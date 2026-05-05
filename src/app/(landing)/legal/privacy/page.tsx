@@ -467,10 +467,10 @@ export default function PrivacyPage() {
                   <p className="text-sm">
                     <span className="eyebrow text-ink-500 mr-3">Also</span>
                     <a
-                      href="mailto:hello@qwikly.co.za"
+                      href="mailto:clarkeagency1@outlook.com"
                       className="text-ember underline transition-colors"
                     >
-                      hello@qwikly.co.za
+                      clarkeagency1@outlook.com
                     </a>
                   </p>
                 </div>

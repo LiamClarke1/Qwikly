@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
           <p>Your Qwikly subscription invoice of <strong>${fmt(bill.total_zar)}</strong> is now <strong>${daysOverdue} days overdue</strong>.</p>
           <p>Your account is now in read-only mode — you cannot send new invoices until this is settled.</p>
           <p><a href="${billingUrl}">View and pay your invoice</a></p>
-          <p>Questions? Reply to this email or WhatsApp us at hello@qwikly.co.za.</p>`,
+          <p>Questions? Reply to this email or contact us at clarkeagency1@outlook.com.</p>`,
         }).catch(() => {});
       }
       results.push({ billing_invoice_id: bill.id, days_overdue: daysOverdue, action: "account_paused" });

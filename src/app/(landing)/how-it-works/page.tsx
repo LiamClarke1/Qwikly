@@ -257,7 +257,7 @@ export default function HowItWorksPage() {
             </CTAButton>
           </div>
           <p className="mt-8 text-sm text-paper/35">
-            POPIA compliant · Hosted in South Africa · hello@qwikly.co.za
+            POPIA compliant · Hosted in South Africa · clarkeagency1@outlook.com
           </p>
         </div>
       </section>

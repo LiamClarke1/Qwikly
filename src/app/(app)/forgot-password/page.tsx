@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
     });
 
     if (resetError) {
-      setError("Something went wrong. Please try again or contact hello@qwikly.co.za.");
+      setError("Something went wrong. Please try again or contact clarkeagency1@outlook.com.");
       setLoading(false);
       return;
     }
