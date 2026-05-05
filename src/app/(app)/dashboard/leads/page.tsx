@@ -129,22 +129,22 @@ function DetailPanel({
   const [messagesLoading, setMessagesLoading] = useState(true);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const displayName = getDisplayName(lead);
   const displayPhone = getDisplayPhone(lead);
   const initial = displayName.charAt(0).toUpperCase();
   const avatarCls = avatarColor(displayName);
   const s = STATUS_CONFIG[lead.status] ?? STATUS_CONFIG.new;
-  const nextStep = NEXT_STEPS[lead.status] ?? NEXT_STEPS.new;
-  const isCallStep = nextStep.action.toLowerCase().includes("call") || nextStep.action.toLowerCase().includes("text");
+  const isNew = lead.status === "new" || lead.status === "lead";
+  const isDone = lead.status === "closed";
 
-  const summaryParts: string[] = [];
-  if (lead.job_type) summaryParts.push(lead.job_type);
-  if (lead.area) summaryParts.push(`in ${lead.area}`);
-  if (lead.preferred_time) summaryParts.push(`· available ${lead.preferred_time}`);
+  const waPhone = displayPhone ? displayPhone.replace(/[^0-9]/g, "").replace(/^0/, "27") : null;
+  const waLink = waPhone
+    ? `https://wa.me/${waPhone}?text=Hi+${encodeURIComponent(displayName)}%2C+thanks+for+reaching+out!`
+    : null;
 
   useEffect(() => {
-    setMessagesLoading(true);
     supabase
       .from("messages_log")
       .select("id,role,content,created_at")
@@ -172,176 +172,219 @@ function DetailPanel({
 
   return (
     <div className="flex flex-col h-full bg-white border-l border-ink/[0.08] overflow-hidden">
-      {/* Header — always visible */}
+      {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-ink/[0.06] shrink-0">
         <div className="flex items-center gap-3">
           <div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-small font-bold text-white", avatarCls)}>
             {initial}
           </div>
           <div>
-            <p className="text-small font-semibold text-ink">{displayName}</p>
-            <p className="text-tiny text-ink-400">{timeAgo(lead.created_at)}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-small font-semibold text-ink">{displayName}</p>
+              {lead.booking_intent && (
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-ember/10 text-ember border border-ember/20">
+                  <Flame className="w-2.5 h-2.5" /> Hot
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className={cn("px-2 py-0.5 rounded-md text-[10px] font-bold border", s.cls)}>
+                {s.label}
+              </span>
+              <p className="text-tiny text-ink-400">{timeAgo(lead.created_at)}</p>
+            </div>
           </div>
         </div>
         <button
           onClick={onClose}
           className="p-2 rounded-lg hover:bg-ink/[0.05] text-ink-400 hover:text-ink transition-colors cursor-pointer"
-          aria-label="Close detail panel"
+          aria-label="Close"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Scrollable body — all sections scroll together */}
       <div className="flex-1 overflow-y-auto">
-        {/* Badges */}
-        <div className="px-5 pt-3 pb-2 flex flex-wrap gap-1.5">
-          <span className={cn("px-2.5 py-1 rounded-lg text-tiny font-semibold border", s.cls)}>
-            {s.label}
-          </span>
-          {lead.booking_intent && (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-tiny font-semibold border bg-ember/10 text-ember border-ember/20">
-              <Flame className="w-3 h-3" /> Hot lead
-            </span>
-          )}
-          {lead.job_type && (
-            <span className="px-2.5 py-1 rounded-lg text-tiny font-medium bg-ink/[0.05] text-ink-500 border border-ink/[0.08]">
-              {lead.job_type}
-            </span>
-          )}
-        </div>
-
-        {/* Contact details */}
-        <div className="px-5 pb-3 border-b border-ink/[0.06] space-y-1.5">
-          {displayPhone ? (
-            <div className="flex items-center gap-1">
-              <a
-                href={`tel:${displayPhone}`}
-                className="flex items-center gap-2 text-tiny text-ink-600 hover:text-ink transition-colors cursor-pointer flex-1"
-              >
-                <Phone className="w-3.5 h-3.5 shrink-0 text-ink-400" />
-                {displayPhone}
-              </a>
-              <button
-                type="button"
-                onClick={copyPhone}
-                className="p-1.5 rounded-lg hover:bg-ink/[0.06] text-ink-400 hover:text-ink transition-colors cursor-pointer"
-                aria-label="Copy phone number"
-              >
-                {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
-              </button>
-            </div>
-          ) : (
-            <p className="flex items-center gap-2 text-tiny text-ink-300 italic">
-              <Phone className="w-3.5 h-3.5 shrink-0" /> Phone not captured yet
+        {/* Lead summary — clean, no box title */}
+        <div className="px-5 pt-4 pb-3 border-b border-ink/[0.06]">
+          {(lead.job_type || lead.area || lead.preferred_time) && (
+            <p className="text-body font-semibold text-ink leading-snug">
+              {[lead.job_type, lead.area && `in ${lead.area}`].filter(Boolean).join(" ")}
             </p>
-          )}
-          {lead.customer_email && (
-            <a
-              href={`mailto:${lead.customer_email}`}
-              className="flex items-center gap-2 text-tiny text-ink-600 hover:text-ink transition-colors cursor-pointer"
-            >
-              <Mail className="w-3.5 h-3.5 shrink-0 text-ink-400" />
-              {lead.customer_email}
-            </a>
-          )}
-          {lead.area && (
-            <p className="text-tiny text-ink-400 pl-0.5">Area: {lead.area}</p>
           )}
           {lead.preferred_time && (
-            <p className="flex items-center gap-1.5 text-tiny text-ink-400">
-              <Clock className="w-3.5 h-3.5 shrink-0 text-ink-400" /> {lead.preferred_time}
+            <p className="text-tiny text-ink-400 mt-1 flex items-center gap-1.5">
+              <Clock className="w-3 h-3 shrink-0" /> Available {lead.preferred_time}
             </p>
           )}
-          <p className="text-tiny text-ink-400">Captured {formatDateTime(lead.created_at)}</p>
+          <p className="text-tiny text-ink-300 mt-1">Captured {formatDateTime(lead.created_at)}</p>
         </div>
 
-        {/* What they need summary */}
-        {summaryParts.length > 0 && (
-          <div className="mx-5 mt-3 p-3 rounded-xl bg-brand/[0.05] border border-brand/[0.12]">
-            <p className="text-tiny font-semibold text-brand mb-1">What they need</p>
-            <p className="text-small text-ink-600 leading-relaxed">{summaryParts.join(" ")}</p>
-          </div>
-        )}
-
-        {/* Next step card */}
-        <div className={cn("mx-5 mt-3 p-3 rounded-xl border", "bg-ink/[0.03] border-ink/[0.07]")}>
-          <p className="text-tiny font-semibold text-ink-400 mb-1.5">Suggested next step</p>
-          <div className="flex items-start gap-2">
-            <span className="text-ink-500 mt-0.5 shrink-0">{nextStep.icon}</span>
-            <div>
-              <p className="text-small font-semibold text-ink">{nextStep.action}</p>
-              <p className="text-tiny text-ink-400">{nextStep.detail}</p>
+        {/* Contact action buttons */}
+        <div className="px-5 py-4 border-b border-ink/[0.06]">
+          {displayPhone ? (
+            <div className="space-y-2">
+              <a
+                href={`tel:${displayPhone}`}
+                className="flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-ink text-white text-small font-semibold hover:bg-ink/90 transition-colors cursor-pointer"
+              >
+                <Phone className="w-4 h-4" /> Call {displayPhone}
+              </a>
+              {waLink && (
+                <a
+                  href={waLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full h-10 rounded-xl bg-[#25D366] text-white text-small font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+                >
+                  <MessageSquare className="w-4 h-4" /> WhatsApp
+                </a>
+              )}
+              {lead.customer_email && (
+                <a
+                  href={`mailto:${lead.customer_email}`}
+                  className="flex items-center justify-center gap-2 w-full h-10 rounded-xl border border-ink/[0.12] text-ink text-small font-medium hover:bg-ink/[0.03] transition-colors cursor-pointer"
+                >
+                  <Mail className="w-4 h-4 text-ink-400" /> {lead.customer_email}
+                </a>
+              )}
+              <div className="flex items-center gap-2 pt-0.5">
+                <p className="text-tiny text-ink-400 flex-1">{displayPhone}</p>
+                <button
+                  type="button"
+                  onClick={copyPhone}
+                  className="flex items-center gap-1 text-tiny text-ink-400 hover:text-ink transition-colors cursor-pointer"
+                >
+                  {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                  {copied ? "Copied" : "Copy"}
+                </button>
+              </div>
             </div>
-          </div>
-          {displayPhone && isCallStep && (
-            <a
-              href={`tel:${displayPhone}`}
-              className="mt-2.5 flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-brand text-white text-tiny font-semibold hover:opacity-90 transition-opacity cursor-pointer"
-            >
-              <Phone className="w-3.5 h-3.5" /> Call now
-            </a>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-tiny text-ink-300 flex items-center gap-2 italic">
+                <Phone className="w-3.5 h-3.5 shrink-0" /> Phone not captured yet
+              </p>
+              {lead.customer_email && (
+                <a
+                  href={`mailto:${lead.customer_email}`}
+                  className="flex items-center justify-center gap-2 w-full h-10 rounded-xl border border-ink/[0.12] text-ink text-small font-medium hover:bg-ink/[0.03] transition-colors cursor-pointer"
+                >
+                  <Mail className="w-4 h-4 text-ink-400" /> {lead.customer_email}
+                </a>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Status actions */}
-        <div className="px-5 py-3 mt-3 border-t border-ink/[0.06]">
-          <p className="text-tiny text-ink-400 font-medium mb-2">Update status</p>
-          <div className="flex flex-wrap gap-1.5">
-            {FILTER_STATUSES.map((st) => {
-              const cfg = STATUS_CONFIG[st];
-              const isActive = lead.status === st || (st === "new" && lead.status === "lead");
-              return (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => updateStatus(st)}
-                  disabled={statusUpdating || isActive}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg text-tiny font-semibold border transition-all duration-150 cursor-pointer disabled:cursor-default",
-                    isActive
-                      ? cfg.cls
-                      : "bg-transparent text-ink-400 border-ink/[0.08] hover:border-ink/[0.18] hover:text-ink"
-                  )}
-                >
-                  {cfg.label}
-                </button>
-              );
-            })}
+        {/* Primary status CTA */}
+        <div className="px-5 py-4 border-b border-ink/[0.06] space-y-2">
+          {!isDone && (
+            <button
+              type="button"
+              onClick={() => updateStatus("closed")}
+              disabled={statusUpdating}
+              className="flex items-center justify-center gap-2 w-full h-11 rounded-xl bg-green-600 text-white text-small font-bold hover:bg-green-700 transition-colors cursor-pointer disabled:opacity-60"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              {statusUpdating ? "Saving…" : "Mark as done"}
+            </button>
+          )}
+          <div className="flex gap-2">
+            {isNew && (
+              <button
+                type="button"
+                onClick={() => updateStatus("confirmed")}
+                disabled={statusUpdating}
+                className="flex-1 h-9 rounded-xl border border-green-600/40 text-green-700 text-tiny font-semibold hover:bg-green-50 transition-colors cursor-pointer disabled:opacity-60"
+              >
+                Confirm booking
+              </button>
+            )}
+            {lead.status === "confirmed" && (
+              <button
+                type="button"
+                onClick={() => updateStatus("no_show")}
+                disabled={statusUpdating}
+                className="flex-1 h-9 rounded-xl border border-ink/[0.12] text-ink-500 text-tiny font-semibold hover:bg-ink/[0.04] transition-colors cursor-pointer disabled:opacity-60"
+              >
+                No-show
+              </button>
+            )}
+            {!isDone && (
+              <button
+                type="button"
+                onClick={() => updateStatus("escalated")}
+                disabled={statusUpdating}
+                className={cn(
+                  "h-9 rounded-xl border text-tiny font-semibold transition-colors cursor-pointer disabled:opacity-60",
+                  isNew ? "flex-1" : "flex-1",
+                  lead.status === "escalated"
+                    ? "bg-danger/10 text-danger border-danger/20"
+                    : "border-ink/[0.12] text-ink-500 hover:bg-ink/[0.04]"
+                )}
+              >
+                Needs you
+              </button>
+            )}
+            {isDone && (
+              <button
+                type="button"
+                onClick={() => updateStatus("new")}
+                disabled={statusUpdating}
+                className="flex-1 h-9 rounded-xl border border-ink/[0.12] text-ink-500 text-tiny font-semibold hover:bg-ink/[0.04] transition-colors cursor-pointer disabled:opacity-60"
+              >
+                Reopen
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Conversation transcript */}
-        <div className="px-5 py-4 border-t border-ink/[0.06]">
-          <p className="text-tiny text-ink-400 font-semibold mb-3 flex items-center gap-2">
-            <MessageSquare className="w-3.5 h-3.5" /> Conversation
-          </p>
-          {messagesLoading ? (
-            <div className="flex items-center gap-2 text-tiny text-ink-400">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 py-6 text-center">
-              <MessageSquare className="w-8 h-8 text-ink-200" />
-              <p className="text-tiny text-ink-400">No messages captured yet</p>
-            </div>
-          ) : (
-            <div className="space-y-2.5 pb-4">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-small leading-relaxed",
-                    msg.role === "assistant"
-                      ? "bg-ink/[0.05] text-ink rounded-tl-sm mr-auto"
-                      : msg.role === "owner"
-                      ? "bg-ink text-white rounded-tr-sm ml-auto"
-                      : "bg-brand/10 text-ink rounded-tr-sm ml-auto"
-                  )}
-                >
-                  {msg.content}
+        {/* Conversation — collapsed by default */}
+        <div className="border-t border-ink/[0.06]">
+          <button
+            type="button"
+            onClick={() => setChatOpen((o) => !o)}
+            className="flex items-center justify-between w-full px-5 py-3 text-tiny text-ink-400 font-medium hover:bg-ink/[0.02] transition-colors cursor-pointer"
+          >
+            <span className="flex items-center gap-2">
+              <MessageSquare className="w-3.5 h-3.5" />
+              Conversation
+              {messages.length > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-ink/[0.07] text-[10px] font-bold text-ink-500">
+                  {messages.length}
+                </span>
+              )}
+            </span>
+            <span className="text-ink-300">{chatOpen ? "▴" : "▾"}</span>
+          </button>
+          {chatOpen && (
+            <div className="px-5 pb-5">
+              {messagesLoading ? (
+                <div className="flex items-center gap-2 text-tiny text-ink-400 py-3">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading…
                 </div>
-              ))}
+              ) : messages.length === 0 ? (
+                <p className="text-tiny text-ink-300 italic py-3">No messages yet</p>
+              ) : (
+                <div className="space-y-2.5 pt-1">
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-small leading-relaxed",
+                        msg.role === "assistant"
+                          ? "bg-ink/[0.05] text-ink rounded-tl-sm mr-auto"
+                          : msg.role === "owner"
+                          ? "bg-ink text-white rounded-tr-sm ml-auto"
+                          : "bg-brand/10 text-ink rounded-tr-sm ml-auto"
+                      )}
+                    >
+                      {msg.content}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
