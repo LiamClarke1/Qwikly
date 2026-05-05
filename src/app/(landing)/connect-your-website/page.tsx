@@ -181,9 +181,9 @@ export default function ConnectYourWebsitePage() {
                 Don&rsquo;t want to do it yourself?
               </h2>
               <p className="text-ink-500 leading-relaxed mb-2">
-                If you know your way around your website, setup is a single copy-paste and you&rsquo;re
-                do it yourself. If you&rsquo;d rather not touch it, we handle everything for a one-time
-                R500 fee. You&rsquo;ll be live the following business day, no code required.
+                If you know your way around your website, setup is a single copy-paste you can do yourself.
+                If you&rsquo;d rather not touch it, we handle everything for a one-time R500 fee.
+                You&rsquo;ll be live the following business day, no code required.
               </p>
               <p className="text-ink-400 text-sm">Works on any platform. No lock-in.</p>
             </div>

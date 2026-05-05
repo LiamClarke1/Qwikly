@@ -539,8 +539,8 @@ export default function PricingPage() {
               <p className="eyebrow text-ember mb-3">Not sure how to get started?</p>
               <h3 className="font-display text-2xl text-ink mb-2">We&rsquo;ll set it up for you. One-time R500 setup fee.</h3>
               <p className="text-ink-700 text-sm leading-relaxed">
-                If you know your way around your website, setup is a single copy-paste and takes about
-                do it yourself. If you&rsquo;d rather hand it off, we handle everything for a one-time R500 fee.
+                If you know your way around your website, setup is a single copy-paste you can do yourself.
+                If you&rsquo;d rather hand it off, we handle everything for a one-time R500 fee.
                 You&rsquo;ll be live the following business day, no code required.
               </p>
             </div>
