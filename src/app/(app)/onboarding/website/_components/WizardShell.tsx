@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
@@ -27,6 +28,12 @@ export function WizardShell({
   onSaveLater,
 }: WizardShellProps) {
   const pct = Math.round((currentStep / totalSteps) * 100);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
+  }, [currentStep]);
 
   return (
     <div className="min-h-screen bg-background text-fg flex flex-col">
@@ -102,7 +109,7 @@ export function WizardShell({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={contentRef} className="flex-1 overflow-y-auto">
         <div className="max-w-4xl mx-auto px-6 pb-16">{children}</div>
       </div>
     </div>
