@@ -115,33 +115,176 @@ function getStatusBorderColor(status: string): string {
   }
 }
 
+const PHYSICAL_TRADES = new Set([
+  "electrician", "plumber", "plumbing", "roofer", "roofing",
+  "solar installer", "solar", "pest control", "pest", "aircon", "hvac",
+  "aircon / hvac", "pool cleaning", "pool", "landscaper", "landscaping",
+  "garage doors", "security", "painter", "painting", "carpenter",
+  "carpentry", "tiler", "tiling", "handyman",
+]);
+
+function isPhysicalTrade(trade: string | null | undefined): boolean {
+  if (!trade) return false;
+  return PHYSICAL_TRADES.has(trade.toLowerCase().trim());
+}
+
+// Broad profession word list for fuzzy matching — covers trades, services, and common job titles
+const PROFESSION_WORDS = [
+  // Trades
+  "electrician", "electrical", "electricity",
+  "plumber", "plumbing",
+  "roofer", "roofing",
+  "solar", "installer",
+  "landscaper", "landscaping",
+  "security",
+  "painter", "painting",
+  "carpenter", "carpentry",
+  "handyman",
+  "tiler", "tiling",
+  "cleaner", "cleaning",
+  "contractor",
+  "aircon",
+  "mechanic", "welder", "welding",
+  "bricklayer", "plasterer", "glazier",
+  "locksmith", "plasterboard",
+  // Service / hospitality
+  "hairdresser", "hairstylist", "barber", "beautician",
+  "chef", "cook", "waiter", "waitress",
+  "driver", "courier",
+  "technician", "operator",
+  // Healthcare
+  "nurse", "doctor", "dentist", "therapist", "pharmacist",
+  // Professional / office
+  "manager", "director", "supervisor", "administrator",
+  "consultant", "accountant", "auditor", "bookkeeper",
+  "lawyer", "attorney", "solicitor",
+  "teacher", "lecturer", "trainer",
+  "engineer", "developer", "designer", "programmer",
+  "analyst", "advisor", "coordinator",
+  // Generic / placeholder
+  "customer", "client", "visitor", "resident",
+  "owner", "boss", "worker", "employee", "staff",
+  "test", "testing", "admin", "user", "person",
+  "anonymous", "unknown", "noname",
+];
+
+// Exact-match non-name words (too short for safe fuzzy matching)
+const NON_NAME_EXACT = new Set([
+  "n/a", "na", "none", "null", "nil", "no", "yes",
+  "test", "admin", "user", "owner", "boss", "staff",
+  "me", "self", "them", "this",
+]);
+
+function levenshtein(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  const dp: number[] = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    let prev = dp[0];
+    dp[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const tmp = dp[j];
+      dp[j] = a[i - 1] === b[j - 1] ? prev : 1 + Math.min(prev, dp[j], dp[j - 1]);
+      prev = tmp;
+    }
+  }
+  return dp[n];
+}
+
+function looksLikeProfession(word: string): boolean {
+  if (word.length < 5) return false;
+  // Allow 1 edit for words ≤7 chars, 2 edits for longer
+  const maxDist = word.length <= 7 ? 1 : 2;
+  return PROFESSION_WORDS.some(t => t.length >= 4 && levenshtein(word, t) <= maxDist);
+}
+
+// Keep the narrower trade check for determining NEXT STEP style
+function looksLikeTrade(word: string): boolean {
+  if (word.length < 5) return false;
+  if (PHYSICAL_TRADES.has(word)) return true;
+  const maxDist = word.length <= 7 ? 1 : 2;
+  const TRADE_WORDS = [
+    "electrician","electrical","electricity","plumber","plumbing",
+    "roofer","roofing","solar","installer","landscaper","landscaping",
+    "security","painter","painting","carpenter","carpentry",
+    "handyman","tiler","tiling","cleaner","cleaning","contractor","aircon",
+  ];
+  return TRADE_WORDS.some(t => t.length >= 4 && levenshtein(word, t) <= maxDist);
+}
+
+function sanitizeLeadName(name: string | null, jobType: string | null): string {
+  if (!name) return "them";
+  const lname = name.toLowerCase().trim();
+  const ljob = jobType ? jobType.toLowerCase().trim() : "";
+
+  // Exact non-name words
+  if (NON_NAME_EXACT.has(lname)) return "them";
+  // Phone number pattern
+  if (/^[\d\s+\-().]{7,}$/.test(lname)) return "them";
+  // Email address
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lname)) return "them";
+  // All digits
+  if (/^\d+$/.test(lname)) return "them";
+  // Single word — fuzzy profession check
+  if (!lname.includes(" ") && looksLikeProfession(lname)) return "them";
+  // Matches job type closely (any business type, not just trades)
+  if (ljob) {
+    const jobWords = ljob.split(/\s+/);
+    if (lname === ljob || jobWords.some(w => w.length >= 4 && levenshtein(lname, w) <= 1)) return "them";
+  }
+  return name.split(" ")[0];
+}
+
 function getNextStep(lead: Lead, client: ClientRow | null): string {
   const mins = getLeadAgeMinutes(lead);
-  const name = lead.customer_name ? lead.customer_name.split(" ")[0] : "them";
-  const trade = client?.trade ? client.trade.toLowerCase() : null;
-  const job = lead.job_type ? lead.job_type.toLowerCase() : (trade ?? "the work");
+  const clientTrade = client?.trade ?? null;
+  const isTradeService = isPhysicalTrade(clientTrade);
+  const name = sanitizeLeadName(lead.customer_name, lead.job_type);
+  const job = lead.job_type ? lead.job_type.toLowerCase() : (clientTrade?.toLowerCase() ?? "the work");
   const area = lead.area ? ` in ${lead.area}` : "";
   const timeHint = lead.preferred_time ? ` They mentioned ${lead.preferred_time} works for them.` : "";
 
-  switch (lead.status) {
-    case "closed":
-      return `The ${job} job for ${name} is done. Now is the best time to ask for a Google review while the experience is still fresh. Send: "Hi ${name}, really appreciate you choosing us. If you were happy with the ${job}, a quick Google review would mean the world. Takes 30 seconds." People who just got great service are your best reviewers.`;
-    case "escalated":
-      return `${name} has flagged an issue with the ${job}${area}. Put everything else down and call them personally right now. Don't text first, call. Say: "I saw there was a problem, I want to sort this out for you today." Solving it fast turns a complaint into your most loyal customer.`;
-    case "confirmed":
-      return `${name}'s ${job} booking${area} is confirmed.${timeHint} Message the day before to confirm you're coming. Most providers don't bother, so this alone sets you apart. Show up on time, do great work, and ask for a review on the day.`;
-    case "no_show":
-      return `${name} missed the ${job} appointment${area}. Send this today: "Hey ${name}, we missed each other earlier. When can I come back? Are you free tomorrow or later this week?" Assume yes and ask when. Most no-shows just need one follow-up to rebook.`;
-    default:
-      if (mins < 15) return `${name} just enquired about ${job}${area}. Call them right now while they're still on their phone. If no answer, send immediately: "Hi ${name}, just saw your message about the ${job}. When can I come have a look? Are you free today?" Assume they want you. Ask when, not if.`;
-      if (mins < 60) return `${name} asked about ${job}${area} less than an hour ago and is almost certainly still deciding.${timeHint} Send now: "Hi ${name}, when can I come check it out for you? Today or tomorrow works for me." Don't ask if they still need help. Ask when you're coming.`;
-      if (mins < 1440) return `${name} asked about ${job}${area} earlier today. Move fast.${timeHint} Send: "Hi ${name}, when can I come have a look at the ${job}? I have time today and tomorrow, what works for you?" Closing on a time is how you win the job.`;
-      return `${name} asked about ${job}${area} ${timeAgo(lead.created_at)} with no follow-up yet. Send one clear message: "Hi ${name}, I still have availability this week for the ${job}. When would be a good time for me to come over?" If no reply within 24 hours, mark this one closed and move on.`;
+  if (isTradeService) {
+    switch (lead.status) {
+      case "closed":
+        return `The ${job} job for ${name} is done. Now is the best time to ask for a Google review while the experience is still fresh. Send: "Hi ${name}, really appreciate you choosing us. If you were happy with the ${job}, a quick Google review would mean the world. Takes 30 seconds."`;
+      case "escalated":
+        return `${name} has flagged an issue with the ${job}${area}. Put everything else down and call them personally right now. Don't text first, call. Say: "I saw there was a problem, I want to sort this out for you today."`;
+      case "confirmed":
+        return `${name}'s ${job} booking${area} is confirmed.${timeHint} Message the day before to confirm you're coming. Show up on time, do great work, and ask for a review on the day.`;
+      case "no_show":
+        return `${name} missed the ${job} appointment${area}. Send: "Hey ${name}, we missed each other earlier. When can I come back? Are you free tomorrow or later this week?" Assume yes and ask when.`;
+      default:
+        if (mins < 15) return `${name} just enquired about ${job}${area}. Call them right now while they're still on their phone. If no answer, send immediately: "Hi ${name}, just saw your message about the ${job}. When can I come have a look? Are you free today?" Assume they want you. Ask when, not if.`;
+        if (mins < 60) return `${name} asked about ${job}${area} less than an hour ago and is almost certainly still deciding.${timeHint} Send now: "Hi ${name}, when can I come check it out for you? Today or tomorrow works for me."`;
+        if (mins < 1440) return `${name} asked about ${job}${area} earlier today. Move fast.${timeHint} Send: "Hi ${name}, when can I come have a look at the ${job}? I have time today and tomorrow, what works for you?"`;
+        return `${name} asked about ${job}${area} ${timeAgo(lead.created_at)} with no follow-up yet. Send: "Hi ${name}, I still have availability this week for the ${job}. When would be a good time for me to come over?" If no reply within 24 hours, mark this one closed and move on.`;
+    }
+  } else {
+    // Non-trade service — focus on onboarding / sign-up follow-up
+    const leadContext = lead.job_type ? `, who is a ${lead.job_type.toLowerCase()},` : "";
+    switch (lead.status) {
+      case "closed":
+        return `${name} has been marked closed. If you haven't made contact yet, try one last message: "Hey ${name}, just circling back — are you still interested in getting set up? Happy to help whenever you're ready."`;
+      case "escalated":
+        return `${name} has raised a concern. Reach out personally and address it directly: "Hey ${name}, I saw there was an issue — I want to make sure we sort this out for you."`;
+      case "confirmed":
+        return `${name} is confirmed and moving forward.${timeHint} Make sure the onboarding process is smooth. Check in: "Hey ${name}, just wanted to make sure everything is working properly for you — any questions?"`;
+      case "no_show":
+        return `${name} didn't complete the process. Follow up: "Hey ${name}, looks like we lost you somewhere along the way. Want to pick up where we left off? I can walk you through it."`;
+      default:
+        if (mins < 15) return `${name}${leadContext} just enquired. Reach out now while they're still warm. Send: "Hey ${name}, just saw your enquiry — are you ready to move forward and get set up? Happy to walk you through it right now."`;
+        if (mins < 60) return `${name} enquired less than an hour ago.${timeHint} Follow up while they're still thinking about it. Send: "Hey ${name}, just following up on your enquiry — are you keen to move forward?"`;
+        if (mins < 1440) return `${name} enquired earlier today. Still a good window to convert them.${timeHint} Send: "Hey ${name}, just checking in — did you get a chance to sign up? Takes two minutes and I can help you get started today."`;
+        return `${name} enquired ${timeAgo(lead.created_at)} with no follow-up yet. Send one message: "Hey ${name}, just circling back — you showed interest earlier. Still keen to move forward? I'm happy to help whenever you're ready."`;
+    }
   }
 }
 
-function buildConversationSummary(messages: Message[], lead: Lead): string {
-  const name = lead.customer_name ? lead.customer_name.split(" ")[0] : "This customer";
+function buildConversationSummary(messages: Message[], lead: Lead, client: ClientRow | null): string {
+  const clientTrade = client?.trade ?? null;
+  const isTradeService = isPhysicalTrade(clientTrade);
+  const name = sanitizeLeadName(lead.customer_name, lead.job_type);
+  const displayName = name !== "them" ? name : "This lead";
   const job = lead.job_type ? lead.job_type.toLowerCase() : null;
   const area = lead.area ?? null;
 
@@ -155,8 +298,6 @@ function buildConversationSummary(messages: Message[], lead: Lead): string {
   ]);
 
   const customerMessages = messages.filter((m) => m.role === "customer");
-
-  // Strip out emails, phone numbers, URLs, and one-word confirmations
   const meaningful = customerMessages.filter((m) => {
     const t = m.content.trim();
     const tl = t.toLowerCase();
@@ -170,43 +311,65 @@ function buildConversationSummary(messages: Message[], lead: Lead): string {
 
   const parts: string[] = [];
 
-  // Lead with what they actually need
-  const jobDesc = job ?? "assistance";
+  // Sentence 1 — Opening context
   const locationPart = area ? ` in ${area}` : "";
-  parts.push(`${name} came to you looking for ${jobDesc}${locationPart}.`);
+  if (isTradeService) {
+    const jobDesc = job ?? "assistance";
+    parts.push(`${displayName} came to you looking for ${jobDesc}${locationPart}.`);
+  } else {
+    const tradeContext = job ? `, a ${job},` : "";
+    parts.push(`${displayName}${tradeContext} reached out to learn more about your service${locationPart}.`);
+  }
 
-  if (meaningful.length > 0) {
-    // Quote their most descriptive message
-    const best = meaningful.sort((a, b) => b.content.length - a.content.length)[0];
+  // Sentence 2 — Most descriptive message they sent
+  const sorted = [...meaningful].sort((a, b) => b.content.length - a.content.length);
+  if (sorted.length > 0) {
+    const best = sorted[0];
     const excerpt = best.content.length > 200 ? best.content.slice(0, 200) + "…" : best.content;
     parts.push(`They said: "${excerpt}"`);
   } else if (customerMessages.length > 0) {
-    // Customer only gave confirmations — the assistant gathered everything.
-    // Reconstruct from structured data + conversation depth.
     const gathered: string[] = [];
     if (area) gathered.push(`their location (${area})`);
-    if (lead.preferred_time) gathered.push(`when they're available (${lead.preferred_time})`);
+    if (lead.preferred_time) gathered.push(`availability (${lead.preferred_time})`);
     if (lead.customer_email) gathered.push("their email");
     if (gathered.length > 0) {
-      parts.push(`Your assistant walked them through a ${messages.length}-message conversation and captured ${gathered.join(", ")}.`);
+      parts.push(`Your assistant walked them through the conversation and captured ${gathered.join(", ")}.`);
     } else {
-      parts.push(`They completed a ${messages.length}-message conversation with your assistant to confirm the details.`);
+      parts.push(`They completed a ${messages.length}-message conversation with your assistant.`);
     }
   } else {
-    parts.push("No conversation messages captured yet. This lead came in through a form or direct capture.");
+    parts.push("No conversation messages have been captured yet for this lead.");
   }
 
-  // Availability
-  if (lead.preferred_time && meaningful.length > 0) {
-    parts.push(`They're available ${lead.preferred_time}.`);
+  // Sentence 3 — Second distinct message if available
+  if (sorted.length > 1) {
+    const second = sorted[1];
+    if (second.content !== sorted[0].content) {
+      const excerpt2 = second.content.length > 150 ? second.content.slice(0, 150) + "…" : second.content;
+      parts.push(`They also mentioned: "${excerpt2}"`);
+    }
   }
 
-  // Booking intent
+  // Sentence 4 — Captured details
+  const details: string[] = [];
+  if (lead.preferred_time) details.push(`available ${lead.preferred_time}`);
+  if (lead.customer_email) details.push("provided their email");
+  if (messages.length > 0) details.push(`${messages.length} messages exchanged in total`);
+  if (details.length > 0) {
+    parts.push(`Details on file: ${details.join(", ")}.`);
+  }
+
+  // Sentence 5 — Intent signal
   if (lead.booking_intent) {
-    parts.push("They indicated they're ready to book. This one is warm.");
+    parts.push(isTradeService
+      ? "They indicated they're ready to book. This one is warm."
+      : "They indicated they're ready to move forward. This lead is warm."
+    );
+  } else if (customerMessages.length > 0) {
+    parts.push("They completed the conversation but haven't confirmed intent yet.");
   }
 
-  return parts.join(" ");
+  return parts.slice(0, 5).join(" ");
 }
 
 function buildFollowUpMessage(lead: Lead, name: string, client: ClientRow | null): string {
@@ -438,7 +601,7 @@ function DetailPanel({
     { label: "Reschedule", text: `Hi ${displayName.split(" ")[0]}, we missed each other. When can I come back? What time works for you this week?` },
   ] : [];
 
-  const conversationSummary = buildConversationSummary(messages, lead);
+  const conversationSummary = buildConversationSummary(messages, lead, client);
 
   useEffect(() => {
     let alive = true;
@@ -669,7 +832,7 @@ function DetailPanel({
         {/* What they said */}
         <div className="rounded-xl bg-blue-50 border border-blue-100 px-3.5 py-3">
           <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-            <MessageSquare className="w-3 h-3" /> What they said
+            <MessageSquare className="w-3 h-3" /> Summary
           </p>
           {messagesLoading ? (
             <div className="flex items-center gap-2 text-tiny text-blue-400">
