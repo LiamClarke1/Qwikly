@@ -1043,6 +1043,33 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══════ SETUP HELP STRIP ═══════════════════════════════ */}
+      <section className="py-14 bg-paper-deep border-t border-b border-ink/[0.06]">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="max-w-xl">
+              <p className="eyebrow text-ember mb-2">Not sure how to get started?</p>
+              <h3 className="font-display text-2xl text-ink mb-2">
+                Can&rsquo;t set it up yourself? We&rsquo;ll do it for you.
+              </h3>
+              <p className="text-ink-700 text-sm leading-relaxed">
+                If you&rsquo;re not comfortable adding code to your website, we handle the full setup
+                for a one-time R500 fee. You&rsquo;ll be live the following business day — no technical
+                knowledge required.
+              </p>
+            </div>
+            <div className="flex-shrink-0">
+              <a
+                href="/contact"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-ember text-paper rounded-xl font-medium text-sm hover:bg-ember/90 transition-colors cursor-pointer whitespace-nowrap"
+              >
+                Book setup help
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ═══════ 07 · FAQ TEASER ════════════════════════════════ */}
       <section className="relative py-28 md:py-36 overflow-hidden grain">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
