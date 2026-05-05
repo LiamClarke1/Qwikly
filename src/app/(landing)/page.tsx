@@ -1046,19 +1046,22 @@ export default function Home() {
       {/* ═══════ SETUP HELP STRIP ═══════════════════════════════ */}
       <section className="py-14 bg-paper-deep border-t border-b border-ink/[0.06]">
         <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
             <div className="max-w-xl">
               <p className="eyebrow text-ember mb-2">Not sure how to get started?</p>
               <h3 className="font-display text-2xl text-ink mb-2">
                 Can&rsquo;t set it up yourself? We&rsquo;ll do it for you.
               </h3>
               <p className="text-ink-700 text-sm leading-relaxed">
-                If you&rsquo;re not comfortable adding code to your website, we handle the full setup
-                for a one-time R500 fee. You&rsquo;ll be live the following business day — no technical
-                knowledge required.
+                If you&rsquo;re not comfortable adding code to your website, we handle the full setup.
+                No technical knowledge required. You&rsquo;ll be live the following business day.
               </p>
             </div>
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex flex-col items-start md:items-end gap-3">
+              <div>
+                <p className="font-display text-3xl font-medium text-ink">R500</p>
+                <p className="text-ink-500 text-xs eyebrow mt-0.5">one-time fee</p>
+              </div>
               <a
                 href="/contact"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-ember text-paper rounded-xl font-medium text-sm hover:bg-ember/90 transition-colors cursor-pointer whitespace-nowrap"
