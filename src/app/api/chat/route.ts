@@ -295,10 +295,14 @@ export async function POST(req: NextRequest) {
           }
         }
       } catch (err) {
-        console.error("Chat stream error:", err);
+        console.error("[chat] stream error:", {
+          tenantId,
+          sessionId,
+          error: err instanceof Error ? err.message : String(err),
+        });
         const fallback = "Something went wrong. Please try again.";
         fullReply = fallback;
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta: fallback })}\n\n`));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta: fallback, isError: true })}\n\n`));
       } finally {
         try {
           if (convoId && fullReply) {
@@ -329,9 +333,11 @@ export async function POST(req: NextRequest) {
               await db.from("conversations").update(updates).eq("id", convoId);
 
               if (visitorInfo.email) {
-                enrollLeadInSequences(client.id, visitorInfo.email, visitorInfo.name ?? null, convoId).catch(
-                  (err) => console.error("[sequences] enroll error", err)
-                );
+                try {
+                  await enrollLeadInSequences(client.id, visitorInfo.email, visitorInfo.name ?? null, convoId);
+                } catch (err) {
+                  console.error("[sequences] enroll error", { clientId: client.id, email: visitorInfo.email, convoId, err });
+                }
               }
             } else if (visitorInfo) {
               // Name-only or booking_intent without contact — save but don't count as lead

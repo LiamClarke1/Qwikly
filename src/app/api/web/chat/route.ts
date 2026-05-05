@@ -429,29 +429,37 @@ export async function POST(req: NextRequest) {
     { role: "user", content: message },
   ];
 
-  let reply = "Sorry, I ran into a technical issue. Please try again in a moment.";
+  let reply = "";
   let visitorInfo: VisitorToolInput | null = null;
 
+  // Call 1: main response. Hard failure → 503 so the widget can retry.
+  let response: Anthropic.Message;
   try {
-    const response = await anthropic.messages.create({
+    response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 160,
       system: systemPrompt,
       tools: TOOLS,
       messages: claudeMessages,
     });
+  } catch (err) {
+    console.error("[web/chat] Claude call 1 failed:", err);
+    return NextResponse.json({ error: "assistant_unavailable" }, { status: 503, headers: CORS });
+  }
 
-    for (const block of response.content) {
-      if (block.type === "text") reply = block.text;
-      if (block.type === "tool_use" && block.name === "update_visitor") {
-        visitorInfo = block.input as VisitorToolInput;
-      }
+  for (const block of response.content) {
+    if (block.type === "text") reply = block.text;
+    if (block.type === "tool_use" && block.name === "update_visitor") {
+      visitorInfo = block.input as VisitorToolInput;
     }
+  }
 
-    // If a tool was called, get the follow-up text reply
-    if (visitorInfo && response.stop_reason === "tool_use") {
-      const toolUseBlock = response.content.find((b) => b.type === "tool_use");
-      if (toolUseBlock && toolUseBlock.type === "tool_use") {
+  // Call 2: follow-up after tool use. Soft failure — visitorInfo is already captured,
+  // so we keep it and fall back to a minimal reply rather than returning 503.
+  if (visitorInfo && response.stop_reason === "tool_use") {
+    const toolUseBlock = response.content.find((b) => b.type === "tool_use");
+    if (toolUseBlock && toolUseBlock.type === "tool_use") {
+      try {
         const followUp = await anthropic.messages.create({
           model: "claude-haiku-4-5-20251001",
           max_tokens: 120,
@@ -467,10 +475,11 @@ export async function POST(req: NextRequest) {
         });
         const textBlock = followUp.content.find((b) => b.type === "text");
         if (textBlock && textBlock.type === "text") reply = textBlock.text;
+      } catch (err) {
+        console.error("[web/chat] Claude call 2 (tool follow-up) failed:", err);
+        reply = reply || "Got it, noted. Anything else you'd like to know?";
       }
     }
-  } catch (err) {
-    console.error("Claude error:", err);
   }
 
   // ── Save AI reply to log ───────────────────────────────────
@@ -507,9 +516,11 @@ export async function POST(req: NextRequest) {
       await supabaseAdmin.from("conversations").update(updates).eq("id", convoId);
 
       if (visitorInfo.email && client_id) {
-        enrollLeadInSequences(Number(client_id), visitorInfo.email, visitorInfo.name ?? null, convoId).catch(
-          (err) => console.error("[sequences] enroll error", err)
-        );
+        try {
+          await enrollLeadInSequences(Number(client_id), visitorInfo.email, visitorInfo.name ?? null, convoId);
+        } catch (err) {
+          console.error("[sequences] enroll error", { client_id, email: visitorInfo.email, convoId, err });
+        }
       }
     } else {
       // Name only (or booking_intent without contact) — save name and intent but do not count as a lead

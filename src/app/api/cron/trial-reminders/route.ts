@@ -111,6 +111,7 @@ export async function POST(req: NextRequest) {
 
   let sent = 0;
   let skipped = 0;
+  let failed = 0;
 
   for (const sub of subs) {
     const trialEndsAt = new Date(sub.trial_ends_at!);
@@ -159,8 +160,9 @@ export async function POST(req: NextRequest) {
       sent++;
     } catch (err) {
       console.error("[trial-reminders] send failed", { userId: sub.user_id, daysLeft, err });
+      failed++;
     }
   }
 
-  return NextResponse.json({ sent, skipped });
+  return NextResponse.json({ sent, skipped, failed });
 }

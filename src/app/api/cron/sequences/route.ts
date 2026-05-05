@@ -67,12 +67,21 @@ export async function POST(req: NextRequest) {
       if (existing) continue; // already handled
 
       // Create the send record first (optimistic, prevents double-send)
-      const { data: sendRecord } = await db
+      const { data: sendRecord, error: sendRecordError } = await db
         .from("email_sequence_sends")
         .insert({ enrollment_id: enrollment.id, step_id: step.id })
         .select("id")
         .maybeSingle();
 
+      if (sendRecordError) {
+        console.error("[sequences/cron] failed to create send record", {
+          enrollmentId: enrollment.id,
+          stepId: step.id,
+          error: sendRecordError.message,
+        });
+        failed++;
+        continue;
+      }
       if (!sendRecord) continue;
 
       try {

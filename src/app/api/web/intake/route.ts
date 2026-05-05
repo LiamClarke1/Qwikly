@@ -66,9 +66,11 @@ export async function POST(req: NextRequest) {
 
   // Auto-enroll lead if email was provided
   if (email) {
-    enrollLeadInSequences(Number(client_id), email, name, String(convo.id)).catch(
-      (err) => console.error("[sequences] enroll error", err)
-    );
+    try {
+      await enrollLeadInSequences(Number(client_id), email, name, String(convo.id));
+    } catch (err) {
+      console.error("[sequences] enroll error", { client_id, email, conversationId: convo.id, err });
+    }
   }
 
   // Generate a simple ws_token (in production this would be a signed JWT)

@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   if (body.steps?.length) {
-    await db.from("email_sequence_steps").insert(
+    const { error: stepsError } = await db.from("email_sequence_steps").insert(
       body.steps.map((s: { subject: string; body: string; delay_hours?: number; position?: number; heading?: string; cta_text?: string; cta_url?: string }, i: number) => ({
         sequence_id: seq.id,
         position: s.position ?? i,
@@ -74,6 +74,11 @@ export async function POST(req: NextRequest) {
         cta_url: s.cta_url ?? null,
       }))
     );
+    if (stepsError) {
+      console.error("[sequences] steps insert failed, rolling back sequence:", { sequenceId: seq.id, error: stepsError });
+      await db.from("email_sequences").delete().eq("id", seq.id);
+      return NextResponse.json({ error: "failed_to_create_steps" }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ id: seq.id }, { status: 201 });

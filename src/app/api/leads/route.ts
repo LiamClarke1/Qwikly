@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
           subject: "You've hit your Qwikly lead cap — upgrade to keep capturing",
           html: capReachedNotificationHtml({ businessName: business.name }),
         })
-        .catch(() => {});
+        .catch((err) => console.error("[leads] cap-reached email failed:", { businessId: business.id, err }));
     }
     return NextResponse.json({ ok: true, capped: true }, { headers: CORS });
   }
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
         suggestUrl,
       }),
     })
-    .catch(() => {});
+    .catch((err) => console.error("[leads] lead notification email failed:", { leadId: lead.id, businessId: business.id, err }));
 
   return NextResponse.json({ ok: true, lead_id: lead.id }, { headers: CORS });
 }
