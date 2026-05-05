@@ -2,9 +2,9 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState, FormEvent, ChangeEvent } from "react";
+import { useEffect, useState, useRef, useCallback, FormEvent, ChangeEvent } from "react";
 import {
-  Save, Check, AlertCircle, User, Camera, Lock,
+  Save, Check, AlertCircle, User, Camera, Lock, Move,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
@@ -83,6 +83,7 @@ function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger"
   const [saving, setSaving] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [adjustOpen, setAdjustOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -126,6 +127,21 @@ function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger"
     show("Photo updated");
   };
 
+  const saveAdjusted = async (blob: Blob) => {
+    setPhotoUploading(true);
+    const { data: { user: u } } = await supabase.auth.getUser();
+    if (!u) { setPhotoUploading(false); return; }
+    const path = `avatars/${u.id}/${Date.now()}.jpg`;
+    const { error: upErr } = await supabase.storage.from("media").upload(path, blob, { upsert: true, contentType: "image/jpeg" });
+    if (upErr) { show(upErr.message, "danger"); setPhotoUploading(false); return; }
+    const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
+    await supabase.auth.updateUser({ data: { avatar_url: publicUrl } });
+    await supabase.from("clients").update({ profile_photo_url: publicUrl }).eq("auth_user_id", u.id);
+    setPhotoUrl(publicUrl);
+    setPhotoUploading(false);
+    show("Photo updated");
+  };
+
   if (authLoading) {
     return (
       <Card>
@@ -147,62 +163,319 @@ function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger"
   }
 
   return (
-    <Card>
-      <CardHeader title="Your account" description="Name, email, and profile photo." />
+    <>
+      {adjustOpen && photoUrl && (
+        <AdjustPhotoModal
+          photoUrl={photoUrl}
+          onClose={() => setAdjustOpen(false)}
+          onSave={(blob) => {
+            setAdjustOpen(false);
+            saveAdjusted(blob);
+          }}
+        />
+      )}
 
-      {/* Avatar */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="relative w-16 h-16 rounded-2xl bg-surface-input border border-[var(--border)] overflow-hidden shrink-0">
-          {photoUrl
-            ? <img src={photoUrl} alt="Profile" className="w-full h-full object-cover" />
-            : <div className="w-full h-full flex items-center justify-center"><User className="w-6 h-6 text-fg-muted" /></div>}
-          {photoUploading && (
-            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+      <Card>
+        <CardHeader title="Your account" description="Name, email, and profile photo." />
+
+        {/* Avatar */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="relative w-16 h-16 rounded-2xl bg-surface-input border border-[var(--border)] overflow-hidden shrink-0">
+            {photoUrl
+              ? <img src={photoUrl} alt="Profile" className="w-full h-full object-cover" />
+              : <div className="w-full h-full flex items-center justify-center"><User className="w-6 h-6 text-fg-muted" /></div>}
+            {photoUploading && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              </div>
+            )}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <label className="cursor-pointer">
+                <span className="inline-flex items-center gap-2 h-8 px-3 text-small font-medium rounded-lg bg-surface-input border border-[var(--border-strong)] text-fg hover:bg-surface-active transition-colors cursor-pointer">
+                  <Camera className="w-3.5 h-3.5" /> Change photo
+                </span>
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" className="sr-only" onChange={uploadPhoto} />
+              </label>
+              {photoUrl && (
+                <button
+                  type="button"
+                  onClick={() => setAdjustOpen(true)}
+                  className="inline-flex items-center gap-2 h-8 px-3 text-small font-medium rounded-lg bg-surface-input border border-[var(--border-strong)] text-fg hover:bg-surface-active transition-colors"
+                >
+                  <Move className="w-3.5 h-3.5" /> Adjust
+                </button>
+              )}
+            </div>
+            <p className="text-tiny text-fg-muted mt-1">JPG, PNG, SVG or WebP, max 10 MB</p>
+          </div>
+        </div>
+
+        <form className="space-y-4" onSubmit={save}>
+          <Field label="Email">
+            <Input value={user?.email ?? ""} disabled className="opacity-60 cursor-not-allowed" />
+          </Field>
+          <Field label="Display name" hint="Shown in your dashboard greeting.">
+            <Input
+              value={form.full_name}
+              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              placeholder="Your name"
+            />
+          </Field>
+          <Field label="Time zone">
+            <select
+              value={form.timezone}
+              onChange={(e) => setForm({ ...form, timezone: e.target.value })}
+              className="w-full bg-surface-input border border-[var(--border)] rounded-xl px-4 py-2.5 text-body text-fg outline-none focus:border-ember/40 focus:ring-2 focus:ring-ember/10 transition-colors duration-150 hover:border-[var(--border-strong)] cursor-pointer appearance-none"
+              style={{
+                backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236A6A63' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>\")",
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 14px center",
+              }}
+            >
+              {TIMEZONES.map((tz) => (
+                <option key={tz} value={tz}>{tz.replace("_", " ")}</option>
+              ))}
+            </select>
+          </Field>
+          <Button type="submit" loading={saving} icon={<Save className="w-4 h-4" />}>Save profile</Button>
+        </form>
+      </Card>
+    </>
+  );
+}
+
+// ─── Adjust photo modal ───────────────────────────────────────────────────────
+
+const PREVIEW_SIZE = 240;
+
+function AdjustPhotoModal({
+  photoUrl,
+  onClose,
+  onSave,
+}: {
+  photoUrl: string;
+  onClose: () => void;
+  onSave: (blob: Blob) => void;
+}) {
+  const [imgDims, setImgDims] = useState<{ w: number; h: number } | null>(null);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [saving, setSaving] = useState(false);
+  const dragRef = useRef<{ active: boolean; lastX: number; lastY: number }>({ active: false, lastX: 0, lastY: 0 });
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const baseScale = imgDims
+    ? Math.max(PREVIEW_SIZE / imgDims.w, PREVIEW_SIZE / imgDims.h)
+    : 1;
+  const scale = baseScale * zoom;
+
+  const clampOffset = useCallback(
+    (o: { x: number; y: number }, s: number, dims: { w: number; h: number } | null) => {
+      if (!dims) return o;
+      const maxX = Math.max(0, (dims.w * s - PREVIEW_SIZE) / 2);
+      const maxY = Math.max(0, (dims.h * s - PREVIEW_SIZE) / 2);
+      return {
+        x: Math.max(-maxX, Math.min(maxX, o.x)),
+        y: Math.max(-maxY, Math.min(maxY, o.y)),
+      };
+    },
+    []
+  );
+
+  const applyDelta = useCallback(
+    (dx: number, dy: number) => {
+      setOffset((prev) => clampOffset({ x: prev.x + dx, y: prev.y + dy }, scale, imgDims));
+    },
+    [scale, imgDims, clampOffset]
+  );
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    dragRef.current = { active: true, lastX: t.clientX, lastY: t.clientY };
+  };
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!dragRef.current.active) return;
+      applyDelta(e.clientX - dragRef.current.lastX, e.clientY - dragRef.current.lastY);
+      dragRef.current.lastX = e.clientX;
+      dragRef.current.lastY = e.clientY;
+    };
+    const onMouseUp = () => { dragRef.current.active = false; };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [applyDelta]);
+
+  useEffect(() => {
+    const el = previewRef.current;
+    if (!el) return;
+    const onTouchMove = (e: TouchEvent) => {
+      if (!dragRef.current.active) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      applyDelta(t.clientX - dragRef.current.lastX, t.clientY - dragRef.current.lastY);
+      dragRef.current.lastX = t.clientX;
+      dragRef.current.lastY = t.clientY;
+    };
+    const onTouchEnd = () => { dragRef.current.active = false; };
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+    return () => {
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [applyDelta]);
+
+  const handleZoom = (e: ChangeEvent<HTMLInputElement>) => {
+    const z = parseFloat(e.target.value);
+    setZoom(z);
+    if (imgDims) {
+      const newScale = Math.max(PREVIEW_SIZE / imgDims.w, PREVIEW_SIZE / imgDims.h) * z;
+      setOffset((prev) => clampOffset(prev, newScale, imgDims));
+    }
+  };
+
+  const handleSave = () => {
+    if (!imgDims) return;
+    setSaving(true);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const OUT = 400;
+      const canvas = document.createElement("canvas");
+      canvas.width = OUT;
+      canvas.height = OUT;
+      const ctx = canvas.getContext("2d")!;
+      ctx.beginPath();
+      ctx.arc(OUT / 2, OUT / 2, OUT / 2, 0, Math.PI * 2);
+      ctx.clip();
+      const r = OUT / PREVIEW_SIZE;
+      const drawW = imgDims.w * scale * r;
+      const drawH = imgDims.h * scale * r;
+      const drawX = OUT / 2 + offset.x * r - drawW / 2;
+      const drawY = OUT / 2 + offset.y * r - drawH / 2;
+      ctx.drawImage(img, drawX, drawY, drawW, drawH);
+      canvas.toBlob((blob) => {
+        setSaving(false);
+        if (blob) onSave(blob);
+      }, "image/jpeg", 0.9);
+    };
+    img.onerror = () => setSaving(false);
+    img.src = photoUrl;
+  };
+
+  const imgW = imgDims ? imgDims.w * scale : 0;
+  const imgH = imgDims ? imgDims.h * scale : 0;
+  const imgX = PREVIEW_SIZE / 2 + offset.x - imgW / 2;
+  const imgY = PREVIEW_SIZE / 2 + offset.y - imgH / 2;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
+      onClick={onClose}
+    >
+      <div
+        className="bg-surface rounded-2xl shadow-xl p-6 w-80 flex flex-col items-center gap-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="text-center">
+          <h3 className="text-body font-semibold text-fg">Adjust photo</h3>
+          <p className="text-tiny text-fg-muted mt-0.5">Drag to reposition, slider to zoom</p>
+        </div>
+
+        {/* Circular preview */}
+        <div
+          ref={previewRef}
+          className="relative overflow-hidden rounded-full bg-surface-input border-2 border-[var(--border)] cursor-grab active:cursor-grabbing select-none"
+          style={{ width: PREVIEW_SIZE, height: PREVIEW_SIZE }}
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+        >
+          {/* Hidden img to capture natural dimensions */}
+          {!imgDims && (
+            <img
+              src={photoUrl}
+              alt=""
+              className="sr-only"
+              onLoad={(e) => {
+                const t = e.currentTarget;
+                setImgDims({ w: t.naturalWidth, h: t.naturalHeight });
+              }}
+            />
+          )}
+          {imgDims && (
+            <img
+              src={photoUrl}
+              alt="Adjust"
+              draggable={false}
+              style={{
+                position: "absolute",
+                width: imgW,
+                height: imgH,
+                left: imgX,
+                top: imgY,
+                pointerEvents: "none",
+                userSelect: "none",
+              }}
+            />
+          )}
+          {!imgDims && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-[var(--border)] border-t-ember rounded-full animate-spin" />
             </div>
           )}
         </div>
-        <div>
-          <label className="cursor-pointer">
-            <span className="inline-flex items-center gap-2 h-8 px-3 text-small font-medium rounded-lg bg-surface-input border border-[var(--border-strong)] text-fg hover:bg-surface-active transition-colors cursor-pointer">
-              <Camera className="w-3.5 h-3.5" /> Change photo
-            </span>
-            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" className="sr-only" onChange={uploadPhoto} />
-          </label>
-          <p className="text-tiny text-fg-muted mt-1">JPG, PNG, SVG or WebP, max 10 MB</p>
+
+        {/* Zoom slider */}
+        <div className="w-full space-y-1.5">
+          <div className="flex justify-between text-tiny text-fg-muted">
+            <span>Zoom</span>
+            <span>{zoom.toFixed(2)}x</span>
+          </div>
+          <input
+            type="range"
+            min="1"
+            max="3"
+            step="0.05"
+            value={zoom}
+            onChange={handleZoom}
+            className="w-full accent-ember"
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3 w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 h-9 rounded-xl border border-[var(--border-strong)] text-small font-medium text-fg-muted hover:bg-surface-active transition-colors"
+          >
+            Cancel
+          </button>
+          <div className="flex-1">
+            <Button
+              type="button"
+              loading={saving}
+              onClick={handleSave}
+              icon={<Check className="w-4 h-4" />}
+            >
+              Save
+            </Button>
+          </div>
         </div>
       </div>
-
-      <form className="space-y-4" onSubmit={save}>
-        <Field label="Email">
-          <Input value={user?.email ?? ""} disabled className="opacity-60 cursor-not-allowed" />
-        </Field>
-        <Field label="Display name" hint="Shown in your dashboard greeting.">
-          <Input
-            value={form.full_name}
-            onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-            placeholder="Your name"
-          />
-        </Field>
-        <Field label="Time zone">
-          <select
-            value={form.timezone}
-            onChange={(e) => setForm({ ...form, timezone: e.target.value })}
-            className="w-full bg-surface-input border border-[var(--border)] rounded-xl px-4 py-2.5 text-body text-fg outline-none focus:border-ember/40 focus:ring-2 focus:ring-ember/10 transition-colors duration-150 hover:border-[var(--border-strong)] cursor-pointer appearance-none"
-            style={{
-              backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236A6A63' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>\")",
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "right 14px center",
-            }}
-          >
-            {TIMEZONES.map((tz) => (
-              <option key={tz} value={tz}>{tz.replace("_", " ")}</option>
-            ))}
-          </select>
-        </Field>
-        <Button type="submit" loading={saving} icon={<Save className="w-4 h-4" />}>Save profile</Button>
-      </form>
-    </Card>
+    </div>
   );
 }
 
