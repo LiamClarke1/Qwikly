@@ -126,18 +126,28 @@
   var URL_RE = /(https?:\/\/[^\s<>"]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.(?:co\.za|com|org|net|io|app)(?:\/[^\s<>"]*)?)/g;
 
   function textToNodes(text) {
-    var nodes = [], last = 0, m;
-    URL_RE.lastIndex = 0;
-    while ((m = URL_RE.exec(text)) !== null) {
-      if (m.index > last) nodes.push(document.createTextNode(text.slice(last, m.index)));
-      var a = document.createElement("a");
-      a.href = m[0].startsWith("http") ? m[0] : "https://" + m[0];
-      a.target = "_blank"; a.rel = "noopener noreferrer";
-      a.textContent = m[0];
-      nodes.push(a);
-      last = URL_RE.lastIndex;
+    var nodes = [];
+    var parts = text.split(/\*\*(.*?)\*\*/g);
+    for (var p = 0; p < parts.length; p++) {
+      if (p % 2 === 1) {
+        var strong = document.createElement("strong");
+        strong.textContent = parts[p];
+        nodes.push(strong);
+      } else {
+        var seg = parts[p], last = 0, m;
+        URL_RE.lastIndex = 0;
+        while ((m = URL_RE.exec(seg)) !== null) {
+          if (m.index > last) nodes.push(document.createTextNode(seg.slice(last, m.index)));
+          var a = document.createElement("a");
+          a.href = m[0].startsWith("http") ? m[0] : "https://" + m[0];
+          a.target = "_blank"; a.rel = "noopener noreferrer";
+          a.textContent = m[0];
+          nodes.push(a);
+          last = URL_RE.lastIndex;
+        }
+        if (last < seg.length) nodes.push(document.createTextNode(seg.slice(last)));
+      }
     }
-    if (last < text.length) nodes.push(document.createTextNode(text.slice(last)));
     return nodes;
   }
 
