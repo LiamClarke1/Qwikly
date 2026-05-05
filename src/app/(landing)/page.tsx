@@ -1115,14 +1115,21 @@ export default function Home() {
               <p className="eyebrow text-ink-500 mb-6">For your website</p>
               <h2 className="display-lg text-ink mb-6">
                 Already have a website?{" "}
-                <em className="italic font-light">Add Qwikly in 5 minutes.</em>
+                <em className="italic font-light">Add Qwikly yourself or let us do it.</em>
               </h2>
               <p className="text-ink-700 text-lg leading-relaxed mb-8 max-w-[42ch]">
-                Paste one line of code into Wix, WordPress, Squarespace, or any custom site. Your digital assistant goes live instantly — no developer needed.
+                Paste one line of code into Wix, WordPress, Squarespace, or any custom site. Your digital assistant goes live — no developer needed.
               </p>
               <CTAButton href="/connect-your-website" size="lg">
                 See how it works
               </CTAButton>
+              <p className="text-sm text-ink-500 mt-4">
+                Not comfortable doing it yourself?{" "}
+                <a href="/contact" className="text-ember underline transition-colors">
+                  We&rsquo;ll set it up for you
+                </a>{" "}
+                — one-time R500 fee, live the following business day.
+              </p>
             </div>
 
             {/* Browser + widget mockup */}
@@ -1161,7 +1168,7 @@ export default function Home() {
                 </div>
                 {/* Badge */}
                 <div className="absolute -top-3 -right-3 bg-ember text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-md shadow-ember/30 whitespace-nowrap">
-                  5 min setup
+                  No code needed
                 </div>
               </div>
             </div>
