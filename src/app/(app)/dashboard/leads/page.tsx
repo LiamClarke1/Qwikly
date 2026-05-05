@@ -171,7 +171,7 @@ function DetailPanel({
   }
 
   return (
-    <div className="flex flex-col h-full bg-white border-l border-ink/[0.08] overflow-hidden">
+    <div className="flex flex-col lg:h-full bg-white border-l border-ink/[0.08] overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-ink/[0.06] shrink-0">
         <div className="flex items-center gap-3">
@@ -204,7 +204,7 @@ function DetailPanel({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="lg:flex-1 lg:overflow-y-auto">
         {/* Lead summary — clean, no box title */}
         <div className="px-5 pt-4 pb-3 border-b border-ink/[0.06]">
           {(lead.job_type || lead.area || lead.preferred_time) && (
@@ -404,6 +404,14 @@ function LeadsContent() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedId, setSelectedId] = useState<string | null>(searchParams.get("id"));
   const [exportLoading, setExportLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const tier = resolvePlan(client?.plan);
   const config = PLAN_CONFIG[tier];
@@ -535,10 +543,10 @@ function LeadsContent() {
           "rounded-2xl border border-ink/[0.08] overflow-hidden shadow-[0_1px_4px_rgba(14,14,12,0.05)]",
           selectedLead ? "lg:grid lg:grid-cols-[1fr_380px]" : ""
         )}
-        style={selectedLead ? { maxHeight: "calc(100vh - 280px)" } : {}}
+        style={selectedLead && !isMobile ? { height: "calc(100vh - 280px)", maxHeight: "calc(100vh - 280px)" } : {}}
       >
-        {/* Table */}
-        <div className={cn("bg-white", selectedLead ? "overflow-y-auto" : "")}>
+        {/* Table — hidden on mobile when panel is open */}
+        <div className={cn("bg-white", selectedLead ? "hidden lg:block lg:overflow-y-auto" : "")}>
           {/* Column headers */}
           <div className="hidden sm:grid sm:grid-cols-[1fr_140px_160px_90px] gap-4 px-5 py-3 bg-ink/[0.02] border-b border-ink/[0.06] text-tiny font-semibold text-ink-400 uppercase tracking-wider">
             <span>Lead</span>
