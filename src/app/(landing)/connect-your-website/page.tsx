@@ -50,7 +50,7 @@ const FAQS = [
   { q: "Will it slow my site down?", a: "The widget script is under 14 KB and loads after your page. Your visitors won't notice any difference." },
   { q: "What does it look like to my visitors?", a: "A small chat launcher in the corner of your site. When clicked, it opens a clean conversation, styled to match your brand colour." },
   { q: "Can I customise the colour to match my brand?", a: "Yes. During setup you pick any accent colour and it applies across the launcher and chat bubbles." },
-  { q: "What if I don't have a developer?", a: "You don't need one. The install is a single copy-paste into your site's Custom Code settings. If you get stuck, we offer a guided setup service — we install and configure everything for you for a one-time R500 fee. Contact us at clarkeagency1@outlook.com to book." },
+  { q: "What if I don't have a developer?", a: "You don't need one. The install is a single copy-paste into your site's Custom Code settings — most people are done in 5 minutes. If you'd rather hand it off, we offer a guided setup service for a one-time R500 fee. You'll be live the following business day. Visit our contact page to book." },
   { q: "Does this replace my contact form?", a: "It can sit alongside it. Most clients find the widget converts better because it qualifies visitors and captures details immediately rather than waiting for a follow-up." },
   { q: "Will WhatsApp be supported?", a: "WhatsApp routing is on the roadmap and coming soon. The widget handles visitors on your website right now." },
   { q: "Will calendar booking be supported?", a: "Calendar integration is coming soon. Right now, qualified leads are emailed to you instantly so you can follow up and confirm." },
@@ -181,12 +181,11 @@ export default function ConnectYourWebsitePage() {
                 Don&rsquo;t want to do it yourself?
               </h2>
               <p className="text-ink-500 leading-relaxed mb-2">
-                We&rsquo;ll install and configure your digital assistant for you, one-time R500 setup fee.
-                We handle everything: installing the widget on your site, writing your greeting,
-                setting your qualifying questions, and confirming the first lead arrives in your inbox.
-                You&rsquo;re live within one business day.
+                If you know your way around your website, setup is a single copy-paste and you&rsquo;re
+                done in 5 minutes. If you&rsquo;d rather not touch it, we handle everything for a one-time
+                R500 fee. You&rsquo;ll be live the following business day, no code required.
               </p>
-              <p className="text-ink-400 text-sm">No technical knowledge required. Works on any platform.</p>
+              <p className="text-ink-400 text-sm">Works on any platform. No lock-in.</p>
             </div>
             <div className="flex-shrink-0 flex flex-col items-start md:items-end gap-3">
               <div className="text-right">
