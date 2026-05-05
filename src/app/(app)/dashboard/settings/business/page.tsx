@@ -2,8 +2,8 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, useRef, FormEvent, ChangeEvent } from "react";
-import { Save, Check, AlertCircle, Upload, X } from "lucide-react";
+import { useState, useRef, useEffect, useCallback, FormEvent, ChangeEvent } from "react";
+import { Save, Check, AlertCircle, Upload, X, Move } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -118,11 +118,14 @@ function BrandCard({ client, save, show }: {
   save: (p: Partial<Client>) => void;
   show: (msg: string, tone?: "success" | "danger") => void;
 }) {
+  const storedIndustry = client.industry ?? "";
+  const isOtherIndustry = storedIndustry !== "" && !INDUSTRIES.includes(storedIndustry);
+
   const initial = useRef({
     business_name:             client.business_name             ?? "",
     website:                   client.website                   ?? "",
     support_email:             client.support_email             ?? "",
-    industry:                  client.industry                  ?? "",
+    industry:                  isOtherIndustry ? "Other" : storedIndustry,
     address:                   client.address                   ?? "",
     web_widget_color:          client.web_widget_color          ?? "#E85A2C",
     web_widget_position:       client.web_widget_position       ?? "bottom-right",
@@ -130,12 +133,14 @@ function BrandCard({ client, save, show }: {
   });
 
   const [form, setForm] = useState({ ...initial.current });
+  const [otherIndustry, setOtherIndustry] = useState(isOtherIndustry ? storedIndustry : "");
   const [saving, setSaving] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(client.invoice_logo_url ?? null);
+  const [adjustLogoOpen, setAdjustLogoOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const isDirty = JSON.stringify(form) !== JSON.stringify(initial.current);
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initial.current) || otherIndustry !== (isOtherIndustry ? storedIndustry : "");
 
   const set = (k: keyof typeof form) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [k]: e.target.value });
@@ -167,6 +172,19 @@ function BrandCard({ client, save, show }: {
     show("Logo removed");
   };
 
+  const saveAdjustedLogo = async (blob: Blob) => {
+    setLogoUploading(true);
+    const path = `logos/${client.id}/${Date.now()}.jpg`;
+    const { error: upErr } = await supabase.storage.from("media").upload(path, blob, { upsert: true, contentType: "image/jpeg" });
+    if (upErr) { show(upErr.message, "danger"); setLogoUploading(false); return; }
+    const { data: { publicUrl } } = supabase.storage.from("media").getPublicUrl(path);
+    const { error: dbErr } = await supabase.from("clients").update({ invoice_logo_url: publicUrl }).eq("id", client.id);
+    if (dbErr) { show(dbErr.message, "danger"); setLogoUploading(false); return; }
+    setLogoUrl(publicUrl);
+    setLogoUploading(false);
+    show("Logo updated");
+  };
+
   const validate = () => {
     const errs: Record<string, string> = {};
     if (form.support_email && !isValidEmail(form.support_email)) errs.support_email = "Enter a valid email address";
@@ -180,7 +198,11 @@ function BrandCard({ client, save, show }: {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
-    await save(form as Partial<Client>);
+    const patch = {
+      ...form,
+      industry: form.industry === "Other" ? (otherIndustry || "Other") : form.industry,
+    };
+    await save(patch as Partial<Client>);
     initial.current = { ...form };
     setSaving(false);
   };
@@ -227,10 +249,19 @@ function BrandCard({ client, save, show }: {
           <Input value={form.business_name} onChange={set("business_name")} />
         </Field>
         <Field label="Industry">
-          <Select value={form.industry} onChange={set("industry")}>
+          <Select value={form.industry} onChange={(e) => { set("industry")(e); if (e.target.value !== "Other") setOtherIndustry(""); }}>
             <option value="">Select industry</option>
             {INDUSTRIES.map((i) => <option key={i} value={i}>{i}</option>)}
           </Select>
+          {form.industry === "Other" && (
+            <input
+              type="text"
+              value={otherIndustry}
+              placeholder="Please describe your industry…"
+              className="mt-2 w-full bg-surface-input border border-[var(--border)] rounded-xl px-4 py-3 text-fg text-small placeholder:text-fg-muted focus:outline-none focus:ring-1 focus:ring-[var(--brand)] focus:border-[var(--brand)] transition-colors duration-200"
+              onChange={(e) => setOtherIndustry(e.target.value)}
+            />
+          )}
         </Field>
         <Field label="Website" error={errors.website}>
           <Input value={form.website} onChange={set("website")} placeholder="https://yourbusiness.co.za" />

@@ -146,6 +146,7 @@
     var avEl = shadow.getElementById("qw-av");
     if (nameEl) nameEl.textContent = biz();
     if (avEl) renderAvatar(avEl);
+    panel.setAttribute("aria-label", "Chat with " + biz());
   }
 
   function renderAvatar(el) {
@@ -437,9 +438,9 @@
     var n = document.createElement("div");
     n.id = "nudge";
     n.setAttribute("role", "status");
-    n.setAttribute("aria-label", "Try the Qwikly demo");
+    n.setAttribute("aria-label", "Chat with " + biz());
     n.innerHTML =
-      '<div id="nudge-txt">Try it — see how Qwikly works<div id="nudge-sub">We reply in 30 seconds</div></div>' +
+      '<div id="nudge-txt">Chat with ' + biz() + '<div id="nudge-sub">We reply in 30 seconds</div></div>' +
       '<button id="nudge-x" aria-label="Dismiss">×</button>';
     shadow.appendChild(n);
 

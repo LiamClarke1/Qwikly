@@ -41,12 +41,16 @@ interface Props {
 }
 
 export default function StepBusiness({ client, onAdvance }: Props) {
+  const storedIndustry = client.industry ?? "";
+  const isOtherIndustry = storedIndustry !== "" && !INDUSTRIES.includes(storedIndustry);
+
   const [form, setForm] = useState({
     business_name: client.business_name ?? "",
-    industry: client.industry ?? "",
+    industry: isOtherIndustry ? "Other" : storedIndustry,
     support_email: client.support_email ?? client.notification_email ?? "",
     contact_phone: client.notification_phone ?? "",
   });
+  const [otherIndustry, setOtherIndustry] = useState(isOtherIndustry ? storedIndustry : "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,9 +63,10 @@ export default function StepBusiness({ client, onAdvance }: Props) {
     setSaving(true);
     setError(null);
     try {
+      const industryValue = form.industry === "Other" ? (otherIndustry.trim() || "Other") : (form.industry || null);
       await saveBusinessStep({
         business_name: form.business_name.trim(),
-        industry: form.industry || null,
+        industry: industryValue,
         support_email: form.support_email.trim() || null,
         notification_email: form.support_email.trim() || null,
         notification_phone: form.contact_phone.trim() || null,
@@ -102,13 +107,26 @@ export default function StepBusiness({ client, onAdvance }: Props) {
         <Field label="Industry" hint="Helps us set smart defaults for your qualifying questions.">
           <Select
             value={form.industry}
-            onChange={(e) => setForm((f) => ({ ...f, industry: e.target.value }))}
+            onChange={(e) => {
+              const val = e.target.value;
+              setForm((f) => ({ ...f, industry: val }));
+              if (val !== "Other") setOtherIndustry("");
+            }}
           >
             <option value="">Select your industry…</option>
             {INDUSTRIES.map((ind) => (
               <option key={ind} value={ind}>{ind}</option>
             ))}
           </Select>
+          {form.industry === "Other" && (
+            <input
+              type="text"
+              value={otherIndustry}
+              placeholder="Please describe your industry…"
+              className="mt-2 w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-[#E85A2C] focus:border-[#E85A2C] transition-colors duration-200"
+              onChange={(e) => setOtherIndustry(e.target.value)}
+            />
+          )}
         </Field>
 
         <Field label="Contact email" hint="Leads will be delivered here.">
