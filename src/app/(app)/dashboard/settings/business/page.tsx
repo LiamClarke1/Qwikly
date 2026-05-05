@@ -218,7 +218,7 @@ function BrandCard({ client, save, show }: {
               </button>
             )}
           </div>
-          <p className="text-tiny text-fg-muted">PNG or SVG, max 2 MB</p>
+          <p className="text-tiny text-fg-muted">PNG, SVG or JPG, max 10 MB</p>
         </div>
       </div>
 

@@ -169,7 +169,7 @@ function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger"
             </span>
             <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" className="sr-only" onChange={uploadPhoto} />
           </label>
-          <p className="text-tiny text-fg-muted mt-1">JPG, PNG or WebP, max 2 MB</p>
+          <p className="text-tiny text-fg-muted mt-1">JPG, PNG, SVG or WebP, max 10 MB</p>
         </div>
       </div>
 
