@@ -528,7 +528,7 @@ function SignupContent() {
             <p className="text-small text-ink italic leading-relaxed">
               &ldquo;We picked up 4 leads in our first week that came in after hours. None of them would have called back.&rdquo;
             </p>
-            <p className="text-tiny text-ink-400 mt-2">Thabo M. · Electrician · Johannesburg</p>
+            <p className="text-tiny text-ink-400 mt-2">Thabo M. · Electrician · Cape Town</p>
           </div>
         </div>
 

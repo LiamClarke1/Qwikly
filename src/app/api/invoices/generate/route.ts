@@ -193,7 +193,7 @@ function buildInvoiceEmailHtml(d: {
     </div>
     <div style="background:#F4EEE4;padding:20px 40px;text-align:center">
       <p style="color:#A89E94;font-size:11px;margin:0">
-        © ${new Date().getFullYear()} Qwikly (Clarke Agency) · Johannesburg, South Africa ·
+        © ${new Date().getFullYear()} Qwikly (Clarke Agency) · Cape Town, South Africa ·
         <a href="https://www.qwikly.co.za/legal/privacy" style="color:#A89E94">Privacy</a>
       </p>
     </div>

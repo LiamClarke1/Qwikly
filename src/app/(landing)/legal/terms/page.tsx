@@ -44,7 +44,7 @@ export default function TermsPage() {
                 </p>
                 <p>
                   These Terms constitute the entire agreement between you and Qwikly (operated by Clarke Agency,
-                  Johannesburg, South Africa) regarding your use of the Service.
+                  Cape Town, South Africa) regarding your use of the Service.
                 </p>
               </div>
             </div>
@@ -431,7 +431,7 @@ export default function TermsPage() {
                 <p>
                   If informal resolution fails, disputes shall be submitted to binding arbitration
                   administered under the Arbitration Act 42 of 1965 (as amended), with proceedings
-                  conducted in Johannesburg, South Africa, in the English language. The arbitrator&rsquo;s
+                  conducted in Cape Town, South Africa, in the English language. The arbitrator&rsquo;s
                   decision shall be final and binding on both parties.
                 </p>
                 <p>
@@ -519,7 +519,7 @@ export default function TermsPage() {
                   </p>
                   <p className="text-sm">
                     <span className="eyebrow text-ink-500 mr-3">Location</span>
-                    Johannesburg, South Africa
+                    Cape Town, South Africa
                   </p>
                   <p className="text-sm">
                     <span className="eyebrow text-ink-500 mr-3">Email</span>

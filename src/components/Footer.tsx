@@ -44,7 +44,7 @@ export default function Footer() {
               hello@qwikly.co.za
             </a>
             <p className="text-sm text-paper/50 mt-4 max-w-xs leading-relaxed">
-              Talk to a human in Johannesburg. We&rsquo;ll have you live within
+              Talk to a human in Cape Town. We&rsquo;ll have you live within
               24&ndash;48 hours.
             </p>
           </div>

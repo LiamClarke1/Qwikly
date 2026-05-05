@@ -107,7 +107,7 @@ const organizationSchema = {
     "Digital assistant for South African service businesses. Replies to WhatsApp and email leads in 30 seconds, qualifies them, and books jobs.",
   address: {
     "@type": "PostalAddress",
-    addressLocality: "Johannesburg",
+    addressLocality: "Cape Town",
     addressCountry: "ZA",
   },
   contactPoint: {

@@ -730,7 +730,7 @@ export default function Home() {
               Live · Capturing leads now
             </div>
             <div className="eyebrow hidden sm:flex items-center gap-3">
-              <span>Johannesburg</span>
+              <span>Cape Town</span>
               <span className="text-ink-300">/</span>
               <LiveClock />
             </div>

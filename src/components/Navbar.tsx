@@ -16,6 +16,7 @@ const navLinks: NavLink[] = [
   { label: "For your website", href: "/connect-your-website" },
   { label: "Pricing", href: "/pricing" },
   { label: "FAQ", anchor: "#faq" },
+  { label: "Talk to us", href: "/contact" },
 ];
 
 export default function Navbar() {

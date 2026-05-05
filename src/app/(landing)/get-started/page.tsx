@@ -751,7 +751,7 @@ ${f.ai_never_say || "Not specified"}
                   <Input
                     value={form.emergency_response}
                     onChange={set("emergency_response")}
-                    placeholder="e.g. Within 1–2 hours in Johannesburg. After-hours surcharge of R250 applies."
+                    placeholder="e.g. Within 1–2 hours in Cape Town. After-hours surcharge of R250 applies."
                   />
                 </Field>
               )}

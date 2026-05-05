@@ -38,7 +38,7 @@ export default function AboutPage() {
               <div className="space-y-4 text-ink-700 leading-relaxed text-base">
                 <p>
                   Qwikly is operated by <strong className="text-ink">Clarke Agency</strong>, a
-                  Johannesburg-based digital services business. Founded by Liam Clarke, Clarke Agency
+                  Cape Town-based digital services business. Founded by Liam Clarke, Clarke Agency
                   builds technology that gives small local businesses the same front-office capability
                   as large companies, without the overhead.
                 </p>
@@ -90,7 +90,7 @@ export default function AboutPage() {
                 </div>
                 <div className="flex gap-6">
                   <span className="eyebrow text-ink-500 w-28 shrink-0">Location</span>
-                  <span>Johannesburg, South Africa</span>
+                  <span>Cape Town, South Africa</span>
                 </div>
                 <div className="flex gap-6">
                   <span className="eyebrow text-ink-500 w-28 shrink-0">VAT Number</span>

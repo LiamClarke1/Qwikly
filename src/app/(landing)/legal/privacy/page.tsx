@@ -28,7 +28,7 @@ export default function PrivacyPage() {
             {/* Intro */}
             <div className="bg-paper-deep border border-ink/[0.07] rounded-2xl p-6">
               <p className="text-ink-700 leading-relaxed text-base">
-                At Qwikly (operated by Clarke Agency, Johannesburg), we believe your data is your business.
+                At Qwikly (operated by Clarke Agency, Cape Town), we believe your data is your business.
                 This policy explains what information we collect, why we collect it, who we share it with,
                 and what rights you have. It applies to everyone who uses Qwikly, including business owners
                 and their customers whose information passes through the platform.
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
               </h2>
               <div className="space-y-4 text-ink-700 leading-relaxed text-base">
                 <p>
-                  Qwikly is operated by Clarke Agency, a business based in Johannesburg, South Africa.
+                  Qwikly is operated by Clarke Agency, a business based in Cape Town, South Africa.
                   For the purposes of the Protection of Personal Information Act 4 of 2013 (&ldquo;POPIA&rdquo;),
                   Clarke Agency acts as the <em>responsible party</em> for information collected from
                   business owners who sign up to Qwikly.
@@ -453,7 +453,7 @@ export default function PrivacyPage() {
                   </p>
                   <p className="text-sm">
                     <span className="eyebrow text-ink-500 mr-3">Location</span>
-                    Johannesburg, South Africa
+                    Cape Town, South Africa
                   </p>
                   <p className="text-sm">
                     <span className="eyebrow text-ink-500 mr-3">Email</span>

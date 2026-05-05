@@ -56,7 +56,7 @@ export async function submitContactForm(
 
   await resend.emails.send({
     from: "Qwikly Contact <hello@qwikly.co.za>",
-    to: ["liamclarke21@outlook.com"],
+    to: ["clarkeagency1@outlook.com"],
     replyTo: email,
     subject: `[Qwikly Contact] ${subject}`,
     html: `

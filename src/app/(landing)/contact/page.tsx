@@ -4,7 +4,7 @@ import ContactForm from "./ContactForm";
 export const metadata: Metadata = {
   title: "Contact",
   description:
-    "Get in touch with the Qwikly team. We're based in Johannesburg and reply within one business day.",
+    "Get in touch with the Qwikly team. We're based in Cape Town and reply within one business day.",
   alternates: { canonical: "https://www.qwikly.co.za/contact" },
 };
 
@@ -15,7 +15,7 @@ export default function ContactPage() {
         <div className="max-w-3xl mx-auto">
           <p className="eyebrow text-ink-500 mb-6">Contact</p>
           <h1 className="font-display font-medium text-[clamp(2.5rem,5vw,4rem)] leading-tight tracking-tight text-ink mb-4">
-            We&rsquo;re in Johannesburg.
+            We&rsquo;re in Cape Town.
             <br />
             <em className="italic font-light">Talk to a human.</em>
           </h1>
@@ -50,7 +50,7 @@ export default function ContactPage() {
 
               <div>
                 <p className="eyebrow text-ink-500 mb-3">Location</p>
-                <p className="text-sm text-ink-700">Johannesburg, South Africa</p>
+                <p className="text-sm text-ink-700">Cape Town, South Africa</p>
               </div>
             </div>
 
