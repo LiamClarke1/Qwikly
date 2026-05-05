@@ -89,9 +89,17 @@
   shadow.appendChild(launcher);
   shadow.appendChild(panel);
 
+  // Apply cached color immediately so there's no orange flash on load
+  try {
+    var _cached = localStorage.getItem("qw_color_" + TENANT_ID);
+    if (_cached) shadow.host.style.setProperty("--qc", _cached);
+  } catch (e) {}
+
   function applyBranding(b) {
     branding = b;
-    shadow.host.style.setProperty("--qc", b.color || "#E85A2C");
+    var _color = b.color || "#E85A2C";
+    shadow.host.style.setProperty("--qc", _color);
+    try { localStorage.setItem("qw_color_" + TENANT_ID, _color); } catch (e) {}
     renderLauncher();
     var nameEl = shadow.getElementById("qw-name");
     var avEl = shadow.getElementById("qw-av");
