@@ -111,7 +111,7 @@ function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger"
   const uploadPhoto = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { show("Photo must be under 2 MB", "danger"); return; }
+    if (file.size > 10 * 1024 * 1024) { show("Photo must be under 10 MB", "danger"); return; }
     setPhotoUploading(true);
     const { data: { user: u } } = await supabase.auth.getUser();
     if (!u) { setPhotoUploading(false); return; }
@@ -167,7 +167,7 @@ function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger"
             <span className="inline-flex items-center gap-2 h-8 px-3 text-small font-medium rounded-lg bg-surface-input border border-[var(--border-strong)] text-fg hover:bg-surface-active transition-colors cursor-pointer">
               <Camera className="w-3.5 h-3.5" /> Change photo
             </span>
-            <input type="file" accept="image/*" className="sr-only" onChange={uploadPhoto} />
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" className="sr-only" onChange={uploadPhoto} />
           </label>
           <p className="text-tiny text-fg-muted mt-1">JPG, PNG or WebP, max 2 MB</p>
         </div>

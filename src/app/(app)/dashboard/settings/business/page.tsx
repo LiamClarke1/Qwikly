@@ -145,7 +145,7 @@ function BrandCard({ client, save, show }: {
   const uploadLogo = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { show("Logo must be under 2 MB", "danger"); return; }
+    if (file.size > 10 * 1024 * 1024) { show("Logo must be under 10 MB", "danger"); return; }
     setLogoUploading(true);
     const path = `logos/${client.id}/${Date.now()}.${file.name.split(".").pop()}`;
     const { error: upErr } = await supabase.storage.from("media").upload(path, file, { upsert: true });
@@ -205,7 +205,7 @@ function BrandCard({ client, save, show }: {
                   : <Upload className="w-3.5 h-3.5" />}
                 Upload logo
               </span>
-              <input type="file" accept="image/*" className="sr-only" onChange={uploadLogo} />
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" className="sr-only" onChange={uploadLogo} />
             </label>
             {logoUrl && (
               <button
