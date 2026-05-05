@@ -65,7 +65,7 @@ const JSON_SHAPE = `{
   "common_questions": ""
 }`;
 
-const SYSTEM = `You are a business data extraction specialist. Extract structured information from business website content. Return ONLY valid JSON — no markdown, no explanation, just the raw JSON object.`;
+const SYSTEM = `You are a business data extraction specialist. Extract structured information from business website content. Return ONLY valid JSON — no markdown, no explanation, just the raw JSON object. If a field's information is not explicitly present in the content, return an empty string "" for that field. Never guess, infer, or fill in plausible-sounding values.`;
 
 const FIELD_RULES = `Field rules:
 - "industry": must be exactly one of: ${INDUSTRIES.join(", ")} — pick the closest match, never leave blank
@@ -90,7 +90,11 @@ const FIELD_RULES = `Field rules:
 - "address": physical street address if stated
 - "working_hours": exact operating hours
 - "team_size": number of staff, technicians, or vehicles
-Never invent data. Only extract what is explicitly stated on the website.`;
+CRITICAL RULES:
+- Never invent, infer, or assume data. Only extract what is explicitly written on the website.
+- If a fact is not stated on the page, return "" — do not write a plausible guess.
+- Do not confuse the website platform's own marketing (e.g. Wix, Squarespace, or software product copy) with the business's own information.
+- "guarantees" must only contain guarantees the business itself explicitly offers, not guarantees mentioned in tools or software they use.`;
 
 // ─── JSON-LD / Schema.org extraction ──────────────────────────────────────────
 

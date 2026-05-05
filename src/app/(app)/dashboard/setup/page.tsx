@@ -136,6 +136,12 @@ function applyAutoFill(data: Record<string, string>, base: FormData): { form: Fo
   };
 
   const next = { ...base };
+  // Wipe every field this scraper can populate before writing fresh data.
+  // Without this, stale values from a previous setup bleed into any slot
+  // that the new scrape returns empty for.
+  for (const fk of new Set(Object.values(map))) {
+    next[fk] = "";
+  }
   let count = 0;
   for (const [k, fk] of Object.entries(map)) {
     const v = data[k];
