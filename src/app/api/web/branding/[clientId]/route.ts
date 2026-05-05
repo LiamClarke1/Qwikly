@@ -16,20 +16,9 @@ export async function GET(
   const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   const { clientId } = params;
 
-  // Hardcoded branding for the Qwikly marketing site itself
-  if (clientId === "1") {
-    return NextResponse.json({
-      name: "Qwikly",
-      color: "#E85A2C",
-      greeting: "Hey. What trade you in?",
-      launcher_label: "Reply in 30s",
-      position: "bottom-right",
-    }, { headers: CORS_HEADERS });
-  }
-
   const { data, error } = await supabaseAdmin
     .from("clients")
-    .select("business_name, web_widget_color, web_widget_greeting, web_widget_launcher_label, web_widget_position, web_widget_enabled")
+    .select("business_name, web_widget_color, web_widget_greeting, ai_greeting, web_widget_launcher_label, web_widget_position, web_widget_enabled, invoice_logo_url")
     .eq("id", clientId)
     .maybeSingle();
 
@@ -63,12 +52,15 @@ export async function GET(
     }
   }
 
+  const greeting = data.ai_greeting?.trim() || data.web_widget_greeting?.trim() || "Hi! How can we help you today?";
+
   return NextResponse.json({
     name: data.business_name ?? "Us",
     color: data.web_widget_color ?? "#E85A2C",
-    greeting: data.web_widget_greeting ?? "Hi! How can we help you today?",
+    greeting,
     launcher_label: data.web_widget_launcher_label ?? "Message us",
     position: data.web_widget_position ?? "bottom-right",
+    logo: data.invoice_logo_url ?? null,
   }, { headers: CORS_HEADERS });
 }
 

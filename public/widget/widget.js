@@ -137,7 +137,15 @@
     var nameEl = shadow.getElementById("qw-name");
     var avEl = shadow.getElementById("qw-av");
     if (nameEl) nameEl.textContent = biz();
-    if (avEl) avEl.textContent = biz().charAt(0).toUpperCase();
+    if (avEl) renderAvatar(avEl);
+  }
+
+  function renderAvatar(el) {
+    if (branding && branding.logo) {
+      el.innerHTML = "<img src='" + branding.logo + "' alt='" + biz() + "' style='width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;' onerror=\"this.parentNode.textContent='" + biz().charAt(0).toUpperCase() + "'\" />";
+    } else {
+      el.textContent = biz().charAt(0).toUpperCase();
+    }
   }
 
   function renderLauncher() {
@@ -209,10 +217,9 @@
   var SEND_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
 
   function buildPanel() {
-    var initial = biz().charAt(0).toUpperCase();
     panel.innerHTML =
       '<div class="hd">' +
-        '<div class="hd-av" id="qw-av">' + initial + "</div>" +
+        '<div class="hd-av" id="qw-av"></div>' +
         '<div class="hd-info">' +
           '<div class="hd-name" id="qw-name">' + biz() + "</div>" +
           '<div class="hd-sub"><span class="hd-dot"></span>Replies in 30s</div>' +
@@ -226,6 +233,7 @@
       "</div>" +
       '<div class="ft">Powered by <strong>Qwikly</strong></div>';
 
+    renderAvatar(shadow.getElementById("qw-av"));
     shadow.getElementById("qw-x").addEventListener("click", closePanel);
     shadow.getElementById("qw-snd").addEventListener("click", handleSend);
 
