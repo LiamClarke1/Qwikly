@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "Terms of Service for Qwikly, the automated WhatsApp response platform for South African service businesses.",
+    "Terms of Service for Qwikly, the digital assistant platform for South African service businesses.",
 };
 
 export default function TermsPage() {
@@ -18,7 +18,7 @@ export default function TermsPage() {
             Terms of Service
           </h1>
           <p className="text-sm text-ink-500 mb-2">
-            Last updated: 1 May 2026
+            Last updated: 5 May 2026
           </p>
           <p className="text-sm text-ink-500 mb-16">
             Governing law: Republic of South Africa
@@ -147,10 +147,11 @@ export default function TermsPage() {
                 </p>
                 <ul className="space-y-2 mt-2 ml-4">
                   {[
-                    "Starter — Free (up to 25 qualified leads per month, 'Powered by Qwikly' branding)",
-                    "Pro — R599/month (up to 200 qualified leads per month, custom branding)",
-                    "Premium — R1,299/month (unlimited qualified leads, API access, dedicated support)",
-                    "Annual billing is available at a discounted rate equivalent to 10 months' fees (2 months free)",
+                    "Free Trial — 14 days free, identical to Pro, no card required",
+                    "Pro — R999/month (up to 75 qualified leads per month, email lead delivery, email support)",
+                    "Premium — R1,999/month (up to 250 qualified leads per month, custom branding, custom questions, CSV export, priority support)",
+                    "Billions — R2,999/month (up to 1,000 qualified leads per month, API access, dedicated support)",
+                    "Annual billing is available at a 15% discount off the monthly rate",
                     "Subscription fees are billed monthly in advance on the anniversary of your sign-up date",
                     "Payment is due on the billing date; failure to pay may result in suspension of the Service",
                     "Top-up leads over your monthly cap are billed at R20 per qualified lead",
@@ -164,7 +165,7 @@ export default function TermsPage() {
 
                 <h3 className="font-display font-medium text-lg text-ink mt-6">Money-Back Guarantee</h3>
                 <p>
-                  Pro and Premium plans include a 30-day money-back guarantee from the date of your first payment. The Starter plan is free and no guarantee is required.
+                  Pro, Premium, and Billions plans include a 30-day money-back guarantee from the date of your first payment. The Free Trial requires no payment and no guarantee is applicable.
                   If you are not satisfied with the Service within the first 30 days, contact us at{" "}
                   <a
                     href="mailto:hello@qwikly.co.za"
@@ -192,10 +193,10 @@ export default function TermsPage() {
                   Downgrades take effect at the start of the next billing cycle. Disputes regarding
                   billing must be raised within 30 days of the relevant invoice date by contacting{" "}
                   <a
-                    href="mailto:liamclarke21@outlook.com"
+                    href="mailto:clarkeagency1@outlook.com"
                     className="text-ember underline transition-colors"
                   >
-                    liamclarke21@outlook.com
+                    clarkeagency1@outlook.com
                   </a>
                   .
                 </p>
@@ -245,10 +246,10 @@ export default function TermsPage() {
                   to access, correct, or request deletion of their information. Requests should be directed
                   to{" "}
                   <a
-                    href="mailto:liamclarke21@outlook.com"
+                    href="mailto:clarkeagency1@outlook.com"
                     className="text-ember underline transition-colors"
                   >
-                    liamclarke21@outlook.com
+                    clarkeagency1@outlook.com
                   </a>
                   .
                 </p>
@@ -369,10 +370,10 @@ export default function TermsPage() {
                 <p>
                   You may terminate your account at any time by contacting us at{" "}
                   <a
-                    href="mailto:liamclarke21@outlook.com"
+                    href="mailto:clarkeagency1@outlook.com"
                     className="text-ember underline transition-colors"
                   >
-                    liamclarke21@outlook.com
+                    clarkeagency1@outlook.com
                   </a>
                   . Termination takes effect at the end of the current billing cycle. Any subscription
                   fees already paid for the current billing cycle are non-refundable beyond the 30-day
@@ -523,10 +524,10 @@ export default function TermsPage() {
                   <p className="text-sm">
                     <span className="eyebrow text-ink-500 mr-3">Email</span>
                     <a
-                      href="mailto:liamclarke21@outlook.com"
+                      href="mailto:clarkeagency1@outlook.com"
                       className="text-ember underline transition-colors"
                     >
-                      liamclarke21@outlook.com
+                      clarkeagency1@outlook.com
                     </a>
                   </p>
                   <p className="text-sm">

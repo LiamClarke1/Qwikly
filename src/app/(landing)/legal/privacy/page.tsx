@@ -18,7 +18,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
           <p className="text-sm text-ink-500 mb-2">
-            Last updated: 27 April 2026
+            Last updated: 5 May 2026
           </p>
           <p className="text-sm text-ink-500 mb-16">
             Governing law: Republic of South Africa &middot; POPIA + GDPR-aligned
@@ -58,10 +58,10 @@ export default function PrivacyPage() {
                 <p>
                   Contact for all data-related enquiries:{" "}
                   <a
-                    href="mailto:liamclarke21@outlook.com"
+                    href="mailto:clarkeagency1@outlook.com"
                     className="text-ember underline transition-colors"
                   >
-                    liamclarke21@outlook.com
+                    clarkeagency1@outlook.com
                   </a>
                 </p>
               </div>
@@ -294,10 +294,10 @@ export default function PrivacyPage() {
                 <p>
                   To exercise any of these rights, contact us at{" "}
                   <a
-                    href="mailto:liamclarke21@outlook.com"
+                    href="mailto:clarkeagency1@outlook.com"
                     className="text-ember underline transition-colors"
                   >
-                    liamclarke21@outlook.com
+                    clarkeagency1@outlook.com
                   </a>
                   . We will respond within 30 days.
                 </p>
@@ -384,10 +384,10 @@ export default function PrivacyPage() {
                   No system is completely secure. If you believe your account or data has been compromised,
                   contact us immediately at{" "}
                   <a
-                    href="mailto:liamclarke21@outlook.com"
+                    href="mailto:clarkeagency1@outlook.com"
                     className="text-ember underline transition-colors"
                   >
-                    liamclarke21@outlook.com
+                    clarkeagency1@outlook.com
                   </a>
                   .
                 </p>
@@ -458,10 +458,10 @@ export default function PrivacyPage() {
                   <p className="text-sm">
                     <span className="eyebrow text-ink-500 mr-3">Email</span>
                     <a
-                      href="mailto:liamclarke21@outlook.com"
+                      href="mailto:clarkeagency1@outlook.com"
                       className="text-ember underline transition-colors"
                     >
-                      liamclarke21@outlook.com
+                      clarkeagency1@outlook.com
                     </a>
                   </p>
                   <p className="text-sm">

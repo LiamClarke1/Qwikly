@@ -66,7 +66,7 @@ export default function AboutPage() {
                 </p>
                 <p>
                   Flat monthly pricing, no per-job fees, no commissions, and no surprises. Plans
-                  start from R0/month on Starter and R599/month on Pro.{" "}
+                  start with a 14-day free trial, then Pro at R999/month.{" "}
                   <Link href="/pricing" className="text-ember underline transition-colors">
                     See pricing
                   </Link>
@@ -93,10 +93,6 @@ export default function AboutPage() {
                   <span>Johannesburg, South Africa</span>
                 </div>
                 <div className="flex gap-6">
-                  <span className="eyebrow text-ink-500 w-28 shrink-0">CIPC Reg</span>
-                  <span className="text-ink-400 italic">__________</span>
-                </div>
-                <div className="flex gap-6">
                   <span className="eyebrow text-ink-500 w-28 shrink-0">VAT Number</span>
                   <span className="text-ink-400 italic">Not yet registered</span>
                 </div>
@@ -111,7 +107,7 @@ export default function AboutPage() {
                 </div>
                 <div className="flex gap-6">
                   <span className="eyebrow text-ink-500 w-28 shrink-0">Data Officer</span>
-                  <span>Liam Clarke, liamclarke21@outlook.com</span>
+                  <span>Liam Clarke, clarkeagency1@outlook.com</span>
                 </div>
               </div>
             </div>
@@ -140,10 +136,10 @@ export default function AboutPage() {
                 <p>
                   If you have a question about your data or want to make a data request, email{" "}
                   <a
-                    href="mailto:liamclarke21@outlook.com"
+                    href="mailto:clarkeagency1@outlook.com"
                     className="text-ember underline transition-colors"
                   >
-                    liamclarke21@outlook.com
+                    clarkeagency1@outlook.com
                   </a>
                   .
                 </p>

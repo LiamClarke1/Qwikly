@@ -40,6 +40,10 @@ export async function submitContactForm(
 
   const { name, email, phone, subject, message } = parsed.data;
 
+  function esc(s: string) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
   const db = supabaseAdmin();
   const { error: dbError } = await db
     .from("support_messages")
@@ -56,10 +60,10 @@ export async function submitContactForm(
     replyTo: email,
     subject: `[Qwikly Contact] ${subject}`,
     html: `
-      <p><strong>From:</strong> ${name} &lt;${email}&gt;${phone ? ` | ${phone}` : ""}</p>
-      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>From:</strong> ${esc(name)} &lt;${esc(email)}&gt;${phone ? ` | ${esc(phone)}` : ""}</p>
+      <p><strong>Subject:</strong> ${esc(subject)}</p>
       <hr />
-      <p style="white-space:pre-wrap">${message}</p>
+      <p style="white-space:pre-wrap">${esc(message)}</p>
     `,
   });
 

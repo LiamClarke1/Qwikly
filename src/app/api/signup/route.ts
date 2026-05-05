@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const allowed = await checkRateLimit(`signup:${ip}`, 5);
+  if (!allowed) {
+    return NextResponse.json({ error: "Too many requests. Please wait a minute and try again." }, { status: 429 });
+  }
+
   let body: { email?: string; password?: string; businessName?: string; plan?: string };
   try {
     body = await req.json();

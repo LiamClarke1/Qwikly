@@ -22,7 +22,12 @@
   }
 
   var conversationId = sessionStorage.getItem("qwikly_cid") || null;
+  var HISTORY_KEY = "qwikly_hist_" + CLIENT_ID;
   var chatHistory = [];
+  try {
+    var _savedHist = sessionStorage.getItem(HISTORY_KEY);
+    if (_savedHist) chatHistory = JSON.parse(_savedHist);
+  } catch (e) {}
   var branding = null;
   var panelOpen = false;
   var sending = false;
@@ -197,11 +202,12 @@
     return nodes;
   }
 
-  function addMsg(cls, text) {
+  function addMsg(cls, text, instant) {
     var m = msgs();
     if (!m) return;
     var div = document.createElement("div");
     div.className = "msg " + cls;
+    if (instant) div.style.animation = "none";
     var nodes = textToNodes(text);
     for (var i = 0; i < nodes.length; i++) div.appendChild(nodes[i]);
     m.appendChild(div);
@@ -223,6 +229,10 @@
     if (!m) return;
     var t = m.querySelector(".typing");
     if (t) t.remove();
+  }
+
+  function saveHistory() {
+    try { sessionStorage.setItem(HISTORY_KEY, JSON.stringify(chatHistory)); } catch (e) {}
   }
 
   function setInputEnabled(enabled) {
@@ -278,6 +288,7 @@
     inp.style.height = "";
     addMsg("usr", text);
     chatHistory.push({ role: "user", content: text });
+    saveHistory();
 
     sending = true;
     setInputEnabled(false);
@@ -311,6 +322,7 @@
         }
         addMsg("bot", data.reply);
         chatHistory.push({ role: "assistant", content: data.reply });
+        saveHistory();
         // Only focus input on desktop — on mobile this pops the keyboard unexpectedly
         if (!isMobile) {
           var inputEl = shadow.getElementById("qw-inp");
@@ -356,22 +368,37 @@
       window.visualViewport.addEventListener("scroll", vpListener);
     }
 
-    setInputEnabled(false);
-    showTyping();
-    setTimeout(function () {
-      removeTyping();
-      var greeting = branding && branding.greeting
-        ? branding.greeting.replace(/\{name\}/g, "").replace(/\{business\}/g, biz()).trim()
-        : "Hey. What trade you in?";
-      addMsg("bot", greeting);
-      chatHistory.push({ role: "assistant", content: greeting });
+    if (chatHistory.length > 0) {
+      // Restore previous conversation — no greeting, no delay
+      var m = msgs();
+      for (var i = 0; i < chatHistory.length; i++) {
+        addMsg(chatHistory[i].role === "user" ? "usr" : "bot", chatHistory[i].content, true);
+      }
+      if (m) m.scrollTop = m.scrollHeight;
       setInputEnabled(true);
-      // Don't auto-focus on mobile — prevents keyboard covering the new message
       if (!isMobile) {
         var inp = shadow.getElementById("qw-inp");
         if (inp) inp.focus();
       }
-    }, 700);
+    } else {
+      // Fresh conversation — show greeting after typing indicator
+      setInputEnabled(false);
+      showTyping();
+      setTimeout(function () {
+        removeTyping();
+        var greeting = branding && branding.greeting
+          ? branding.greeting.replace(/\{name\}/g, "").replace(/\{business\}/g, biz()).trim()
+          : "Hey. What trade you in?";
+        addMsg("bot", greeting);
+        chatHistory.push({ role: "assistant", content: greeting });
+        saveHistory();
+        setInputEnabled(true);
+        if (!isMobile) {
+          var inp = shadow.getElementById("qw-inp");
+          if (inp) inp.focus();
+        }
+      }, 700);
+    }
 
     fireEvent("launcher_opened");
   }

@@ -40,6 +40,7 @@ const PUBLIC_PREFIXES = [
   // Public widget endpoints — must be accessible from any external site
   "/api/chat",
   "/embed.js",
+  "/faq",
 ];
 
 export async function middleware(request: NextRequest) {

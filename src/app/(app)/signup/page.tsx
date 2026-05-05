@@ -326,7 +326,6 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
         <h2 className="text-h1 text-ink">Create your account</h2>
         <p className="text-ink-500 text-small mt-1.5">
           {plan === "trial" ? "No bank account required. Live in 5 minutes." :
-           plan === "starter" ? "No card needed. Live in 5 minutes." :
            "30-day money-back guarantee."}
         </p>
       </div>
@@ -368,7 +367,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
             required
             autoComplete="organization"
             placeholder="Acme Plumbing"
-            className="w-full h-11 bg-white border border-ink/[0.14]rounded-xl px-4 text-small text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
+            className="w-full h-11 bg-white border border-ink/[0.14] rounded-xl px-4 text-small text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
           />
         </div>
 
@@ -384,7 +383,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
             required
             autoComplete="email"
             placeholder="you@example.com"
-            className="w-full h-11 bg-white border border-ink/[0.14]rounded-xl px-4 text-small text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
+            className="w-full h-11 bg-white border border-ink/[0.14] rounded-xl px-4 text-small text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
           />
         </div>
 
@@ -401,7 +400,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
               required
               autoComplete="new-password"
               placeholder="At least 8 characters"
-              className="w-full h-11 bg-white border border-ink/[0.14]rounded-xl px-4 pr-12 text-small text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
+              className="w-full h-11 bg-white border border-ink/[0.14] rounded-xl px-4 pr-12 text-small text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
             />
             <button
               type="button"
@@ -434,7 +433,19 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
         </button>
       </form>
 
-      <p className="text-center text-small text-ink-500 mt-8">
+      <p className="text-center text-tiny text-ink-400 mt-5 leading-relaxed">
+        By creating an account you agree to our{" "}
+        <Link href="/legal/terms" className="text-ember hover:text-ember-deep underline transition-colors duration-200">
+          Terms of Service
+        </Link>{" "}
+        and{" "}
+        <Link href="/legal/privacy" className="text-ember hover:text-ember-deep underline transition-colors duration-200">
+          Privacy Policy
+        </Link>
+        .
+      </p>
+
+      <p className="text-center text-small text-ink-500 mt-5">
         Already have an account?{" "}
         <Link href="/login" className="text-ember hover:text-ember-deep font-medium transition-colors duration-200">
           Sign in

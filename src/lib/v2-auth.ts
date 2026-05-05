@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "./supabase-server";
 
-export type PlanTier = "starter" | "pro" | "premium";
+export type PlanTier = "trial" | "starter" | "pro" | "premium" | "billions";
 
 export type V2AuthContext = {
   userId: string;
@@ -54,7 +54,7 @@ export async function v2Auth(): Promise<V2AuthContext | null> {
   return {
     userId: user.id,
     businessId: business.id,
-    plan: (sub?.plan as PlanTier) ?? "starter",
+    plan: (sub?.plan as PlanTier) ?? "trial",
     subscriptionStatus: sub?.status ?? "active",
     paystackCustomerCode: sub?.paystack_customer_code ?? null,
     paystackSubscriptionCode: sub?.paystack_subscription_code ?? null,

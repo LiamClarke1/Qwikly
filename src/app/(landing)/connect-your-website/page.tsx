@@ -88,7 +88,7 @@ export default function ConnectYourWebsitePage() {
             </Link>
           </div>
           <p className="mt-4 text-sm text-ink-500">
-            Digital assistant included in <strong className="text-ink">Starter</strong>, <strong className="text-ink">Pro</strong>, and <strong className="text-ink">Premium</strong> plans. No per-job fees, ever.
+            Included in all plans. No per-job fees, ever.
           </p>
         </div>
       </section>

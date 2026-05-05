@@ -57,24 +57,24 @@ export type ClientPromptData = {
 };
 
 export const CLIENT_TONE_MAP: Record<string, string> = {
-  friendly:            "Warm and conversational. Use contractions, match their energy. Friendly without being over-the-top.",
-  friendly_casual:     "Warm and conversational. Use contractions, match their energy. Friendly without being over-the-top.",
-  professional:        "Precise and professional. Complete sentences, respectful throughout.",
-  professional_formal: "Precise and professional. Complete sentences, respectful throughout.",
-  brief:               "Direct and efficient. Shortest path to the answer or booking. No small talk.",
-  direct_efficient:    "Direct and efficient. Shortest path to the answer or booking. No small talk.",
-  warm:                "Caring and empathetic. Acknowledge the visitor's situation before offering solutions.",
-  warm_empathetic:     "Caring and empathetic. Acknowledge the visitor's situation before offering solutions.",
+  friendly:            "Casual and warm. Always use contractions (you're, we'll, it's). Match the visitor's energy exactly — relaxed gets relaxed, urgent gets focused. Sound like a helpful friend who knows the trade inside out. Light, natural language. Never stiff or scripted.",
+  friendly_casual:     "Casual and warm. Always use contractions (you're, we'll, it's). Match the visitor's energy exactly — relaxed gets relaxed, urgent gets focused. Sound like a helpful friend who knows the trade inside out. Light, natural language. Never stiff or scripted.",
+  professional:        "Formal and precise. No contractions. Complete sentences always. Respectful distance at all times — no small talk, no casual asides. Every sentence should be something you could read aloud in a business meeting. Measured, confident, and correct.",
+  professional_formal: "Formal and precise. No contractions. Complete sentences always. Respectful distance at all times — no small talk, no casual asides. Every sentence should be something you could read aloud in a business meeting. Measured, confident, and correct.",
+  brief:               "No fluff. Lead with the answer, end with the question. No acknowledgment phrases, no warm-up, no filler. Under 12 words per sentence wherever possible. Respectful but fast — the visitor's time is the only thing that matters.",
+  direct_efficient:    "No fluff. Lead with the answer, end with the question. No acknowledgment phrases, no warm-up, no filler. Under 12 words per sentence wherever possible. Respectful but fast — the visitor's time is the only thing that matters.",
+  warm:                "Lead with empathy on every single message. Before answering anything, acknowledge the visitor's situation or feeling in one genuine sentence. Make them feel truly heard before moving forward. Never skip this. Empathy first, answer second, question third — every time.",
+  warm_empathetic:     "Lead with empathy on every single message. Before answering anything, acknowledge the visitor's situation or feeling in one genuine sentence. Make them feel truly heard before moving forward. Never skip this. Empathy first, answer second, question third — every time.",
 };
 
 export const SETUP_TONE_KEYS = new Set(["friendly_casual","professional_formal","warm_empathetic","direct_efficient"]);
 
 export const RESPONSE_STYLE_MAP: Record<string, string> = {
-  short:          "1-2 sentences per message maximum. Punchy and direct.",
-  brief:          "1-2 sentences per message maximum. Punchy and direct.",
-  detailed:       "2-3 sentences per message. Enough context to build confidence, never full paragraphs.",
-  balanced:       "2-3 sentences per message. Helpful detail without overwhelming.",
-  conversational: "2-3 natural sentences. Like a real person talking.",
+  short:          "2 sentences per message. No more. First sentence answers or acknowledges. Second sentence asks the question or makes the CTA. Nothing else.",
+  brief:          "2 sentences per message. No more. First sentence answers or acknowledges. Second sentence asks the question or makes the CTA. Nothing else.",
+  balanced:       "3 sentences per message. Answer the question, add one line of helpful context or reassurance, then ask the question or deliver the CTA.",
+  conversational: "3 natural sentences. Answer, add a touch of warmth or brief context, then move forward. Sound like a real person, not a script.",
+  detailed:       "4-6 sentences per message. Explain the why or the consequence of the visitor's situation. Give enough context to feel informed and confident. Anticipate the obvious follow-up concern and address it before they ask. Then close with a question or CTA. Full but never padded — every sentence must earn its place.",
 };
 
 export function getTradeQuestion(trade: string): string {
