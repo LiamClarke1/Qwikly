@@ -31,8 +31,10 @@ export function WizardShell({
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    contentRef.current?.scrollTo({ top: 0 });
-    window.scrollTo({ top: 0 });
+    if (contentRef.current) {
+      contentRef.current.scrollTo({ top: contentRef.current.scrollHeight });
+    }
+    window.scrollTo({ top: document.body.scrollHeight });
   }, [currentStep]);
 
   return (
