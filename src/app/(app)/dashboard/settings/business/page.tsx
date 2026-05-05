@@ -208,41 +208,62 @@ function BrandCard({ client, save, show }: {
   };
 
   return (
-    <Card>
-      <CardHeader title="Brand" description="Identity shown on invoices, the embed widget, and customer-facing content." />
+    <>
+      {adjustLogoOpen && logoUrl && (
+        <AdjustLogoModal
+          logoUrl={logoUrl}
+          onClose={() => setAdjustLogoOpen(false)}
+          onSave={(blob) => {
+            setAdjustLogoOpen(false);
+            saveAdjustedLogo(blob);
+          }}
+        />
+      )}
 
-      {/* Logo */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="w-16 h-16 rounded-xl bg-surface-input border border-[var(--border)] flex items-center justify-center overflow-hidden shrink-0">
-          {logoUrl
-            ? <img src={logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
-            : <span className="text-tiny text-fg-muted text-center leading-tight px-1">No logo</span>}
-        </div>
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <label className="cursor-pointer">
-              <span className="inline-flex items-center gap-2 h-8 px-3 text-small font-medium rounded-lg bg-surface-input border border-[var(--border-strong)] text-fg hover:bg-surface-active transition-colors cursor-pointer">
-                {logoUploading
-                  ? <div className="w-3.5 h-3.5 border-2 border-fg-muted/30 border-t-fg-muted rounded-full animate-spin" />
-                  : <Upload className="w-3.5 h-3.5" />}
-                Upload logo
-              </span>
-              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" className="sr-only" onChange={uploadLogo} />
-            </label>
-            {logoUrl && (
-              <button
-                type="button"
-                onClick={removeLogo}
-                disabled={logoUploading}
-                className="inline-flex items-center gap-1.5 h-8 px-3 text-small font-medium rounded-lg bg-surface-input border border-[var(--border)] text-danger hover:bg-danger/10 transition-colors cursor-pointer disabled:opacity-40"
-              >
-                <X className="w-3.5 h-3.5" /> Remove
-              </button>
-            )}
+      <Card>
+        <CardHeader title="Brand" description="Identity shown on invoices, the embed widget, and customer-facing content." />
+
+        {/* Logo */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-16 h-16 rounded-xl bg-surface-input border border-[var(--border)] flex items-center justify-center overflow-hidden shrink-0">
+            {logoUrl
+              ? <img src={logoUrl} alt="Logo" className="w-full h-full object-contain p-1" />
+              : <span className="text-tiny text-fg-muted text-center leading-tight px-1">No logo</span>}
           </div>
-          <p className="text-tiny text-fg-muted">PNG, SVG or JPG, max 10 MB</p>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <label className="cursor-pointer">
+                <span className="inline-flex items-center gap-2 h-8 px-3 text-small font-medium rounded-lg bg-surface-input border border-[var(--border-strong)] text-fg hover:bg-surface-active transition-colors cursor-pointer">
+                  {logoUploading
+                    ? <div className="w-3.5 h-3.5 border-2 border-fg-muted/30 border-t-fg-muted rounded-full animate-spin" />
+                    : <Upload className="w-3.5 h-3.5" />}
+                  Upload logo
+                </span>
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" className="sr-only" onChange={uploadLogo} />
+              </label>
+              {logoUrl && (
+                <button
+                  type="button"
+                  onClick={() => setAdjustLogoOpen(true)}
+                  className="inline-flex items-center gap-2 h-8 px-3 text-small font-medium rounded-lg bg-surface-input border border-[var(--border-strong)] text-fg hover:bg-surface-active transition-colors"
+                >
+                  <Move className="w-3.5 h-3.5" /> Adjust
+                </button>
+              )}
+              {logoUrl && (
+                <button
+                  type="button"
+                  onClick={removeLogo}
+                  disabled={logoUploading}
+                  className="inline-flex items-center gap-1.5 h-8 px-3 text-small font-medium rounded-lg bg-surface-input border border-[var(--border)] text-danger hover:bg-danger/10 transition-colors cursor-pointer disabled:opacity-40"
+                >
+                  <X className="w-3.5 h-3.5" /> Remove
+                </button>
+              )}
+            </div>
+            <p className="text-tiny text-fg-muted">PNG, SVG or JPG, max 10 MB</p>
+          </div>
         </div>
-      </div>
 
       <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={submit}>
         <Field label="Business name">
@@ -317,6 +338,238 @@ function BrandCard({ client, save, show }: {
         </div>
       </form>
     </Card>
+  </>
+  );
+}
+
+// ─── Adjust logo modal ────────────────────────────────────────────────────────
+
+const LOGO_PREVIEW = 240;
+
+function AdjustLogoModal({
+  logoUrl,
+  onClose,
+  onSave,
+}: {
+  logoUrl: string;
+  onClose: () => void;
+  onSave: (blob: Blob) => void;
+}) {
+  const [imgDims, setImgDims] = useState<{ w: number; h: number } | null>(null);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [saving, setSaving] = useState(false);
+  const dragRef = useRef<{ active: boolean; lastX: number; lastY: number }>({ active: false, lastX: 0, lastY: 0 });
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const baseScale = imgDims
+    ? Math.min(LOGO_PREVIEW / imgDims.w, LOGO_PREVIEW / imgDims.h)
+    : 1;
+  const scale = baseScale * zoom;
+
+  const clampOffset = useCallback(
+    (o: { x: number; y: number }, s: number, dims: { w: number; h: number } | null) => {
+      if (!dims) return o;
+      const maxX = Math.max(0, (dims.w * s - LOGO_PREVIEW) / 2);
+      const maxY = Math.max(0, (dims.h * s - LOGO_PREVIEW) / 2);
+      return {
+        x: Math.max(-maxX, Math.min(maxX, o.x)),
+        y: Math.max(-maxY, Math.min(maxY, o.y)),
+      };
+    },
+    []
+  );
+
+  const applyDelta = useCallback(
+    (dx: number, dy: number) => {
+      setOffset((prev) => clampOffset({ x: prev.x + dx, y: prev.y + dy }, scale, imgDims));
+    },
+    [scale, imgDims, clampOffset]
+  );
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    dragRef.current = { active: true, lastX: t.clientX, lastY: t.clientY };
+  };
+
+  useEffect(() => {
+    const onMouseMove = (e: MouseEvent) => {
+      if (!dragRef.current.active) return;
+      applyDelta(e.clientX - dragRef.current.lastX, e.clientY - dragRef.current.lastY);
+      dragRef.current.lastX = e.clientX;
+      dragRef.current.lastY = e.clientY;
+    };
+    const onMouseUp = () => { dragRef.current.active = false; };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [applyDelta]);
+
+  useEffect(() => {
+    const el = previewRef.current;
+    if (!el) return;
+    const onTouchMove = (e: TouchEvent) => {
+      if (!dragRef.current.active) return;
+      e.preventDefault();
+      const t = e.touches[0];
+      applyDelta(t.clientX - dragRef.current.lastX, t.clientY - dragRef.current.lastY);
+      dragRef.current.lastX = t.clientX;
+      dragRef.current.lastY = t.clientY;
+    };
+    const onTouchEnd = () => { dragRef.current.active = false; };
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+    return () => {
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [applyDelta]);
+
+  const handleZoom = (e: ChangeEvent<HTMLInputElement>) => {
+    const z = parseFloat(e.target.value);
+    setZoom(z);
+    if (imgDims) {
+      const newScale = Math.min(LOGO_PREVIEW / imgDims.w, LOGO_PREVIEW / imgDims.h) * z;
+      setOffset((prev) => clampOffset(prev, newScale, imgDims));
+    }
+  };
+
+  const handleSave = () => {
+    if (!imgDims) return;
+    setSaving(true);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const OUT = 400;
+      const canvas = document.createElement("canvas");
+      canvas.width = OUT;
+      canvas.height = OUT;
+      const ctx = canvas.getContext("2d")!;
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, OUT, OUT);
+      const r = OUT / LOGO_PREVIEW;
+      const drawW = imgDims.w * scale * r;
+      const drawH = imgDims.h * scale * r;
+      const drawX = OUT / 2 + offset.x * r - drawW / 2;
+      const drawY = OUT / 2 + offset.y * r - drawH / 2;
+      ctx.drawImage(img, drawX, drawY, drawW, drawH);
+      canvas.toBlob((blob) => {
+        setSaving(false);
+        if (blob) onSave(blob);
+      }, "image/jpeg", 0.95);
+    };
+    img.onerror = () => setSaving(false);
+    img.src = logoUrl;
+  };
+
+  const imgW = imgDims ? imgDims.w * scale : 0;
+  const imgH = imgDims ? imgDims.h * scale : 0;
+  const imgX = LOGO_PREVIEW / 2 + offset.x - imgW / 2;
+  const imgY = LOGO_PREVIEW / 2 + offset.y - imgH / 2;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
+      onClick={onClose}
+    >
+      <div
+        className="bg-surface rounded-2xl shadow-xl p-6 w-80 flex flex-col items-center gap-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="text-center">
+          <h3 className="text-body font-semibold text-fg">Adjust logo</h3>
+          <p className="text-tiny text-fg-muted mt-0.5">Drag to reposition, slider to zoom</p>
+        </div>
+
+        {/* Square preview */}
+        <div
+          ref={previewRef}
+          className="relative overflow-hidden rounded-xl bg-white border-2 border-[var(--border)] cursor-grab active:cursor-grabbing select-none"
+          style={{ width: LOGO_PREVIEW, height: LOGO_PREVIEW }}
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+        >
+          {!imgDims && (
+            <img
+              src={logoUrl}
+              alt=""
+              className="sr-only"
+              onLoad={(e) => {
+                const t = e.currentTarget;
+                setImgDims({ w: t.naturalWidth, h: t.naturalHeight });
+              }}
+            />
+          )}
+          {imgDims && (
+            <img
+              src={logoUrl}
+              alt="Adjust"
+              draggable={false}
+              style={{
+                position: "absolute",
+                width: imgW,
+                height: imgH,
+                left: imgX,
+                top: imgY,
+                pointerEvents: "none",
+                userSelect: "none",
+              }}
+            />
+          )}
+          {!imgDims && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-6 h-6 border-2 border-[var(--border)] border-t-ember rounded-full animate-spin" />
+            </div>
+          )}
+        </div>
+
+        {/* Zoom slider */}
+        <div className="w-full space-y-1.5">
+          <div className="flex justify-between text-tiny text-fg-muted">
+            <span>Zoom</span>
+            <span>{zoom.toFixed(2)}x</span>
+          </div>
+          <input
+            type="range"
+            min="1"
+            max="4"
+            step="0.05"
+            value={zoom}
+            onChange={handleZoom}
+            className="w-full accent-ember"
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3 w-full">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 h-9 rounded-xl border border-[var(--border-strong)] text-small font-medium text-fg-muted hover:bg-surface-active transition-colors"
+          >
+            Cancel
+          </button>
+          <div className="flex-1">
+            <Button
+              type="button"
+              loading={saving}
+              onClick={handleSave}
+              icon={<Check className="w-4 h-4" />}
+            >
+              Save
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
