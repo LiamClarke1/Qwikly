@@ -101,7 +101,7 @@
 
   function renderAvatar(el) {
     if (branding && branding.logo) {
-      el.innerHTML = "<img src='" + branding.logo + "' alt='" + biz() + "' style='width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;' onerror=\"this.parentNode.textContent='" + biz().charAt(0).toUpperCase() + "'\" />";
+      el.innerHTML = "<img src='" + branding.logo + "' alt='" + biz() + "' style='width:100%;height:100%;object-fit:contain;border-radius:50%;display:block;background:#fff;padding:3px;' onerror=\"this.parentNode.textContent='" + biz().charAt(0).toUpperCase() + "'\" />";
     } else {
       el.textContent = biz().charAt(0).toUpperCase();
     }
