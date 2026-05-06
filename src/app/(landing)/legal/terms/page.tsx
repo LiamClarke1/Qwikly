@@ -163,19 +163,9 @@ export default function TermsPage() {
                   ))}
                 </ul>
 
-                <h3 className="font-display font-medium text-lg text-ink mt-6">Money-Back Guarantee</h3>
+                <h3 className="font-display font-medium text-lg text-ink mt-6">Refund Policy</h3>
                 <p>
-                  Pro, Premium, and Billions plans include a 30-day money-back guarantee from the date of your first payment. The Free Trial requires no payment and no guarantee is applicable.
-                  If you are not satisfied with the Service within the first 30 days, contact us at{" "}
-                  <a
-                    href="mailto:clarkeagency1@outlook.com"
-                    className="text-ember underline transition-colors"
-                  >
-                    clarkeagency1@outlook.com
-                  </a>{" "}
-                  and we will issue a full refund. After 30 days, subscription fees are non-refundable
-                  except where required by the Consumer Protection Act 68 of 2008 or other applicable
-                  South African law.
+                  All subscription fees are non-refundable. Cancellations take effect at the end of the current billing cycle and you retain access until that date. No refunds are issued for partial billing periods, unused time, or any other reason, except where expressly required by the Consumer Protection Act 68 of 2008 or other applicable South African law.
                 </p>
 
                 <h3 className="font-display font-medium text-lg text-ink mt-6">Late Payment</h3>
@@ -376,8 +366,7 @@ export default function TermsPage() {
                     clarkeagency1@outlook.com
                   </a>
                   . Termination takes effect at the end of the current billing cycle. Any subscription
-                  fees already paid for the current billing cycle are non-refundable beyond the 30-day
-                  money-back guarantee period.
+                  fees already paid for the current billing cycle are non-refundable.
                 </p>
                 <p>
                   We may suspend or terminate your account immediately, with or without notice, if we

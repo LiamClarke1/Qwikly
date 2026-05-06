@@ -527,7 +527,7 @@ ${f.ai_never_say || "Not specified"}
         {/* Header */}
         <div className="text-center mb-8">
           <span className="inline-block bg-accent/10 text-accent text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
-            30-day money-back guarantee on all plans.
+            Cancel anytime. No lock-in contracts.
           </span>
           <h1 className="text-3xl font-bold text-text-dark mb-2">Set up your digital assistant</h1>
           <p className="text-text-muted-dark text-sm">

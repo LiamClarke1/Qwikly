@@ -326,7 +326,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
         <h2 className="text-h1 text-ink">Create your account</h2>
         <p className="text-ink-500 text-small mt-1.5">
           {plan === "trial" ? "No bank account required. Live in 5 minutes." :
-           "30-day money-back guarantee."}
+           "Cancel anytime. No lock-in."}
         </p>
       </div>
 
@@ -513,7 +513,7 @@ function SignupContent() {
               "Qualifies visitors and captures contact details",
               "Books them in with a preferred time",
               "Leads delivered to your email instantly",
-              "30-day money-back on Pro and Premium",
+              "Cancel anytime, no lock-in contracts",
             ].map((point, i) => (
               <div key={i} className="flex items-start gap-3">
                 <div className="w-5 h-5 rounded-full bg-ember/10 border border-ember/20 flex items-center justify-center shrink-0 mt-0.5">

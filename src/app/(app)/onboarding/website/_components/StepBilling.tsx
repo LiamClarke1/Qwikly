@@ -70,7 +70,7 @@ export default function StepBilling({ plan, onAdvance, onBack }: Props) {
           Activate your Starter plan.
         </h1>
         <p className="text-fg-muted text-body mb-8">
-          30-day money-back guarantee. Cancel anytime.
+          Cancel anytime. No lock-in.
         </p>
 
         <div className="rounded-2xl bg-white/[0.03] border border-line p-6 mb-8 space-y-4">
@@ -169,7 +169,7 @@ export default function StepBilling({ plan, onAdvance, onBack }: Props) {
         Activate your {config.name} plan.
       </h1>
       <p className="text-fg-muted text-body mb-8">
-        30-day money-back guarantee. Cancel anytime.
+        Cancel anytime. No lock-in.
       </p>
 
       {checkoutError && (
