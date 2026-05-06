@@ -168,18 +168,31 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
               <option value="warm">Warm &amp; helpful</option>
             </Select>
           </Field>
-          <Field label="Assistant tone (detailed)">
-            <Input value={personality.ai_tone} onChange={setp("ai_tone")} placeholder="e.g. Confident but approachable" />
+          <Field label="Assistant tone">
+            <Select value={personality.ai_tone} onChange={setp("ai_tone")}>
+              <option value="">Select tone</option>
+              <option value="friendly_casual">Friendly &amp; Casual</option>
+              <option value="professional_formal">Professional &amp; Formal</option>
+              <option value="warm_empathetic">Warm &amp; Empathetic</option>
+              <option value="direct_efficient">Direct &amp; Efficient</option>
+            </Select>
           </Field>
           <Field label="Language / dialect">
-            <Input value={personality.ai_language} onChange={setp("ai_language")} placeholder="e.g. South African English" />
+            <Select value={personality.ai_language} onChange={setp("ai_language")}>
+              <option value="">Select language</option>
+              <option value="English only">English only</option>
+              <option value="English & Afrikaans">English &amp; Afrikaans</option>
+              <option value="English & Zulu">English &amp; Zulu</option>
+              <option value="English & Sotho">English &amp; Sotho</option>
+              <option value="Match the customer's language">Match the customer&apos;s language</option>
+            </Select>
           </Field>
           <Field label="Response style">
             <Select value={personality.ai_response_style} onChange={setp("ai_response_style")}>
               <option value="">Select style</option>
-              <option value="short">Short, punchy replies</option>
-              <option value="detailed">Detailed and thorough</option>
-              <option value="conversational">Conversational flow</option>
+              <option value="brief">Brief &amp; punchy</option>
+              <option value="balanced">Balanced</option>
+              <option value="detailed">Detailed &amp; thorough</option>
             </Select>
           </Field>
           <div className="md:col-span-2">

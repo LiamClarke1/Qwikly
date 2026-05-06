@@ -1460,6 +1460,8 @@ export default function SetupPage() {
       common_questions: form.common_questions,
       common_objections: form.common_objections,
       ai_tone: form.ai_tone,
+      // Keep Settings > Assistant "Overall tone" dropdown in sync
+      tone: ({ friendly_casual: "friendly", professional_formal: "professional", warm_empathetic: "warm", direct_efficient: "brief" } as Record<string, string>)[form.ai_tone] ?? "",
       ai_language: form.ai_language,
       ai_response_style: form.ai_response_style,
       ai_greeting: form.ai_greeting,
