@@ -297,6 +297,66 @@ export function qwiklyBookingNotificationHtml({
 </html>`;
 }
 
+export function setupCallSlotPickerHtml({
+  visitorName,
+  slots,
+  baseUrl,
+}: {
+  visitorName: string;
+  slots: { token: string; label: string }[];
+  baseUrl: string;
+}) {
+  const slotButtons = slots
+    .map(
+      (s) => `
+    <table cellpadding="0" cellspacing="0" style="margin:0 0 10px;width:100%;">
+      <tr><td style="background:#0D111A;border:1px solid rgba(255,255,255,0.10);border-radius:10px;">
+        <a href="${baseUrl}/book/${s.token}" style="display:block;padding:14px 18px;font-size:14px;font-weight:600;color:#F4F4F5;text-decoration:none;letter-spacing:-.005em;">${s.label} &nbsp;→</a>
+      </td></tr>
+    </table>`
+    )
+    .join("");
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#07080B;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#07080B;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+        <tr><td style="padding-bottom:32px;">
+          <span style="font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.5px;">
+            Qwikly<span style="color:#E85A2C;">.</span>
+          </span>
+        </td></tr>
+
+        <tr><td style="background:#0D111A;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:32px;">
+
+          <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;">Pick your slot</p>
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.3px;">Hey ${visitorName}, let's book it.</h1>
+          <p style="margin:0 0 24px;font-size:14px;color:#9CA3AF;line-height:1.6;">
+            Pick a 15-minute window that works for you. Click a slot, confirm, and the Google Meet invite lands in your inbox right after.
+          </p>
+
+          ${slotButtons}
+
+          <p style="margin:18px 0 0;font-size:12px;color:#6B7280;line-height:1.55;">
+            None of these work? Reply to this email and we'll send fresh times. Slots hold for 48 hours.
+          </p>
+        </td></tr>
+
+        <tr><td style="padding-top:24px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#4B5563;">Sent by <a href="https://qwikly.co.za" style="color:#E85A2C;text-decoration:none;">Qwikly</a></p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export function bookingReminderHtml({
   customerName,
   businessName,

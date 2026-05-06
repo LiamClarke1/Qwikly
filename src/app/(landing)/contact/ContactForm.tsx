@@ -4,6 +4,7 @@ import { useFormState, useFormStatus } from "react-dom";
 import { submitContactForm, type ContactFormState } from "./actions";
 
 const SUBJECTS = [
+  "Book a setup call",
   "Pricing question",
   "Setup help",
   "Technical issue",
@@ -45,9 +46,13 @@ export default function ContactForm() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h3 className="font-display text-xl text-ink mb-2">Message sent</h3>
+        <h3 className="font-display text-xl text-ink mb-2">
+          {state.setupCallTriggered ? "Slots on the way" : "Message sent"}
+        </h3>
         <p className="text-ink-500 text-sm">
-          We&rsquo;ll get back to you within one business day at the email you provided.
+          {state.setupCallTriggered
+            ? "We've just emailed you 3 setup-call slots. Pick one and you're booked. Check your junk if it doesn't land within a few minutes."
+            : "We’ll get back to you within one business day at the email you provided."}
         </p>
       </div>
     );
