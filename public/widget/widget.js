@@ -7,7 +7,7 @@
   var script = document.currentScript || document.querySelector("script[data-client]");
   var CLIENT_ID = (window.__QW_CLIENT) || (script && script.getAttribute("data-client"));
   if (!CLIENT_ID) return;
-  var API_BASE = (window.__QW_API) || (script && script.getAttribute("data-api")) || "https://web.qwikly.co.za";
+  var API_BASE = (window.__QW_API) || (script && script.getAttribute("data-api")) || "https://qwikly.co.za";
 
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var isMobile = window.matchMedia("(max-width: 600px)").matches;

@@ -1,4 +1,4 @@
-/* Qwikly Embed Widget v1.1 — cdn.qwikly.co.za/embed.js */
+/* Qwikly Embed Widget v1.1 — qwikly.co.za/embed.js */
 (function () {
   "use strict";
 
