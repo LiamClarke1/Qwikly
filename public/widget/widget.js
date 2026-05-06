@@ -134,16 +134,17 @@
   shadow.appendChild(launcher);
   shadow.appendChild(panel);
 
-  // Apply cached color immediately so there's no orange flash on load
+  // Pre-warm the color from cache so there's no wrong-color flash once revealed,
+  // but always start hidden — stale cached labels caused a 2-second flash of old
+  // branding before the real values loaded.
+  var cachedLabel = null;
   try {
     var _cached = localStorage.getItem("qw_color_" + CLIENT_ID);
     if (_cached) shadow.host.style.setProperty("--qc", _cached);
+    cachedLabel = localStorage.getItem("qw_label_" + CLIENT_ID);
   } catch (e) {}
-  // Apply cached launcher label immediately so there's no wrong-text flash on load
-  var cachedLabel = null;
-  try { cachedLabel = localStorage.getItem("qw_label_" + CLIENT_ID); } catch (e) {}
-  // Hide launcher until branding loads on first visit (no cache yet)
-  if (!cachedLabel) launcher.style.visibility = "hidden";
+  launcher.style.opacity = "0";
+  launcher.style.transition = "opacity 0.18s ease";
 
   // ── Helpers ────────────────────────────────────────────────
   function applyBranding(b) {
@@ -173,8 +174,8 @@
       : (cachedLabel || "Message us");
     cachedLabel = label;
     try { localStorage.setItem("qw_label_" + CLIENT_ID, label); } catch (e) {}
-    launcher.style.visibility = "";
     launcher.innerHTML = BOLT_SVG + '<span class="pulse"></span><span>' + label + "</span>";
+    launcher.style.opacity = "1";
   }
 
   function biz() { return branding ? (branding.name || "Us") : "Us"; }
