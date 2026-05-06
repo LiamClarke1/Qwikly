@@ -126,20 +126,24 @@
   shadow.appendChild(launcher);
   shadow.appendChild(panel);
 
-  // Pre-warm color from cache so the reveal uses the right colour, but keep
-  // the launcher hidden until branding loads — avoids stale-label flash.
+  // Pre-warm color and label from cache so the launcher can render instantly
+  // on page load instead of waiting for the branding API call.
+  var _cachedLabel = null;
   try {
     var _cached = localStorage.getItem("qw_color_" + TENANT_ID);
     if (_cached) shadow.host.style.setProperty("--qc", _cached);
+    _cachedLabel = localStorage.getItem("qw_label_" + TENANT_ID);
   } catch (e) {}
-  launcher.style.opacity = "0";
-  launcher.style.transition = "opacity 0.18s ease";
+  launcher.innerHTML = BOLT_SVG + '<span class="pulse"></span><span>' + (_cachedLabel || "Message us") + "</span>";
 
   function applyBranding(b) {
     branding = b;
     var _color = b.color || "#E85A2C";
     shadow.host.style.setProperty("--qc", _color);
-    try { localStorage.setItem("qw_color_" + TENANT_ID, _color); } catch (e) {}
+    try {
+      localStorage.setItem("qw_color_" + TENANT_ID, _color);
+      localStorage.setItem("qw_label_" + TENANT_ID, b.launcher_label || "Message us");
+    } catch (e) {}
     renderLauncher();
     var nameEl = shadow.getElementById("qw-name");
     var avEl = shadow.getElementById("qw-av");
@@ -164,7 +168,6 @@
   function renderLauncher() {
     var label = branding ? (branding.launcher_label || "Message us") : "Message us";
     launcher.innerHTML = BOLT_SVG + '<span class="pulse"></span><span>' + label + "</span>";
-    launcher.style.opacity = "1";
   }
 
   function biz() { return branding ? (branding.name || "Us") : "Us"; }
