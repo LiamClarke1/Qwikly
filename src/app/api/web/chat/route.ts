@@ -5,6 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { enrollLeadInSequences } from "@/lib/email/sequences";
 import { resolvePlan, PLAN_CONFIG } from "@/lib/plan";
 import { embedText } from "@/lib/embeddings";
+import { notifyLeadCaptured } from "@/lib/notify-lead";
 import {
   buildClientSystemPrompt,
   type ClientPromptData,
@@ -561,7 +562,39 @@ export async function POST(req: NextRequest) {
       if (visitorInfo.area)           updates.area           = visitorInfo.area;
       if (visitorInfo.preferred_time) updates.preferred_time = visitorInfo.preferred_time;
       if (isTopUp || raceTopUp)       updates.is_top_up      = true;
+
+      // Detect "first time becoming a lead" so we only fire the notification
+      // once per conversation, not on every subsequent message that re-enters
+      // this branch.
+      const { data: priorConvo } = await supabaseAdmin
+        .from("conversations")
+        .select("is_lead")
+        .eq("id", convoId)
+        .maybeSingle();
+      const wasAlreadyLead = (priorConvo as { is_lead?: boolean | null } | null)?.is_lead === true;
+
       await supabaseAdmin.from("conversations").update(updates).eq("id", convoId);
+
+      // Fire the lead-alert email on the transition to lead. Done in the
+      // background — never block the chat reply on email delivery.
+      if (!wasAlreadyLead && client_id) {
+        notifyLeadCaptured({
+          clientId: Number(client_id),
+          conversationId: convoId,
+          lead: {
+            id: convoId,
+            name: visitorInfo.name ?? null,
+            contact: visitorInfo.phone ?? visitorInfo.email ?? "",
+            need: visitorInfo.job_type ?? null,
+            preferredTime: visitorInfo.preferred_time ?? null,
+            visitorEmail: visitorInfo.email ?? null,
+          },
+        })
+          .then((r) => {
+            if (!r.ok) console.warn("[web/chat] lead notify skipped:", r);
+          })
+          .catch((err) => console.error("[web/chat] lead notify threw:", err));
+      }
 
       if (visitorInfo.email && client_id) {
         try {
