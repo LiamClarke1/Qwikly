@@ -38,6 +38,7 @@ const PUBLIC_PREFIXES = [
   "/api/login",
   // Public widget endpoints — must be accessible from any external site
   "/api/chat",
+  "/api/embed/branding",
   "/embed.js",
   "/faq",
 ];
