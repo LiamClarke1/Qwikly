@@ -240,11 +240,17 @@ function StatusBar({
             <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
             <span className="text-ink font-medium">
               You&rsquo;ve hit your cap — top-ups billed at{" "}
-              <span className="font-bold">R{PLAN_TOP_UP_PRICE}/lead</span>, or{" "}
-              <Link href="/dashboard/billing" className="text-danger font-bold hover:underline cursor-pointer">
-                upgrade to Premium
-              </Link>{" "}
-              for unlimited.
+              <span className="font-bold">R{PLAN_TOP_UP_PRICE}/lead</span>
+              {tier !== "billions" && (
+                <>
+                  {", or "}
+                  <Link href="/dashboard/billing" className="text-danger font-bold hover:underline cursor-pointer">
+                    upgrade to {tier === "premium" ? "Billions" : "Premium"}
+                  </Link>
+                  {" for more leads"}
+                </>
+              )}
+              .
             </span>
           </div>
         </div>
@@ -285,8 +291,8 @@ function UpgradePrompt({
     ? "You're approaching your monthly lead limit"
     : "You're making good use of exports";
   const body = isProPrompt
-    ? "Pro gives you 200 qualified leads/month, custom branding, and CSV exports — for R599/month. No per-lead fees."
-    : "Premium gives you unlimited qualified leads, WhatsApp routing, calendar integration, and API access — from R1,299/month.";
+    ? "Pro gives you 75 qualified leads/month and email lead delivery — for R999/month. No per-lead fees."
+    : "Premium gives you 250 qualified leads/month, custom branding, CSV exports, and priority support — for R1,999/month.";
   const ctaLabel = isProPrompt ? "See Pro plan" : "See Premium plan";
 
   return (

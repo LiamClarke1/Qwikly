@@ -109,9 +109,10 @@ const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean;
     highlight: false,
     features: [
       "1,000 qualified leads/month",
-      "Everything in Premium, plus:",
       "API access",
       "Dedicated support",
+      "Custom branding (your logo)",
+      "Lead exports (CSV)",
     ],
   },
 };
