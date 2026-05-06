@@ -2,31 +2,23 @@
 
 import { useEffect } from "react";
 
-const PUBLIC_KEY = "qw_pk_deab090596b4";
-
-export default function WidgetLoader() {
+export default function WidgetLoader({ clientId }: { clientId: string }) {
   useEffect(() => {
-    let el: HTMLScriptElement | null = null;
+    if (!clientId) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).__QW_CLIENT = clientId;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).__QW_API = "/api";
 
-    fetch(`/api/widget-resolve?key=${PUBLIC_KEY}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (!data?.client_id) return;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).__QW_CLIENT = data.client_id;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (window as any).__QW_API = "/api";
-        el = document.createElement("script");
-        el.src = "/widget/widget.js";
-        el.async = true;
-        document.body.appendChild(el);
-      })
-      .catch(() => {});
+    const el = document.createElement("script");
+    el.src = "/widget/widget.js";
+    el.async = true;
+    document.body.appendChild(el);
 
     return () => {
-      if (el) try { document.body.removeChild(el); } catch {}
+      try { document.body.removeChild(el); } catch {}
     };
-  }, []);
+  }, [clientId]);
 
   return null;
 }
