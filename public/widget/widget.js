@@ -519,8 +519,6 @@
   function init() {
     checkRoute();
     if (!host.parentNode) return; // already destroyed (landed on an app route)
-    // Render immediately only if we have a cached label — avoids showing wrong default text
-    if (cachedLabel) renderLauncher();
     fetch(API_BASE + "/web/branding/" + CLIENT_ID)
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (b) {
