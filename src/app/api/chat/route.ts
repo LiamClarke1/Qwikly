@@ -7,6 +7,7 @@ import { supabaseAdmin as createSupabaseAdmin } from "@/lib/supabase-server";
 import { ensureKbEmbeddings, searchKb, embedText } from "@/lib/embeddings";
 import { enrollLeadInSequences } from "@/lib/email/sequences";
 import { resolvePlan, PLAN_CONFIG } from "@/lib/plan";
+import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
 import {
   buildClientSystemPrompt,
   CLIENT_TOOLS,
@@ -27,6 +28,18 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ipOk = await checkRateLimit(`chat:ip:${ip}`, 20);
+  if (!ipOk) {
+    return NextResponse.json(
+      { error: "Too many requests. Please slow down." },
+      {
+        status: 429,
+        headers: { ...CORS, "Retry-After": String(retryAfterSeconds("minute")) },
+      }
+    );
+  }
+
   let body: {
     tenantId?: string;
     sessionId?: string;
@@ -43,6 +56,17 @@ export async function POST(req: NextRequest) {
   const { tenantId, sessionId, message, context } = body;
   if (!tenantId || !message) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400, headers: CORS });
+  }
+
+  const tenantOk = await checkRateLimit(`chat:tenant:${tenantId}`, 200, "hour");
+  if (!tenantOk) {
+    return NextResponse.json(
+      { error: "Tenant hourly rate limit exceeded." },
+      {
+        status: 429,
+        headers: { ...CORS, "Retry-After": String(retryAfterSeconds("hour")) },
+      }
+    );
   }
 
   const db = createSupabaseAdmin();
