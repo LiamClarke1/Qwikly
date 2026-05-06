@@ -445,7 +445,7 @@ export default function BookingsPage() {
                       <div
                         key={i}
                         className={cn(
-                          "border-l border-[var(--border)] p-0.5 space-y-0.5 transition-colors duration-100",
+                          "min-w-0 overflow-hidden border-l border-[var(--border)] p-0.5 space-y-0.5 transition-colors duration-100",
                           items.length === 0 ? "cursor-pointer" : "",
                           isSelected ? "bg-ember/[0.03]" : "hover:bg-surface-hover"
                         )}
