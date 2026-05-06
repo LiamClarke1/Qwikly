@@ -229,7 +229,7 @@ export default function EmbedPage() {
                 {"\n"}{"  "}
                 <span className="text-sky-300">src</span>
                 <span className="text-slate-400">=</span>
-                <span className="text-green-300">&quot;https://cdn.qwikly.co.za/embed.js&quot;</span>
+                <span className="text-green-300">&quot;https://qwikly.co.za/embed.js&quot;</span>
                 {"\n"}{"  "}
                 <span className="text-sky-300">data-qwikly-id</span>
                 <span className="text-slate-400">=</span>
