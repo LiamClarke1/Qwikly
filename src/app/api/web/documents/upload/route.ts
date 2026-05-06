@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     if (!client) return NextResponse.json({ error: "not_found" }, { status: 404, headers: CORS });
-    if (!client.doc_visitor_upload) return NextResponse.json({ error: "uploads_disabled" }, { status: 403, headers: CORS });
+    // Default to enabled — clients can opt out via Settings > Files
+    if (client.doc_visitor_upload === false) return NextResponse.json({ error: "uploads_disabled" }, { status: 403, headers: CORS });
 
     // Verify the sessionId owns this conversation
     const { data: convo } = await db

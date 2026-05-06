@@ -68,7 +68,7 @@ export async function GET(
       launcher_label: data.web_widget_launcher_label ?? "Message us",
       position: data.web_widget_position ?? "bottom-right",
       logo: data.invoice_logo_url ?? null,
-      doc_visitor_upload:  data.doc_visitor_upload  ?? false,
+      doc_visitor_upload:  data.doc_visitor_upload  ?? true,
       doc_allowed_types:   data.doc_allowed_types   ?? ["application/pdf", "image/jpeg", "image/png"],
       doc_max_size_mb:     data.doc_max_size_mb      ?? 10,
       doc_visitor_prompt:  data.doc_visitor_prompt   ?? null,
