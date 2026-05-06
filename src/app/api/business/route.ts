@@ -17,8 +17,15 @@ const PATCHABLE = [
   "qualifying_questions",
 ] as const;
 
-const SELECT_COLUMNS =
-  "id, name, industry, contact_email, notification_email, lead_emails_enabled, owner_first_name, accent_colour, greeting, qualifying_questions, api_key, branding_removed, created_at";
+// SELECT * keeps the API resilient to schema drift — when a migration adds
+// new columns (e.g. owner_first_name) the dashboard keeps working even if
+// the column doesn't exist yet on this DB; missing fields just come back
+// undefined and the frontend handles them with `??` defaults.
+function isMissingColumnError(error: { code?: string; message?: string } | null) {
+  if (!error) return false;
+  // Postgres "undefined column" / PostgREST schema cache mismatch error codes
+  return error.code === "42703" || (error.message ?? "").toLowerCase().includes("does not exist");
+}
 
 export async function GET() {
   const auth = await v2Auth();
@@ -27,7 +34,7 @@ export async function GET() {
   const db = supabaseAdmin();
   const { data, error } = await db
     .from("businesses")
-    .select(SELECT_COLUMNS)
+    .select("*")
     .eq("id", auth.businessId)
     .maybeSingle();
 
@@ -109,16 +116,39 @@ export async function PATCH(req: NextRequest) {
   }
 
   const db = supabaseAdmin();
-  const { data, error } = await db
+  let { data, error } = await db
     .from("businesses")
     .update(updates)
     .eq("id", auth.businessId)
-    .select(SELECT_COLUMNS)
+    .select("*")
     .single();
+
+  // Drop unknown columns (e.g. when a migration hasn't been applied yet) and retry.
+  // Lets the dashboard keep working through partial deploys.
+  if (error && isMissingColumnError(error)) {
+    const safeUpdates = { ...updates };
+    for (const key of Object.keys(updates)) {
+      if ((error.message ?? "").toLowerCase().includes(key.toLowerCase())) {
+        delete safeUpdates[key];
+      }
+    }
+    if (Object.keys(safeUpdates).length === 0) {
+      return NextResponse.json(
+        { error: "schema_outdated", message: "The database is missing a column the app expects. Run pending migrations." },
+        { status: 503 }
+      );
+    }
+    ({ data, error } = await db
+      .from("businesses")
+      .update(safeUpdates)
+      .eq("id", auth.businessId)
+      .select("*")
+      .single());
+  }
 
   if (error) {
     console.error("[business PATCH] update error:", error.message);
-    return NextResponse.json({ error: "update_failed" }, { status: 500 });
+    return NextResponse.json({ error: "update_failed", message: error.message }, { status: 500 });
   }
 
   return NextResponse.json({

@@ -8,10 +8,11 @@ ALTER TABLE businesses
 
 -- Best-effort backfill from clients.owner_name (legacy v1 onboarding field).
 -- Takes the first whitespace-delimited token, so "Liam Clarke" → "Liam".
+-- clients.auth_user_id is TEXT (legacy), businesses.user_id is UUID — cast to compare.
 UPDATE businesses b
 SET    owner_first_name = SPLIT_PART(TRIM(c.owner_name), ' ', 1)
 FROM   clients c
-WHERE  c.auth_user_id = b.user_id
+WHERE  c.auth_user_id::uuid = b.user_id
   AND  b.owner_first_name IS NULL
   AND  c.owner_name IS NOT NULL
   AND  TRIM(c.owner_name) <> '';

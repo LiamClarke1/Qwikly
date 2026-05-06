@@ -47,11 +47,21 @@ export async function POST(req: NextRequest) {
   }
 
   const db = supabaseAdmin();
-  const { data: business, error: bizErr } = await db
+  const { data: businessRaw, error: bizErr } = await db
     .from("businesses")
-    .select("id, name, contact_email, notification_email, lead_emails_enabled, owner_first_name")
+    .select("*")
     .eq("id", auth.businessId)
     .maybeSingle();
+  const business = businessRaw as
+    | {
+        id: string;
+        name: string;
+        contact_email: string | null;
+        notification_email?: string | null;
+        lead_emails_enabled?: boolean | null;
+        owner_first_name?: string | null;
+      }
+    | null;
 
   if (bizErr || !business) {
     return NextResponse.json({ error: "business_not_found" }, { status: 404 });

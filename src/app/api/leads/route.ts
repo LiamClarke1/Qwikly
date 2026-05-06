@@ -83,11 +83,22 @@ export async function POST(req: NextRequest) {
 
   const db = supabaseAdmin();
 
-  const { data: business } = await db
+  const { data: businessRaw } = await db
     .from("businesses")
-    .select("id, name, contact_email, notification_email, lead_emails_enabled, owner_first_name, user_id")
+    .select("*")
     .eq("api_key", api_key)
     .maybeSingle();
+  const business = businessRaw as
+    | {
+        id: string;
+        name: string;
+        contact_email: string | null;
+        notification_email?: string | null;
+        lead_emails_enabled?: boolean | null;
+        owner_first_name?: string | null;
+        user_id: string;
+      }
+    | null;
 
   if (!business) {
     return NextResponse.json({ error: "invalid_api_key" }, { status: 401, headers: CORS });
