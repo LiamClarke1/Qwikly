@@ -37,11 +37,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-16 border-b border-paper/10">
           <div className="md:col-span-4">
             <p className="eyebrow text-paper/50 mb-5">Contact</p>
+            {/* TODO: Set up forwarding rule on the qwikly.co.za domain MX so hello@qwikly.co.za delivers to the team inbox. */}
             <a
-              href="mailto:clarkeagency1@outlook.com"
+              href="mailto:hello@qwikly.co.za"
               className="font-display text-2xl md:text-3xl text-paper hover:text-ember transition-colors cursor-pointer"
             >
-              clarkeagency1@outlook.com
+              hello@qwikly.co.za
             </a>
             <p className="text-sm text-paper/50 mt-4 max-w-xs leading-relaxed">
               Talk to a human in Cape Town. We&rsquo;ll have you live within
