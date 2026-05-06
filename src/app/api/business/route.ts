@@ -5,7 +5,19 @@ import { randomBytes } from "crypto";
 
 export const dynamic = "force-dynamic";
 
-const PATCHABLE = ["name", "industry", "contact_email", "accent_colour", "greeting", "qualifying_questions"] as const;
+const PATCHABLE = [
+  "name",
+  "industry",
+  "contact_email",
+  "notification_email",
+  "lead_emails_enabled",
+  "accent_colour",
+  "greeting",
+  "qualifying_questions",
+] as const;
+
+const SELECT_COLUMNS =
+  "id, name, industry, contact_email, notification_email, lead_emails_enabled, accent_colour, greeting, qualifying_questions, api_key, branding_removed, created_at";
 
 export async function GET() {
   const auth = await v2Auth();
@@ -14,7 +26,7 @@ export async function GET() {
   const db = supabaseAdmin();
   const { data, error } = await db
     .from("businesses")
-    .select("id, name, industry, contact_email, accent_colour, greeting, qualifying_questions, api_key, branding_removed, created_at")
+    .select(SELECT_COLUMNS)
     .eq("id", auth.businessId)
     .maybeSingle();
 
@@ -52,6 +64,18 @@ export async function PATCH(req: NextRequest) {
         return NextResponse.json({ error: "accent_colour must be a valid 6-digit hex colour (e.g. #E85A2C)" }, { status: 400 });
       }
     }
+    if (field === "notification_email") {
+      const val = body[field];
+      if (val !== null && val !== "" && (typeof val !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val))) {
+        return NextResponse.json({ error: "notification_email must be a valid email or null" }, { status: 400 });
+      }
+      updates[field] = val === "" ? null : val;
+      continue;
+    }
+    if (field === "lead_emails_enabled") {
+      updates[field] = Boolean(body[field]);
+      continue;
+    }
     updates[field] = body[field];
   }
 
@@ -72,7 +96,7 @@ export async function PATCH(req: NextRequest) {
     .from("businesses")
     .update(updates)
     .eq("id", auth.businessId)
-    .select("id, name, industry, contact_email, accent_colour, greeting, qualifying_questions, api_key, branding_removed, created_at")
+    .select(SELECT_COLUMNS)
     .single();
 
   if (error) {

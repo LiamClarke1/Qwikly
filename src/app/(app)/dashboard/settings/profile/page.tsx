@@ -7,7 +7,6 @@ import {
   Save, Check, AlertCircle, User, Camera, Lock, Move,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { useClient } from "@/lib/use-client";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Field } from "@/components/ui/input";
@@ -40,11 +39,9 @@ function useToast() {
 }
 
 function isValidEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-function isValidPhone(v: string) { return /^[+\d\s\-()]{7,20}$/.test(v); }
 
 export default function ProfilePage() {
   const { toast, show } = useToast();
-  const { client, setClient } = useClient();
 
   return (
     <>
@@ -62,13 +59,7 @@ export default function ProfilePage() {
       <div className="space-y-8">
         <AccountCard show={show} />
         <PasswordCard show={show} />
-        {client && (
-          <NotificationsCard
-            client={client}
-            show={show}
-            onSave={(patch) => setClient({ ...client, ...patch })}
-          />
-        )}
+        <NotificationsCard show={show} />
       </div>
     </>
   );
@@ -528,61 +519,183 @@ function PasswordCard({ show }: { show: (msg: string, tone?: "success" | "danger
 }
 
 // ─── Notifications card ───────────────────────────────────────────────────────
-
-type ClientPatch = { notification_email?: string | null; notification_phone?: string | null };
+// Lead alert preferences live on the businesses table (v2 widget backend).
+// The legacy clients.notification_email / clients.notification_phone fields
+// are not read by /api/leads, so writing there silently did nothing.
 
 function NotificationsCard({
-  client,
   show,
-  onSave,
 }: {
-  client: { id: string; notification_email?: string | null; notification_phone?: string | null };
   show: (msg: string, tone?: "success" | "danger") => void;
-  onSave: (patch: ClientPatch) => void;
 }) {
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
-    notification_email: client.notification_email ?? "",
-    notification_phone: client.notification_phone ?? "",
+    notification_email: "",
+    lead_emails_enabled: true,
   });
+  const [defaultEmail, setDefaultEmail] = useState<string>("");
   const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; phone?: string }>({});
+  const [testing, setTesting] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string }>({});
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/business", { cache: "no-store" });
+        if (!alive) return;
+        if (!res.ok) {
+          show("Couldn't load notification settings", "danger");
+          setLoading(false);
+          return;
+        }
+        const data = await res.json();
+        setForm({
+          notification_email: data.notification_email ?? data.contact_email ?? "",
+          lead_emails_enabled: data.lead_emails_enabled !== false,
+        });
+        setDefaultEmail(data.contact_email ?? "");
+      } catch {
+        show("Couldn't load notification settings", "danger");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [show]);
 
   const save = async (e: FormEvent) => {
     e.preventDefault();
     const errs: typeof errors = {};
-    if (form.notification_email && !isValidEmail(form.notification_email)) errs.email = "Enter a valid email address";
-    if (form.notification_phone && !isValidPhone(form.notification_phone)) errs.phone = "Enter a valid phone number (e.g. +27 82 123 4567)";
+    if (form.notification_email && !isValidEmail(form.notification_email)) {
+      errs.email = "Enter a valid email address";
+    }
+    if (form.lead_emails_enabled && !form.notification_email) {
+      errs.email = "Add an address to send lead alerts to, or turn alerts off.";
+    }
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setSaving(true);
-    const { error } = await supabase
-      .from("clients")
-      .update(form)
-      .eq("id", client.id);
+    const res = await fetch("/api/business", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        notification_email: form.notification_email || null,
+        lead_emails_enabled: form.lead_emails_enabled,
+      }),
+    });
     setSaving(false);
-    if (error) show(error.message, "danger");
-    else { onSave(form); show("Notifications saved"); setErrors({}); }
+    if (!res.ok) {
+      const { error } = await res.json().catch(() => ({ error: "save_failed" }));
+      show(error || "Couldn't save", "danger");
+      return;
+    }
+    show("Notifications saved");
+    setErrors({});
   };
+
+  const sendTest = async () => {
+    if (form.notification_email && !isValidEmail(form.notification_email)) {
+      setErrors({ email: "Enter a valid email address first" });
+      return;
+    }
+    setTesting(true);
+    const res = await fetch("/api/leads/test-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        form.notification_email ? { override_recipient: form.notification_email } : {}
+      ),
+    });
+    setTesting(false);
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      show(body.message || body.error || "Test send failed", "danger");
+      return;
+    }
+    show(`Test email sent to ${body.recipient}`);
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader title="Lead alerts" description="Loading..." />
+      </Card>
+    );
+  }
 
   return (
     <Card>
-      <CardHeader title="Notifications" description="Where to alert you when a lead needs attention." />
-      <form className="space-y-4" onSubmit={save}>
-        <Field label="Email" hint="Where new lead alerts will be sent." error={errors.email}>
+      <CardHeader
+        title="Lead alerts"
+        description="Get an email the moment your assistant captures a new lead."
+      />
+
+      <form className="space-y-5" onSubmit={save}>
+        {/* On/off toggle */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <div className="text-small font-medium text-fg">Email me when a new lead comes in</div>
+            <div className="text-mini text-fg-muted mt-1">
+              Turn this off to stop all lead notification emails. Leads still get captured in your dashboard.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setForm((f) => ({ ...f, lead_emails_enabled: !f.lead_emails_enabled }))}
+            role="switch"
+            aria-checked={form.lead_emails_enabled}
+            aria-label="Toggle lead notification emails"
+            className={`relative w-12 h-6 rounded-full transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-ember/40 shrink-0 mt-0.5 ${
+              form.lead_emails_enabled ? "bg-ember" : "bg-ink/20"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-paper rounded-full shadow-sm transition-transform duration-200 ${
+                form.lead_emails_enabled ? "translate-x-6" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
+
+        <Field
+          label="Send lead alerts to"
+          hint={
+            defaultEmail && form.notification_email !== defaultEmail
+              ? `Default account email is ${defaultEmail}. Leave blank to use it.`
+              : "This is the inbox where every new lead will land."
+          }
+          error={errors.email}
+        >
           <Input
             type="email"
             value={form.notification_email}
-            onChange={(e) => { setForm({ ...form, notification_email: e.target.value }); setErrors({ ...errors, email: undefined }); }}
+            onChange={(e) => {
+              setForm({ ...form, notification_email: e.target.value });
+              setErrors({ ...errors, email: undefined });
+            }}
             placeholder="you@business.co.za"
+            disabled={!form.lead_emails_enabled}
           />
         </Field>
-        <Field label="WhatsApp number" hint="For future WhatsApp alert delivery." error={errors.phone}>
-          <Input
-            value={form.notification_phone}
-            onChange={(e) => { setForm({ ...form, notification_phone: e.target.value }); setErrors({ ...errors, phone: undefined }); }}
-            placeholder="+27 82 123 4567"
-          />
-        </Field>
-        <Button type="submit" loading={saving} icon={<Save className="w-4 h-4" />}>Save notifications</Button>
+
+        <div className="flex flex-wrap gap-3 pt-1">
+          <Button type="submit" loading={saving} icon={<Save className="w-4 h-4" />}>
+            Save changes
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={sendTest}
+            loading={testing}
+            disabled={!form.notification_email && !defaultEmail}
+          >
+            Send test email
+          </Button>
+        </div>
+
+        <p className="text-mini text-fg-muted">
+          Tip: if a test email never arrives, check your spam folder, then verify the sender domain in your Resend dashboard.
+        </p>
       </form>
     </Card>
   );

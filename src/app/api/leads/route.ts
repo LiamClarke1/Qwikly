@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
   const { data: business } = await db
     .from("businesses")
-    .select("id, name, contact_email, user_id")
+    .select("id, name, contact_email, notification_email, lead_emails_enabled, user_id")
     .eq("api_key", api_key)
     .maybeSingle();
 
@@ -78,14 +78,21 @@ export async function POST(req: NextRequest) {
   const planConfig = PLAN_CONFIG[resolvePlan(plan)];
   const leadCap = planConfig.leadLimit; // null = no hard cap (premium)
 
+  // Resolve where notifications should land. notification_email is the user-controlled
+  // setting; contact_email is the legacy fallback for accounts that pre-date the toggle.
+  const recipient = (business.notification_email && business.notification_email.trim())
+    || (business.contact_email && business.contact_email.trim())
+    || null;
+  const emailsEnabled = business.lead_emails_enabled !== false; // default true if column null
+
   // ── Lead cap enforcement ──────────────────────────────────────────────────────
   if (leadCap !== null && usagePeriod.leads_captured >= leadCap) {
     // Only email on the first blocked request (when exactly at cap)
-    if (usagePeriod.leads_captured === leadCap) {
+    if (usagePeriod.leads_captured === leadCap && emailsEnabled && recipient) {
       resend.emails
         .send({
           from: FROM,
-          to: [business.contact_email],
+          to: [recipient],
           subject: "You've hit your Qwikly lead cap — upgrade to keep capturing",
           html: capReachedNotificationHtml({ businessName: business.name }),
         })
@@ -134,10 +141,26 @@ export async function POST(req: NextRequest) {
   const confirmUrl = `${BASE_URL}/api/leads/confirm/${lead.confirm_token}?action=confirm`;
   const suggestUrl = `${BASE_URL}/api/leads/confirm/${lead.confirm_token}?action=suggest`;
 
+  if (!emailsEnabled || !recipient) {
+    await db
+      .from("leads")
+      .update({
+        email_status: "skipped",
+        email_error: !emailsEnabled
+          ? "lead_emails_disabled"
+          : "no_recipient_address",
+      })
+      .eq("id", lead.id);
+    return NextResponse.json({ ok: true, lead_id: lead.id, email_skipped: true }, { headers: CORS });
+  }
+
+  // Fire-and-forget the email but record the outcome so failures are visible
+  // in the dashboard and we never silently lose a notification.
   resend.emails
     .send({
       from: FROM,
-      to: [business.contact_email],
+      to: [recipient],
+      replyTo: lead.visitor_email ?? undefined,
       subject: `New lead from your website — ${lead.name ?? contact}`,
       html: leadNotificationHtml({
         businessName: business.name,
@@ -150,7 +173,31 @@ export async function POST(req: NextRequest) {
         suggestUrl,
       }),
     })
-    .catch((err) => console.error("[leads] lead notification email failed:", { leadId: lead.id, businessId: business.id, err }));
+    .then(async ({ data, error }) => {
+      if (error) {
+        console.error("[leads] lead notification email failed:", { leadId: lead.id, businessId: business.id, error });
+        await db
+          .from("leads")
+          .update({ email_status: "failed", email_error: error.message ?? String(error) })
+          .eq("id", lead.id);
+      } else {
+        await db
+          .from("leads")
+          .update({
+            email_status: "sent",
+            email_message_id: data?.id ?? null,
+            email_sent_at: new Date().toISOString(),
+          })
+          .eq("id", lead.id);
+      }
+    })
+    .catch(async (err) => {
+      console.error("[leads] lead notification email threw:", { leadId: lead.id, businessId: business.id, err });
+      await db
+        .from("leads")
+        .update({ email_status: "failed", email_error: err?.message ?? String(err) })
+        .eq("id", lead.id);
+    });
 
   return NextResponse.json({ ok: true, lead_id: lead.id }, { headers: CORS });
 }
