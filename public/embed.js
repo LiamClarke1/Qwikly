@@ -5,7 +5,7 @@
   var script = document.currentScript || document.querySelector("script[data-qwikly-id]");
   var TENANT_ID = script && script.getAttribute("data-qwikly-id");
   if (!TENANT_ID) return;
-  var API_BASE = (script && script.getAttribute("data-api")) || "https://web.qwikly.co.za";
+  var API_BASE = (script && script.getAttribute("data-api")) || "https://qwikly.co.za";
 
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var isMobile = window.matchMedia("(max-width: 600px)").matches;
@@ -141,8 +141,10 @@
     if (nameEl) nameEl.textContent = biz();
     if (avEl) renderAvatar(avEl);
 
-    // Show/hide attach button when branding updates after panel is built
-    var attBtn = shadow.getElementById("qw-att");
+    // Re-initialize file input with correct MIME types now that branding is loaded.
+    // If the panel was already built before branding arrived, fileInput may be
+    // null (crash path) or pointing to a detached element (wipe path) — reset it.
+    if (panelBuilt) fileInput = null;
     setupFileInput();
   }
 
@@ -198,18 +200,19 @@
 
   function setupFileInput() {
     if (fileInput) return;
-    fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.style.display = "none";
-    var allowed = branding.doc_allowed_types || ["application/pdf", "image/jpeg", "image/png"];
-    fileInput.accept = mimeToAccept(allowed);
-    fileInput.addEventListener("change", function () {
-      var file = fileInput.files && fileInput.files[0];
-      fileInput.value = "";
+    var input = document.createElement("input");
+    input.type = "file";
+    input.style.display = "none";
+    var allowed = (branding && branding.doc_allowed_types) || ["application/pdf", "image/jpeg", "image/png"];
+    input.accept = mimeToAccept(allowed);
+    input.addEventListener("change", function () {
+      var file = input.files && input.files[0];
+      input.value = "";
       if (file) handleFileSelected(file);
     });
     // Append to panel so it lives inside the shadow
-    panel.appendChild(fileInput);
+    panel.appendChild(input);
+    fileInput = input; // assign last so a partial failure doesn't block re-runs
   }
 
   // ── Document card rendering ─────────────────────────────────────────────────

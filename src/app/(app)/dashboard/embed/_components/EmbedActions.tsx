@@ -9,7 +9,7 @@ interface EmbedActionsProps {
 }
 
 export function EmbedActions({ publicKey, tenantName }: EmbedActionsProps) {
-  const snippet = `<script\n  src="https://cdn.qwikly.co.za/embed.js"\n  data-qwikly-id="${publicKey}"\n  async\n></script>`;
+  const snippet = `<script\n  src="https://qwikly.co.za/embed.js"\n  data-qwikly-id="${publicKey}"\n  async\n></script>`;
 
   // ── Copy state ────────────────────────────────────────────────────────────
   const [copied, setCopied] = useState(false);

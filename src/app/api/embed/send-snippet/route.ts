@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  const snippet = `<script src="https://cdn.qwikly.co.za/embed.js" data-qwikly-id="${client.public_key}" async></script>`;
+  const snippet = `<script src="https://qwikly.co.za/embed.js" data-qwikly-id="${client.public_key}" async></script>`;
   const escapedSnippet = snippet.replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const safeName = (client.business_name ?? "your site")
     .replace(/&/g, "&amp;")

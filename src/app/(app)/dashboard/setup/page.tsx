@@ -523,7 +523,7 @@ function OverviewView({
   }
 
   const handleWebCopy = async () => {
-    const snippet = `<script\n  src="https://cdn.qwikly.co.za/embed.js"\n  data-qwikly-id="${client?.public_key ?? ""}"\n  async\n></script>`;
+    const snippet = `<script\n  src="https://qwikly.co.za/embed.js"\n  data-qwikly-id="${client?.public_key ?? ""}"\n  async\n></script>`;
     try {
       await navigator.clipboard.writeText(snippet);
     } catch {
@@ -759,7 +759,7 @@ function OverviewView({
                 </p>
                 <div className="rounded-xl bg-[#0f172a] p-4 overflow-x-auto">
                   <pre className="font-mono text-[12px] leading-relaxed whitespace-pre text-slate-300">
-                    {`<script\n  src="https://cdn.qwikly.co.za/embed.js"\n  data-qwikly-id="${client?.public_key ?? ""}"\n  async\n></script>`}
+                    {`<script\n  src="https://qwikly.co.za/embed.js"\n  data-qwikly-id="${client?.public_key ?? ""}"\n  async\n></script>`}
                   </pre>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
