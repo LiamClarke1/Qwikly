@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
       client.google_token_expiry,
       clientId
     );
-    const calendarId = client.google_calendar_id ?? "primary";
+    const calendarId = client.google_calendar_id?.trim() || "primary";
 
     const { data } = await cal.events.list({
       calendarId,

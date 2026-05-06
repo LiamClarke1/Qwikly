@@ -47,7 +47,7 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const cal = calendarClient(client.google_access_token, client.google_refresh_token ?? "", client.google_token_expiry, clientId);
-    const calendarId = calId ?? client.google_calendar_id ?? "primary";
+    const calendarId = (calId?.trim() || client.google_calendar_id?.trim()) || "primary";
     const { data } = await cal.events.patch({
       calendarId,
       eventId,

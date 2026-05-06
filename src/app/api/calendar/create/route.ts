@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       client.google_token_expiry,
       clientId
     );
-    const calendarId = client.google_calendar_id ?? "primary";
+    const calendarId = client.google_calendar_id?.trim() || "primary";
 
     const start = new Date(booking.booking_datetime);
     const end = new Date(start.getTime() + 60 * 60 * 1000); // 1-hour default

@@ -44,7 +44,7 @@ export async function DELETE(req: NextRequest) {
 
   try {
     const cal = calendarClient(client.google_access_token, client.google_refresh_token ?? "", client.google_token_expiry, clientId);
-    const calendarId = calId ?? client.google_calendar_id ?? "primary";
+    const calendarId = (calId?.trim() || client.google_calendar_id?.trim()) || "primary";
     await cal.events.delete({ calendarId, eventId });
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
