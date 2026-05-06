@@ -143,7 +143,6 @@
 
     // Show/hide attach button when branding updates after panel is built
     var attBtn = shadow.getElementById("qw-att");
-    if (attBtn) attBtn.style.display = b.doc_visitor_upload ? "flex" : "none";
     setupFileInput();
   }
 
@@ -199,7 +198,6 @@
 
   function setupFileInput() {
     if (fileInput) return;
-    if (!branding || !branding.doc_visitor_upload) return;
     fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.style.display = "none";
@@ -479,10 +477,7 @@
   // ── Panel build ─────────────────────────────────────────────────────────────
 
   function buildPanel() {
-    var showAttach = branding && branding.doc_visitor_upload;
-    var attachHtml = showAttach
-      ? '<button class="attbtn" id="qw-att" aria-label="Attach file" title="Attach file">' + ATTACH_SVG + "</button>"
-      : "";
+    var attachHtml = '<button class="attbtn" id="qw-att" aria-label="Attach file" title="Attach file">' + ATTACH_SVG + "</button>";
 
     panel.innerHTML =
       '<div class="hd"><div class="hd-av" id="qw-av"></div>' +
