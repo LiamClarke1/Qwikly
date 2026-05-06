@@ -63,7 +63,7 @@ export default function FilesSettingsPage() {
     );
   }
 
-  const visitorUpload = client.doc_visitor_upload  ?? false;
+  const visitorUpload = client.doc_visitor_upload  ?? true;
   const businessSend  = client.doc_business_send   ?? false;
   const allowedTypes  = client.doc_allowed_types   ?? ["application/pdf", "image/jpeg", "image/png"];
   const maxSizeMb     = client.doc_max_size_mb     ?? 10;
