@@ -55,6 +55,8 @@ export type ClientPromptData = {
   ai_unhappy_customer?: string | null;
   ai_escalation_triggers?: string | null;
   ai_escalation_custom?: string | null;
+  doc_visitor_upload?: boolean | null;
+  doc_visitor_prompt?: string | null;
 };
 
 export const CLIENT_TONE_MAP: Record<string, string> = {
@@ -101,6 +103,41 @@ export function getTradeQuestion(trade: string): string {
   if (t.includes("security") || t.includes("alarm"))                    return "Is this for a new installation, a repair, or a monitoring enquiry?";
   if (t.includes("move") || t.includes("removal"))                      return "Is this a local move or long distance, and roughly how big is the load?";
   return "Tell me a bit more about what you need so I can point you in the right direction.";
+}
+
+export function getPhotoPrompt(trade: string): string | null {
+  const t = (trade ?? "").toLowerCase();
+  if (t.includes("plumb"))                                                return "a photo of the leak, blockage, or affected area";
+  if (t.includes("electr"))                                               return "a photo of the fault, switchboard, or affected area";
+  if (t.includes("roof"))                                                 return "a photo of the roof damage or affected section";
+  if (t.includes("solar"))                                                return "a photo of your roof and any existing setup";
+  if (t.includes("pest"))                                                 return "a photo of the pest or affected area";
+  if (t.includes("pool"))                                                 return "a photo of the pool and the issue";
+  if (t.includes("air") || t.includes("hvac") || t.includes("condition")) return "a photo of the unit";
+  if (t.includes("paint"))                                                return "a photo of the surface or room";
+  if (t.includes("tile") || t.includes("floor"))                         return "a photo of the area";
+  if (t.includes("garden") || t.includes("landscap"))                    return "a photo of your garden or the space";
+  if (t.includes("security") || t.includes("alarm"))                     return "a photo of the property or affected area";
+  if (t.includes("garage"))                                               return "a photo of the garage door";
+  if (t.includes("build") || t.includes("construct") || t.includes("renovat")) return "photos of the space or area needing work";
+  if (t.includes("clean"))                                                return "a photo of the space";
+  if (t.includes("move") || t.includes("removal"))                       return "a few photos of the items or rooms to be moved";
+  if (t.includes("photog"))                                               return "any reference images or inspiration photos";
+  if (t.includes("interior") || t.includes("design") || t.includes("decor")) return "photos of the space";
+  if (t.includes("car") || t.includes("auto") || t.includes("panel"))   return "a photo of the vehicle or damage";
+  if (t.includes("glass") || t.includes("window"))                       return "a photo of the glass or window";
+  if (t.includes("waterproof"))                                           return "a photo of the affected area";
+  if (t.includes("brick") || t.includes("pave") || t.includes("plas"))  return "a photo of the area";
+  // Professional/service businesses where photos rarely help
+  if (
+    t.includes("legal") || t.includes("law") || t.includes("account") ||
+    t.includes("tax") || t.includes("dental") || t.includes("doctor") ||
+    t.includes("medical") || t.includes("gp") || t.includes("gym") ||
+    t.includes("fitness") || t.includes("tutor") || t.includes("coach") ||
+    t.includes("restaurant") || t.includes("cafe") || t.includes("cater")
+  ) return null;
+  // Default: for any other physical trade, photos help
+  return "a photo of the issue or area";
 }
 
 export function buildClientSystemPrompt(c: ClientPromptData, customSystemPrompt?: string | null): string {
@@ -273,7 +310,14 @@ ${speed === "fast"
 
 Think about urgency, scale, history, the specific nature of the problem, and location. Draw on your understanding of how people in this trade experience problems. Generate the question from the context of this conversation, not from a fixed list. The question should feel like it came from someone who has dealt with this kind of job many times before.
 
-After they answer, acknowledge in ONE sentence that validates what they said. Then move to Stage 3.
+After they answer, acknowledge in ONE sentence that validates what they said. Then move to Stage 2b if uploads are enabled, otherwise move directly to Stage 3.
+
+### Stage 2b — Photo Request (only when uploads are enabled)
+
+${c.doc_visitor_upload !== false && getPhotoPrompt(trade)
+  ? `Uploads are enabled. After understanding the visitor's problem, ask them to send ${c.doc_visitor_prompt?.trim() || getPhotoPrompt(trade)} using the + button in the chat. One sentence only. Example: "If you can, hit the + button and send ${c.doc_visitor_prompt?.trim() || getPhotoPrompt(trade)} — it helps us quote you accurately." Do this once, naturally, after Stage 2. If they don't send one, move on without pushing it.`
+  : "Uploads are not enabled for this account. Skip this stage entirely."
+}
 
 ### Stage 3 — Qualify and Quantify
 

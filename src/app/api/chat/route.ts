@@ -62,7 +62,8 @@ export async function POST(req: NextRequest) {
       common_questions, common_objections, faq,
       tone, ai_tone, ai_language, ai_response_style, ai_conversation_speed, ai_greeting, ai_sign_off,
       ai_always_do, ai_never_say, ai_unhappy_customer,
-      ai_escalation_triggers, ai_escalation_custom
+      ai_escalation_triggers, ai_escalation_custom,
+      doc_visitor_upload, doc_visitor_prompt
     `)
     .eq("public_key", tenantId)
     .maybeSingle();
