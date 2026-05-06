@@ -597,8 +597,8 @@ export default function BillingPage() {
           </p>
         </div>
         <div className="p-5">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {(["pro", "premium", "billions"] as PlanId[]).map((planId) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
+            {(["pro", "premium"] as PlanId[]).map((planId) => {
               const meta = PLANS[planId];
               const isCurrent = !isTrialPlan && !isLegacyStarter && planId === currentPlanId;
               const price = isMonthly ? MONTHLY[planId] : Math.round(ANNUAL[planId] / 12);

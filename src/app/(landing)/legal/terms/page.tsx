@@ -150,7 +150,6 @@ export default function TermsPage() {
                     "Free Trial, 14 days free, identical to Pro, no card required",
                     "Pro, R999/month (up to 75 qualified leads per month, email lead delivery, email support)",
                     "Premium, R1,999/month (up to 250 qualified leads per month, custom branding, custom questions, CSV export, priority support)",
-                    "Billions, R2,999/month (up to 1,000 qualified leads per month, API access, dedicated support)",
                     "Annual billing is available at a 15% discount off the monthly rate",
                     "Subscription fees are billed monthly in advance on the anniversary of your sign-up date",
                     "Payment is due on the billing date; failure to pay may result in suspension of the Service",

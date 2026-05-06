@@ -158,7 +158,7 @@ export default function StepAssistant({ client, plan, onAdvance, onBack }: Props
             {!canCustomise && (
               <div className="absolute inset-0 z-10 rounded-xl bg-surface/70 backdrop-blur-[2px] flex items-center justify-center gap-2 border border-border">
                 <Lock className="w-4 h-4 text-fg-muted" />
-                <span className="text-small text-fg-muted font-medium">Custom greeting — Premium &amp; Billions</span>
+                <span className="text-small text-fg-muted font-medium">Custom greeting — Premium only</span>
               </div>
             )}
             <Field label="Greeting message" hint='Use {business} for your business name.'>
@@ -177,7 +177,7 @@ export default function StepAssistant({ client, plan, onAdvance, onBack }: Props
             {!canCustomise && (
               <div className="absolute inset-0 z-10 rounded-xl bg-surface/70 backdrop-blur-[2px] flex items-center justify-center gap-2 border border-border">
                 <Lock className="w-4 h-4 text-fg-muted" />
-                <span className="text-small text-fg-muted font-medium">Custom questions — Premium &amp; Billions</span>
+                <span className="text-small text-fg-muted font-medium">Custom questions — Premium only</span>
               </div>
             )}
             <Field label="Qualifying questions" hint="Up to 3 questions your assistant asks every lead.">

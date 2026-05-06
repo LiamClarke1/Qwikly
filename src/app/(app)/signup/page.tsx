@@ -106,21 +106,6 @@ const PLANS: {
       "Priority email support",
     ],
   },
-  {
-    id: "billions",
-    name: "Billions",
-    price: "R2,999",
-    sub: "/month",
-    cta: "Choose Billions",
-    noCard: false,
-    features: [
-      "1,000 qualified leads/month",
-      "Everything in Premium, plus:",
-      "Calendar integration (coming soon)",
-      "API access",
-      "Dedicated support",
-    ],
-  },
 ];
 
 interface PlanSelectProps {
@@ -140,7 +125,7 @@ function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
         </p>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {PLANS.map((plan) => {
           const isSelected = selected === plan.id;
           return (
@@ -306,7 +291,6 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
     plan === "trial" ? "Free Trial — 14 days, no card required" :
     plan === "pro" ? "Pro — R999/mo" :
     plan === "premium" ? "Premium — R1,999/mo" :
-    plan === "billions" ? "Billions — R2,999/mo" :
     "Free Trial — 14 days, no card required";
 
   return (
@@ -464,7 +448,9 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
 function SignupContent() {
   const searchParams = useSearchParams();
   const rawPlan = searchParams.get("plan");
-  const validPlans: PlanTier[] = ["trial", "pro", "premium", "billions"];
+  // "billions" deliberately excluded so any old ?plan=billions URL gracefully
+  // falls back to trial selection (the tier itself is hidden site-wide).
+  const validPlans: PlanTier[] = ["trial", "pro", "premium"];
   const initialPlan: PlanTier | null = validPlans.includes(rawPlan as PlanTier)
     ? (rawPlan as PlanTier)
     : null;

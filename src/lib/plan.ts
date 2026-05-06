@@ -54,6 +54,8 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     apiAccess: false,
     supportTier: 'priority',
   },
+  // Hidden from public pricing & signup; config kept so existing customers
+  // (if any) and admin tooling continue to resolve correctly.
   billions: {
     name: 'Billions',
     priceMonthly: 2999,

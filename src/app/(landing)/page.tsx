@@ -671,23 +671,6 @@ const teaserTiers = [
     href: "/signup?plan=premium",
     variant: "solid" as const,
   },
-  {
-    name: "Billions",
-    price: "R2,999",
-    period: "/month",
-    tagline: "Maximum leads, full control",
-    highlight: false,
-    isTrial: false,
-    features: [
-      "1,000 qualified leads/month",
-      "Everything in Premium",
-      "Calendar integration (coming soon)",
-      "API access + dedicated support",
-    ],
-    cta: "Start with Billions",
-    href: "/signup?plan=billions",
-    variant: "outline" as const,
-  },
 ];
 
 const faqTeaser = [
@@ -950,7 +933,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch reveal-stagger">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch reveal-stagger max-w-5xl mx-auto">
             {teaserTiers.map((tier) => (
               <div
                 key={tier.name}

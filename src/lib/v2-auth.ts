@@ -38,7 +38,7 @@ export async function v2Auth(): Promise<V2AuthContext | null> {
 
   const db = supabaseAdmin();
 
-  const [{ data: business }, { data: sub }] = await Promise.all([
+  const [{ data: existingBusiness }, { data: sub }] = await Promise.all([
     db.from("businesses").select("id").eq("user_id", user.id).maybeSingle(),
     db.from("subscriptions")
       .select("plan, status, paystack_customer_code, paystack_subscription_code, paystack_email_token, cancel_at_period_end")
@@ -46,9 +46,34 @@ export async function v2Auth(): Promise<V2AuthContext | null> {
       .maybeSingle(),
   ]);
 
+  // Self-heal for legacy accounts that pre-date the businesses table.
+  // These users have a clients row but no businesses row, so every v2
+  // endpoint was returning 401. Create the row on the fly using whatever
+  // identity data we can find on the auth user / clients row.
+  let business = existingBusiness;
   if (!business) {
-    console.warn("[v2-auth] authenticated user has no business row:", user.id);
-    return null;
+    const { data: legacyClient } = await db
+      .from("clients")
+      .select("business_name, notification_email, client_email")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+
+    const inserted = await db
+      .from("businesses")
+      .insert({
+        user_id: user.id,
+        name: legacyClient?.business_name ?? user.user_metadata?.business_name ?? "",
+        contact_email: legacyClient?.client_email ?? user.email ?? "",
+        notification_email: legacyClient?.notification_email ?? user.email ?? null,
+      })
+      .select("id")
+      .single();
+
+    if (inserted.error || !inserted.data) {
+      console.error("[v2-auth] failed to self-heal businesses row:", { userId: user.id, error: inserted.error });
+      return null;
+    }
+    business = inserted.data;
   }
 
   return {

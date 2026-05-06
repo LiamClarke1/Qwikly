@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Check, Minus, Plus, Shield, MapPin, Clock, Zap, Users, TrendingDown, MessageSquare, Phone, X } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 
+// "billions" tier is intentionally hidden from public pricing for now (kept in
+// types/billing infra so existing accounts still work). Re-include it in the
+// arrays below to surface it again.
 const MONTHLY = { trial: 0, pro: 999, premium: 1999, billions: 2999 } as const;
 const ANNUAL  = { trial: 0, pro: 10188, premium: 20390, billions: 30590 } as const;
 
@@ -62,38 +65,21 @@ const tiers: {
       "Priority email support",
     ],
   },
-  {
-    id: "billions",
-    name: "Billions",
-    tagline: "Full scale, full control",
-    highlight: false,
-    cta: "Start with Billions",
-    features: [
-      "1,000 qualified leads/month",
-      "Everything in Premium, plus:",
-      "Calendar integration (coming soon)",
-      "API access",
-      "Dedicated support",
-    ],
-  },
 ];
 
 type FeatureCell = boolean | string;
 
-const featureRows: { label: string; pro: FeatureCell; premium: FeatureCell; billions: FeatureCell }[] = [
-  { label: "Digital assistant platform",       pro: true,    premium: true,    billions: true     },
-  { label: "Email lead delivery",              pro: true,    premium: true,    billions: true     },
-  { label: "POPIA compliant",                  pro: true,    premium: true,    billions: true     },
-  { label: "Email support",                    pro: true,    premium: true,    billions: true     },
-  { label: "Qualified leads / month",          pro: "75",    premium: "250",   billions: "1,000"  },
-  { label: '"Powered by Qwikly" branding',    pro: true,    premium: false,   billions: false    },
-  { label: "Custom branding (your logo)",      pro: false,   premium: true,    billions: true     },
-  { label: "Custom greeting & questions",      pro: false,   premium: true,    billions: true     },
-  { label: "Lead exports (CSV)",               pro: false,   premium: true,    billions: true     },
-  { label: "Priority email support",           pro: false,   premium: true,    billions: true     },
-  { label: "Calendar integration",             pro: false,   premium: false,   billions: "Soon"   },
-  { label: "API access",                       pro: false,   premium: false,   billions: true     },
-  { label: "Dedicated support",               pro: false,   premium: false,   billions: true     },
+const featureRows: { label: string; pro: FeatureCell; premium: FeatureCell }[] = [
+  { label: "Digital assistant platform",       pro: true,    premium: true     },
+  { label: "Email lead delivery",              pro: true,    premium: true     },
+  { label: "POPIA compliant",                  pro: true,    premium: true     },
+  { label: "Email support",                    pro: true,    premium: true     },
+  { label: "Qualified leads / month",          pro: "75",    premium: "250"    },
+  { label: '"Powered by Qwikly" branding',    pro: true,    premium: false    },
+  { label: "Custom branding (your logo)",      pro: false,   premium: true     },
+  { label: "Custom greeting & questions",      pro: false,   premium: true     },
+  { label: "Lead exports (CSV)",               pro: false,   premium: true     },
+  { label: "Priority email support",           pro: false,   premium: true     },
 ];
 
 const pricingFAQs = [
@@ -153,7 +139,7 @@ function TableCell({ value, isPremiumCol }: { value: FeatureCell; isPremiumCol?:
   );
 }
 
-type CompareTab = "pro" | "premium" | "billions";
+type CompareTab = "pro" | "premium";
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
@@ -223,7 +209,7 @@ export default function PricingPage() {
           </div>
 
           {/* Tier cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch max-w-5xl mx-auto">
             {tiers.map((tier) => {
               const price = displayPrice(tier.id);
 
@@ -438,7 +424,7 @@ export default function PricingPage() {
           <div className="sm:hidden">
             {/* Plan tabs */}
             <div className="flex rounded-xl border border-ink/10 overflow-hidden mb-8">
-              {(["pro", "premium", "billions"] as CompareTab[]).map((tab) => (
+              {(["pro", "premium"] as CompareTab[]).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setCompareTab(tab)}
@@ -482,9 +468,6 @@ export default function PricingPage() {
                   <th className="pb-5 px-4 text-center font-normal">
                     <span className="eyebrow text-ember">Premium</span>
                   </th>
-                  <th className="pb-5 px-4 text-center font-normal eyebrow text-ink-500">
-                    Billions
-                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink/[0.06]">
@@ -498,9 +481,6 @@ export default function PricingPage() {
                     </td>
                     <td className="py-4 px-4 text-center">
                       <TableCell value={row.premium} isPremiumCol />
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <TableCell value={row.billions} />
                     </td>
                   </tr>
                 ))}

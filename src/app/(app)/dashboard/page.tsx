@@ -241,11 +241,11 @@ function StatusBar({
             <span className="text-ink font-medium">
               You&rsquo;ve hit your cap — top-ups billed at{" "}
               <span className="font-bold">R{PLAN_TOP_UP_PRICE}/lead</span>
-              {tier !== "billions" && (
+              {tier !== "premium" && tier !== "billions" && (
                 <>
                   {", or "}
                   <Link href="/dashboard/billing" className="text-danger font-bold hover:underline cursor-pointer">
-                    upgrade to {tier === "premium" ? "Billions" : "Premium"}
+                    upgrade to Premium
                   </Link>
                   {" for more leads"}
                 </>

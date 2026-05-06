@@ -102,9 +102,9 @@ export default function TeamPage() {
               <Lock className="w-6 h-6 text-ink-400" />
             </div>
             <div className="max-w-sm">
-              <p className="text-h3 font-semibold text-fg">Team access requires Premium or Billions</p>
+              <p className="text-h3 font-semibold text-fg">Team access requires Premium</p>
               <p className="text-small text-fg-muted mt-2 leading-relaxed">
-                Upgrade to Premium or Billions to invite team members and manage workspace access.
+                Upgrade to Premium to invite team members and manage workspace access.
               </p>
             </div>
             <Link

@@ -51,16 +51,6 @@ const productSchema = {
       availability: "https://schema.org/InStock",
       url: "https://www.qwikly.co.za/pricing",
     },
-    {
-      "@type": "Offer",
-      name: "Billions",
-      priceCurrency: "ZAR",
-      price: "2999",
-      priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
-      description: "1,000 qualified leads per month. API access, dedicated support, and everything in Premium.",
-      availability: "https://schema.org/InStock",
-      url: "https://www.qwikly.co.za/pricing",
-    },
   ],
 };
 
