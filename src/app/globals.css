@@ -6,10 +6,46 @@
 .h-screen { height: 100vh; height: 100dvh; }
 .min-h-screen { min-height: 100vh; min-height: 100dvh; }
 
-/* Prevent iOS Safari auto-zoom on input focus (triggers when font-size < 16px) */
-@media screen and (-webkit-min-device-pixel-ratio: 0) {
-  input, textarea, select {
-    font-size: 16px;
+/* ──────────────────────────────────────────────────────────────
+   iOS Safari auto-zoom fix
+   Safari zooms the viewport on focus when an input's computed
+   font-size is < 16px. Tailwind utilities like .text-sm (14px)
+   have specificity (0,1,0) and beat a bare `input` selector, so
+   we boost specificity with :not() chains AND use !important to
+   make this deterministic regardless of class ordering.
+   Scoped to ≤768px so desktop typography is untouched.
+   ────────────────────────────────────────────────────────────── */
+@media screen and (max-width: 768px) {
+  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="file"]):not([type="color"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Kill the 300ms double-tap-to-zoom delay and accidental zoom on
+   interactive elements. Keep pinch-zoom available on the page
+   itself for accessibility — only suppress it on tappable UI. */
+button,
+a,
+[role="button"],
+input[type="submit"],
+input[type="button"],
+input[type="reset"],
+input[type="checkbox"],
+input[type="radio"],
+label,
+select {
+  touch-action: manipulation;
+}
+
+/* Belt-and-braces: stop any element from forcing the viewport
+   wider than the screen on mobile. Pairs with the existing
+   html{overflow-x:clip} / body{overflow-x:hidden}. */
+@media screen and (max-width: 768px) {
+  html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 }
 
