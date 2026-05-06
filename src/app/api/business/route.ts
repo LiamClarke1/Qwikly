@@ -11,13 +11,14 @@ const PATCHABLE = [
   "contact_email",
   "notification_email",
   "lead_emails_enabled",
+  "owner_first_name",
   "accent_colour",
   "greeting",
   "qualifying_questions",
 ] as const;
 
 const SELECT_COLUMNS =
-  "id, name, industry, contact_email, notification_email, lead_emails_enabled, accent_colour, greeting, qualifying_questions, api_key, branding_removed, created_at";
+  "id, name, industry, contact_email, notification_email, lead_emails_enabled, owner_first_name, accent_colour, greeting, qualifying_questions, api_key, branding_removed, created_at";
 
 export async function GET() {
   const auth = await v2Auth();
@@ -81,6 +82,15 @@ export async function PATCH(req: NextRequest) {
     }
     if (field === "lead_emails_enabled") {
       updates[field] = Boolean(body[field]);
+      continue;
+    }
+    if (field === "owner_first_name") {
+      const val = body[field];
+      if (val !== null && typeof val !== "string") {
+        return NextResponse.json({ error: "owner_first_name must be a string or null" }, { status: 400 });
+      }
+      const trimmed = typeof val === "string" ? val.trim() : null;
+      updates[field] = trimmed && trimmed.length > 0 ? trimmed : null;
       continue;
     }
     updates[field] = body[field];

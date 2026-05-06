@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   const db = supabaseAdmin();
   const { data: business, error: bizErr } = await db
     .from("businesses")
-    .select("id, name, contact_email, notification_email, lead_emails_enabled")
+    .select("id, name, contact_email, notification_email, lead_emails_enabled, owner_first_name")
     .eq("id", auth.businessId)
     .maybeSingle();
 
@@ -112,6 +112,7 @@ export async function POST(req: NextRequest) {
 
   const templateArgs = {
     businessName: business.name || "your business",
+    ownerFirstName: business.owner_first_name,
     leadName: "Sarah Mokoena",
     contact: "+27 82 555 0123",
     need: "Looking for a quote on a kitchen renovation, ideally before mid-June.",

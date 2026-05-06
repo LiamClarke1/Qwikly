@@ -90,135 +90,33 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
     timeZone: "Africa/Johannesburg",
   });
 
-  // ── Quick-action buttons (call / WhatsApp / email)
+  // ── Quick-action buttons (call / WhatsApp / SMS / email) — small text-link
+  //     style, sits below the body like a normal email signature would.
   const quickButtons: string[] = [];
   if (callHref) {
-    quickButtons.push(`
-      <td style="padding:0 6px;">
-        <a href="${esc(callHref)}" style="display:block;padding:14px 16px;background:#E85A2C;color:#fff;text-decoration:none;border-radius:12px;font-size:14px;font-weight:700;text-align:center;">
-          📞 Call now
-        </a>
-      </td>`);
+    quickButtons.push(`<a href="${esc(callHref)}" style="display:inline-block;margin:0 8px 8px 0;padding:9px 16px;background:#111827;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">Call</a>`);
   }
   if (whatsappHref) {
-    quickButtons.push(`
-      <td style="padding:0 6px;">
-        <a href="${esc(whatsappHref)}" style="display:block;padding:14px 16px;background:#25D366;color:#fff;text-decoration:none;border-radius:12px;font-size:14px;font-weight:700;text-align:center;">
-          💬 WhatsApp
-        </a>
-      </td>`);
+    quickButtons.push(`<a href="${esc(whatsappHref)}" style="display:inline-block;margin:0 8px 8px 0;padding:9px 16px;background:#25D366;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">WhatsApp</a>`);
   }
   if (smsHref) {
-    quickButtons.push(`
-      <td style="padding:0 6px;">
-        <a href="${esc(smsHref)}" style="display:block;padding:14px 16px;background:#1F2937;color:#F4F4F5;text-decoration:none;border-radius:12px;font-size:14px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.08);">
-          💬 SMS
-        </a>
-      </td>`);
+    quickButtons.push(`<a href="${esc(smsHref)}" style="display:inline-block;margin:0 8px 8px 0;padding:9px 16px;background:#FFFFFF;color:#111827;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;border:1px solid #E5E7EB;">Text</a>`);
   }
   if (emailHref) {
-    quickButtons.push(`
-      <td style="padding:0 6px;">
-        <a href="${esc(emailHref)}" style="display:block;padding:14px 16px;background:#1F2937;color:#F4F4F5;text-decoration:none;border-radius:12px;font-size:14px;font-weight:700;text-align:center;border:1px solid rgba(255,255,255,0.08);">
-          ✉️ Email
-        </a>
-      </td>`);
+    quickButtons.push(`<a href="${esc(emailHref)}" style="display:inline-block;margin:0 8px 8px 0;padding:9px 16px;background:#FFFFFF;color:#111827;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;border:1px solid #E5E7EB;">Email back</a>`);
   }
 
-  // ── Detail rows (only render rows that have content)
-  const detailRow = (label: string, value: string | null | undefined) =>
-    value && value.trim()
-      ? `<tr>
-          <td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:#9CA3AF;font-size:13px;width:35%;vertical-align:top;">${esc(label)}</td>
-          <td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:#F4F4F5;font-size:13px;line-height:1.5;text-align:right;">${esc(value)}</td>
-        </tr>`
-      : "";
-
-  const detailRows = [
-    detailRow("Name", leadName),
-    detailRow("Contact", contact),
-    !contactIsEmail ? detailRow("Email", visitorEmail) : "",
-    detailRow("Preferred time", preferredTime),
-    detailRow("Captured", capturedAt + " (SAST)"),
-  ]
-    .filter(Boolean)
-    .join("");
-
-  // ── "What they need" hero quote (only if present)
-  const needBlock = need?.trim()
-    ? `
-      <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
-        <tr><td style="background:rgba(232,90,44,0.08);border-left:3px solid #E85A2C;border-radius:8px;padding:16px 18px;">
-          <p style="margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;">What they need</p>
-          <p style="margin:0;font-size:15px;color:#F4F4F5;line-height:1.55;">${esc(need)}</p>
-        </td></tr>
-      </table>`
-    : "";
-
-  // ── Conversation summary block (visitor + assistant turns)
-  // Shows the last few turns so the business owner has context before replying.
-  // Visitor messages are highlighted; assistant replies are dimmed for context.
-  const conversationBlock = (() => {
-    const turns = Array.isArray(conversation) ? conversation : [];
-    if (turns.length === 0) return "";
-
-    // Keep the most recent ~6 messages so the email doesn't get unbounded.
-    const recent = turns.slice(-6);
-
-    const bubbles = recent.map((t) => {
-      const isVisitor = (t.role || "").toLowerCase().includes("visitor")
-        || (t.role || "").toLowerCase() === "user"
-        || (t.role || "").toLowerCase() === "customer";
-      const text = (t.content || "").trim();
-      if (!text) return "";
-
-      if (isVisitor) {
-        return `
-          <tr><td style="padding:6px 0;">
-            <table cellpadding="0" cellspacing="0" role="presentation" style="margin-left:auto;">
-              <tr><td style="background:#1A2030;padding:10px 14px;border-radius:14px 14px 4px 14px;max-width:380px;">
-                <span style="display:block;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;margin-bottom:3px;">${esc(displayName)}</span>
-                <span style="display:block;font-size:13px;color:#F4F4F5;line-height:1.5;white-space:pre-wrap;">${esc(text)}</span>
-              </td></tr>
-            </table>
-          </td></tr>`;
-      }
-      return `
-        <tr><td style="padding:6px 0;">
-          <table cellpadding="0" cellspacing="0" role="presentation">
-            <tr><td style="background:rgba(255,255,255,0.03);padding:10px 14px;border-radius:14px 14px 14px 4px;max-width:380px;">
-              <span style="display:block;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#6B7280;margin-bottom:3px;">Your assistant</span>
-              <span style="display:block;font-size:13px;color:#9CA3AF;line-height:1.5;white-space:pre-wrap;">${esc(text)}</span>
-            </td></tr>
-          </table>
-        </td></tr>`;
-    }).filter(Boolean).join("");
-
-    if (!bubbles) return "";
-
-    const trimmedNotice = turns.length > recent.length
-      ? `<p style="margin:0 0 12px;font-size:11px;color:#6B7280;font-style:italic;">Showing the last ${recent.length} of ${turns.length} messages</p>`
-      : "";
-
-    return `
-      <p style="margin:24px 0 12px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#9CA3AF;">Conversation</p>
-      ${trimmedNotice}
-      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:24px;">
-        ${bubbles}
-      </table>`;
-  })();
-
-  // ── Documents shared by the visitor (only if any)
-  const documentsBlock = (() => {
+  // ── Documents shared — Gmail-style "attachment chips" pinned to the very top
+  const docsTopBlock = (() => {
     const docs = Array.isArray(documents) ? documents : [];
     if (docs.length === 0) return "";
 
     const fileIcon = (type: string) => {
       const t = (type || "").toLowerCase();
-      if (t.includes("pdf")) return "📄";
-      if (t.includes("image") || t.includes("png") || t.includes("jpeg") || t.includes("jpg")) return "🖼️";
-      if (t.includes("word") || t.includes("document")) return "📝";
-      return "📎";
+      if (t.includes("pdf")) return "PDF";
+      if (t.includes("image") || t.includes("png") || t.includes("jpeg") || t.includes("jpg")) return "IMG";
+      if (t.includes("word") || t.includes("document")) return "DOC";
+      return "FILE";
     };
     const sizeLabel = (bytes: number | null | undefined) => {
       if (!bytes || bytes <= 0) return "";
@@ -227,152 +125,202 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
       return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
     };
 
-    const rows = docs.map((d) => `
-      <tr><td style="padding:8px 0;">
-        <a href="${esc(d.viewUrl)}" style="display:block;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px;text-decoration:none;">
-          <table width="100%" cellpadding="0" cellspacing="0" role="presentation"><tr>
-            <td style="vertical-align:middle;width:32px;font-size:18px;">${fileIcon(d.fileType)}</td>
-            <td style="vertical-align:middle;padding-left:8px;">
-              <div style="font-size:13px;font-weight:600;color:#F4F4F5;line-height:1.3;">${esc(d.fileName)}</div>
-              <div style="font-size:11px;color:#6B7280;margin-top:2px;">${esc(d.fileType)}${sizeLabel(d.fileSizeBytes ?? null) ? " · " + sizeLabel(d.fileSizeBytes ?? null) : ""}</div>
+    const chips = docs.map((d) => `
+      <td style="padding:0 8px 8px 0;vertical-align:top;">
+        <a href="${esc(d.viewUrl)}" style="display:block;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:10px 12px;text-decoration:none;min-width:180px;">
+          <table cellpadding="0" cellspacing="0" role="presentation"><tr>
+            <td style="vertical-align:middle;width:36px;">
+              <span style="display:inline-block;background:#F3F4F6;color:#6B7280;font-size:10px;font-weight:700;letter-spacing:0.04em;padding:6px 7px;border-radius:5px;">${fileIcon(d.fileType)}</span>
             </td>
-            <td align="right" style="vertical-align:middle;font-size:12px;color:#E85A2C;font-weight:600;white-space:nowrap;">View →</td>
+            <td style="vertical-align:middle;padding-left:10px;">
+              <div style="font-size:13px;font-weight:600;color:#111827;line-height:1.3;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(d.fileName)}</div>
+              <div style="font-size:11px;color:#6B7280;margin-top:2px;">${sizeLabel(d.fileSizeBytes ?? null) || esc(d.fileType)}</div>
+            </td>
           </tr></table>
         </a>
-      </td></tr>`).join("");
+      </td>`).join("");
 
     return `
-      <p style="margin:24px 0 8px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#9CA3AF;">
-        ${docs.length === 1 ? "Document shared" : `${docs.length} documents shared`}
-      </p>
       <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:24px;">
-        ${rows}
+        <tr><td style="font-size:12px;color:#6B7280;padding-bottom:8px;">
+          📎 ${docs.length} attachment${docs.length === 1 ? "" : "s"} from the visitor
+        </td></tr>
+        <tr><td>
+          <table cellpadding="0" cellspacing="0" role="presentation"><tr>${chips}</tr></table>
+        </td></tr>
       </table>`;
   })();
 
-  // ── Pre-filled reply preview block — shows what's been auto-typed into
-  //     the WhatsApp / Email / SMS deep-links, so the user knows what will
-  //     appear when they tap.
-  const replyPreviewBlock = `
-    <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 20px;">
-      <tr><td style="background:rgba(255,255,255,0.025);border:1px dashed rgba(255,255,255,0.1);border-radius:10px;padding:14px 16px;">
-        <p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#9CA3AF;">
-          ✨ Pre-typed reply (tap a button above to send)
-        </p>
-        <p style="margin:0;font-size:13px;color:#D1D5DB;line-height:1.55;font-style:italic;white-space:pre-wrap;">${esc(followUpMessage)}</p>
-      </td></tr>
-    </table>`;
+  // ── Conversation summary — formatted like an email transcript, plain text
+  //     style with the speaker's name in bold, not chat bubbles.
+  const conversationBlock = (() => {
+    const turns = Array.isArray(conversation) ? conversation : [];
+    if (turns.length === 0) return "";
+
+    const recent = turns.slice(-6);
+    const visitorLabel = leadName?.trim() || "Visitor";
+
+    const lines = recent.map((t) => {
+      const isVisitor = (t.role || "").toLowerCase().includes("visitor")
+        || (t.role || "").toLowerCase() === "user"
+        || (t.role || "").toLowerCase() === "customer";
+      const text = (t.content || "").trim();
+      if (!text) return "";
+      const who = isVisitor ? visitorLabel : "Your assistant";
+      const whoColor = isVisitor ? "#111827" : "#6B7280";
+      return `
+        <tr><td style="padding:6px 0;font-size:14px;line-height:1.55;color:#374151;">
+          <strong style="color:${whoColor};">${esc(who)}:</strong> ${esc(text)}
+        </td></tr>`;
+    }).filter(Boolean).join("");
+
+    if (!lines) return "";
+
+    const trimmedNotice = turns.length > recent.length
+      ? `<p style="margin:0 0 8px;font-size:12px;color:#9CA3AF;font-style:italic;">Showing the last ${recent.length} of ${turns.length} messages.</p>`
+      : "";
+
+    return `
+      <p style="margin:24px 0 8px;font-size:13px;font-weight:600;color:#111827;">Conversation</p>
+      ${trimmedNotice}
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 24px;border-left:3px solid #E5E7EB;padding-left:14px;">
+        ${lines}
+      </table>`;
+  })();
+
+  // ── Detail rows (only render rows that have content) — like a normal email
+  //     "summary" with key-values aligned left
+  const detailRow = (label: string, value: string | null | undefined) =>
+    value && value.trim()
+      ? `<tr>
+          <td style="padding:6px 16px 6px 0;color:#6B7280;font-size:13px;width:120px;vertical-align:top;">${esc(label)}</td>
+          <td style="padding:6px 0;color:#111827;font-size:14px;line-height:1.5;">${esc(value)}</td>
+        </tr>`
+      : "";
+
+  const detailRows = [
+    detailRow("Name", leadName),
+    detailRow(contactIsEmail ? "Email" : "Phone", contact),
+    !contactIsEmail ? detailRow("Email", visitorEmail) : "",
+    detailRow("Preferred time", preferredTime),
+    detailRow("Captured", capturedAt + " (SAST)"),
+  ]
+    .filter(Boolean)
+    .join("");
+
+  // Personal greeting using the owner's first name when known
+  const greetingName = ownerFirstName?.trim() || "";
+  const greeting = greetingName ? `Hi ${esc(greetingName)},` : "Hi,";
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="color-scheme" content="dark light">
-  <meta name="supported-color-schemes" content="dark light">
-  <title>New lead — ${esc(businessName)}</title>
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>New lead — ${esc(displayName)}</title>
   <!--[if mso]>
   <style>td,a,h1,h2,p { font-family: Arial, sans-serif !important; }</style>
   <![endif]-->
   <style>
-    @media (max-width:520px) {
-      .qw-card { padding:24px 20px !important; }
-      .qw-quick td { display:block !important; width:100% !important; padding:6px 0 !important; }
-      .qw-h1 { font-size:24px !important; }
-      .qw-actions td { display:block !important; width:100% !important; padding:6px 0 !important; }
-      .qw-actions a { width:100% !important; box-sizing:border-box !important; }
+    @media (max-width:560px) {
+      .qw-pad { padding:24px 20px !important; }
+      .qw-actions td { display:block !important; width:100% !important; padding:0 0 8px !important; }
+      .qw-actions a { width:100% !important; box-sizing:border-box !important; text-align:center !important; }
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background:#07080B;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;">
+<body style="margin:0;padding:0;background:#F9FAFB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;color:#111827;">
 
   <!-- Hidden preheader (preview text in inbox lists) -->
-  <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#07080B;opacity:0;">
-    ${esc(displayName)} is asking about ${esc(need || "your service")}. Tap to call, WhatsApp or email back now.
+  <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#F9FAFB;opacity:0;">
+    ${esc(displayName)} reached out${need ? " about " + esc(need.slice(0, 80)) : ""}. ${(documents?.length ?? 0) > 0 ? `${documents!.length} file${documents!.length === 1 ? "" : "s"} attached.` : "Tap a button to reply."}
   </div>
 
-  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#07080B;padding:32px 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F9FAFB;padding:32px 16px;">
     <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:560px;">
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:560px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;">
 
-        <!-- Logo + freshness pill -->
-        <tr><td style="padding-bottom:24px;">
+        <!-- Sender header -->
+        <tr><td class="qw-pad" style="padding:24px 32px 0;">
           <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
             <tr>
-              <td align="left" style="vertical-align:middle;">
-                <span style="font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.5px;">Qwikly<span style="color:#E85A2C;">.</span></span>
-              </td>
-              <td align="right" style="vertical-align:middle;">
-                <span style="display:inline-block;padding:5px 11px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.25);border-radius:999px;color:#4ADE80;font-size:11px;font-weight:600;letter-spacing:0.04em;">● JUST NOW</span>
+              <td style="vertical-align:middle;">
+                <div style="font-size:13px;color:#6B7280;">From <strong style="color:#111827;">Qwikly Assistant</strong> · ${esc(businessName)}</div>
+                <div style="font-size:12px;color:#9CA3AF;margin-top:2px;">${esc(capturedAt)} (SAST)</div>
               </td>
             </tr>
           </table>
         </td></tr>
 
-        <!-- Card -->
-        <tr><td class="qw-card" style="background:#0D111A;border:1px solid rgba(255,255,255,0.07);border-radius:20px;padding:36px;">
+        <!-- Body -->
+        <tr><td class="qw-pad" style="padding:20px 32px 8px;">
 
-          <!-- Hero -->
-          <p style="margin:0 0 6px;font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#E85A2C;">New lead • ${esc(businessName)}</p>
-          <h1 class="qw-h1" style="margin:0 0 8px;font-size:28px;font-weight:700;color:#F4F4F5;letter-spacing:-0.5px;line-height:1.2;">
-            ${esc(displayName)}
+          <!-- Attachments at top, like Gmail -->
+          ${docsTopBlock}
+
+          <!-- Subject line -->
+          <h1 style="margin:0 0 16px;font-size:20px;font-weight:600;color:#111827;line-height:1.3;letter-spacing:-0.2px;">
+            New lead: ${esc(displayName)}${need ? ` — ${esc(need.length > 50 ? need.slice(0, 50) + "…" : need)}` : ""}
           </h1>
-          <p style="margin:0 0 24px;font-size:14px;color:#9CA3AF;line-height:1.55;">
-            wants to hear from you. Reply fast — leads contacted within 5 minutes are <strong style="color:#F4F4F5;">21× more likely to convert</strong>.
+
+          <!-- Greeting and human intro -->
+          <p style="margin:0 0 14px;font-size:15px;color:#111827;line-height:1.55;">
+            ${greeting}
+          </p>
+          <p style="margin:0 0 18px;font-size:15px;color:#374151;line-height:1.6;">
+            <strong style="color:#111827;">${esc(displayName)}</strong> just reached out via your website${need ? ` about <em>${esc(need)}</em>` : ""}.
+            ${preferredTime ? `They mentioned: <em>"${esc(preferredTime)}"</em>.` : ""}
+            Here's everything they shared:
           </p>
 
-          ${needBlock}
-
-          <!-- Quick action buttons (one-tap reply, with pre-filled message) -->
-          ${quickButtons.length > 0 ? `
-          <table class="qw-quick" width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 -6px 16px;">
-            <tr>${quickButtons.join("")}</tr>
-          </table>
-          ${replyPreviewBlock}` : ""}
-
-          <!-- Detail table -->
-          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border-top:1px solid rgba(255,255,255,0.05);margin-bottom:8px;">
+          <!-- Lead details -->
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 8px;background:#F9FAFB;border-radius:6px;padding:6px 14px;">
             ${detailRows}
           </table>
 
-          <!-- Conversation summary -->
+          <!-- Conversation transcript -->
           ${conversationBlock}
 
-          <!-- Documents shared -->
-          ${documentsBlock}
+          <!-- Pre-typed reply notice + buttons -->
+          ${quickButtons.length > 0 ? `
+          <p style="margin:24px 0 6px;font-size:13px;font-weight:600;color:#111827;">Reply now</p>
+          <p style="margin:0 0 12px;font-size:13px;color:#6B7280;line-height:1.55;">
+            Tap a button below — your reply is already typed. Just review and send.
+          </p>
+          <p style="margin:0 0 16px;">
+            ${quickButtons.join("")}
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 24px;background:#F3F4F6;border-radius:6px;padding:14px 16px;">
+            <tr><td style="font-size:13px;color:#374151;line-height:1.55;font-style:italic;white-space:pre-wrap;">${esc(followUpMessage)}</td></tr>
+          </table>` : ""}
 
-          <!-- Booking actions -->
-          <p style="margin:0 0 12px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#9CA3AF;">Booking response</p>
+          <!-- Booking confirm/suggest -->
+          <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#111827;">Or respond to their requested time</p>
           <table class="qw-actions" cellpadding="0" cellspacing="0" role="presentation">
             <tr>
-              <td style="padding-right:10px;">
-                <a href="${esc(confirmUrl)}" style="display:inline-block;padding:13px 22px;background:#F4F4F5;color:#07080B;text-decoration:none;border-radius:10px;font-size:14px;font-weight:700;">
-                  ✓ Confirm slot
-                </a>
+              <td style="padding-right:8px;">
+                <a href="${esc(confirmUrl)}" style="display:inline-block;padding:9px 18px;background:#111827;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">Confirm slot</a>
               </td>
               <td>
-                <a href="${esc(suggestUrl)}" style="display:inline-block;padding:13px 22px;background:transparent;color:#9CA3AF;text-decoration:none;border-radius:10px;font-size:14px;font-weight:600;border:1px solid rgba(255,255,255,0.12);">
-                  Suggest another time
-                </a>
+                <a href="${esc(suggestUrl)}" style="display:inline-block;padding:9px 18px;background:#FFFFFF;color:#111827;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;border:1px solid #E5E7EB;">Suggest another time</a>
               </td>
             </tr>
           </table>
 
-        </td></tr>
-
-        <!-- Reply-to tip -->
-        <tr><td style="padding-top:16px;">
-          <p style="margin:0;font-size:12px;color:#6B7280;line-height:1.55;text-align:center;">
-            💡 <strong style="color:#9CA3AF;">Pro tip:</strong> Just hit Reply ${visitorEmail || contactIsEmail ? "and your message will go straight to them." : "to add notes for yourself."}
+          <!-- Reply tip -->
+          <p style="margin:24px 0 0;font-size:13px;color:#6B7280;line-height:1.55;border-top:1px solid #F3F4F6;padding-top:16px;">
+            ${visitorEmail || contactIsEmail ? `Tip: Just hit <strong style="color:#374151;">Reply</strong> on this email and your response will go straight to ${esc(visitorEmail || contact)}.` : "Tip: Reply to this email to add private notes for yourself."}
           </p>
+
         </td></tr>
 
         <!-- Footer -->
-        <tr><td style="padding-top:20px;text-align:center;">
-          <p style="margin:0;font-size:11px;color:#4B5563;">
-            Captured by your <a href="https://www.qwikly.co.za/dashboard" style="color:#9CA3AF;text-decoration:none;">Qwikly</a> assistant
-            <span style="color:#374151;"> · </span>
-            <a href="https://www.qwikly.co.za/dashboard/settings/profile" style="color:#6B7280;text-decoration:underline;">Manage alerts</a>
+        <tr><td class="qw-pad" style="padding:18px 32px 24px;border-top:1px solid #F3F4F6;">
+          <p style="margin:0;font-size:12px;color:#9CA3AF;line-height:1.5;">
+            Captured by your <a href="https://www.qwikly.co.za/dashboard" style="color:#6B7280;text-decoration:underline;">Qwikly</a> assistant ·
+            <a href="https://www.qwikly.co.za/dashboard/settings/profile" style="color:#9CA3AF;text-decoration:underline;">Manage alerts</a>
           </p>
         </td></tr>
 

@@ -532,6 +532,7 @@ function NotificationsCard({
   const [form, setForm] = useState({
     notification_email: "",
     lead_emails_enabled: true,
+    owner_first_name: "",
   });
   const [defaultEmail, setDefaultEmail] = useState<string>("");
   const [saving, setSaving] = useState(false);
@@ -555,6 +556,7 @@ function NotificationsCard({
         setForm({
           notification_email: data.notification_email ?? data.contact_email ?? "",
           lead_emails_enabled: data.lead_emails_enabled !== false,
+          owner_first_name: data.owner_first_name ?? "",
         });
         setDefaultEmail(data.contact_email ?? "");
       } catch (err) {
@@ -584,6 +586,7 @@ function NotificationsCard({
       body: JSON.stringify({
         notification_email: form.notification_email || null,
         lead_emails_enabled: form.lead_emails_enabled,
+        owner_first_name: form.owner_first_name || null,
       }),
     });
     setSaving(false);
@@ -659,6 +662,18 @@ function NotificationsCard({
             />
           </button>
         </div>
+
+        <Field
+          label="Your first name"
+          hint="Used to personalise your alert emails (Hi Liam, …) and the auto-typed reply we draft for you."
+        >
+          <Input
+            type="text"
+            value={form.owner_first_name}
+            onChange={(e) => setForm({ ...form, owner_first_name: e.target.value })}
+            placeholder="e.g. Liam"
+          />
+        </Field>
 
         <Field
           label="Send lead alerts to"

@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
 
   const { data: business } = await db
     .from("businesses")
-    .select("id, name, contact_email, notification_email, lead_emails_enabled, user_id")
+    .select("id, name, contact_email, notification_email, lead_emails_enabled, owner_first_name, user_id")
     .eq("api_key", api_key)
     .maybeSingle();
 
@@ -190,6 +190,7 @@ export async function POST(req: NextRequest) {
       subject: `New lead — ${lead.name ?? contact}`,
       html: leadNotificationHtml({
         businessName: business.name,
+        ownerFirstName: business.owner_first_name,
         leadName: lead.name,
         contact,
         need: lead.need,
@@ -201,6 +202,7 @@ export async function POST(req: NextRequest) {
       }),
       text: leadNotificationText({
         businessName: business.name,
+        ownerFirstName: business.owner_first_name,
         leadName: lead.name,
         contact,
         need: lead.need,
