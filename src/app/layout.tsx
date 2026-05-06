@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Qwikly | Never Miss a Lead Again",
     description:
-      "Replies to every WhatsApp lead in 30 seconds. Books the job. Pay only when the calendar fills.",
+      "The digital assistant for your website. Captures every lead, qualifies them, and delivers them to your inbox — 24/7.",
     images: ["/og-image.png"],
   },
   robots: {
@@ -104,7 +104,7 @@ const organizationSchema = {
   url: "https://www.qwikly.co.za",
   logo: "https://www.qwikly.co.za/og-image.png",
   description:
-    "Digital assistant for South African service businesses. Replies to WhatsApp and email leads in 30 seconds, qualifies them, and books jobs.",
+    "Digital assistant for South African service businesses. Captures every website visitor, qualifies them, and delivers warm leads to your inbox — 24/7, even while you sleep.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Cape Town",
