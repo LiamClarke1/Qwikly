@@ -10,7 +10,7 @@ import {
   ChevronRight, ChevronLeft, Check, Copy, Loader2, Sparkles,
   Building2, Wrench, DollarSign, Clock, Star, Bot,
   Globe, Upload, FileText, X, Zap, AlertCircle, ArrowRight, Clock3, MessageSquare,
-  Phone, PlusCircle, Mail, Key, Pencil,
+  Mail, Key, Pencil,
 } from "lucide-react";
 import { ClientRow } from "@/lib/use-client";
 import { cn } from "@/lib/cn";
@@ -53,7 +53,6 @@ const STEPS = [
   { title: "Availability", subtitle: "When and how you work", icon: Clock },
   { title: "Your Edge", subtitle: "Why customers should choose you", icon: Star },
   { title: "Assistant Personality", subtitle: "How your assistant speaks to customers", icon: Bot },
-  { title: "WhatsApp", subtitle: "Verify your number to go live", icon: MessageSquare },
 ];
 
 const LOADING_STAGES = [
@@ -85,7 +84,7 @@ function useToast() {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type View = "overview" | "intro" | "loading" | "done" | "wizard";
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type Step = 1 | 2 | 3 | 4 | 5 | 6;
 
 interface UploadedFile { name: string; base64: string; mediaType: string; size: number; }
 interface AutoFillResult { data: Record<string, string>; filledCount: number; highlights: string[]; }
@@ -1259,7 +1258,6 @@ export default function SetupPage() {
   const [form, setForm] = useState<FormData>(empty);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [numberChoice, setNumberChoice] = useState<"existing" | "new" | "">("");
   const { toast, show: showToast } = useToast();
 
   // Populate form once client data has loaded from Supabase
@@ -1317,8 +1315,6 @@ export default function SetupPage() {
       website_url: client.website_url ?? "",
       contact_email: client.contact_email ?? "",
     });
-    const wa = client.whatsapp_number ?? "";
-    setNumberChoice(wa === "new_number_requested" ? "new" : wa ? "existing" : "");
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client?.id]);
 
@@ -1385,7 +1381,8 @@ export default function SetupPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.business_name.trim()) { setError("Business name is required."); return; }
-    if (!form.whatsapp_number.trim()) { setError("WhatsApp number is required."); return; }
+    if (!form.notification_phone.trim()) { setError("Contact phone is required."); return; }
+    if (!form.notification_email.trim()) { setError("Contact email is required."); return; }
 
     setSaving(true);
     setError(null);
@@ -1394,7 +1391,6 @@ export default function SetupPage() {
       business_name: form.business_name,
       owner_name: form.owner_name,
       trade: form.trade.toLowerCase(),
-      whatsapp_number: form.whatsapp_number,
       google_calendar_id: form.google_calendar_email,
       address: form.areas.trim() || null,
       system_prompt: buildSystemPrompt(form),
@@ -1603,7 +1599,7 @@ export default function SetupPage() {
         </div>
       </div>
 
-      <form onSubmit={step === 7 ? handleSubmit : (e) => e.preventDefault()}>
+      <form onSubmit={step === 6 ? handleSubmit : (e) => e.preventDefault()}>
         <div className="panel !p-6 md:!p-8 space-y-6">
           <div className="mb-2">
             <h2 className="text-h2 text-fg">Step {step} of {STEPS.length}: {STEPS[step - 1].title}</h2>
@@ -1637,10 +1633,10 @@ export default function SetupPage() {
               <Field label="Team size" optional>
                 <WInput value={form.team_size} onChange={set("team_size")} placeholder="e.g. Just me, or a team of 4" />
               </Field>
-              <Field label="Contact phone" optional hint="Shown to customers who prefer to call.">
+              <Field label="Contact phone" hint="Leads and notifications are sent to this number.">
                 <WInput value={form.notification_phone} onChange={set("notification_phone")} placeholder="+27 82 000 0000" type="tel" />
               </Field>
-              <Field label="Contact email" optional hint="Leads and enquiries are sent here.">
+              <Field label="Contact email" hint="Qualified leads are delivered to this inbox.">
                 <WInput value={form.notification_email} onChange={set("notification_email")} placeholder="you@example.com" type="email" />
               </Field>
             </div>
@@ -1708,91 +1704,7 @@ export default function SetupPage() {
               <Field label="How do customers prefer to confirm?">
                 <Pills value={form.booking_preference} onChange={set("booking_preference")} options={BOOKING_PREF_OPTS} />
               </Field>
-              <div>
-                <label className="flex items-center gap-2 text-small font-semibold text-fg mb-3">
-                  WhatsApp number
-                </label>
-                <div className="space-y-3">
-                  {/* Option A — existing number */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNumberChoice("existing");
-                      if (form.whatsapp_number === "new_number_requested") set("whatsapp_number")("");
-                    }}
-                    className={cn(
-                      "w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer",
-                      numberChoice === "existing" ? "border-brand bg-brand-soft" : "border-line bg-white/[0.02] hover:border-line-strong"
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0 mt-0.5">
-                          <Phone className="w-4 h-4 text-fg-muted" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-fg text-small">Keep your current number</p>
-                          <p className="text-tiny text-fg-muted mt-1 leading-relaxed">
-                            Your customers already have this number. We move it to Qwikly — same number, but replies are handled automatically. You manage everything from this dashboard.
-                          </p>
-                          <p className="text-tiny text-warning mt-2 leading-relaxed">
-                            Your number will leave the WhatsApp app on your phone. You&apos;ll reply from the Qwikly dashboard instead.
-                          </p>
-                        </div>
-                      </div>
-                      <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5", numberChoice === "existing" ? "border-brand bg-brand" : "border-line")}>
-                        {numberChoice === "existing" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                      </div>
-                    </div>
-                  </button>
-
-                  {numberChoice === "existing" && (
-                    <WInput value={form.whatsapp_number} onChange={set("whatsapp_number")} placeholder="+27 83 123 4567" type="tel" />
-                  )}
-
-                  {/* Option B — new number */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setNumberChoice("new");
-                      set("whatsapp_number")("new_number_requested");
-                    }}
-                    className={cn(
-                      "w-full text-left p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer",
-                      numberChoice === "new" ? "border-brand bg-brand-soft" : "border-line bg-white/[0.02] hover:border-line-strong"
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0 mt-0.5">
-                          <PlusCircle className="w-4 h-4 text-fg-muted" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-fg text-small">Separate business number</p>
-                          <p className="text-tiny text-fg-muted mt-1 leading-relaxed">
-                            Keep your personal WhatsApp as-is. Get a dedicated number for all business enquiries. Recommended if you want to keep personal and business separate.
-                          </p>
-                          <p className="text-tiny text-success mt-2 leading-relaxed">
-                            Clean split — personal stays personal.
-                          </p>
-                        </div>
-                      </div>
-                      <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5", numberChoice === "new" ? "border-brand bg-brand" : "border-line")}>
-                        {numberChoice === "new" && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                      </div>
-                    </div>
-                  </button>
-
-                  {numberChoice === "new" && (
-                    <div className="px-4 py-3 rounded-xl bg-white/[0.03] border border-line">
-                      <p className="text-tiny text-fg-muted leading-relaxed">
-                        We&apos;ll set up a new number for you during onboarding. Continue with setup and we&apos;ll handle it.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <Field label="Google Calendar email" optional hint="Bookings go straight into this calendar.">
+              <Field label="Google Calendar email" optional hint="Bookings go straight into this calendar. Coming soon — Q3 2026.">
                 <WInput value={form.google_calendar_email} onChange={set("google_calendar_email")} placeholder="e.g. pete@gmail.com" type="email" />
               </Field>
             </div>
@@ -1894,15 +1806,7 @@ export default function SetupPage() {
             </div>
           )}
 
-          {/* ── STEP 7 ── */}
-          {step === 7 && (
-            <WhatsAppVerifyStep
-              phone={form.whatsapp_number}
-              clientId={client?.id}
-            />
-          )}
-
-          {step === 7 && error && (
+          {step === 6 && error && (
             <div className="bg-danger/10 border border-danger/30 rounded-xl px-4 py-3">
               <p className="text-danger text-small">{error}</p>
             </div>
@@ -1925,7 +1829,7 @@ export default function SetupPage() {
             </button>
           )}
 
-          {step < 7 ? (
+          {step < 6 ? (
             <button type="button" onClick={next}
               className="flex items-center gap-2 px-7 py-3 rounded-xl bg-brand text-white text-small font-semibold hover:bg-brand/90 transition-colors duration-200 cursor-pointer"
             >
