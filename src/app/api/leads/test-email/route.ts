@@ -112,13 +112,29 @@ export async function POST(req: NextRequest) {
 
   const templateArgs = {
     businessName: business.name || "your business",
-    leadName: "Qwikly Test Lead",
-    contact: "+27 00 000 0000",
-    need: "End-to-end test of your lead alert pipeline. Safe to delete.",
-    preferredTime: "Anytime",
-    visitorEmail: "test@qwikly.co.za",
+    leadName: "Sarah Mokoena",
+    contact: "+27 82 555 0123",
+    need: "Looking for a quote on a kitchen renovation, ideally before mid-June.",
+    preferredTime: "Tomorrow morning works best",
+    visitorEmail: "sarah.test@example.com",
     confirmUrl,
     suggestUrl,
+    conversation: [
+      { role: "visitor", content: "Hi, do you guys handle kitchen renovations?" },
+      { role: "assistant", content: "Yes! We do full and partial kitchen renos across Johannesburg. What did you have in mind?" },
+      { role: "visitor", content: "I want to redo our cabinets and put in a stone countertop. Roughly 4m x 3m kitchen." },
+      { role: "assistant", content: "Cool. Can I grab your name and a contact number so the team can send you a quote?" },
+      { role: "visitor", content: "Sarah Mokoena — 082 555 0123. Tomorrow morning would be great for a call." },
+    ],
+    documents: [
+      {
+        id: "test-doc-1",
+        fileName: "kitchen-photos.pdf",
+        fileType: "application/pdf",
+        fileSizeBytes: 2_400_000,
+        viewUrl: `${BASE_URL}/dashboard/leads`,
+      },
+    ],
   };
 
   // ── 3. Send through Resend exactly like the real /api/leads path does

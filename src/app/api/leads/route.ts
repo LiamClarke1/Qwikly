@@ -8,7 +8,32 @@ import {
   leadNotificationHtml,
   leadNotificationText,
   capReachedNotificationHtml,
+  type ConversationMessage,
 } from "@/lib/email/templates/lead-v2";
+
+// Defensive: the widget can send raw_conversation in a few different shapes
+// depending on how it was wired up. Coerce to {role, content} pairs that the
+// email template understands. Returns [] when the input is absent or unusable.
+function normaliseConversation(raw: unknown): ConversationMessage[] {
+  if (!Array.isArray(raw)) return [];
+  const out: ConversationMessage[] = [];
+  for (const turn of raw) {
+    if (!turn || typeof turn !== "object") continue;
+    const t = turn as Record<string, unknown>;
+    const role = String(
+      t.role ?? t.sender ?? t.from ?? (t.is_visitor ? "visitor" : "assistant")
+    );
+    const content = typeof t.content === "string"
+      ? t.content
+      : typeof t.message === "string"
+        ? t.message
+        : typeof t.text === "string"
+          ? t.text
+          : "";
+    if (content.trim()) out.push({ role, content });
+  }
+  return out;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -172,6 +197,7 @@ export async function POST(req: NextRequest) {
         visitorEmail: lead.visitor_email,
         confirmUrl,
         suggestUrl,
+        conversation: normaliseConversation(body.raw_conversation),
       }),
       text: leadNotificationText({
         businessName: business.name,
@@ -182,6 +208,7 @@ export async function POST(req: NextRequest) {
         visitorEmail: lead.visitor_email,
         confirmUrl,
         suggestUrl,
+        conversation: normaliseConversation(body.raw_conversation),
       }),
     })
     .then(async ({ data, error }) => {
