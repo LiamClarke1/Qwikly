@@ -146,7 +146,7 @@ export function qwiklyMeetingConfirmationHtml({
           <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;">Call confirmed</p>
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.3px;">You're booked in, ${visitorName}.</h1>
           <p style="margin:0 0 24px;font-size:14px;color:#9CA3AF;line-height:1.6;">
-            Liam will jump on a quick ${durationMin}-minute call with you to walk through how Qwikly fits your business and get you set up live. Calendar invite is on its way to your inbox.
+            The Clarke Agency team will jump on a ${durationMin}-minute call with you to walk through how Qwikly fits your business and get the chat live on your site by the end of the call. The calendar invite is on its way.
           </p>
 
           <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid rgba(255,255,255,0.06);margin-bottom:8px;">
@@ -157,13 +157,27 @@ export function qwiklyMeetingConfirmationHtml({
 
           ${meetButton}
 
-          <p style="margin:0 0 6px;font-size:13px;color:#F4F4F5;font-weight:600;">What to expect</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#F4F4F5;font-weight:600;">What to have ready</p>
+          <p style="margin:0 0 8px;font-size:13px;color:#9CA3AF;line-height:1.6;">
+            So we can get you fully live on the call, please have these on hand:
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px;">
+            <tr><td style="padding:6px 0 6px 14px;color:#9CA3AF;font-size:13px;line-height:1.55;border-left:2px solid #E85A2C;">Login to your website (so we can drop the chat snippet straight in).</td></tr>
+            <tr><td style="padding:6px 0 6px 14px;color:#9CA3AF;font-size:13px;line-height:1.55;border-left:2px solid #E85A2C;">A quick rundown of your services, pricing, and business hours.</td></tr>
+            <tr><td style="padding:6px 0 6px 14px;color:#9CA3AF;font-size:13px;line-height:1.55;border-left:2px solid #E85A2C;">Your logo and brand colours (PNG/SVG and hex codes).</td></tr>
+            <tr><td style="padding:6px 0 6px 14px;color:#9CA3AF;font-size:13px;line-height:1.55;border-left:2px solid #E85A2C;">The email or WhatsApp number where you want new leads to land.</td></tr>
+          </table>
+          <p style="margin:0 0 18px;font-size:12px;color:#6B7280;line-height:1.55;">
+            Don't stress if anything's missing, we'll work around it. The goal is to leave the call with Qwikly running on your site and your first leads already coming in.
+          </p>
+
+          <p style="margin:0 0 6px;font-size:13px;color:#F4F4F5;font-weight:600;">What to expect on the call</p>
           <p style="margin:0 0 16px;font-size:13px;color:#9CA3AF;line-height:1.6;">
-            No slides, no pitch deck. Liam will ask about your business, show you Qwikly running on a site like yours, and set it up live with you if you want to go ahead.
+            No slides, no pitch deck. We'll ask about your business, show you Qwikly running on a site like yours, install it on your site, and walk you through how leads will land.
           </p>
 
           <p style="margin:0;font-size:13px;color:#6B7280;line-height:1.6;">
-            Need to reschedule? Just reply to the calendar invite or to this email.
+            Need to reschedule? Reply to the calendar invite or to this email.
           </p>
         </td></tr>
 

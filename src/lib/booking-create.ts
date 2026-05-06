@@ -80,6 +80,10 @@ export async function bookMeeting(args: BookMeetingArgs): Promise<BookingResult>
     return { ok: false, reason: "calendar_not_connected" };
   }
 
+  // Resolve the Clarke Agency host inbox up-front so we can both add it as a
+  // calendar attendee AND send the host notification email to it.
+  const hostRecipient = await resolveBookingNotificationRecipient(args.clientId);
+
   try {
     const cal = calendarClient(
       client.google_access_token,
@@ -87,7 +91,7 @@ export async function bookMeeting(args: BookMeetingArgs): Promise<BookingResult>
       client.google_token_expiry,
       args.clientId
     );
-    const calendarId = client.google_calendar_id ?? "primary";
+    const calendarId = client.google_calendar_id?.trim() || "primary";
 
     // Re-check the slot is still free right before booking. Cheap protection
     // against two visitors agreeing to the same slot inside the same minute.
@@ -117,6 +121,15 @@ export async function bookMeeting(args: BookMeetingArgs): Promise<BookingResult>
       .filter(Boolean)
       .join("\n");
 
+    // Build attendee list: visitor + Clarke Agency inbox so both get the
+    // calendar invite + Meet link directly via Google Calendar.
+    const attendees: Array<{ email: string; displayName?: string }> = [
+      { email: args.visitorEmail, displayName: args.visitorName },
+    ];
+    if (hostRecipient && hostRecipient.toLowerCase() !== args.visitorEmail.toLowerCase()) {
+      attendees.push({ email: hostRecipient, displayName: "Clarke Agency" });
+    }
+
     const { data: event } = await cal.events.insert({
       calendarId,
       conferenceDataVersion: 1,
@@ -126,7 +139,8 @@ export async function bookMeeting(args: BookMeetingArgs): Promise<BookingResult>
         description,
         start: { dateTime: args.start, timeZone: "Africa/Johannesburg" },
         end: { dateTime: args.end, timeZone: "Africa/Johannesburg" },
-        attendees: [{ email: args.visitorEmail, displayName: args.visitorName }],
+        attendees,
+        guestsCanModify: true,
         conferenceData: {
           createRequest: {
             requestId,
@@ -142,8 +156,10 @@ export async function bookMeeting(args: BookMeetingArgs): Promise<BookingResult>
       event.conferenceData?.entryPoints?.find((e) => e.entryPointType === "video")?.uri ??
       null;
 
+    // Send visitor confirmation. Capture the Resend response so we can see
+    // exactly what happened (delivery vs rejection vs network failure).
     try {
-      await resend.emails.send({
+      const { data: visitorSend, error: visitorErr } = await resend.emails.send({
         from: FROM,
         to: args.visitorEmail,
         subject: `Your Qwikly call is booked — ${formatLabel(args.start)}`,
@@ -154,20 +170,24 @@ export async function bookMeeting(args: BookMeetingArgs): Promise<BookingResult>
           meetLink,
         }),
       });
+      if (visitorErr) {
+        console.error("[booking-create] visitor email rejected by Resend", { to: args.visitorEmail, err: visitorErr });
+      } else {
+        console.log("[booking-create] visitor email accepted by Resend", { to: args.visitorEmail, id: visitorSend?.id });
+      }
     } catch (mailErr) {
-      console.error("[booking-create] visitor confirmation email failed", mailErr);
+      console.error("[booking-create] visitor email send threw", mailErr);
     }
 
-    // Notify the host (Liam / Clarke Agency inbox) that a booking just landed.
-    // Best-effort, never block the booking response on email delivery.
-    const hostRecipient = await resolveBookingNotificationRecipient(args.clientId);
+    // Notify the Clarke Agency inbox separately so they get a branded summary
+    // beside the calendar invite. Best-effort — never block the booking.
     if (hostRecipient) {
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.qwikly.co.za";
       const conversationUrl = args.conversationId
         ? `${baseUrl}/dashboard/conversations/${args.conversationId}`
         : null;
       try {
-        await resend.emails.send({
+        const { data: hostSend, error: hostErr } = await resend.emails.send({
           from: FROM,
           to: hostRecipient,
           replyTo: args.visitorEmail,
@@ -184,9 +204,16 @@ export async function bookMeeting(args: BookMeetingArgs): Promise<BookingResult>
             conversationUrl,
           }),
         });
+        if (hostErr) {
+          console.error("[booking-create] host email rejected by Resend", { to: hostRecipient, err: hostErr });
+        } else {
+          console.log("[booking-create] host email accepted by Resend", { to: hostRecipient, id: hostSend?.id });
+        }
       } catch (mailErr) {
-        console.error("[booking-create] host notification email failed", mailErr);
+        console.error("[booking-create] host email send threw", mailErr);
       }
+    } else {
+      console.warn("[booking-create] no host recipient resolved; skipping host email");
     }
 
     return {

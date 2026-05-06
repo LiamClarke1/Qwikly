@@ -43,10 +43,10 @@ const DEFAULTS: Required<Options> = {
   weekendDays: [6, 7],
   lookaheadDays: 7,
   minLeadHours: 2,
-  maxSlots: 20,
-  maxPerDay: 6,
-  weekendMaxPerDay: 2,
-  granularityMin: 15,
+  maxSlots: 30,
+  maxPerDay: 8,
+  weekendMaxPerDay: 4,
+  granularityMin: 60,
 };
 
 function sastWeekday(utc: Date): number {
@@ -118,7 +118,7 @@ export async function getAvailableSlots(
     client.google_token_expiry,
     clientId
   );
-  const calendarId = client.google_calendar_id ?? "primary";
+  const calendarId = client.google_calendar_id?.trim() || "primary";
 
   const now = new Date();
   const windowEnd = new Date(now.getTime() + opts.lookaheadDays * 24 * 60 * 60 * 1000);
