@@ -10,7 +10,7 @@ import {
 import { Input, Textarea, Field } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { WidgetPreview } from "@/app/(app)/onboarding/website/_components/WidgetPreview";
+import { WidgetPreview } from "@/components/widget-preview";
 
 interface Props {
   client: ClientRow;
