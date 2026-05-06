@@ -382,19 +382,6 @@ export default function BookingsPage() {
         ))}
       </div>
 
-      {/* Connect calendar banner — only shown when explicitly disconnected */}
-      {calConnected === false && (
-        <div className="mb-4 flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-ember/[0.06] border border-ember/20">
-          <div className="flex items-center gap-3">
-            <CalendarDays className="w-4 h-4 text-ember shrink-0" />
-            <p className="text-small text-fg-muted">Connect your Google Calendar to see all your appointments in one place.</p>
-          </div>
-          <a href="/dashboard/settings?tab=integrations" className="shrink-0 text-small font-semibold text-ember hover:text-ember-deep transition-colors cursor-pointer">
-            Connect calendar
-          </a>
-        </div>
-      )}
-
       {view === "calendar" ? (
         <Card className="!p-0 overflow-hidden">
           {/* Toolbar */}
@@ -408,16 +395,12 @@ export default function BookingsPage() {
               <Button variant="ghost" size="sm" onClick={() => { setWeekStart(startOfWeek(new Date())); setSelectedDay(null); }}>
                 Today
               </Button>
-              {calConnected === true ? (
+              {calConnected === true && (
                 <span className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-[#6366f1]/10 border border-[#6366f1]/25 text-tiny text-[#818cf8] font-medium">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#818cf8]" />
                   Google Calendar synced
                 </span>
-              ) : calConnected === false ? (
-                <a href="/dashboard/settings?tab=integrations" className="hidden sm:inline-flex items-center gap-1 text-tiny text-fg-subtle hover:text-ember transition-colors cursor-pointer">
-                  <Link2 className="w-3 h-3" /> Connect calendar
-                </a>
-              ) : null}
+              )}
             </div>
             <div className="flex items-center gap-1.5">
               <p className="text-tiny text-fg-subtle mr-1 hidden sm:block">Click any slot to add a booking</p>
