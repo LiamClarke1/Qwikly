@@ -256,7 +256,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
       return;
     }
     if (!json.needsConfirmation) {
-      router.push(`/onboarding/website?plan=${plan}`);
+      router.push(`/dashboard/setup?plan=${plan}`);
       return;
     }
     setLoading(false);

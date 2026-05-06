@@ -130,7 +130,7 @@ export function WebsiteAssistantTab({ client, onSave }: Props) {
             variant="ghost"
             size="sm"
             icon={<ExternalLink className="w-3.5 h-3.5" />}
-            onClick={() => window.open("/onboarding/website", "_blank")}
+            onClick={() => window.open("/dashboard/setup", "_blank")}
           >
             Setup wizard
           </Button>
@@ -249,7 +249,7 @@ export function WebsiteAssistantTab({ client, onSave }: Props) {
         </div>
         <p className="text-fg-subtle text-xs mt-2">
           Need step-by-step instructions?{" "}
-          <a href="/onboarding/website" className="text-brand hover:underline cursor-pointer">
+          <a href="/dashboard/setup" className="text-brand hover:underline cursor-pointer">
             Re-run the setup wizard →
           </a>
         </p>

@@ -86,8 +86,8 @@ export async function GET(request: NextRequest) {
 
       if (!client || !client.onboarding_completed_at) {
         const onboardingPath = plan
-          ? `/onboarding/website?plan=${plan}`
-          : "/onboarding/website";
+          ? `/dashboard/setup?plan=${plan}`
+          : "/dashboard/setup";
         return NextResponse.redirect(new URL(onboardingPath, requestUrl.origin));
       }
     } else {
