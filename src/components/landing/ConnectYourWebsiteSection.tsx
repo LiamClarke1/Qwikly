@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 const PREVIEW_MESSAGES = [
   { from: "bot", text: "Hey. What trade you in?" },
   { from: "visitor", text: "Electrician" },
-  { from: "bot", text: "Right — how many leads a week do you lose to whoever replies first?" },
+  { from: "bot", text: "Right, how many leads a week do you lose to whoever replies first?" },
   { from: "visitor", text: "Probably 3 or 4" },
 ];
 

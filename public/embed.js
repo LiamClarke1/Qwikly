@@ -58,7 +58,7 @@
     ".hd-name{font-weight:700;font-size:13px;line-height:1.2;color:#fff}",
     ".hd-sub{font-size:11px;color:rgba(255,255,255,.8);margin-top:2px;display:flex;align-items:center;gap:4px}",
     ".hd-dot{width:6px;height:6px;border-radius:50%;background:#22C55E;flex-shrink:0}",
-    ".close{background:none;border:none;color:rgba(255,255,255,.8);cursor:pointer;padding:6px;opacity:.8;font-size:20px;line-height:1;flex-shrink:0;touch-action:manipulation;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background .15s}",
+    ".close{background:none;border:none;color:rgba(255,255,255,.8);cursor:pointer;padding:0;opacity:.8;font-size:22px;line-height:1;flex-shrink:0;touch-action:manipulation;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background .15s;width:44px;height:44px;min-width:44px}",
     ".close:hover{opacity:1;background:rgba(255,255,255,.15)}",
     ".msgs{flex:1;overflow-y:auto;padding:14px 12px 8px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}",
     ".msg{max-width:88%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.55;word-break:break-word;animation:" + (prefersReduced ? "none" : "fadeUp .18s ease") + "}",
@@ -121,6 +121,8 @@
   panel.setAttribute("role", "dialog");
   panel.setAttribute("aria-modal", "true");
   panel.setAttribute("aria-label", "Chat");
+  panel.setAttribute("role", "dialog");
+  panel.setAttribute("aria-modal", "true");
   shadow.appendChild(launcher);
   shadow.appendChild(panel);
 
@@ -651,7 +653,16 @@
       vpListener = null;
     }
     panel.style.bottom = ""; panel.style.maxHeight = "";
+    if (launcher && launcher.focus) { try { launcher.focus(); } catch (_e) {} }
   }
+
+  // Escape closes the panel from anywhere on the page when open.
+  document.addEventListener("keydown", function (e) {
+    if (panelOpen && (e.key === "Escape" || e.keyCode === 27)) {
+      e.preventDefault();
+      closePanel();
+    }
+  });
 
   // ── Analytics ───────────────────────────────────────────────────────────────
 

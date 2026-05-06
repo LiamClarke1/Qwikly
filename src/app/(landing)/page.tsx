@@ -626,7 +626,7 @@ const teaserTiers = [
     isTrial: true,
     features: [
       "75 qualified leads/month",
-      "Full Pro features — identical",
+      "Full Pro features, identical",
       "Custom branding + questions",
       "No bank account needed",
       "Upgrade anytime",
@@ -1154,7 +1154,7 @@ export default function Home() {
                 <em className="italic font-light">Add Qwikly yourself or let us do it.</em>
               </h2>
               <p className="text-ink-700 text-lg leading-relaxed mb-8 max-w-[42ch]">
-                Paste one line of code into Wix, WordPress, Squarespace, or any custom site. Your digital assistant goes live — no developer needed.
+                Paste one line of code into Wix, WordPress, Squarespace, or any custom site. Your digital assistant goes live, no developer needed.
               </p>
               <CTAButton href="/connect-your-website" size="lg">
                 See how it works

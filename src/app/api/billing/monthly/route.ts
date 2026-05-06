@@ -11,17 +11,20 @@ export const dynamic = "force-dynamic";
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.qwikly.co.za";
 
 const PLAN_PRICES: Record<string, number> = {
-  lite: 399,
-  pro: 799,
-  business: 1499,
+  pro: 999,
+  premium: 1999,
+  billions: 2999,
 };
 
+const TOP_UP_RATE_ZAR = 20;
+
 /**
- * Monthly billing run — generates Qwikly subscription invoices.
+ * Monthly billing run, generates Qwikly subscription invoices.
  * Triggered automatically on the 1st of each month from /api/invoices/daily.
  * Can also be called manually for a specific client.
  *
- * Billing = flat monthly subscription fee based on client plan (lite/pro/business).
+ * Billing = flat monthly subscription fee based on client plan (pro/premium/billions),
+ * plus per-lead top-up charges for any conversations marked is_top_up in the period.
  */
 export async function POST(req: NextRequest) {
   if (req.headers.get("authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -56,6 +59,18 @@ export async function POST(req: NextRequest) {
       const plan: string = client.plan ?? "pro";
       const subscriptionZar: number = toZar(PLAN_PRICES[plan] ?? PLAN_PRICES.pro);
 
+      // Aggregate top-up leads for the period (Pro tier over-cap conversations)
+      const { count: topUpLeadCount } = await db
+        .from("conversations")
+        .select("id", { count: "exact", head: true })
+        .eq("client_id", client.id)
+        .eq("is_top_up", true)
+        .eq("is_lead", true)
+        .gte("created_at", `${periodStart}T00:00:00.000Z`)
+        .lte("created_at", `${periodEnd}T23:59:59.999Z`);
+      const topUpZar: number = toZar((topUpLeadCount ?? 0) * TOP_UP_RATE_ZAR);
+      const totalZar: number = subscriptionZar + topUpZar;
+
       // Check if period already exists for this month
       const { data: existingPeriod } = await db
         .from("qwikly_billing_periods")
@@ -69,7 +84,7 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
-      // Create billing period — reuse commission_zar column to store subscription fee
+      // Create billing period, reuse commission_zar column to store subscription fee
       const { data: period } = await db.from("qwikly_billing_periods").insert({
         client_id: client.id,
         period_start: periodStart,
@@ -78,7 +93,7 @@ export async function POST(req: NextRequest) {
         total_paid_zar: 0,
         total_paid_ex_vat_zar: 0,
         commission_rate: 0,
-        commission_zar: subscriptionZar,
+        commission_zar: totalZar,
         status: "locked",
         locked_at: now.toISOString(),
         due_at: dueDate,
@@ -88,16 +103,22 @@ export async function POST(req: NextRequest) {
       const { data: seqNum } = await db.rpc("nextval", { sequence_name: "qwikly_billing_number_seq" }).maybeSingle();
       const billingInvoiceNumber = `QWK-${periodYear}-${String(periodMonth).padStart(2, "0")}-${String(seqNum ?? Date.now()).padStart(4, "0")}`;
 
-      const lineItemsSnapshot = [{
-        description: `Qwikly ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan — ${new Date(periodStart).toLocaleDateString("en-ZA", { month: "long", year: "numeric" })}`,
+      const lineItemsSnapshot: Array<{ description: string; amount_zar: number }> = [{
+        description: `Qwikly ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan, ${new Date(periodStart).toLocaleDateString("en-ZA", { month: "long", year: "numeric" })}`,
         amount_zar: subscriptionZar,
       }];
+      if ((topUpLeadCount ?? 0) > 0) {
+        lineItemsSnapshot.push({
+          description: `Top-up leads (${topUpLeadCount} × R${TOP_UP_RATE_ZAR})`,
+          amount_zar: topUpZar,
+        });
+      }
 
       const { data: billingInvoice } = await db.from("qwikly_billing_invoices").insert({
         client_id: client.id,
         period_id: period!.id,
         invoice_number: billingInvoiceNumber,
-        total_zar: subscriptionZar,
+        total_zar: totalZar,
         vat_zar: 0,
         status: "sent",
         due_at: dueDate,
@@ -118,7 +139,7 @@ export async function POST(req: NextRequest) {
       if (client.whatsapp_number) {
         sendWhatsAppMessage(client.whatsapp_number, clientBillingReadyWa({
           businessName: client.business_name ?? "",
-          subscriptionZar,
+          subscriptionZar: totalZar,
           plan,
           periodLabel,
           dueAt: dueDate,
@@ -132,7 +153,7 @@ export async function POST(req: NextRequest) {
         resend.emails.send({
           from: FROM,
           to: [emailTo],
-          subject: `Qwikly subscription invoice ${billingInvoiceNumber} — ${fmt(subscriptionZar)} due ${fmtDate(dueDate)}`,
+          subject: `Qwikly subscription invoice ${billingInvoiceNumber}, ${fmt(totalZar)} due ${fmtDate(dueDate)}`,
           html: qwiklyBillingInvoiceHtml({
             businessName: client.business_name ?? "",
             billingEmail: emailTo,
@@ -140,14 +161,14 @@ export async function POST(req: NextRequest) {
             periodEnd,
             invoiceNumber: billingInvoiceNumber,
             plan,
-            subscriptionZar,
+            subscriptionZar: totalZar,
             dueAt: dueDate,
             billingUrl,
           }),
         }).catch(() => {});
       }
 
-      results.push({ client_id: client.id, result: "invoiced", subscription_zar: subscriptionZar });
+      results.push({ client_id: client.id, result: "invoiced", subscription_zar: totalZar });
     } catch (err) {
       results.push({ client_id: client.id, result: "error", error: String(err) });
     }

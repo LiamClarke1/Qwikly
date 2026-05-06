@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  let event: { event: string; data: Record<string, unknown> };
+  let event: { event: string; data: Record<string, unknown>; id?: string | number };
   try {
     event = JSON.parse(rawBody);
   } catch {
@@ -29,6 +29,36 @@ export async function POST(req: NextRequest) {
   }
 
   const db = supabaseAdmin();
+
+  // Idempotency: Paystack uses (event, reference|subscription_code|customer_code) as a stable key
+  const data = event.data ?? {};
+  const externalId = String(
+    event.id ??
+      data.reference ??
+      data.subscription_code ??
+      data.id ??
+      `${event.event}:${data.customer && (data.customer as Record<string, unknown>).customer_code}:${Date.now()}`
+  );
+
+  const { data: existing } = await db
+    .from("webhook_events")
+    .select("id")
+    .eq("provider", "paystack")
+    .eq("external_id", externalId)
+    .eq("processed", true)
+    .maybeSingle();
+
+  if (existing) {
+    return NextResponse.json({ ok: true, duplicate: true });
+  }
+
+  const { data: logged } = await db.from("webhook_events").upsert({
+    provider: "paystack",
+    event_type: event.event,
+    external_id: externalId,
+    payload: event,
+    processed: false,
+  }, { onConflict: "provider,external_id", ignoreDuplicates: false }).select().single();
 
   try {
     switch (event.event) {
@@ -45,8 +75,18 @@ export async function POST(req: NextRequest) {
         await handlePaymentFailed(db, event.data);
         break;
     }
+
+    if (logged?.id) {
+      await db
+        .from("webhook_events")
+        .update({ processed: true, processed_at: new Date().toISOString() })
+        .eq("id", logged.id);
+    }
   } catch (err) {
     console.error("[paystack-webhook] processing error:", err);
+    if (logged?.id) {
+      await db.from("webhook_events").update({ error: String(err) }).eq("id", logged.id);
+    }
     return NextResponse.json({ error: "Processing failed" }, { status: 500 });
   }
 

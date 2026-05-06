@@ -3,7 +3,7 @@
 import { Globe, Zap, Calendar, Bell } from "lucide-react";
 
 const CHAT_MESSAGES = [
-  { from: "visitor", text: "Hi, I need a plumber urgently — burst geyser in Randburg", time: "02:14" },
+  { from: "visitor", text: "Hi, I need a plumber urgently, burst geyser in Randburg", time: "02:14" },
   { from: "bot", text: "Hi! We can help. Is the mains water turned off already?", time: "02:14" },
   { from: "visitor", text: "Yes just did it", time: "02:15" },
   { from: "bot", text: "Perfect. I can book a tech for 02:45 tonight. Shall I confirm that slot?", time: "02:15" },
@@ -37,13 +37,13 @@ export function WebsiteAssistantSection() {
             </h2>
             <p className="mt-6 text-paper/70 text-lg leading-relaxed max-w-lg">
               The &ldquo;Reply in 30s&rdquo; button at the bottom right of this page is exactly what your
-              website visitors will see. Click it and talk to it — this is the real thing,
+              website visitors will see. Click it and talk to it, this is the real thing,
               live, right now. Every lead that lands on your site will go through this.
             </p>
 
             <div className="mt-8 space-y-4">
               {[
-                { icon: Zap, text: "Appears on your site in 5 minutes — one line of code" },
+                { icon: Zap, text: "Appears on your site in 5 minutes, one line of code" },
                 { icon: Globe, text: "Handles every website visitor 24/7, replies in 30 seconds" },
                 { icon: Calendar, text: "Books appointments straight into your Google Calendar" },
                 { icon: Bell, text: "You get an email notification the moment a qualified lead comes in" },
@@ -66,7 +66,7 @@ export function WebsiteAssistantSection() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                 </svg>
-                Try it now — it&rsquo;s live
+                Try it now, it&rsquo;s live
               </button>
               <p className="text-paper/40 text-sm">No login. No form. Just talk to it.</p>
             </div>

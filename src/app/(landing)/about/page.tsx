@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "About",
   description:
-    "Qwikly is a South African AI website assistant built for local businesses. Learn who we are, why we built this, and how we operate.",
+    "Qwikly is a South African digital assistant platform built for local businesses. Learn who we are, why we built this, and how we operate.",
   alternates: { canonical: "https://www.qwikly.co.za/about" },
 };
 

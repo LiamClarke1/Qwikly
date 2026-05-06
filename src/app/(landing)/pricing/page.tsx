@@ -25,7 +25,7 @@ const tiers: {
     cta: "Start 14-day trial",
     features: [
       "75 qualified leads/month",
-      "Full Pro features — identical",
+      "Full Pro features, identical",
       "Digital assistant + embed snippet",
       "Custom branding + questions",
       "No card required",
@@ -339,7 +339,7 @@ export default function PricingPage() {
             </h2>
             <p className="mt-6 text-lg text-ink-700 leading-relaxed max-w-xl">
               Every enquiry that goes unanswered is a job you didn&apos;t book.
-              The question isn&apos;t whether R999 a month is worth it — it&apos;s how much losing leads is costing you right now.
+              The question isn&apos;t whether R999 a month is worth it, it&apos;s how much losing leads is costing you right now.
             </p>
           </div>
 
@@ -351,7 +351,7 @@ export default function PricingPage() {
               <p className="eyebrow text-ink-500 mb-6">Without Qwikly</p>
               {[
                 { Icon: Users,        text: "Hiring someone to answer enquiries: R4,000 – R8,000/month" },
-                { Icon: Clock,        text: "After-hours enquiries wait until morning — your competitor picks up the phone" },
+                { Icon: Clock,        text: "After-hours enquiries wait until morning, your competitor picks up the phone" },
                 { Icon: TrendingDown, text: "No record of leads lost, no visibility on what you're missing" },
                 { Icon: Zap,          text: "First to respond wins the job. If it isn't you, it's your competitor" },
               ].map(({ Icon, text }, i) => (
@@ -366,9 +366,9 @@ export default function PricingPage() {
 
             {/* With Qwikly */}
             <div className="ed-card-ink space-y-5">
-              <p className="eyebrow text-ember mb-6">With Qwikly Pro — R999/month</p>
+              <p className="eyebrow text-ember mb-6">With Qwikly Pro, R999/month</p>
               {[
-                "Qualified leads land in your inbox — no staff required",
+                "Qualified leads land in your inbox, no staff required",
                 "Responds instantly, 24/7, including weekends and public holidays",
                 "No sick days, no lunch breaks, no missed calls after 5pm",
                 "Full conversation log and lead history in your dashboard",
@@ -396,7 +396,7 @@ export default function PricingPage() {
               },
               {
                 stat: "24/7",
-                label: "Your digital assistant is live — even when your phone is off.",
+                label: "Your digital assistant is live, even when your phone is off.",
               },
             ].map(({ stat, label }, i) => (
               <div key={i} className="ed-card-ghost text-center py-10">
@@ -413,7 +413,7 @@ export default function PricingPage() {
 
           {/* Section CTA */}
           <div className="text-center">
-            <p className="eyebrow text-ink-500 mb-6">14 days free — no card required</p>
+            <p className="eyebrow text-ink-500 mb-6">14 days free, no card required</p>
             <CTAButton href="/signup?plan=trial" variant="primary" size="lg">
               Start your free trial
             </CTAButton>
@@ -639,7 +639,7 @@ export default function PricingPage() {
                 </h3>
                 <p className="text-ink-700 text-sm leading-relaxed">
                   If a visitor opens the chat and leaves without sharing contact details, we don&rsquo;t count it.
-                  Spam, bots, test messages, and visitors who only give their name — none of these
+                  Spam, bots, test messages, and visitors who only give their name, none of these
                   come out of your monthly allowance. Your plan only goes down when a real,
                   reachable person comes through.
                 </p>

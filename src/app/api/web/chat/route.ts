@@ -28,9 +28,9 @@ You do this by getting the visitor to say their pain out loud, agreeing with it,
 
 ## How you sound
 
-Tradies hate AI-sounding bots. If you sound like ChatGPT, you have already lost.
+Tradies hate scripted assistants. If you sound like ChatGPT, you have already lost.
 
-Speak like a confident person who knows the product inside out — not like a customer service rep, not like a chatbot, not like a marketer. Short and direct. 1 to 3 sentences per message. Maximum.
+Speak like a confident person who knows the product inside out, not like a customer service rep, not like a marketer. Short and direct. 1 to 3 sentences per message. Maximum.
 
 Ask one question at a time. Never two in the same message.
 
@@ -43,7 +43,7 @@ Never say any of these phrases:
 
 Never use exclamation marks in greetings. Never apologise unless something has actually gone wrong. You're talking to a tradie on his phone between jobs, not writing a corporate email.
 
-Never refer to yourself as ChatGPT, Claude, an AI model, or anything else under the hood. If asked directly whether you're a bot, say: "Ja, I'm Qwikly's digital assistant, but the company behind me is run by Liam. Want to talk to him directly? I can book you in for a quick 15."
+Never refer to yourself as ChatGPT, Claude, or anything else under the hood. If asked directly what you are, say: "Ja, I'm Qwikly's digital assistant, the company behind me is run by Liam. **Want to talk to him directly? I can book you in for a quick 15.**"
 
 NEVER use em dashes (—). Not once, not ever. Use a comma or a full stop instead. This is a hard rule with no exceptions.
 
@@ -126,12 +126,12 @@ CONTACT GATE — MANDATORY BEFORE ANY CLOSE:
 Before giving ANY pricing details or the signup link, you MUST have the visitor's email address or phone number. If you do not have it yet, ask for it now. Make it feel like the natural next step in the conversation, not a form field. Call update_visitor immediately once they give it. Only then proceed to Path A or Path B. If they refuse a second time, you may proceed without it — but you must have asked at least twice total across the conversation.
 
 PATH A — DEFAULT (always try this first, only after contact is captured or refused twice):
-"Want to get started? 14-day free trial, no card needed. Pro is R999/month for 75 leads, Premium is R1,999/month for 250 leads. Cancel anytime, no lock-in. Head to qwikly.co.za/pricing to pick the right one."
+"14-day free trial, no card needed. Pro is R999/month for 75 leads, Premium is R1,999/month for 250 leads. Cancel anytime, no lock-in. Head to qwikly.co.za/pricing to pick the right one. **Want to get started?**"
 
 If they say yes to signing up: direct them to qwikly.co.za/pricing. Say: "Head to qwikly.co.za/pricing whenever you're ready. Takes about 5 minutes to set up."
 
 PATH B — FALLBACK (if they say "I need to think" or "tell me more" or seem unsure):
-"All good. Want a quick 15 with Liam tomorrow? He'll show you exactly how it works and set it up live with you."
+"All good. He'll show you exactly how it works and set it up live with you. **Want a quick 15 with Liam tomorrow?**"
 
 If they say yes to a call: you already have their name from Stage 1, so just ask for their best number. Call update_visitor once you have their number. After saving, confirm with: "Sorted. Liam will WhatsApp you to confirm the time."
 
@@ -313,6 +313,7 @@ export async function POST(req: NextRequest) {
   let systemPrompt = `Current date and time (South Africa, SAST): ${saTime}\n\n` + QWIKLY_SYSTEM;
   let isTopUp = false;
   let clientAuthUserId: string | null = null;
+  let leadCap: number | null = null;
 
   if (client_id !== "1") {
     const { data: clientRow } = await supabaseAdmin
@@ -363,6 +364,7 @@ export async function POST(req: NextRequest) {
     // ── Lead cap check ─────────────────────────────────────────
     const tier = resolvePlan(clientRow?.plan);
     const cap = PLAN_CONFIG[tier].leadLimit;
+    leadCap = cap;
     if (cap !== null) {
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
       const { count: monthLeads } = await supabaseAdmin
@@ -377,7 +379,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             reply:
-              "Thanks for reaching out. We've reached our lead limit for this month and can't take new enquiries right now. We'll be back to full capacity on the 1st — or contact us directly in the meantime.",
+              "Thanks for reaching out. We've reached our lead limit for this month and can't take new enquiries right now. We'll be back to full capacity on the 1st, or contact us directly in the meantime.",
             conversation_id: null,
             lead_captured: false,
           },
@@ -460,12 +462,17 @@ export async function POST(req: NextRequest) {
   let visitorInfo: VisitorToolInput | null = null;
 
   // Call 1: main response. Hard failure → 503 so the widget can retry.
+  // Cache the system prompt (large, mostly stable per client) to cut tokens
+  // on repeat requests within Anthropic's 5-minute prompt cache window.
+  const systemBlocks: Anthropic.TextBlockParam[] = [
+    { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
+  ];
   let response: Anthropic.Message;
   try {
     response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 160,
-      system: systemPrompt,
+      system: systemBlocks,
       tools: TOOLS,
       messages: claudeMessages,
     });
@@ -490,7 +497,7 @@ export async function POST(req: NextRequest) {
         const followUp = await anthropic.messages.create({
           model: "claude-haiku-4-5-20251001",
           max_tokens: 120,
-          system: systemPrompt,
+          system: systemBlocks,
           messages: [
             ...claudeMessages,
             { role: "assistant", content: response.content },
@@ -530,7 +537,21 @@ export async function POST(req: NextRequest) {
 
   if (visitorInfo && convoId) {
     if (hasContact) {
-      // Contact info captured — this is a real lead, count against cap
+      // Contact info captured — this is a real lead, count against cap.
+      // Re-check the lead count after the update window to catch concurrent
+      // requests that slipped past the initial cap check (race-safe billing
+      // even if not race-safe rejection).
+      let raceTopUp = false;
+      if (leadCap !== null && client_id !== "1") {
+        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+        const { count: priorLeads } = await supabaseAdmin
+          .from("conversations")
+          .select("id", { count: "exact", head: true })
+          .eq("client_id", Number(client_id))
+          .eq("is_lead", true)
+          .gte("created_at", startOfMonth);
+        if ((priorLeads ?? 0) >= leadCap) raceTopUp = true;
+      }
       const updates: Record<string, string | boolean> = { status: "lead", is_lead: true };
       if (visitorInfo.name)           updates.customer_name  = visitorInfo.name;
       if (visitorInfo.phone)          updates.customer_phone = visitorInfo.phone;
@@ -539,7 +560,7 @@ export async function POST(req: NextRequest) {
       if (visitorInfo.job_type)       updates.job_type       = visitorInfo.job_type;
       if (visitorInfo.area)           updates.area           = visitorInfo.area;
       if (visitorInfo.preferred_time) updates.preferred_time = visitorInfo.preferred_time;
-      if (isTopUp)                    updates.is_top_up      = true;
+      if (isTopUp || raceTopUp)       updates.is_top_up      = true;
       await supabaseAdmin.from("conversations").update(updates).eq("id", convoId);
 
       if (visitorInfo.email && client_id) {

@@ -12,7 +12,7 @@ export const FAQ_DATA = [
   {
     question: "What counts as a qualified lead?",
     answer:
-      "A lead only counts when a visitor shares their phone number or email address. Just opening the chat or asking a question is not a lead — curiosity is free. Bounced chats, visitors who give only their name, and spam are never counted. A visitor who confirms booking intent still counts as just one lead, not extra.",
+      "A lead only counts when a visitor shares their phone number or email address. Just opening the chat or asking a question is not a lead, curiosity is free. Bounced chats, visitors who give only their name, and spam are never counted. A visitor who confirms booking intent still counts as just one lead, not extra.",
   },
   {
     question: "What happens when I hit my monthly lead limit?",

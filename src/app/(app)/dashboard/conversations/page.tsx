@@ -35,6 +35,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useClient } from "@/lib/use-client";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -133,6 +134,7 @@ export default function ConversationsPage() {
   const router = useRouter();
   const sp = useSearchParams();
   const initialId = sp.get("id");
+  const { client, loading: clientLoading } = useClient();
 
   const [convos, setConvos] = useState<Convo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -175,10 +177,13 @@ export default function ConversationsPage() {
 
   // ── Load conversation list ────────────────────────────────────────────────
   useEffect(() => {
+    if (clientLoading) return;
+    if (!client?.id) { setLoading(false); return; }
     (async () => {
       const { data } = await supabase
         .from("conversations")
         .select("*")
+        .eq("client_id", client.id)
         .order("updated_at", { ascending: false });
       const list = (data as Convo[]) ?? [];
 
@@ -204,7 +209,7 @@ export default function ConversationsPage() {
       }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [client?.id, clientLoading]);
 
   // ── AI analysis fetch ─────────────────────────────────────────────────────
   const fetchAnalysis = useCallback(async (conversationId: string) => {

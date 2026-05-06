@@ -2,16 +2,25 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, FormEvent } from "react";
 import {
   CreditCard, Calendar, Check, Download, Shield,
-  ArrowRight, X, CheckCircle, ChevronRight, Clock,
+  ArrowRight, X, CheckCircle, ChevronRight, Clock, Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/empty";
 import { cn } from "@/lib/cn";
 import { fmt, fmtDateLong } from "@/lib/money";
+
+async function verifyPassword(password: string): Promise<boolean> {
+  const res = await fetch("/api/auth/verify-password", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password }),
+  });
+  return res.ok;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -133,12 +142,27 @@ function PlanChangeModal({
 }) {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [password, setPassword] = useState("");
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [step, setStep] = useState<"review" | "confirm">("review");
 
   const isAnnualToMonthly = fromCycle === "annual" && toCycle === "monthly";
   const isDowngrade = MONTHLY[to] < MONTHLY[from] || isAnnualToMonthly;
 
-  async function handleConfirm() {
+  async function handleConfirm(e?: FormEvent) {
+    e?.preventDefault();
+    if (!password) {
+      setPwError("Enter your password to confirm.");
+      return;
+    }
     setLoading(true);
+    setPwError(null);
+    const ok = await verifyPassword(password);
+    if (!ok) {
+      setLoading(false);
+      setPwError("Password is incorrect. Try again.");
+      return;
+    }
     await onConfirm();
     setLoading(false);
     setDone(true);
@@ -154,11 +178,11 @@ function PlanChangeModal({
             <p className="text-body font-semibold text-fg">Plan updated</p>
             <p className="text-small text-fg-muted mt-1">Your subscription has been changed.</p>
           </div>
-        ) : (
+        ) : step === "review" ? (
           <>
             <div className="flex items-start justify-between mb-5">
               <h3 className="text-h2 text-fg">Confirm plan change</h3>
-              <button onClick={onClose} className="text-fg-muted hover:text-fg cursor-pointer transition-colors">
+              <button onClick={onClose} aria-label="Close" className="text-fg-muted hover:text-fg cursor-pointer transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -191,9 +215,45 @@ function PlanChangeModal({
 
             <div className="flex gap-3">
               <Button variant="ghost" onClick={onClose} className="flex-1" disabled={loading}>Cancel</Button>
-              <Button onClick={handleConfirm} loading={loading} className="flex-1">Confirm change</Button>
+              <Button onClick={() => setStep("confirm")} className="flex-1">Continue</Button>
             </div>
           </>
+        ) : (
+          <form onSubmit={handleConfirm}>
+            <div className="flex items-start justify-between mb-5">
+              <h3 className="text-h2 text-fg flex items-center gap-2">
+                <Lock className="w-5 h-5 text-fg-muted" aria-hidden="true" />
+                Confirm with password
+              </h3>
+              <button type="button" onClick={onClose} aria-label="Close" className="text-fg-muted hover:text-fg cursor-pointer transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-small text-fg-muted mb-4 leading-relaxed">
+              For your security, enter your account password before we change your subscription.
+            </p>
+            <label htmlFor="confirm-pw-change" className="text-tiny text-fg-muted block mb-1.5">
+              Account password
+            </label>
+            <input
+              id="confirm-pw-change"
+              type="password"
+              autoFocus
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setPwError(null); }}
+              aria-invalid={!!pwError}
+              aria-describedby={pwError ? "confirm-pw-change-err" : undefined}
+              className="w-full bg-white/5 border border-line rounded-lg px-3 py-2 text-fg outline-none focus:ring-2 focus:ring-brand"
+            />
+            {pwError && (
+              <p id="confirm-pw-change-err" className="text-tiny text-danger mt-1.5">{pwError}</p>
+            )}
+            <div className="flex gap-3 mt-5">
+              <Button type="button" variant="ghost" onClick={() => setStep("review")} className="flex-1" disabled={loading}>Back</Button>
+              <Button type="submit" loading={loading} className="flex-1">Confirm change</Button>
+            </div>
+          </form>
         )}
       </div>
     </div>
@@ -207,9 +267,24 @@ function CancelModal({
 }: { renewsAt: string; onClose: () => void; onConfirm: () => Promise<void> }) {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [password, setPassword] = useState("");
+  const [pwError, setPwError] = useState<string | null>(null);
+  const [step, setStep] = useState<"review" | "confirm">("review");
 
-  async function handleConfirm() {
+  async function handleConfirm(e?: FormEvent) {
+    e?.preventDefault();
+    if (!password) {
+      setPwError("Enter your password to confirm.");
+      return;
+    }
     setLoading(true);
+    setPwError(null);
+    const ok = await verifyPassword(password);
+    if (!ok) {
+      setLoading(false);
+      setPwError("Password is incorrect. Try again.");
+      return;
+    }
     await onConfirm();
     setLoading(false);
     setDone(true);
@@ -227,11 +302,11 @@ function CancelModal({
               You&apos;ll keep access until {fmtDateLong(renewsAt)}.
             </p>
           </div>
-        ) : (
+        ) : step === "review" ? (
           <>
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-h2 text-fg">Cancel subscription?</h3>
-              <button onClick={onClose} className="text-fg-muted hover:text-fg cursor-pointer transition-colors">
+              <button onClick={onClose} aria-label="Close" className="text-fg-muted hover:text-fg cursor-pointer transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -248,11 +323,47 @@ function CancelModal({
               <Button variant="ghost" onClick={onClose} className="flex-1" disabled={loading}>
                 Keep subscription
               </Button>
-              <Button variant="danger" onClick={handleConfirm} loading={loading} className="flex-1">
-                Cancel subscription
+              <Button variant="danger" onClick={() => setStep("confirm")} className="flex-1">
+                Continue
               </Button>
             </div>
           </>
+        ) : (
+          <form onSubmit={handleConfirm}>
+            <div className="flex items-start justify-between mb-5">
+              <h3 className="text-h2 text-fg flex items-center gap-2">
+                <Lock className="w-5 h-5 text-fg-muted" aria-hidden="true" />
+                Confirm with password
+              </h3>
+              <button type="button" onClick={onClose} aria-label="Close" className="text-fg-muted hover:text-fg cursor-pointer transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-small text-fg-muted mb-4 leading-relaxed">
+              For your security, enter your account password before we cancel your subscription.
+            </p>
+            <label htmlFor="confirm-pw-cancel" className="text-tiny text-fg-muted block mb-1.5">
+              Account password
+            </label>
+            <input
+              id="confirm-pw-cancel"
+              type="password"
+              autoFocus
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => { setPassword(e.target.value); setPwError(null); }}
+              aria-invalid={!!pwError}
+              aria-describedby={pwError ? "confirm-pw-cancel-err" : undefined}
+              className="w-full bg-white/5 border border-line rounded-lg px-3 py-2 text-fg outline-none focus:ring-2 focus:ring-brand"
+            />
+            {pwError && (
+              <p id="confirm-pw-cancel-err" className="text-tiny text-danger mt-1.5">{pwError}</p>
+            )}
+            <div className="flex gap-3 mt-5">
+              <Button type="button" variant="ghost" onClick={() => setStep("review")} className="flex-1" disabled={loading}>Back</Button>
+              <Button type="submit" variant="danger" loading={loading} className="flex-1">Cancel subscription</Button>
+            </div>
+          </form>
         )}
       </div>
     </div>

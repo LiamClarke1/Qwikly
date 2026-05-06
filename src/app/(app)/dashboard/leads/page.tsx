@@ -45,6 +45,8 @@ interface Message {
   role: "assistant" | "customer" | "owner";
   content: string;
   created_at: string;
+  message_type: string | null;
+  attachment_id: string | null;
 }
 
 interface Note {
@@ -626,7 +628,7 @@ function DetailPanel({
     (async () => {
       const { data } = await supabase
         .from("messages_log")
-        .select("id,role,content,created_at")
+        .select("id,role,content,created_at,message_type,attachment_id")
         .eq("conversation_id", lead.id)
         .order("created_at");
       if (alive) { setMessages((data as Message[]) ?? []); setMessagesLoading(false); }
@@ -665,12 +667,13 @@ function DetailPanel({
   }, [lead.id]);
 
   useEffect(() => {
-    if (!displayPhone) return;
+    if (!displayPhone || !client?.id) return;
     let alive = true;
     (async () => {
       const { data } = await supabase
         .from("conversations")
         .select("id,job_type,status,created_at,area")
+        .eq("client_id", client.id)
         .eq("customer_phone", displayPhone)
         .neq("id", lead.id)
         .eq("is_lead", true)
@@ -679,7 +682,7 @@ function DetailPanel({
       if (alive) setPastJobs((data as PastJob[]) ?? []);
     })();
     return () => { alive = false; };
-  }, [lead.id, displayPhone]);
+  }, [lead.id, displayPhone, client?.id]);
 
   async function updateStatus(status: string) {
     setStatusUpdating(true);
@@ -1176,21 +1179,64 @@ function DetailPanel({
               <p className="text-tiny text-ink-300 italic py-4 text-center">No messages yet</p>
             ) : (
               <div className="space-y-2.5">
-                {messages.map((msg) => (
-                  <div key={msg.id} className="flex flex-col gap-0.5">
-                    <div className={cn(
-                      "max-w-[88%] rounded-2xl px-3.5 py-2.5 text-tiny leading-relaxed",
-                      msg.role === "assistant" ? "bg-ink/[0.05] text-ink rounded-tl-sm mr-auto"
-                      : msg.role === "owner" ? "bg-ink text-white rounded-tr-sm ml-auto"
-                      : "bg-blue-50 text-blue-900 border border-blue-100 rounded-tr-sm ml-auto"
-                    )}>
-                      {msg.content}
+                {messages.map((msg) => {
+                  const isDoc = msg.message_type === "document";
+                  let docMeta: { filename?: string; size?: number } | null = null;
+                  if (isDoc) {
+                    try { docMeta = JSON.parse(msg.content); } catch { docMeta = {}; }
+                  }
+                  const isFromMe = msg.role === "owner";
+                  return (
+                    <div key={msg.id} className="flex flex-col gap-0.5">
+                      {isDoc ? (
+                        <div className={cn(
+                          "max-w-[88%] flex items-center gap-2.5 rounded-2xl px-3 py-2.5",
+                          isFromMe
+                            ? "bg-ink text-white rounded-tr-sm ml-auto"
+                            : "bg-blue-50 text-blue-900 border border-blue-100 rounded-tr-sm ml-auto"
+                        )}>
+                          <div className={cn(
+                            "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
+                            isFromMe ? "bg-white/20" : "bg-blue-200"
+                          )}>
+                            <FileText className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-tiny font-semibold truncate">{docMeta?.filename ?? "Document"}</p>
+                            {docMeta?.size && (
+                              <p className="text-[10px] opacity-70">{formatBytes(docMeta.size)}</p>
+                            )}
+                          </div>
+                          {msg.attachment_id && (
+                            <button
+                              type="button"
+                              onClick={() => downloadDoc(msg.attachment_id!)}
+                              className={cn(
+                                "w-6 h-6 rounded-lg flex items-center justify-center shrink-0 cursor-pointer transition-opacity hover:opacity-70",
+                                isFromMe ? "bg-white/20" : "bg-blue-200"
+                              )}
+                              title="Download"
+                            >
+                              <Download className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className={cn(
+                          "max-w-[88%] rounded-2xl px-3.5 py-2.5 text-tiny leading-relaxed",
+                          msg.role === "assistant" ? "bg-ink/[0.05] text-ink rounded-tl-sm mr-auto"
+                          : msg.role === "owner" ? "bg-ink text-white rounded-tr-sm ml-auto"
+                          : "bg-blue-50 text-blue-900 border border-blue-100 rounded-tr-sm ml-auto"
+                        )}>
+                          {msg.content}
+                        </div>
+                      )}
+                      <p className={cn("text-[10px] text-ink-300 px-1", msg.role !== "assistant" && "text-right")}>
+                        {msg.role === "customer" ? "Customer" : msg.role === "owner" ? "You" : "Assistant"} · {timeAgo(msg.created_at)}
+                      </p>
                     </div>
-                    <p className={cn("text-[10px] text-ink-300 px-1", msg.role !== "assistant" && "text-right")}>
-                      {msg.role === "customer" ? "Customer" : msg.role === "owner" ? "You" : "Assistant"} · {timeAgo(msg.created_at)}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1288,7 +1334,7 @@ function StatsBar({ leads }: { leads: Lead[] }) {
 function LeadsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { client } = useClient();
+  const { client, loading: clientLoading } = useClient();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -1320,10 +1366,13 @@ function LeadsContent() {
   const canExport = config.csvExport;
 
   const loadLeads = useCallback(async () => {
+    if (clientLoading) return;
+    if (!client?.id) { setLoading(false); return; }
     setLoading(true);
     let q = supabase
       .from("conversations")
       .select("id,customer_name,customer_phone,customer_email,job_type,status,created_at,updated_at,preferred_time,area,booking_intent,job_value,closed_reason,appointment_at,follow_up_at,assigned_to")
+      .eq("client_id", client.id)
       .eq("is_lead", true)
       .order("created_at", { ascending: false })
       .limit(200);
@@ -1335,7 +1384,7 @@ function LeadsContent() {
     if (error) console.error("[leads] query error:", error.message);
     setLeads((data as Lead[]) ?? []);
     setLoading(false);
-  }, [statusFilter]);
+  }, [statusFilter, client?.id, clientLoading]);
 
   useEffect(() => { loadLeads(); }, [loadLeads]);
 

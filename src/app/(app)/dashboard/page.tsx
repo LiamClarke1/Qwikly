@@ -334,7 +334,7 @@ const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  const { client } = useClient();
+  const { client, loading: clientLoading } = useClient();
   const { firstName } = useUser();
   const [loading, setLoading] = useState(true);
   const [leadsMonth, setLeadsMonth] = useState(0);
@@ -345,6 +345,11 @@ export default function HomePage() {
   const widgetLive = !!(client?.web_widget_last_seen_at);
 
   useEffect(() => {
+    if (clientLoading) return;
+    if (!client?.id) {
+      setLoading(false);
+      return;
+    }
     (async () => {
       const now = new Date();
       const startMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -354,17 +359,20 @@ export default function HomePage() {
         supabase
           .from("conversations")
           .select("id", { count: "exact", head: true })
+          .eq("client_id", client.id)
           .eq("is_lead", true)
           .gte("created_at", startMonth),
         supabase
           .from("conversations")
           .select("id,customer_name,customer_phone,status,updated_at,job_type")
+          .eq("client_id", client.id)
           .eq("is_lead", true)
           .order("updated_at", { ascending: false })
           .limit(6),
         supabase
           .from("conversations")
           .select("id", { count: "exact", head: true })
+          .eq("client_id", client.id)
           .eq("is_lead", true)
           .gte("created_at", startDay),
         fetch("/api/subscription").then((r) => r.ok ? r.json() : null).catch(() => null),
@@ -376,7 +384,7 @@ export default function HomePage() {
       if (subRes?.plan) setTier(resolvePlan(subRes.plan));
       setLoading(false);
     })();
-  }, []);
+  }, [client?.id, clientLoading]);
 
   const greeting = (() => {
     const h = new Date().getHours();
