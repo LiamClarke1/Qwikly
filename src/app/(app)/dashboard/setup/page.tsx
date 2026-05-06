@@ -87,7 +87,7 @@ type View = "overview" | "intro" | "loading" | "done" | "wizard";
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
 
 interface UploadedFile { name: string; base64: string; mediaType: string; size: number; }
-interface AutoFillResult { data: Record<string, string>; filledCount: number; highlights: string[]; }
+interface AutoFillResult { data: Record<string, string>; confidence: Record<string, string>; filledCount: number; highlights: string[]; }
 
 interface FormData {
   business_name: string; owner_name: string; trade: string; areas: string;
@@ -190,12 +190,23 @@ function buildSystemPrompt(f: FormData): string {
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
-function Field({ label, hint, optional, children }: { label: string; hint?: string; optional?: boolean; children: React.ReactNode }) {
+function AutoFillBadge({ confidence }: { confidence?: string }) {
+  if (!confidence || confidence === "high") return null;
+  return (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-warning/10 border border-warning/20 text-[10px] font-semibold text-warning leading-none">
+      <AlertCircle className="w-2.5 h-2.5 shrink-0" />
+      Review
+    </span>
+  );
+}
+
+function Field({ label, hint, optional, confidence, children }: { label: string; hint?: string; optional?: boolean; confidence?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="flex items-center gap-2 text-small font-semibold text-fg mb-1.5">
+      <label className="flex items-center gap-2 text-small font-semibold text-fg mb-1.5 flex-wrap">
         {label}
         {optional && <span className="text-tiny font-normal text-fg-muted">(optional)</span>}
+        <AutoFillBadge confidence={confidence} />
       </label>
       {children}
       {hint && <p className="text-tiny text-fg-muted mt-1.5 leading-relaxed">{hint}</p>}
@@ -1047,6 +1058,10 @@ function LoadingView({ stage, progress }: { stage: string; progress: number }) {
 // ─── Done View ────────────────────────────────────────────────────────────────
 
 function DoneView({ result, onContinue }: { result: AutoFillResult; onContinue: () => void }) {
+  const reviewCount = Object.entries(result.confidence ?? {}).filter(
+    ([k, v]) => (v === "medium" || v === "low") && result.data[k]?.trim()
+  ).length;
+
   return (
     <div className="space-y-6 text-center">
       <div>
@@ -1069,6 +1084,22 @@ function DoneView({ result, onContinue }: { result: AutoFillResult; onContinue: 
                 <span className="text-small text-fg">{h}</span>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {reviewCount > 0 && (
+        <div className="panel !p-4 text-left bg-warning/[0.04] border-warning/20">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-warning/10 border border-warning/20 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-4 h-4 text-warning" />
+            </div>
+            <div>
+              <p className="text-small font-semibold text-fg">{reviewCount} field{reviewCount !== 1 ? "s" : ""} flagged for review</p>
+              <p className="text-tiny text-fg-muted mt-0.5 leading-relaxed">
+                These were estimated by AI from your website text. Look for the amber <span className="font-semibold text-warning">Review</span> tags in the wizard and confirm each one is correct.
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -1321,6 +1352,17 @@ export default function SetupPage() {
   const set = (field: keyof FormData) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
+  // Returns confidence level for an API field key, only when non-empty and not high confidence.
+  // Used to show "Review" badges on auto-filled wizard fields.
+  const cf = (apiKey: string): string | undefined => {
+    if (!autoFillResult) return undefined;
+    const val = autoFillResult.data[apiKey];
+    if (!val || !val.trim()) return undefined;
+    const level = autoFillResult.confidence[apiKey];
+    if (!level || level === "high") return undefined;
+    return level;
+  };
+
   const scrollTop = () => document.getElementById("main-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
   const next = () => { setError(null); setStep((s) => (s + 1) as Step); scrollTop(); };
   const back = () => { setError(null); setStep((s) => (s - 1) as Step); scrollTop(); };
@@ -1366,7 +1408,7 @@ export default function SetupPage() {
 
       setLoadingPct(100);
       setForm(filled);
-      setAutoFillResult({ data: json.data, filledCount: count, highlights });
+      setAutoFillResult({ data: json.data, confidence: json.confidence ?? {}, filledCount: count, highlights });
 
       // Brief pause at 100% before showing done
       setTimeout(() => setView("done"), 600);
@@ -1609,34 +1651,34 @@ export default function SetupPage() {
           {/* ── STEP 1 ── */}
           {step === 1 && (
             <div className="space-y-5">
-              <Field label="Business name" hint="Your assistant uses this name when greeting customers.">
+              <Field label="Business name" confidence={cf("business_name")} hint="Your assistant uses this name when greeting customers.">
                 <WInput value={form.business_name} onChange={set("business_name")} placeholder="e.g. Pete's Plumbing" />
               </Field>
-              <Field label="Your name" optional hint="So we know who to contact.">
+              <Field label="Your name" optional confidence={cf("owner_name")} hint="So we know who to contact.">
                 <WInput value={form.owner_name} onChange={set("owner_name")} placeholder="e.g. Pete Jacobs" />
               </Field>
               <Field label="Type of work">
                 <WSelectWithOther value={form.trade} onChange={set("trade")} options={TRADES} placeholder="Select your trade" />
               </Field>
-              <Field label="Cities and suburbs you cover" hint="Your assistant declines jobs outside these areas automatically.">
+              <Field label="Cities and suburbs you cover" confidence={cf("areas")} hint="Your assistant declines jobs outside these areas automatically.">
                 <WInput value={form.areas} onChange={set("areas")} placeholder="e.g. Sandton, Midrand, Fourways, Randburg" />
               </Field>
-              <Field label="Years in business" optional>
+              <Field label="Years in business" optional confidence={cf("years_in_business")}>
                 <WInput value={form.years_in_business} onChange={set("years_in_business")} placeholder="e.g. 8 years" />
               </Field>
-              <Field label="Licences & certifications" optional hint="Your assistant mentions these proactively to build trust.">
+              <Field label="Licences & certifications" optional confidence={cf("certifications")} hint="Your assistant mentions these proactively to build trust.">
                 <WTextarea value={form.certifications} onChange={set("certifications")} placeholder={"One per line:\n- Wireman's licence\n- NHBRC registered"} rows={3} />
               </Field>
-              <Field label="Brands or products you use" optional>
+              <Field label="Brands or products you use" optional confidence={cf("brands_used")}>
                 <WInput value={form.brands_used} onChange={set("brands_used")} placeholder="e.g. Defy, Bosch, Crabtree" />
               </Field>
-              <Field label="Team size" optional>
+              <Field label="Team size" optional confidence={cf("team_size")}>
                 <WInput value={form.team_size} onChange={set("team_size")} placeholder="e.g. Just me, or a team of 4" />
               </Field>
-              <Field label="Contact phone" hint="Leads and notifications are sent to this number.">
+              <Field label="Contact phone" confidence={cf("phone")} hint="Leads and notifications are sent to this number.">
                 <WInput value={form.notification_phone} onChange={set("notification_phone")} placeholder="+27 82 000 0000" type="tel" />
               </Field>
-              <Field label="Contact email" hint="Qualified leads are delivered to this inbox.">
+              <Field label="Contact email" confidence={cf("email")} hint="Qualified leads are delivered to this inbox.">
                 <WInput value={form.notification_email} onChange={set("notification_email")} placeholder="you@example.com" type="email" />
               </Field>
             </div>
@@ -1645,17 +1687,17 @@ export default function SetupPage() {
           {/* ── STEP 2 ── */}
           {step === 2 && (
             <div className="space-y-5">
-              <Field label="Every service you offer" hint="One per line. This is your assistant's full menu.">
+              <Field label="Every service you offer" confidence={cf("services_offered")} hint="One per line. This is your assistant's full menu.">
                 <WTextarea value={form.services_offered} onChange={set("services_offered")} placeholder={"- Geyser replacement\n- DB board upgrade\n- Certificate of Compliance\n- Solar installation"} rows={8} />
               </Field>
-              <Field label="Jobs you don't take on" optional hint="Prevents your assistant from promising work you won't do.">
+              <Field label="Jobs you don't take on" optional confidence={cf("services_excluded")} hint="Prevents your assistant from promising work you won't do.">
                 <WTextarea value={form.services_excluded} onChange={set("services_excluded")} placeholder={"- No aircon work\n- No 3-phase industrial\n- No jobs outside Gauteng"} rows={4} />
               </Field>
-              <Field label="Emergency or after-hours callouts?">
+              <Field label="Emergency or after-hours callouts?" confidence={cf("after_hours")}>
                 <Pills value={form.after_hours} onChange={set("after_hours")} options={AFTER_HOURS_OPTS} />
               </Field>
               {(form.after_hours === "Yes" || form.after_hours === "Depends on the job") && (
-                <Field label="Emergency response time" optional>
+                <Field label="Emergency response time" optional confidence={cf("emergency_response")}>
                   <WInput value={form.emergency_response} onChange={set("emergency_response")} placeholder="e.g. Within 1–2 hours, R250 surcharge" />
                 </Field>
               )}
@@ -1665,25 +1707,25 @@ export default function SetupPage() {
           {/* ── STEP 3 ── */}
           {step === 3 && (
             <div className="space-y-5">
-              <Field label="How do you charge?">
+              <Field label="How do you charge?" confidence={cf("charge_type")}>
                 <Pills value={form.charge_type} onChange={set("charge_type")} options={CHARGE_OPTS} />
               </Field>
-              <Field label="Call-out fee" optional>
+              <Field label="Call-out fee" optional confidence={cf("callout_fee")}>
                 <WInput value={form.callout_fee} onChange={set("callout_fee")} placeholder="e.g. R450, waived if you proceed" />
               </Field>
-              <Field label="Example jobs with prices" hint="Give 5–10 real examples so your assistant can quote accurately.">
+              <Field label="Example jobs with prices" confidence={cf("example_prices")} hint="Give 5–10 real examples so your assistant can quote accurately.">
                 <WTextarea value={form.example_prices} onChange={set("example_prices")} placeholder={"- Tap washer: R350\n- Geyser replacement 150L: from R3,500\n- DB board upgrade: from R5,500"} rows={7} />
               </Field>
-              <Field label="Minimum job value" optional>
+              <Field label="Minimum job value" optional confidence={cf("minimum_job")}>
                 <WInput value={form.minimum_job} onChange={set("minimum_job")} placeholder="e.g. Minimum R500" />
               </Field>
-              <Field label="Free quotes?">
+              <Field label="Free quotes?" confidence={cf("free_quotes")}>
                 <Pills value={form.free_quotes} onChange={set("free_quotes")} options={FREE_QUOTE_OPTS} />
               </Field>
-              <Field label="Payment methods" optional>
+              <Field label="Payment methods" optional confidence={cf("payment_methods")}>
                 <Pills value={form.payment_methods} onChange={set("payment_methods")} options={PAYMENT_METHOD_OPTS} />
               </Field>
-              <Field label="Payment terms" optional>
+              <Field label="Payment terms" optional confidence={cf("payment_terms")}>
                 <MultiPills value={form.payment_terms} onChange={set("payment_terms")} options={PAYMENT_TERM_OPTS} />
               </Field>
             </div>
@@ -1692,10 +1734,10 @@ export default function SetupPage() {
           {/* ── STEP 4 ── */}
           {step === 4 && (
             <div className="space-y-5">
-              <Field label="Working hours" hint="Your assistant only offers booking slots within these hours.">
+              <Field label="Working hours" confidence={cf("working_hours")} hint="Your assistant only offers booking slots within these hours.">
                 <WInput value={form.working_hours} onChange={set("working_hours")} placeholder="e.g. Mon–Fri 7am–5pm, Sat 8am–1pm" />
               </Field>
-              <Field label="How far in advance can customers book?" optional>
+              <Field label="How far in advance can customers book?" optional confidence={cf("booking_lead_time")}>
                 <WInput value={form.booking_lead_time} onChange={set("booking_lead_time")} placeholder="e.g. Same or next day for most jobs" />
               </Field>
               <Field label="How quickly do you follow up after a booking?" optional>
@@ -1713,19 +1755,19 @@ export default function SetupPage() {
           {/* ── STEP 5 ── */}
           {step === 5 && (
             <div className="space-y-5">
-              <Field label="Why should a customer choose you?" hint="Your assistant uses this when customers say 'let me think about it'.">
+              <Field label="Why should a customer choose you?" confidence={cf("unique_selling_point")} hint="Your assistant uses this when customers say 'let me think about it'.">
                 <WTextarea value={form.unique_selling_point} onChange={set("unique_selling_point")} placeholder={"- 12 years certified\n- No hidden fees\n- 1-year workmanship guarantee\n- We arrive on time or call ahead"} rows={5} />
               </Field>
-              <Field label="Guarantees or warranties" optional>
+              <Field label="Guarantees or warranties" optional confidence={cf("guarantees")}>
                 <WTextarea value={form.guarantees} onChange={set("guarantees")} placeholder={"- 1-year workmanship guarantee\n- Free callback within 30 days for same fault"} rows={3} />
               </Field>
-              <Field label="Questions customers always ask" optional hint="Your assistant answers these instantly.">
+              <Field label="Questions customers always ask" optional confidence={cf("common_questions")} hint="Your assistant answers these instantly.">
                 <WTextarea value={form.common_questions} onChange={set("common_questions")} placeholder={"- Do you issue COC certificates?\n- Do you work weekends?\n- Are you fully certified?"} rows={5} />
               </Field>
               <Field label="Common objections and how to handle them" optional>
                 <WTextarea value={form.common_objections} onChange={set("common_objections")} placeholder={"- 'You're too expensive' → Our price includes a 1-year guarantee\n- 'Let me get another quote' → Availability fills fast, want me to pencil you in?"} rows={5} />
               </Field>
-              <Field label="Customer testimonials" optional hint="Your assistant can share these when customers ask for references. Separate each one with ---">
+              <Field label="Customer testimonials" optional confidence={cf("testimonials")} hint="Your assistant can share these when customers ask for references. Separate each one with ---">
                 <WTextarea value={form.testimonials} onChange={set("testimonials")} placeholder={"\"Pete sorted our burst pipe within the hour. Will use again!\" — John S.\n---\n\"Brilliant service, arrived on time and priced fairly.\" — Lisa M."} rows={5} />
               </Field>
             </div>
