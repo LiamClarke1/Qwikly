@@ -34,7 +34,7 @@
   var shadow = host.attachShadow({ mode: "open" });
   document.body.appendChild(host);
 
-  var BOLT_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
+  var BOLT_SVG = '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
   var SEND_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
   var ATTACH_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
   var DL_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
@@ -45,7 +45,7 @@
   style.textContent = [
     ":host{all:initial;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}",
     "*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}",
-    "#launcher{position:fixed;bottom:24px;right:24px;z-index:2147483647;display:flex;align-items:center;gap:7px;padding:13px 22px;border-radius:50px;background:var(--qc,#E85A2C);color:#fff;font-size:14px;font-weight:700;cursor:pointer;border:none;box-shadow:0 6px 28px rgba(232,90,44,.45);transition:" + MICRO + ";touch-action:manipulation;letter-spacing:-.01em}",
+    "#launcher{position:fixed;bottom:28px;right:28px;z-index:2147483647;display:flex;align-items:center;gap:9px;padding:16px 28px;border-radius:50px;background:var(--qc,#E85A2C);color:#fff;font-size:16px;font-weight:700;cursor:pointer;border:none;box-shadow:0 8px 32px rgba(232,90,44,.50);transition:" + MICRO + ";touch-action:manipulation;letter-spacing:-.01em}",
     "#launcher:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(232,90,44,.55)}",
     "#launcher:active{transform:translateY(0);box-shadow:0 4px 16px rgba(232,90,44,.35)}",
     ".pulse{width:8px;height:8px;border-radius:50%;background:#22C55E;flex-shrink:0;animation:" + (prefersReduced ? "none" : "pulse 2s ease-in-out infinite") + "}",
@@ -107,7 +107,7 @@
     // Upload error
     ".doc-err{font-size:12px;padding:8px 13px;color:#EF4444;align-self:flex-end}",
     // Mobile
-    "@media(max-width:600px){#launcher{bottom:max(16px,calc(env(safe-area-inset-bottom) + 12px));right:max(16px,calc(env(safe-area-inset-right) + 8px));padding:11px 18px;font-size:13px}#panel{left:8px;right:8px;width:auto;bottom:max(72px,calc(env(safe-area-inset-bottom) + 68px));height:auto;max-height:60vh;border-radius:18px;transition:none}}",
+    "@media(max-width:600px){#launcher{bottom:max(20px,calc(env(safe-area-inset-bottom) + 16px));right:max(20px,calc(env(safe-area-inset-right) + 12px));padding:14px 24px;font-size:15px}#panel{left:8px;right:8px;width:auto;bottom:max(72px,calc(env(safe-area-inset-bottom) + 68px));height:auto;max-height:60vh;border-radius:18px;transition:none}}",
     // Dark mode
     "@media(prefers-color-scheme:dark){#panel{background:#1e293b}.bot{background:#334155;color:#f1f5f9}.bot a{color:#60a5fa}.msgs{background:#1e293b}.cin{background:#1e293b;border-top-color:#334155}.cinp{background:#0f172a;border-color:#334155;color:#f1f5f9}.cinp::placeholder{color:#64748b}.ft{background:#1e293b;color:#475569;border-top-color:#334155}.attbtn{background:#334155;color:#94a3b8}.attbtn:hover{background:#475569;color:#f1f5f9}.bot .doc-icon{background:#475569}.bot .doc-dl{background:#475569;color:#f1f5f9}}",
   ].join("");
