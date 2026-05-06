@@ -11,7 +11,7 @@ import {
   CheckCircle2, Flame, Copy, Check, Zap, Calendar, Star,
   Search, StickyNote, User, Banknote, Bell,
   ChevronDown, ChevronUp, ExternalLink, Trash2,
-  AlertCircle, History, TrendingUp, Sparkles, Send,
+  AlertCircle, History, TrendingUp, Sparkles, Send, FileText, Paperclip,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient, ClientRow } from "@/lib/use-client";
@@ -60,6 +60,20 @@ interface PastJob {
   status: string;
   created_at: string;
   area: string | null;
+}
+
+interface ConvDoc {
+  id: string;
+  file_name: string;
+  file_size: number;
+  file_type: string;
+  uploaded_by: "business" | "visitor";
+}
+
+function formatBytes(n: number) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -566,6 +580,8 @@ function DetailPanel({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
 
+  const [docs, setDocs] = useState<ConvDoc[]>([]);
+
   const [jobValue, setJobValue] = useState(lead.job_value?.toString() ?? "");
   const [assignedTo, setAssignedTo] = useState(lead.assigned_to ?? "");
   const [followUpAt, setFollowUpAt] = useState(lead.follow_up_at ? lead.follow_up_at.slice(0, 16) : "");
@@ -614,6 +630,21 @@ function DetailPanel({
         .eq("conversation_id", lead.id)
         .order("created_at");
       if (alive) { setMessages((data as Message[]) ?? []); setMessagesLoading(false); }
+    })();
+    return () => { alive = false; };
+  }, [lead.id]);
+
+  useEffect(() => {
+    let alive = true;
+    setDocs([]);
+    (async () => {
+      const { data } = await supabase
+        .from("conversation_documents")
+        .select("id,file_name,file_size,file_type,uploaded_by")
+        .eq("conversation_id", lead.id)
+        .eq("status", "active")
+        .order("created_at");
+      if (alive) setDocs((data as ConvDoc[]) ?? []);
     })();
     return () => { alive = false; };
   }, [lead.id]);
@@ -695,6 +726,13 @@ function DetailPanel({
   async function deleteNote(noteId: string) {
     await supabase.from("lead_notes").delete().eq("id", noteId);
     setNotes((prev) => prev.filter((n) => n.id !== noteId));
+  }
+
+  async function downloadDoc(docId: string) {
+    const r = await fetch(`/api/documents/${docId}/url`);
+    if (!r.ok) return;
+    const { url } = await r.json();
+    if (url) window.open(url, "_blank", "noopener");
   }
 
   async function copyPhone() {
@@ -1079,6 +1117,43 @@ function DetailPanel({
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Documents shared by visitor */}
+        {docs.length > 0 && (
+          <div className="px-4 py-3 border-b border-ink/[0.06]">
+            <p className="text-[10px] font-semibold text-ink-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Paperclip className="w-3 h-3" /> Documents ({docs.length})
+            </p>
+            <div className="space-y-1.5">
+              {docs.map((doc) => {
+                const isImg = doc.file_type?.startsWith("image/");
+                return (
+                  <div key={doc.id} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-ink/[0.03] border border-ink/[0.08]">
+                    <div className="w-7 h-7 rounded-lg bg-white border border-ink/[0.10] flex items-center justify-center shrink-0">
+                      {isImg
+                        ? <Download className="w-3.5 h-3.5 text-ink-400" />
+                        : <FileText className="w-3.5 h-3.5 text-ink-400" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-tiny font-semibold text-ink truncate">{doc.file_name}</p>
+                      <p className="text-[10px] text-ink-400">
+                        {formatBytes(doc.file_size)} · {doc.uploaded_by === "visitor" ? "From customer" : "Sent by you"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => downloadDoc(doc.id)}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-ink-400 hover:text-ink hover:bg-ink/[0.06] transition-colors cursor-pointer shrink-0"
+                      title="Download"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
