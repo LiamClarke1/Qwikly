@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
 import { CheckCircle, Zap, ArrowRight } from "lucide-react";
 
 export default function ForgotPasswordPage() {
@@ -18,11 +17,18 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError(null);
 
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-
-    if (resetError) {
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      if (!res.ok) {
+        setError("Something went wrong. Please try again or contact clarkeagency1@outlook.com.");
+        setLoading(false);
+        return;
+      }
+    } catch {
       setError("Something went wrong. Please try again or contact clarkeagency1@outlook.com.");
       setLoading(false);
       return;

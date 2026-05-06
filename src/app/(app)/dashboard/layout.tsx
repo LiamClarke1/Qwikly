@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { Suspense } from "react";
 import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
 import { AssistantChat } from "@/components/shell/assistant-chat";
 import { MobileBottomNav } from "@/components/shell/mobile-bottom-nav";
+import { VerifyEmailBanner } from "@/components/shell/verify-email-banner";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -93,6 +95,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             overscrollBehavior: "contain",
           }}
         >
+          <Suspense fallback={null}>
+            <VerifyEmailBanner />
+          </Suspense>
           <main className="px-4 md:px-7 py-6 md:py-8 pb-24 md:pb-8 max-w-[1400px] w-full mx-auto animate-fade-in">
             {children}
           </main>

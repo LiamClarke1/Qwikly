@@ -58,6 +58,7 @@ export interface ClientRow {
   hours?: Record<string, [string, string] | null> | null;
   notification_email?: string | null;
   notification_phone?: string | null;
+  email_verified_at?: string | null;
   billing_email?: string | null;
   client_email?: string | null;
   meta_business_id?: string | null;
