@@ -121,14 +121,15 @@ export async function bookMeeting(args: BookMeetingArgs): Promise<BookingResult>
       .filter(Boolean)
       .join("\n");
 
-    // Build attendee list: visitor + Clarke Agency inbox so both get the
-    // calendar invite + Meet link directly via Google Calendar.
+    // Visitor is the only Google Calendar attendee — they get Google's calendar
+    // invite + Meet link automatically. The Clarke Agency host inbox gets the
+    // branded notification email separately (via Resend, below) but is NOT
+    // added as a calendar attendee, so they don't double up on calendar invites
+    // and the event lives only on the OAuth account's calendar (which is what
+    // shows up on Liam's phone).
     const attendees: Array<{ email: string; displayName?: string }> = [
       { email: args.visitorEmail, displayName: args.visitorName },
     ];
-    if (hostRecipient && hostRecipient.toLowerCase() !== args.visitorEmail.toLowerCase()) {
-      attendees.push({ email: hostRecipient, displayName: "Clarke Agency" });
-    }
 
     const { data: event } = await cal.events.insert({
       calendarId,
@@ -140,7 +141,6 @@ export async function bookMeeting(args: BookMeetingArgs): Promise<BookingResult>
         start: { dateTime: args.start, timeZone: "Africa/Johannesburg" },
         end: { dateTime: args.end, timeZone: "Africa/Johannesburg" },
         attendees,
-        guestsCanModify: true,
         conferenceData: {
           createRequest: {
             requestId,

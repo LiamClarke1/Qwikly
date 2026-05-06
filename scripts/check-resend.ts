@@ -19,8 +19,8 @@ async function main() {
   if (domainsErr) {
     console.log("❌ domains.list error:", domainsErr);
   } else {
-    const list = (domains as { data?: Array<Record<string, unknown>> } | undefined)?.data
-      ?? (domains as unknown as Array<Record<string, unknown>>);
+    const list = ((domains as unknown) as { data?: Array<Record<string, unknown>> } | undefined)?.data
+      ?? ((domains as unknown) as Array<Record<string, unknown>>);
     if (!list || (Array.isArray(list) && list.length === 0)) {
       console.log("⚠ No domains visible on this API key.");
     } else {
