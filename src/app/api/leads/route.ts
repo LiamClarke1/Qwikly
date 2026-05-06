@@ -6,6 +6,7 @@ import { resend, FROM } from "@/lib/resend";
 import { PLAN_CONFIG, resolvePlan } from "@/lib/plan";
 import {
   leadNotificationHtml,
+  leadNotificationText,
   capReachedNotificationHtml,
 } from "@/lib/email/templates/lead-v2";
 
@@ -161,8 +162,18 @@ export async function POST(req: NextRequest) {
       from: FROM,
       to: [recipient],
       replyTo: lead.visitor_email ?? undefined,
-      subject: `New lead from your website — ${lead.name ?? contact}`,
+      subject: `New lead — ${lead.name ?? contact}`,
       html: leadNotificationHtml({
+        businessName: business.name,
+        leadName: lead.name,
+        contact,
+        need: lead.need,
+        preferredTime: lead.preferred_time,
+        visitorEmail: lead.visitor_email,
+        confirmUrl,
+        suggestUrl,
+      }),
+      text: leadNotificationText({
         businessName: business.name,
         leadName: lead.name,
         contact,

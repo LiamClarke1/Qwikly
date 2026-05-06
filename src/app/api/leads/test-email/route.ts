@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { v2Auth } from "@/lib/v2-auth";
 import { resend, FROM } from "@/lib/resend";
-import { leadNotificationHtml } from "@/lib/email/templates/lead-v2";
+import { leadNotificationHtml, leadNotificationText } from "@/lib/email/templates/lead-v2";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
   const confirmUrl = `${BASE_URL}/api/leads/confirm/${lead.confirm_token}?action=confirm`;
   const suggestUrl = `${BASE_URL}/api/leads/confirm/${lead.confirm_token}?action=suggest`;
 
-  const html = leadNotificationHtml({
+  const templateArgs = {
     businessName: business.name || "your business",
     leadName: "Qwikly Test Lead",
     contact: "+27 00 000 0000",
@@ -119,14 +119,15 @@ export async function POST(req: NextRequest) {
     visitorEmail: "test@qwikly.co.za",
     confirmUrl,
     suggestUrl,
-  });
+  };
 
   // ── 3. Send through Resend exactly like the real /api/leads path does
   const { data, error } = await resend.emails.send({
     from: FROM,
     to: [recipient],
     subject: "Qwikly — test lead alert (delete after verifying)",
-    html,
+    html: leadNotificationHtml(templateArgs),
+    text: leadNotificationText(templateArgs),
   });
 
   if (error) {
