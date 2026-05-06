@@ -7,7 +7,12 @@ const FROM = process.env.TWILIO_WHATSAPP_NUMBER ?? "whatsapp:+14155238886";
 
 export async function sendWhatsAppMessage(to: string, body: string): Promise<void> {
   const phone = to.startsWith("whatsapp:") ? to : `whatsapp:${to.startsWith("+") ? to : `+${to.replace(/\D/g, "")}`}`;
-  await getClient().messages.create({ from: FROM, to: phone, body });
+  try {
+    await getClient().messages.create({ from: FROM, to: phone, body });
+  } catch (err) {
+    console.error("[twilio] sendWhatsAppMessage failed:", err);
+    throw err;
+  }
 }
 
 export function interpolate(template: string, vars: Record<string, string>): string {

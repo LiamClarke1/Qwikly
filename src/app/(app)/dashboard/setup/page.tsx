@@ -69,6 +69,19 @@ const MAX_FILE_BYTES = 3 * 1024 * 1024; // 3 MB per file
 const ALLOWED_TYPES = ["application/pdf", "text/plain", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
 const ALLOWED_EXT = [".pdf", ".txt", ".doc", ".docx"];
 
+// ─── Toast ────────────────────────────────────────────────────────────────────
+
+type Toast = { msg: string; tone: "success" | "danger" };
+
+function useToast() {
+  const [toast, setToast] = useState<Toast | null>(null);
+  const show = (msg: string, tone: "success" | "danger" = "success") => {
+    setToast({ msg, tone });
+    setTimeout(() => setToast(null), 2500);
+  };
+  return { toast, show };
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type View = "overview" | "intro" | "loading" | "done" | "wizard";
@@ -341,29 +354,39 @@ function InlineWhatsAppConnect({ clientId }: { clientId: string | undefined }) {
   const sendCode = async () => {
     setError(null);
     setSending(true);
-    const res = await fetch("/api/whatsapp/verify-send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone }),
-    });
-    const j = await res.json();
-    setSending(false);
-    if (!res.ok) return setError(j.error ?? "Failed to send code");
-    setCodeSent(true);
+    try {
+      const res = await fetch("/api/whatsapp/verify-send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
+      const j = await res.json().catch(() => ({}));
+      setSending(false);
+      if (!res.ok) return setError((j as { error?: string }).error ?? "Failed to send code");
+      setCodeSent(true);
+    } catch {
+      setSending(false);
+      setError("Network error. Please check your connection and try again.");
+    }
   };
 
   const checkCode = async () => {
     setError(null);
     setVerifying(true);
-    const res = await fetch("/api/whatsapp/verify-check", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, code, client_id: clientId }),
-    });
-    const j = await res.json();
-    setVerifying(false);
-    if (!res.ok) return setError(j.error ?? "Incorrect code");
-    setVerified(true);
+    try {
+      const res = await fetch("/api/whatsapp/verify-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, code, client_id: clientId }),
+      });
+      const j = await res.json().catch(() => ({}));
+      setVerifying(false);
+      if (!res.ok) return setError((j as { error?: string }).error ?? "Incorrect code");
+      setVerified(true);
+    } catch {
+      setVerifying(false);
+      setError("Network error. Please check your connection and try again.");
+    }
   };
 
   if (verified) {
@@ -1122,29 +1145,39 @@ function WhatsAppVerifyStep({ phone, clientId }: WhatsAppVerifyStepProps) {
   const sendCode = async () => {
     setError(null);
     setSending(true);
-    const res = await fetch("/api/whatsapp/verify-send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone }),
-    });
-    const j = await res.json();
-    setSending(false);
-    if (!res.ok) return setError(j.error ?? "Failed to send code");
-    setCodeSent(true);
+    try {
+      const res = await fetch("/api/whatsapp/verify-send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone }),
+      });
+      const j = await res.json().catch(() => ({}));
+      setSending(false);
+      if (!res.ok) return setError((j as { error?: string }).error ?? "Failed to send code");
+      setCodeSent(true);
+    } catch {
+      setSending(false);
+      setError("Network error. Please check your connection and try again.");
+    }
   };
 
   const checkCode = async () => {
     setError(null);
     setVerifying(true);
-    const res = await fetch("/api/whatsapp/verify-check", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, code, client_id: clientId }),
-    });
-    const j = await res.json();
-    setVerifying(false);
-    if (!res.ok) return setError(j.error ?? "Incorrect code");
-    setVerified(true);
+    try {
+      const res = await fetch("/api/whatsapp/verify-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, code, client_id: clientId }),
+      });
+      const j = await res.json().catch(() => ({}));
+      setVerifying(false);
+      if (!res.ok) return setError((j as { error?: string }).error ?? "Incorrect code");
+      setVerified(true);
+    } catch {
+      setVerifying(false);
+      setError("Network error. Please check your connection and try again.");
+    }
   };
 
   if (verified) {
@@ -1227,6 +1260,7 @@ export default function SetupPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [numberChoice, setNumberChoice] = useState<"existing" | "new" | "">("");
+  const { toast, show: showToast } = useToast();
 
   // Populate form once client data has loaded from Supabase
   useEffect(() => {
@@ -1291,8 +1325,9 @@ export default function SetupPage() {
   const set = (field: keyof FormData) => (value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
-  const next = () => { setStep((s) => (s + 1) as Step); window.scrollTo({ top: 0, behavior: "smooth" }); };
-  const back = () => { setStep((s) => (s - 1) as Step); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  const scrollTop = () => document.getElementById("main-scroll")?.scrollTo({ top: 0, behavior: "smooth" });
+  const next = () => { setError(null); setStep((s) => (s + 1) as Step); scrollTop(); };
+  const back = () => { setError(null); setStep((s) => (s - 1) as Step); scrollTop(); };
 
   const runAnalyse = async (url: string, files: UploadedFile[], pasteText: string) => {
     setLastAnalyseArgs({ url, files, text: pasteText });
@@ -1425,7 +1460,8 @@ export default function SetupPage() {
 
     setSaving(false);
     if (!res.ok) { setError((json as { error?: string }).error ?? "Failed to save. Please try again."); return; }
-    router.push("/dashboard");
+    showToast("Assistant updated and live!", "success");
+    setTimeout(() => router.push("/dashboard"), 900);
   };
 
   const progressPct = view === "wizard" ? ((step - 1) / (STEPS.length - 1)) * 100 : 0;
@@ -1852,6 +1888,9 @@ export default function SetupPage() {
               <Field label="Things your assistant must never say" optional>
                 <WTextarea value={form.ai_never_say} onChange={set("ai_never_say")} placeholder={"- Never mention competitor names\n- Never confirm same-day availability without checking"} rows={3} />
               </Field>
+              <Field label="Custom escalation note" optional hint="Any extra context your assistant needs when handing off to you (e.g. 'Ask the customer to WhatsApp a photo of the fault first').">
+                <WTextarea value={form.ai_escalation_custom} onChange={set("ai_escalation_custom")} placeholder="e.g. Always ask the customer for their full address before escalating" rows={3} />
+              </Field>
             </div>
           )}
 
@@ -1902,6 +1941,15 @@ export default function SetupPage() {
           )}
         </div>
       </form>
+
+      {toast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 panel-strong px-4 py-2.5 flex items-center gap-2 animate-slide-up">
+          {toast.tone === "success"
+            ? <Check className="w-4 h-4 text-success" />
+            : <AlertCircle className="w-4 h-4 text-danger" />}
+          <span className="text-small text-fg">{toast.msg}</span>
+        </div>
+      )}
     </div>
   );
 }

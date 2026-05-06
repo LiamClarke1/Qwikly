@@ -281,7 +281,7 @@ async function tryDirect(url: string): Promise<string | null> {
 async function tryJina(url: string): Promise<string | null> {
   try {
     const res = await fetch(`https://r.jina.ai/${url}`, {
-      headers: { "Accept": "text/plain", "X-Timeout": "15" },
+      headers: { "Accept": "text/plain", "X-Timeout": "15", "X-No-Cache": "true" },
       signal: AbortSignal.timeout(20000),
     });
     if (!res.ok) return null;
@@ -319,19 +319,20 @@ async function tryCorsProxy(url: string): Promise<string | null> {
 }
 
 // Raw HTML for structured data extraction (JSON-LD, regex)
+// Wayback Machine is intentionally excluded — it returns old archived snapshots, not live content.
 async function fetchRawHtml(url: string): Promise<string | null> {
   let html = await tryDirect(url);
-  if (!html || html.length < 200) html = await tryWayback(url);
   if (!html || html.length < 200) html = await tryAllOrigins(url);
   if (!html || html.length < 200) html = await tryCorsProxy(url);
   return html && html.length >= 200 ? html : null;
 }
 
 // Clean text content (Jina first for JS sites, then fallbacks)
+// Wayback Machine is intentionally excluded — it returns old archived snapshots, not live content.
 async function fetchCleanText(url: string): Promise<string | null> {
   const jina = await tryJina(url);
   if (jina) return jina;
-  const html = await tryDirect(url) ?? await tryWayback(url) ?? await tryAllOrigins(url);
+  const html = await tryDirect(url) ?? await tryAllOrigins(url);
   if (!html || html.length < 200) return null;
   return stripHtml(html);
 }

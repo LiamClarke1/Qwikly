@@ -44,8 +44,13 @@ export async function POST(req: NextRequest) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 
+  if (!process.env.RESEND_API_KEY) {
+    console.error("RESEND_API_KEY is not configured");
+    return NextResponse.json({ error: "Email service not configured." }, { status: 503 });
+  }
+
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY!);
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const { error: sendErr } = await resend.emails.send({
       from: "Qwikly <no-reply@qwikly.co.za>",
       to: recipientEmail,

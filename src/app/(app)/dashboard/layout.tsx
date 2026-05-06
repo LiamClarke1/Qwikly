@@ -80,6 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex-1 min-w-0 flex flex-col relative" style={{ minHeight: 0, overflow: "hidden" }}>
         <Topbar isDark={isDark} onToggleTheme={toggleTheme} />
         <div
+          id="main-scroll"
           style={{
             position: "absolute",
             top: "4rem",

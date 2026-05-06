@@ -90,8 +90,9 @@ export async function POST(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
   const resendKey = process.env.RESEND_API_KEY;
+  let emailSent = false;
   if (resendKey) {
-    await fetch("https://api.resend.com/emails", {
+    const emailRes = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -101,7 +102,8 @@ export async function POST(req: NextRequest) {
         html: `<p>You've been invited as a team member (${role}). <a href="https://app.qwikly.co.za/signup">Sign up or log in</a> to accept.</p>`,
       }),
     }).catch(() => null);
+    emailSent = emailRes?.ok ?? false;
   }
 
-  return NextResponse.json(data, { status: 201 });
+  return NextResponse.json({ ...data, email_sent: emailSent }, { status: 201 });
 }
