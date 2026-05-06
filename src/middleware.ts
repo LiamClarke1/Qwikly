@@ -36,6 +36,8 @@ const PUBLIC_PREFIXES = [
   "/api/webhooks/yoco",
   "/api/signup",
   "/api/login",
+  "/api/auth/forgot-password",
+  "/auth/verify",
   // Public widget endpoints — must be accessible from any external site
   "/api/chat",
   "/api/embed/branding",
