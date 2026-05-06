@@ -615,7 +615,7 @@ function NotificationsCard({
       show(body.message || body.error || "Test send failed", "danger");
       return;
     }
-    show(`Test email sent to ${body.recipient}`);
+    show(`Test lead created and email sent to ${body.recipient}`);
   };
 
   if (loading) {
@@ -692,12 +692,12 @@ function NotificationsCard({
             loading={testing}
             disabled={!form.notification_email && !defaultEmail}
           >
-            Send test email
+            Send test lead
           </Button>
         </div>
 
         <p className="text-mini text-fg-muted">
-          Tip: if a test email never arrives, check your spam folder, then verify the sender domain in your Resend dashboard.
+          The test runs the full pipeline: it creates a real lead in your dashboard and sends the alert email. Limited to 4 sends per minute. If nothing arrives, check spam first.
         </p>
       </form>
     </Card>
