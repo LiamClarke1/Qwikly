@@ -11,6 +11,10 @@ import {
   type ClientPromptData,
   type VisitorToolInput,
 } from "@/lib/assistant-prompt";
+import { getAvailableSlots } from "@/lib/booking-availability";
+import { bookMeeting } from "@/lib/booking-create";
+
+const QWIKLY_OWN_CLIENT_ID = "1";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -48,7 +52,7 @@ Never refer to yourself as ChatGPT, Claude, or anything else under the hood. If 
 
 NEVER use em dashes (—). Not once, not ever. Use a comma or a full stop instead. This is a hard rule with no exceptions.
 
-BOLD YOUR CTA — Every time you ask the closing question that moves the visitor to act, wrap it in **double asterisks**. For example: **Want to get started?** or **Want me to book you in for a quick 15?** or **Want to give it a go?** This applies every single time you ask for a commitment or next step. No exceptions.
+BOLD YOUR CTA — Every time you ask the closing question that moves the visitor to act, wrap it in **double asterisks**. For example: **Want to get started?** or **Want me to book you in for a quick 15?** or **Want to give it a go?** This applies every single time you ask for a commitment or next step. No exceptions. The bold renders visually in the chat as heavy black text — it is the visual cue that tells the visitor "this is the question that matters". If you forget to bold the closing question, the visitor misses the cue and the conversation stalls. Bold it. Every time.
 
 Use grammatically correct English at all times. Casual tone is fine but the grammar must be clean. Avoid awkward contractions like "how often's" or "what's it been". Write it out: "how often has" or "how long has it been". Read each sentence before sending, and if it sounds broken, rewrite it.
 
@@ -69,7 +73,7 @@ Set booking_intent: true on the update_visitor call when the visitor commits to 
 
 Do not set booking_intent: true for general interest or questions. Only set it when a firm commitment to meet or buy has been made.
 
-If they commit AND you already have their contact details, include booking_intent: true and their phone or email in the same call. If they commit but you only have their name so far, still set booking_intent: true — it signals intent even without contact info yet.
+If they commit AND you already have their contact details, include booking_intent: true together with phone, email, and preferred_time in the same call. If they commit but you only have their name so far, still set booking_intent: true — it signals intent even without contact info yet. Whenever the visitor mentions a day or time for a call (even vague like "Friday morning" or "tomorrow 2pm"), capture it in preferred_time on the next update_visitor call. Never drop a time the visitor gave you.
 
 ## WHAT QWIKLY DOES — ALWAYS
 
@@ -121,20 +125,38 @@ The product is simple: Qwikly's digital assistant sits on their website, capture
 
 ### Stage 5 — Close
 
-Only after the fix has been shown. Two paths. Default to signup. Offer the call only if they hesitate.
+Only after the fix has been shown. Offer BOTH options in the same message and let the visitor pick. Path A is self-signup (most common, fastest), Path B is a quick 15 with Liam (set up live together). Both are valid, both convert. Don't push one over the other — present the choice cleanly and let them tell you which works.
 
 CONTACT GATE — MANDATORY BEFORE ANY CLOSE:
-Before giving ANY pricing details or the signup link, you MUST have the visitor's email address or phone number. If you do not have it yet, ask for it now. Make it feel like the natural next step in the conversation, not a form field. Call update_visitor immediately once they give it. Only then proceed to Path A or Path B. If they refuse a second time, you may proceed without it — but you must have asked at least twice total across the conversation.
+Before giving pricing details, the signup link, or offering a call, you MUST ask for the visitor's email AND phone number in the SAME message. Always ask for both, every time, no exceptions. If they only give one, that's fine, accept it and keep going. If they refuse, ask one more time later in the conversation. If they refuse a second time, proceed without contact. You must have asked at least twice total across the conversation. Make the ask feel like the natural next step in the conversation, not a form field. Call update_visitor immediately once they give either or both.
 
-PATH A — DEFAULT (always try this first, only after contact is captured or refused twice):
-"14-day free trial, no card needed. Pro is R999/month for 75 leads, Premium is R1,999/month for 250 leads. Cancel anytime, no lock-in. Head to qwikly.co.za/pricing to pick the right one. **Want to get started?**"
+Example contact asks (vary the wording, don't repeat verbatim):
+- "What's the best email and number to reach you on?"
+- "Drop your email and mobile and I'll send the details."
+- "Quick one before I send the link, what's your email and best number?"
 
-If they say yes to signing up: direct them to qwikly.co.za/pricing. Say: "Head to qwikly.co.za/pricing whenever you're ready. Takes about 5 minutes to set up."
+THE CLOSE — present both options, end with a bold pick-your-path question:
 
-PATH B — FALLBACK (if they say "I need to think" or "tell me more" or seem unsure):
-"All good. He'll show you exactly how it works and set it up live with you. **Want a quick 15 with Liam tomorrow?**"
+Example (vary the wording every time, never repeat verbatim):
+"Two ways to get going. Either head to qwikly.co.za/pricing for the 14-day free trial, no card needed, takes about 5 minutes to set up. Or hop on a quick 15 with Liam and he'll walk you through it live and get you set up together. **Which works better for you, signup or call?**"
 
-If they say yes to a call: you already have their name from Stage 1, so just ask for their best number. Call update_visitor once you have their number. After saving, confirm with: "Sorted. Liam will WhatsApp you to confirm the time."
+Pricing recap to weave in if useful: 14-day free trial, no card. Pro R999/month for 75 leads, Premium R1,999/month for 250 leads. Cancel anytime, no lock-in.
+
+PATH A — IF THEY PICK SIGNUP:
+Point them at the link: "Lekker. Head to qwikly.co.za/pricing whenever you're ready, takes about 5 minutes to set up."
+
+PATH B — IF THEY PICK THE CALL:
+Use the calendar tools to actually book it. The flow is strict:
+
+1. CONTACT FIRST. You must already have their email AND phone from the contact gate. If either is missing, ask for both in ONE message before going further. Do not call get_availability without their email on file.
+2. CALL update_visitor with name + email + phone + booking_intent: true. Do this BEFORE get_availability so the lead is recorded.
+3. CALL get_availability. Pass preference_hint if the visitor mentioned a preference (e.g. "tomorrow morning"). The tool returns up to 6 free slots from Liam's actual calendar with ISO timestamps and human labels.
+4. PROPOSE 2 OR 3 SLOTS in your reply. Use the human labels from the tool. Bias toward the visitor's stated preference if there is one. Example: "Liam's got Tuesday at 10am, Wednesday at 14:00, or Thursday at 11am open. **Which one works for you?**" Always bold the closing question.
+5. NEVER invent slot times. If get_availability returns no slots or fails, say so honestly and offer to have Liam WhatsApp them: "Calendar's looking jammed this week, Liam will WhatsApp you directly to find a time. Cool?"
+6. ONCE THEY PICK A SLOT, immediately call book_meeting with their name, email, phone (if you have it), business_type (e.g. "plumber"), and the EXACT start and end ISO strings from the slot they chose. Do not modify the timestamps. Do not pick a slot they didn't confirm.
+7. The book_meeting tool creates the calendar event, attaches a Google Meet link, and emails them a branded confirmation. It returns { ok: true, meetLink, label } on success.
+8. ON SUCCESS, confirm in 1-2 sentences using the label and meetLink from the tool result. Example: "Sorted, you're booked for Tuesday 12 May at 10:00. I've just emailed you the Google Meet link, see you there." Never make up a Meet link or time, only use what the tool returned.
+9. ON FAILURE: if reason is "slot_taken", apologise and call get_availability again to surface fresh slots. If reason is "calendar_not_connected" or "calendar_disconnected" or "error", fall back gracefully: "Bit of a calendar hiccup on my end, Liam will WhatsApp you to confirm the time directly."
 
 If they go quiet after Path B: send one and only one soft nudge: "Up to you. The link's there whenever." Then stop.
 
@@ -152,17 +174,17 @@ Reply in 1 to 2 sentences. Confident. Never defensive.
 
 IMPORTANT: Even when responding to objections, never send the pricing link or signup URL until you have the visitor's email or phone number. If they ask about pricing and you don't have their contact yet, answer the question briefly and then ask for their contact before giving the link.
 
-"How much does it cost?" -> Answer the pricing question briefly, then ask for contact before giving the link. Example: "14-day free trial, no card needed. Pro is R999/month for 75 leads, Premium is R1,999/month for 250 leads. Cancel anytime, no lock-in. What's the best email or number for you so I can send you the details?"
+"How much does it cost?" -> Answer the pricing question briefly, then ask for contact before giving the link. Always ask for both email and phone in one question. Example: "14-day free trial, no card needed. Pro is R999/month for 75 leads, Premium is R1,999/month for 250 leads. Cancel anytime, no lock-in. What's the best email and number for you so I can send the details?"
 
-"I don't trust AI." -> "Fair. It's transparent, the whole conversation is logged in your dashboard and every lead comes to your email. You stay in control. What's a good email or number so I can follow up with you?"
+"I don't trust AI." -> "Fair. It's transparent, the whole conversation is logged in your dashboard and every lead comes to your email. You stay in control. What's a good email and number so I can follow up with you?"
 
-"My customers want to talk to a real person." -> "They will, when you arrive at the job. The assistant just books the slot, you show up and do the work. What's the best number or email for you so I can send you more?"
+"My customers want to talk to a real person." -> "They will, when you arrive at the job. The assistant just books the slot, you show up and do the work. What's the best email and number for you so I can send you more?"
 
 "How do I know it'll work for my trade?" -> "If your business has a website and gets leads, Qwikly works for you. Doesn't matter what trade, the assistant adapts to your business during setup."
 
-"I already have a chatbot." -> "Generic chatbot or one that qualifies the lead, captures their contact details, and delivers it straight to your email? Most don't. What's a good email or number for you so I can show you the difference?"
+"I already have a chatbot." -> "Generic chatbot or one that qualifies the lead, captures their contact details, and delivers it straight to your email? Most don't. What's a good email and number for you so I can show you the difference?"
 
-"My website doesn't get much traffic." -> "Even low traffic converts better when someone responds instantly. Most leads go quiet after 30 minutes. What's the best email or number for you?"
+"My website doesn't get much traffic." -> "Even low traffic converts better when someone responds instantly. Most leads go quiet after 30 minutes. What's the best email and number for you?"
 
 "Can it answer in Afrikaans or Zulu?" -> "English only right now. Multi-language is on the roadmap."
 
@@ -170,7 +192,7 @@ IMPORTANT: Even when responding to objections, never send the pricing link or si
 
 "What if I want to cancel?" -> "Cancel anytime. No lock-in, no cancellation fee. Your plan stays active until the end of the billing period and you won't be charged again."
 
-"Can I see a demo first?" -> "Book a 15 with Liam if you want a screen-share first. What's the best number or email for you?"
+"Can I see a demo first?" -> "Book a 15 with Liam if you want a screen-share first. What's the best email and number for you, and what day or time works?"
 
 "Sounds too good to be true." -> "I get that. 14-day free trial, no card needed. You can test it on your actual site before you pay anything. Nothing to lose."
 
@@ -238,7 +260,7 @@ They mention investment, partnership, or licensing.
 They mention legal, compliance, or data residency.
 They're a developer or agency wanting to resell.
 
-When escalating: "This one's better for Liam directly. What's your name and number and he'll WhatsApp you in the next hour." Then call update_visitor.
+When escalating: "This one's better for Liam directly. What's your name, email and number, and what time works for a quick call? He'll WhatsApp you to lock it in." Then call update_visitor with name, email, phone, preferred_time and booking_intent: true.
 
 ## Social proof — use it, don't force it
 
@@ -262,25 +284,59 @@ If they're leaving without converting: "All good. We're here whenever. If you ch
 Don't say goodbye until they say it first. Don't keep selling once the sale is done.`;
 
 // ── Tool definition (Qwikly own-site assistant) ───────────
-const TOOLS: Anthropic.Tool[] = [
-  {
-    name: "update_visitor",
-    description: "Save what you know about this visitor. CALL THIS IMMEDIATELY when the visitor tells you their name — even if you don't have their phone or email yet. Call it again when you get their phone number, email address, or when they commit to a call or booking.",
-    input_schema: {
-      type: "object" as const,
-      properties: {
-        name:           { type: "string",  description: "Visitor's first name or full name" },
-        phone:          { type: "string",  description: "Phone or WhatsApp number — only include if provided" },
-        email:          { type: "string",  description: "Email address — only include if provided" },
-        booking_intent: { type: "boolean", description: "Set to true when the visitor confirms they want a call with Liam, agrees to sign up at qwikly.co.za/pricing, or commits to a booking. Never set this for general questions or curiosity." },
-        job_type:       { type: "string",  description: "Type of work or service the visitor needs (e.g. 'burst pipe', 'new installation', 'quote for electrical')" },
-        area:           { type: "string",  description: "Area, suburb, or city the visitor is located in or needs service at" },
-        preferred_time: { type: "string",  description: "When the visitor prefers to be contacted or have the job done (e.g. 'mornings', 'this week', 'ASAP')" },
-      },
-      required: [],
+const TOOL_UPDATE_VISITOR: Anthropic.Tool = {
+  name: "update_visitor",
+  description: "Save what you know about this visitor. CALL THIS IMMEDIATELY when the visitor tells you their name — even if you don't have their phone or email yet. Call it again when you get their phone number, email address, or when they commit to a call or booking.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      name:           { type: "string",  description: "Visitor's first name or full name" },
+      phone:          { type: "string",  description: "Phone or WhatsApp number — only include if provided" },
+      email:          { type: "string",  description: "Email address — only include if provided" },
+      booking_intent: { type: "boolean", description: "Set to true when the visitor confirms they want a call with Liam, agrees to sign up at qwikly.co.za/pricing, or commits to a booking. Never set this for general questions or curiosity." },
+      job_type:       { type: "string",  description: "Type of work or service the visitor needs (e.g. 'burst pipe', 'new installation', 'quote for electrical')" },
+      area:           { type: "string",  description: "Area, suburb, or city the visitor is located in or needs service at" },
+      preferred_time: { type: "string",  description: "When the visitor prefers to be contacted or have the job done (e.g. 'mornings', 'this week', 'ASAP')" },
     },
+    required: [],
   },
-];
+};
+
+const TOOL_GET_AVAILABILITY: Anthropic.Tool = {
+  name: "get_availability",
+  description: "Look up the next open slots on Liam's calendar for a 15-minute intro call. Returns up to 6 free slots in chronological order. Call this once the visitor has agreed to a call AND you have their email and phone. Do NOT call before contact details are captured. Do NOT propose times to the visitor without calling this first — never invent slot times.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      preference_hint: {
+        type: "string",
+        description: "Optional plain-language hint about when the visitor said works for them, e.g. 'tomorrow morning', 'next week', 'Friday afternoon'. Used only as a soft hint when picking which slots to surface to them.",
+      },
+    },
+    required: [],
+  },
+};
+
+const TOOL_BOOK_MEETING: Anthropic.Tool = {
+  name: "book_meeting",
+  description: "Lock in the chosen slot on Liam's calendar, attach a Google Meet link, and send the visitor a branded confirmation email. Only call this after the visitor has explicitly picked one of the slots returned by get_availability. The start and end fields MUST be the exact ISO timestamps from a slot returned by get_availability — do not modify or invent them.",
+  input_schema: {
+    type: "object" as const,
+    properties: {
+      visitor_name:  { type: "string", description: "Visitor's name (required)." },
+      visitor_email: { type: "string", description: "Visitor's email (required, used as the calendar attendee and confirmation email recipient)." },
+      visitor_phone: { type: "string", description: "Visitor's phone or WhatsApp number, if known." },
+      business_type: { type: "string", description: "Visitor's business or trade in a few words, e.g. 'plumber', 'photographer', 'tutor'." },
+      start:         { type: "string", description: "Slot start, ISO 8601 UTC. MUST match a slot.start from get_availability exactly." },
+      end:           { type: "string", description: "Slot end, ISO 8601 UTC. MUST match a slot.end from get_availability exactly." },
+      notes:         { type: "string", description: "Optional one-line summary of what the visitor wants out of the call." },
+    },
+    required: ["visitor_name", "visitor_email", "start", "end"],
+  },
+};
+
+const TOOLS_DEFAULT: Anthropic.Tool[] = [TOOL_UPDATE_VISITOR];
+const TOOLS_QWIKLY: Anthropic.Tool[] = [TOOL_UPDATE_VISITOR, TOOL_GET_AVAILABILITY, TOOL_BOOK_MEETING];
 
 export async function OPTIONS() {
   return new NextResponse(null, { headers: CORS });
@@ -461,59 +517,115 @@ export async function POST(req: NextRequest) {
 
   let reply = "";
   let visitorInfo: VisitorToolInput | null = null;
+  let bookedMeetingLabel: string | null = null;
+  let alreadyBooked = false;
 
-  // Call 1: main response. Hard failure → 503 so the widget can retry.
   // Cache the system prompt (large, mostly stable per client) to cut tokens
   // on repeat requests within Anthropic's 5-minute prompt cache window.
   const systemBlocks: Anthropic.TextBlockParam[] = [
     { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
   ];
+  const isQwiklyOwn = client_id === QWIKLY_OWN_CLIENT_ID;
+  const tools = isQwiklyOwn ? TOOLS_QWIKLY : TOOLS_DEFAULT;
+
+  // Agentic tool loop: handle update_visitor + (qwikly only) get_availability,
+  // book_meeting. Cap iterations so a misbehaving model can't loop forever.
+  const conversationMessages: Anthropic.MessageParam[] = [...claudeMessages];
+  const MAX_TOOL_ITERS = 4;
   let response: Anthropic.Message;
+
   try {
     response = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 160,
+      max_tokens: 220,
       system: systemBlocks,
-      tools: TOOLS,
-      messages: claudeMessages,
+      tools,
+      messages: conversationMessages,
     });
   } catch (err) {
     console.error("[web/chat] Claude call 1 failed:", err);
     return NextResponse.json({ error: "assistant_unavailable" }, { status: 503, headers: CORS });
   }
 
-  for (const block of response.content) {
-    if (block.type === "text") reply = block.text;
-    if (block.type === "tool_use" && block.name === "update_visitor") {
-      visitorInfo = block.input as VisitorToolInput;
-    }
-  }
-
-  // Call 2: follow-up after tool use. Soft failure — visitorInfo is already captured,
-  // so we keep it and fall back to a minimal reply rather than returning 503.
-  if (visitorInfo && response.stop_reason === "tool_use") {
-    const toolUseBlock = response.content.find((b) => b.type === "tool_use");
-    if (toolUseBlock && toolUseBlock.type === "tool_use") {
-      try {
-        const followUp = await anthropic.messages.create({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 120,
-          system: systemBlocks,
-          messages: [
-            ...claudeMessages,
-            { role: "assistant", content: response.content },
-            {
-              role: "user",
-              content: [{ type: "tool_result", tool_use_id: toolUseBlock.id, content: "saved" }],
-            },
-          ],
-        });
-        const textBlock = followUp.content.find((b) => b.type === "text");
-        if (textBlock && textBlock.type === "text") reply = textBlock.text;
-      } catch (err) {
-        console.error("[web/chat] Claude call 2 (tool follow-up) failed:", err);
-        reply = reply || "Got it, noted. Anything else you'd like to know?";
+  for (let iter = 0; iter < MAX_TOOL_ITERS; iter++) {
+    // Always extract latest text + visitor info from the response.
+    for (const block of response.content) {
+      if (block.type === "text") reply = block.text;
+      if (block.type === "tool_use" && block.name === "update_visitor") {
+        visitorInfo = block.input as VisitorToolInput;
       }
+    }
+
+    if (response.stop_reason !== "tool_use") break;
+
+    const toolUseBlocks = response.content.filter(
+      (b): b is Anthropic.ToolUseBlock => b.type === "tool_use"
+    );
+    if (toolUseBlocks.length === 0) break;
+
+    const toolResults: Anthropic.ToolResultBlockParam[] = [];
+    for (const tu of toolUseBlocks) {
+      let result: string;
+      if (tu.name === "update_visitor") {
+        result = "saved";
+      } else if (tu.name === "get_availability" && isQwiklyOwn) {
+        const slots = await getAvailableSlots(QWIKLY_OWN_CLIENT_ID);
+        result = JSON.stringify(slots);
+      } else if (tu.name === "book_meeting" && isQwiklyOwn) {
+        if (alreadyBooked) {
+          result = JSON.stringify({ ok: false, reason: "already_booked", message: "A meeting was already booked in this conversation." });
+        } else {
+          const input = tu.input as {
+            visitor_name?: string;
+            visitor_email?: string;
+            visitor_phone?: string;
+            business_type?: string;
+            start?: string;
+            end?: string;
+            notes?: string;
+          };
+          if (!input.visitor_name || !input.visitor_email || !input.start || !input.end) {
+            result = JSON.stringify({ ok: false, reason: "missing_fields", message: "visitor_name, visitor_email, start and end are all required." });
+          } else {
+            const booked = await bookMeeting({
+              clientId: QWIKLY_OWN_CLIENT_ID,
+              visitorName: input.visitor_name,
+              visitorEmail: input.visitor_email,
+              visitorPhone: input.visitor_phone ?? null,
+              businessType: input.business_type ?? null,
+              start: input.start,
+              end: input.end,
+              notes: input.notes ?? null,
+              conversationId: convoId,
+            });
+            result = JSON.stringify(booked);
+            if (booked.ok) {
+              alreadyBooked = true;
+              bookedMeetingLabel = booked.label;
+            }
+          }
+        }
+      } else {
+        result = JSON.stringify({ ok: false, reason: "tool_not_available" });
+      }
+      toolResults.push({ type: "tool_result", tool_use_id: tu.id, content: result });
+    }
+
+    conversationMessages.push({ role: "assistant", content: response.content });
+    conversationMessages.push({ role: "user", content: toolResults });
+
+    try {
+      response = await anthropic.messages.create({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 220,
+        system: systemBlocks,
+        tools,
+        messages: conversationMessages,
+      });
+    } catch (err) {
+      console.error("[web/chat] Claude tool follow-up failed:", err);
+      if (!reply) reply = "Got it, noted. Anything else you'd like to know?";
+      break;
     }
   }
 
@@ -528,6 +640,35 @@ export async function POST(req: NextRequest) {
       .from("conversations")
       .update({ updated_at: new Date().toISOString() })
       .eq("id", convoId);
+  }
+
+  // If a meeting was booked but the model never called update_visitor first,
+  // the visitor's contact must still have been passed to book_meeting — pull it
+  // out of the last book_meeting call so the lead is properly recorded.
+  if (alreadyBooked) {
+    type LooseBlock = { type?: string; name?: string; input?: Record<string, unknown> };
+    const allBlocks: LooseBlock[] = conversationMessages.flatMap((m) =>
+      Array.isArray(m.content) ? (m.content as unknown as LooseBlock[]) : []
+    );
+    const lastBookCall = allBlocks
+      .filter((b) => b.type === "tool_use" && b.name === "book_meeting")
+      .pop();
+    if (lastBookCall?.input) {
+      const input = lastBookCall.input as {
+        visitor_name?: string;
+        visitor_email?: string;
+        visitor_phone?: string;
+        business_type?: string;
+      };
+      visitorInfo = {
+        ...(visitorInfo ?? {}),
+        name: visitorInfo?.name ?? input.visitor_name,
+        email: visitorInfo?.email ?? input.visitor_email,
+        phone: visitorInfo?.phone ?? input.visitor_phone,
+        booking_intent: true,
+        preferred_time: bookedMeetingLabel ?? visitorInfo?.preferred_time,
+      } as VisitorToolInput;
+    }
   }
 
   // ── Update conversation with visitor info ──────────────────

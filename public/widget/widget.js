@@ -77,7 +77,9 @@
     ".bot{background:#F3F4F6;color:#1F2937;border-radius:18px 18px 18px 4px;align-self:flex-start}",
     ".bot a{color:#2563EB;text-decoration:underline;word-break:break-all;cursor:pointer}",
     ".bot a:hover{color:#1D4ED8}",
+    ".bot strong{font-weight:800;color:#0B0F19;letter-spacing:-.005em}",
     ".usr{background:var(--qc,#E85A2C);color:#fff;border-radius:18px 18px 4px 18px;align-self:flex-end}",
+    ".usr strong{font-weight:800;color:#fff}",
 
     // ── Typing indicator ──
     ".typing{display:flex;gap:5px;align-items:center;padding:12px 14px;background:#F3F4F6;border-radius:18px 18px 18px 4px;align-self:flex-start;width:56px}",

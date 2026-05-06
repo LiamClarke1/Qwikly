@@ -15,6 +15,19 @@ import {
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.qwikly.co.za";
 
+// Override recipient for the qwikly.co.za marketing chat (client_id=1) so lead
+// + booking notifications go to the Clarke Agency inbox instead of whatever's
+// stored on the businesses row. Set this in Vercel env. Falls back to the
+// standard businesses.notification_email/contact_email lookup if unset.
+const QWIKLY_OWN_NOTIFICATION_EMAIL = (process.env.QWIKLY_OWN_NOTIFICATION_EMAIL ?? "").trim() || null;
+const QWIKLY_OWN_CLIENT_ID = "1";
+
+export function resolveQwiklyOwnRecipientOverride(clientId: number | string | null | undefined): string | null {
+  if (clientId == null) return null;
+  if (String(clientId) !== QWIKLY_OWN_CLIENT_ID) return null;
+  return QWIKLY_OWN_NOTIFICATION_EMAIL;
+}
+
 export type NotifyLeadResult =
   | { ok: true; messageId: string | null; recipient: string }
   | { ok: false; reason: "disabled" | "no_recipient" | "no_resend_key" | "send_failed"; message?: string };
@@ -77,15 +90,21 @@ export async function notifyLeadCaptured(input: NotifyLeadInput): Promise<Notify
     }
   }
 
-  if (!business) {
+  // For qwikly.co.za (client_id=1) the Clarke Agency env override wins so all
+  // marketing-chat alerts route to one inbox regardless of the businesses row.
+  // Override also lets us send even when no business row exists for client_id=1.
+  const ownOverride = resolveQwiklyOwnRecipientOverride(input.clientId ?? null);
+
+  if (!business && !ownOverride) {
     return { ok: false, reason: "no_recipient", message: "No matching business row" };
   }
 
   // ── 2. Resolve recipient + on/off toggle
-  const recipient = (business.notification_email && business.notification_email.trim())
-    || (business.contact_email && business.contact_email.trim())
+  const recipient = ownOverride
+    || (business?.notification_email && business.notification_email.trim())
+    || (business?.contact_email && business.contact_email.trim())
     || null;
-  const emailsEnabled = business.lead_emails_enabled !== false; // null/undefined = on by default
+  const emailsEnabled = business?.lead_emails_enabled !== false; // null/undefined = on by default
 
   if (!emailsEnabled) return { ok: false, reason: "disabled" };
   if (!recipient) return { ok: false, reason: "no_recipient" };
@@ -155,8 +174,8 @@ export async function notifyLeadCaptured(input: NotifyLeadInput): Promise<Notify
     : `${BASE_URL}/dashboard/leads`;
 
   const templateArgs = {
-    businessName: business.name || "your business",
-    ownerFirstName: business.owner_first_name ?? null,
+    businessName: business?.name || "Qwikly",
+    ownerFirstName: business?.owner_first_name ?? null,
     leadName: input.lead.name,
     contact: input.lead.contact,
     need: input.lead.need,
@@ -178,7 +197,7 @@ export async function notifyLeadCaptured(input: NotifyLeadInput): Promise<Notify
   });
 
   if (error) {
-    console.error("[notify-lead] send failed:", { businessId: business.id, error });
+    console.error("[notify-lead] send failed:", { businessId: business?.id ?? null, clientId: input.clientId, error });
     return { ok: false, reason: "send_failed", message: error.message ?? String(error) };
   }
 
