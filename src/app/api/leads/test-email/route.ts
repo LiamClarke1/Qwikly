@@ -10,11 +10,13 @@ export const dynamic = "force-dynamic";
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.qwikly.co.za";
 
 // POST /api/leads/test-email
-// Exercises the full lead-alert pipeline so the business owner can verify
-// end-to-end that:
-//   1. The backend can create a lead row (DB write succeeds)
-//   2. Resend delivers the notification email
-//   3. The email_status / email_message_id columns track the result
+// Sends a sample lead-alert email so the business owner can verify their
+// configuration end-to-end (Resend domain, recipient resolution, template
+// rendering). Uses the *exact* code path real leads use, just with a fake
+// conversation + document attached so every section of the email renders.
+//
+// We intentionally do NOT insert a row in the leads table for tests — that
+// would pollute the dashboard with rows that aren't real leads.
 //
 // Optional body: { override_recipient?: string } — ignores stored prefs and
 // uses the provided address instead. Useful when verifying a new address
@@ -26,7 +28,6 @@ export async function POST(req: NextRequest) {
   const auth = await v2Auth();
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Rate limit: 4 test sends per minute per business
   const allowed = await checkRateLimit(`test-email:${auth.businessId}`, 4);
   if (!allowed) {
     return NextResponse.json(
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
   }
 
   const db = supabaseAdmin();
-  const { data: businessRaw, error: bizErr } = await db
+  const { data: businessRaw } = await db
     .from("businesses")
     .select("*")
     .eq("id", auth.businessId)
@@ -56,14 +57,13 @@ export async function POST(req: NextRequest) {
     | {
         id: string;
         name: string;
-        contact_email: string | null;
+        contact_email?: string | null;
         notification_email?: string | null;
-        lead_emails_enabled?: boolean | null;
         owner_first_name?: string | null;
       }
     | null;
 
-  if (bizErr || !business) {
+  if (!business) {
     return NextResponse.json({ error: "business_not_found" }, { status: 404 });
   }
 
@@ -91,45 +91,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // ── 1. Insert a real test lead row so the DB-write side of the pipeline
-  //       is exercised end-to-end. The lead is clearly marked so it's easy
-  //       to find and delete later. We do NOT increment usage_periods so
-  //       these tests don't burn the user's monthly lead cap.
-  const { data: lead, error: leadError } = await db
-    .from("leads")
-    .insert({
-      business_id: business.id,
-      name: "Qwikly Test Lead",
-      contact: "+27 00 000 0000",
-      need: "End-to-end test of your lead alert pipeline. Safe to delete.",
-      preferred_time: "Anytime",
-      visitor_email: "test@qwikly.co.za",
-    })
-    .select("id, confirm_token")
-    .single();
-
-  if (leadError || !lead?.confirm_token) {
-    console.error("[leads/test-email] insert error:", leadError);
-    return NextResponse.json(
-      { error: "db_write_failed", message: leadError?.message ?? "Could not write test lead" },
-      { status: 500 }
-    );
-  }
-
-  // ── 2. Build the same email a real lead would trigger
-  const confirmUrl = `${BASE_URL}/api/leads/confirm/${lead.confirm_token}?action=confirm`;
-  const suggestUrl = `${BASE_URL}/api/leads/confirm/${lead.confirm_token}?action=suggest`;
-
+  // Sample data — exercises every block in the template (need, conversation,
+  // attachments, pre-typed reply, owner name) so users can preview the full
+  // email before real leads start arriving.
   const templateArgs = {
     businessName: business.name || "your business",
-    ownerFirstName: business.owner_first_name,
+    ownerFirstName: business.owner_first_name ?? null,
     leadName: "Sarah Mokoena",
     contact: "+27 82 555 0123",
     need: "Looking for a quote on a kitchen renovation, ideally before mid-June.",
     preferredTime: "Tomorrow morning works best",
     visitorEmail: "sarah.test@example.com",
-    confirmUrl,
-    suggestUrl,
+    confirmUrl: `${BASE_URL}/dashboard/leads`,
+    suggestUrl: `${BASE_URL}/dashboard/leads`,
     conversation: [
       { role: "visitor", content: "Hi, do you guys handle kitchen renovations?" },
       { role: "assistant", content: "Yes! We do full and partial kitchen renos across Johannesburg. What did you have in mind?" },
@@ -148,43 +122,26 @@ export async function POST(req: NextRequest) {
     ],
   };
 
-  // ── 3. Send through Resend exactly like the real /api/leads path does
   const { data, error } = await resend.emails.send({
     from: FROM,
     to: [recipient],
-    subject: "Qwikly — test lead alert (delete after verifying)",
+    subject: "Qwikly — sample lead alert (preview)",
     html: leadNotificationHtml(templateArgs),
     text: leadNotificationText(templateArgs),
   });
 
   if (error) {
     console.error("[leads/test-email] send failed:", { businessId: business.id, error });
-    await db
-      .from("leads")
-      .update({ email_status: "failed", email_error: error.message ?? String(error) })
-      .eq("id", lead.id);
     return NextResponse.json(
-      { error: "send_failed", message: error.message ?? String(error), recipient, lead_id: lead.id },
+      { error: "send_failed", message: error.message ?? String(error), recipient },
       { status: 502 }
     );
   }
-
-  // ── 4. Persist delivery status so the same tracking that real leads use
-  //       gets exercised on this path.
-  await db
-    .from("leads")
-    .update({
-      email_status: "sent",
-      email_message_id: data?.id ?? null,
-      email_sent_at: new Date().toISOString(),
-    })
-    .eq("id", lead.id);
 
   return NextResponse.json({
     ok: true,
     recipient,
     message_id: data?.id ?? null,
-    lead_id: lead.id,
-    note: "A test lead was created. View or delete it from /dashboard/leads.",
+    note: "Sample email sent. Real leads from your widget will look the same with their actual conversation + attachments.",
   });
 }

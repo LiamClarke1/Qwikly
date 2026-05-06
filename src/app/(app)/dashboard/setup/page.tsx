@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { ClientRow } from "@/lib/use-client";
 import { cn } from "@/lib/cn";
+import { supabase } from "@/lib/supabase";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -53,6 +54,7 @@ const STEPS = [
   { title: "Availability", subtitle: "When and how you work", icon: Clock },
   { title: "Your Edge", subtitle: "Why customers should choose you", icon: Star },
   { title: "Assistant Personality", subtitle: "How your assistant speaks to customers", icon: Bot },
+  { title: "Install & Test", subtitle: "See it work, then go live", icon: Zap },
 ];
 
 const LOADING_STAGES = [
@@ -84,7 +86,7 @@ function useToast() {
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type View = "overview" | "intro" | "loading" | "done" | "wizard";
-type Step = 1 | 2 | 3 | 4 | 5 | 6;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 interface UploadedFile { name: string; base64: string; mediaType: string; size: number; }
 interface AutoFillResult { data: Record<string, string>; confidence: Record<string, string>; filledCount: number; highlights: string[]; }
@@ -1272,6 +1274,231 @@ function WhatsAppVerifyStep({ phone, clientId }: WhatsAppVerifyStepProps) {
   );
 }
 
+// ─── Step 7: Install + Test ───────────────────────────────────────────────────
+
+function Step7InstallTest({
+  client,
+  form,
+  error,
+  setError,
+}: {
+  client: ClientRow;
+  form: FormData;
+  error: string | null;
+  setError: (msg: string | null) => void;
+}) {
+  const [snippetCopied, setSnippetCopied] = useState(false);
+  const [widgetVerified, setWidgetVerified] = useState(false);
+  const [conversation, setConversation] = useState<{ role: "user" | "assistant"; text: string }[]>([]);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const [flagSent, setFlagSent] = useState<string | null>(null);
+
+  // Poll for widget detection every 5 seconds.
+  // Reads web_widget_status which the embed.js POSTs to on load.
+  useEffect(() => {
+    if (widgetVerified) return;
+    const tick = async () => {
+      const { data } = await supabase
+        .from("clients")
+        .select("web_widget_status")
+        .eq("id", client.id)
+        .maybeSingle();
+      if (data && (data as { web_widget_status?: string }).web_widget_status === "verified") {
+        setWidgetVerified(true);
+      }
+    };
+    tick();
+    const interval = setInterval(tick, 5000);
+    return () => clearInterval(interval);
+  }, [client.id, widgetVerified]);
+
+  const snippet = `<script\n  src="https://qwikly.co.za/embed.js"\n  data-qwikly-id="${(client as ClientRow & { public_key?: string }).public_key ?? ""}"\n  async\n></script>`;
+
+  const copySnippet = async () => {
+    try {
+      await navigator.clipboard.writeText(snippet);
+      setSnippetCopied(true);
+      setTimeout(() => setSnippetCopied(false), 2000);
+    } catch {
+      setError("Could not copy. Select and copy manually.");
+    }
+  };
+
+  const sendTestMessage = async () => {
+    if (!input.trim() || sending) return;
+    const userMsg = input.trim();
+    setInput("");
+    setError(null);
+    setConversation((c) => [...c, { role: "user", text: userMsg }]);
+    setSending(true);
+    try {
+      const res = await fetch("/api/onboarding/test-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMsg,
+          history: conversation,
+          form,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error((data as { error?: string }).error ?? "Test failed.");
+      const reply = (data as { reply?: string }).reply ?? "Sorry, the test failed. Try again.";
+      setConversation((c) => [...c, { role: "assistant", text: reply }]);
+    } catch (err) {
+      setConversation((c) => [
+        ...c,
+        { role: "assistant", text: err instanceof Error ? err.message : "Test message failed. Try again." },
+      ]);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const flag = async (type: "missed" | "overasked" | "wrong_tone") => {
+    const last = conversation.slice(-2).map((m) => m.text).join(" / ");
+    await supabase.from("profile_feedback").insert({
+      client_id: client.id,
+      type,
+      note: `Onboarding test: ${last}`.slice(0, 1000),
+    });
+    setFlagSent(type);
+    setTimeout(() => setFlagSent(null), 2000);
+  };
+
+  return (
+    <div className="space-y-6">
+      <p className="text-fg-muted text-small leading-relaxed">
+        Paste the snippet on your website, then send a test message to make sure your assistant is asking the right things for your business. You'll spot anything missing before real customers hit it.
+      </p>
+
+      {/* Install panel */}
+      <div className="rounded-2xl border border-line bg-white/[0.02] p-5 space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-fg font-semibold text-h3">1. Install on your site</h3>
+          {widgetVerified ? (
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-success/10 text-success text-tiny font-semibold whitespace-nowrap">
+              <Check className="w-3 h-3" /> Widget detected
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-warning/10 text-warning text-tiny font-semibold whitespace-nowrap">
+              <Loader2 className="w-3 h-3 animate-spin" /> Waiting for widget…
+            </span>
+          )}
+        </div>
+        <pre className="bg-ink-900 rounded-xl p-4 font-mono text-tiny text-fg overflow-x-auto whitespace-pre">{snippet}</pre>
+        <button
+          type="button"
+          onClick={copySnippet}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand text-white font-semibold text-small hover:bg-brand/90 transition-colors cursor-pointer"
+        >
+          {snippetCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          {snippetCopied ? "Copied" : "Copy snippet"}
+        </button>
+        <p className="text-tiny text-fg-muted">
+          Add this to the &lt;head&gt; or just before &lt;/body&gt; on every page where you want the assistant to appear.
+        </p>
+      </div>
+
+      {/* Test simulator */}
+      <div className="rounded-2xl border border-line bg-white/[0.02] p-5 space-y-4">
+        <div>
+          <h3 className="text-fg font-semibold text-h3">2. Send a test message</h3>
+          <p className="text-tiny text-fg-muted mt-1">
+            Type the way one of your real customers would. The assistant uses everything you just configured to reply.
+          </p>
+        </div>
+
+        <div className="bg-ink-900 rounded-xl p-4 min-h-[200px] max-h-[400px] overflow-y-auto space-y-3">
+          {conversation.length === 0 && (
+            <p className="text-fg-faint text-small italic">
+              Try something like &ldquo;Hi, do you do emergency callouts?&rdquo; or &ldquo;How much for a basic service?&rdquo;
+            </p>
+          )}
+          {conversation.map((m, i) => (
+            <div key={i} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
+              <div
+                className={cn(
+                  "px-4 py-2.5 rounded-2xl text-small max-w-[80%] leading-relaxed",
+                  m.role === "user"
+                    ? "bg-brand text-white"
+                    : "bg-white/[0.06] text-fg border border-line whitespace-pre-wrap"
+                )}
+              >
+                {m.text}
+              </div>
+            </div>
+          ))}
+          {sending && (
+            <div className="flex justify-start">
+              <div className="px-4 py-2.5 rounded-2xl bg-white/[0.06] border border-line">
+                <Loader2 className="w-4 h-4 animate-spin text-fg-muted" />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); sendTestMessage(); } }}
+            placeholder="Type a message…"
+            className="flex-1 bg-white/[0.03] border border-line rounded-xl px-4 py-3 text-fg text-small placeholder:text-fg-faint focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand/60"
+          />
+          <button
+            type="button"
+            onClick={sendTestMessage}
+            disabled={sending || !input.trim()}
+            className="px-5 py-3 rounded-xl bg-brand text-white font-semibold text-small hover:bg-brand/90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            Send
+          </button>
+        </div>
+
+        {conversation.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-line/50">
+            <span className="text-tiny text-fg-muted mr-1">Flag the last reply:</span>
+            <button
+              type="button"
+              onClick={() => flag("missed")}
+              className="px-3 py-1.5 rounded-lg bg-white/[0.03] border border-line text-tiny text-fg-muted hover:text-fg hover:border-line-strong cursor-pointer"
+            >
+              Missed something
+            </button>
+            <button
+              type="button"
+              onClick={() => flag("overasked")}
+              className="px-3 py-1.5 rounded-lg bg-white/[0.03] border border-line text-tiny text-fg-muted hover:text-fg hover:border-line-strong cursor-pointer"
+            >
+              Asked too much
+            </button>
+            <button
+              type="button"
+              onClick={() => flag("wrong_tone")}
+              className="px-3 py-1.5 rounded-lg bg-white/[0.03] border border-line text-tiny text-fg-muted hover:text-fg hover:border-line-strong cursor-pointer"
+            >
+              Wrong tone
+            </button>
+            {flagSent && (
+              <span className="text-tiny text-success font-semibold inline-flex items-center gap-1">
+                <Check className="w-3 h-3" /> Logged
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {error && (
+        <div className="bg-danger/10 border border-danger/30 rounded-xl px-4 py-3">
+          <p className="text-danger text-small">{error}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function SetupPage() {
@@ -1473,8 +1700,6 @@ export default function SetupPage() {
       ai_always_do: form.ai_always_do,
       ai_never_say: form.ai_never_say,
       ai_sign_off: form.ai_sign_off,
-      onboarding_complete: true,
-      onboarding_completed_at: new Date().toISOString(),
       // scrape-populated fields
       phone: form.notification_phone.trim() || null,
       notification_phone: form.notification_phone.trim() || null,
@@ -1502,8 +1727,28 @@ export default function SetupPage() {
 
     setSaving(false);
     if (!res.ok) { setError((json as { error?: string }).error ?? "Failed to save. Please try again."); return; }
-    showToast("Assistant updated and live!", "success");
-    setTimeout(() => router.push("/dashboard"), 900);
+    showToast("Saved. Now let's test it before going live.", "success");
+    setStep(7);
+    scrollTop();
+  };
+
+  const completeAndGoLive = async () => {
+    setSaving(true);
+    const res = await fetch("/api/setup/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        onboarding_complete: true,
+        onboarding_completed_at: new Date().toISOString(),
+      }),
+    });
+    setSaving(false);
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      setError((json as { error?: string }).error ?? "Failed to go live. Please try again.");
+      return;
+    }
+    router.push("/dashboard?welcome=true");
   };
 
   const progressPct = view === "wizard" ? ((step - 1) / (STEPS.length - 1)) * 100 : 0;
@@ -1857,6 +2102,16 @@ export default function SetupPage() {
               <p className="text-danger text-small">{error}</p>
             </div>
           )}
+
+          {/* ── STEP 7: Install + Test ── */}
+          {step === 7 && client && (
+            <Step7InstallTest
+              client={client}
+              form={form}
+              error={error}
+              setError={setError}
+            />
+          )}
         </div>
 
         {/* Navigation */}
@@ -1875,18 +2130,29 @@ export default function SetupPage() {
             </button>
           )}
 
-          {step < 6 ? (
+          {step < 6 && (
             <button type="button" onClick={next}
               className="flex items-center gap-2 px-7 py-3 rounded-xl bg-brand text-white text-small font-semibold hover:bg-brand/90 transition-colors duration-200 cursor-pointer"
             >
               Next <ChevronRight className="w-4 h-4" />
             </button>
-          ) : (
+          )}
+          {step === 6 && (
             <button type="submit" disabled={saving}
               className="flex items-center gap-2 px-7 py-3 rounded-xl bg-brand text-white text-small font-semibold hover:bg-brand/90 transition-colors duration-200 cursor-pointer disabled:opacity-60"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              {saving ? "Saving..." : "Finish setup"}
+              {saving ? "Saving..." : "Save & test it"}
+              {!saving && <ChevronRight className="w-4 h-4" />}
+            </button>
+          )}
+          {step === 7 && (
+            <button type="button" onClick={completeAndGoLive} disabled={saving}
+              className="flex items-center gap-2 px-7 py-3 rounded-xl bg-brand text-white text-small font-semibold hover:bg-brand/90 transition-colors duration-200 cursor-pointer disabled:opacity-60"
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              {saving ? "Going live..." : "Looks great, go live"}
+              {!saving && <ArrowRight className="w-4 h-4" />}
             </button>
           )}
         </div>
