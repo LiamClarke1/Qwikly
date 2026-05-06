@@ -124,11 +124,14 @@
   shadow.appendChild(launcher);
   shadow.appendChild(panel);
 
-  // Apply cached color immediately so there's no orange flash on load
+  // Pre-warm color from cache so the reveal uses the right colour, but keep
+  // the launcher hidden until branding loads — avoids stale-label flash.
   try {
     var _cached = localStorage.getItem("qw_color_" + TENANT_ID);
     if (_cached) shadow.host.style.setProperty("--qc", _cached);
   } catch (e) {}
+  launcher.style.opacity = "0";
+  launcher.style.transition = "opacity 0.18s ease";
 
   function applyBranding(b) {
     branding = b;
@@ -159,6 +162,7 @@
   function renderLauncher() {
     var label = branding ? (branding.launcher_label || "Message us") : "Message us";
     launcher.innerHTML = BOLT_SVG + '<span class="pulse"></span><span>' + label + "</span>";
+    launcher.style.opacity = "1";
   }
 
   function biz() { return branding ? (branding.name || "Us") : "Us"; }
@@ -686,7 +690,6 @@
   function init() {
     checkRoute();
     if (!host.parentNode) return;
-    renderLauncher();
     fetch(API_BASE + "/api/embed/branding/" + TENANT_ID)
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (b) { if (b) applyBranding(b); })
