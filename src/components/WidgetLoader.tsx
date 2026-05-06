@@ -7,8 +7,9 @@ export default function WidgetLoader({ publicKey }: { publicKey: string }) {
     if (!publicKey) return;
 
     const el = document.createElement("script");
-    el.src = "https://cdn.qwikly.co.za/embed.js";
+    el.src = "/embed.js";
     el.setAttribute("data-qwikly-id", publicKey);
+    el.setAttribute("data-api", window.location.origin);
     el.async = true;
     document.body.appendChild(el);
 
