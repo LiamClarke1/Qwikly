@@ -340,8 +340,8 @@ export default function HomePage() {
   const [leadsMonth, setLeadsMonth] = useState(0);
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
   const [newLeadsToday, setNewLeadsToday] = useState(0);
+  const [tier, setTier] = useState<PlanTier>("pro");
 
-  const tier: PlanTier = resolvePlan(client?.plan);
   const widgetLive = !!(client?.web_widget_last_seen_at);
 
   useEffect(() => {
@@ -350,7 +350,7 @@ export default function HomePage() {
       const startMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
       const startDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
 
-      const [monthLeads, recent, todayCount] = await Promise.all([
+      const [monthLeads, recent, todayCount, subRes] = await Promise.all([
         supabase
           .from("conversations")
           .select("id", { count: "exact", head: true })
@@ -367,11 +367,13 @@ export default function HomePage() {
           .select("id", { count: "exact", head: true })
           .eq("is_lead", true)
           .gte("created_at", startDay),
+        fetch("/api/subscription").then((r) => r.ok ? r.json() : null).catch(() => null),
       ]);
 
       setLeadsMonth(monthLeads.count ?? 0);
       setRecentLeads((recent.data as Lead[]) ?? []);
       setNewLeadsToday(todayCount.count ?? 0);
+      if (subRes?.plan) setTier(resolvePlan(subRes.plan));
       setLoading(false);
     })();
   }, []);
