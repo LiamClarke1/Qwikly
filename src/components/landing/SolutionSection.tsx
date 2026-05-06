@@ -12,7 +12,7 @@ interface SolutionContent {
 const content: Record<Problem, SolutionContent> = {
   "missing-calls": {
     headline: "Qwikly picks up every time. Even at 11pm on a Sunday.",
-    body: "When a customer messages on WhatsApp or email, Qwikly replies in under 5 seconds. No missed message, no lost job, no chasing them tomorrow morning.",
+    body: "When a visitor chats on your website, Qwikly replies in under 5 seconds. No missed message, no lost job, no chasing them tomorrow morning.",
     bullets: ["Replies in under 30 seconds, 24/7", "Speaks like you, not like a bot", "Books straight into your Google Calendar"],
     conversation: [
       { sender: "customer", text: "Hi, I need a plumber urgently. Burst geyser in Sandton." },
@@ -23,7 +23,7 @@ const content: Record<Problem, SolutionContent> = {
   },
   "slow-reply": {
     headline: "Reply in 30 seconds, even when you're elbow-deep in a geyser.",
-    body: "Every WhatsApp and email gets a thoughtful reply instantly. Customers don't wait. They book. By the time you check your phone at lunch, the job is in your calendar.",
+    body: "Every website visitor gets a thoughtful reply instantly. Customers don't wait. They book. By the time you check your phone at lunch, the job is in your calendar.",
     bullets: ["30-second response, always", "Qualifies the lead so you only deal with real jobs", "You wake up to booked appointments, not unread messages"],
     conversation: [
       { sender: "customer", text: "Do you do aircon servicing? And how much roughly?" },
@@ -46,7 +46,7 @@ const content: Record<Problem, SolutionContent> = {
   "ghosting": {
     headline: "We chase them so you don't have to.",
     body: "Follow-ups at 1 hour, 24 hours, 3 days, 7 days. We've seen 1 in 4 silent leads come back when nudged correctly. They didn't ghost you. They got distracted.",
-    bullets: ["Automated follow-ups at 4h, 24h, 2d, 5d", "Dormant-lead revival at 30 days", "Switches to email if WhatsApp goes quiet"],
+    bullets: ["Automated follow-ups at 4h, 24h, 2d, 5d", "Dormant-lead revival at 30 days", "Follows up automatically if they go quiet"],
     conversation: [
       { sender: "customer", text: "Hey, what do you charge for electrical COC?" },
       { sender: "ai", text: "COC is R2,500 for a standard property. I can get you booked in this week. When works?" },

@@ -3,12 +3,12 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Qwikly offers three flat monthly plans: Starter (free), Pro at R599/month, Premium at R1,299/month. No per-job fees, no commissions. Cancel anytime.",
+    "Qwikly offers flat monthly plans: Free trial, Pro at R999/month, Premium at R1,999/month. No per-job fees, no commissions. Cancel anytime.",
   alternates: { canonical: "https://www.qwikly.co.za/pricing" },
   openGraph: {
     title: "Qwikly Pricing: Flat Monthly Plans. No Per-Job Fees.",
     description:
-      "Starter Free · Pro R599/mo · Premium R1,299/mo. No commissions, no setup fees, no lock-in. Cancel anytime.",
+      "Free trial · Pro R999/mo · Premium R1,999/mo. No commissions, no setup fees, no lock-in. Cancel anytime.",
     url: "https://www.qwikly.co.za/pricing",
   },
 };
@@ -35,9 +35,9 @@ const productSchema = {
       "@type": "Offer",
       name: "Pro",
       priceCurrency: "ZAR",
-      price: "599",
+      price: "999",
       priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
-      description: "200 qualified leads per month. Custom branding, custom greeting and qualifying questions, lead exports, priority support.",
+      description: "75 qualified leads per month. Digital assistant platform, email lead delivery, POPIA compliant.",
       availability: "https://schema.org/InStock",
       url: "https://www.qwikly.co.za/pricing",
     },
@@ -45,9 +45,9 @@ const productSchema = {
       "@type": "Offer",
       name: "Premium",
       priceCurrency: "ZAR",
-      price: "1299",
+      price: "1999",
       priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
-      description: "Unlimited qualified leads. Everything in Pro plus API access and dedicated support.",
+      description: "250 qualified leads per month. Everything in Pro plus custom branding, custom questions, lead exports, and priority support.",
       availability: "https://schema.org/InStock",
       url: "https://www.qwikly.co.za/pricing",
     },

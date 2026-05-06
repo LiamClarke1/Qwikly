@@ -84,10 +84,10 @@ export function RevenueCalculator() {
       <div className="lg:col-span-6 space-y-8">
         <div>
           <div className="flex items-center justify-between mb-4">
-            <label className="text-sm font-medium text-ink">WhatsApp & email leads per week</label>
+            <label className="text-sm font-medium text-ink">Website leads per week</label>
             <span className="eyebrow text-ember">{leads}</span>
           </div>
-          <Slider min={5} max={100} value={leads} onChange={setLeads} label="WhatsApp and email leads per week" />
+          <Slider min={5} max={100} value={leads} onChange={setLeads} label="Website leads per week" />
         </div>
 
         <div>

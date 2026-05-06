@@ -5,7 +5,7 @@ const rows = [
   },
   {
     tech: "Multi-channel omnichannel CRM integration",
-    human: "Replies on WhatsApp and email, all in one place",
+    human: "Answers every website visitor, 24/7, in 30 seconds",
   },
   {
     tech: "Google Calendar API sync with conflict resolution",
