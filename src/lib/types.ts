@@ -24,8 +24,10 @@ export type Conversation = {
 export type Message = {
   id: number;
   conversation_id: number;
-  role: "customer" | "assistant" | "system";
+  role: "customer" | "assistant" | "system" | "owner" | "ai";
   content: string;
+  message_type?: "text" | "document";
+  attachment_id?: string | null;
   created_at: string;
 };
 

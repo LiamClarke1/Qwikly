@@ -4,13 +4,14 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 import {
-  User, Building2, Bot, Users, Key, Plug, CreditCard, AlertTriangle, Code2,
+  User, Building2, Bot, Users, Key, Plug, CreditCard, AlertTriangle, Code2, Paperclip,
 } from "lucide-react";
 
 const NAV = [
   { href: "/dashboard/settings/profile",     label: "Profile",       icon: User          },
   { href: "/dashboard/settings/business",    label: "Business",      icon: Building2     },
   { href: "/dashboard/settings/assistant",   label: "Assistant",     icon: Bot           },
+  { href: "/dashboard/settings/files",       label: "Files",         icon: Paperclip     },
   { href: "/dashboard/settings/team",        label: "Team",          icon: Users         },
   { href: "/dashboard/settings/api-keys",    label: "API Keys",      icon: Key           },
   { href: "/dashboard/settings/integrations",label: "Integrations",  icon: Plug          },

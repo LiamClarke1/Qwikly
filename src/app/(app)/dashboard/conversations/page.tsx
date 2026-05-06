@@ -29,6 +29,10 @@ import {
   Target,
   GripVertical,
   Pencil,
+  Paperclip,
+  Download,
+  FileText,
+  Image as ImageIcon,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Avatar } from "@/components/ui/avatar";
@@ -59,6 +63,19 @@ interface Message {
   conversation_id: string;
   role: string;
   content: string;
+  message_type?: "text" | "document";
+  attachment_id?: string | null;
+  created_at: string;
+  document?: ConvDoc | null;
+}
+
+interface ConvDoc {
+  id: string;
+  file_name: string;
+  file_size: number;
+  file_type: string;
+  uploaded_by: "business" | "visitor";
+  status: "active" | "deleted";
   created_at: string;
 }
 
@@ -140,6 +157,9 @@ export default function ConversationsPage() {
   const [dragOverChannel, setDragOverChannel] = useState<string | null>(null);
   const [contactDraft, setContactDraft] = useState<{ phone: string; email: string } | null>(null);
   const [savingContact, setSavingContact] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const docFileRef = useRef<HTMLInputElement>(null);
 
   // AI analysis
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
@@ -236,12 +256,15 @@ export default function ConversationsPage() {
     setContactDraft(null);
 
     (async () => {
-      const { data } = await supabase
-        .from("messages_log")
-        .select("*")
-        .eq("conversation_id", activeId)
-        .order("created_at", { ascending: true });
-      const msgs = (data as Message[]) ?? [];
+      const [{ data }, { data: docsData }] = await Promise.all([
+        supabase.from("messages_log").select("*").eq("conversation_id", activeId).order("created_at", { ascending: true }),
+        supabase.from("conversation_documents").select("*").eq("conversation_id", activeId).eq("status", "active"),
+      ]);
+      const docsMap = Object.fromEntries(((docsData ?? []) as ConvDoc[]).map((d) => [d.id, d]));
+      const msgs = ((data ?? []) as Message[]).map((m) => ({
+        ...m,
+        document: m.attachment_id ? (docsMap[m.attachment_id] ?? null) : null,
+      }));
       setMessages(msgs);
       setLoadingMsgs(false);
       setTimeout(() => {
@@ -433,6 +456,47 @@ export default function ConversationsPage() {
     }
     setContactDraft(null);
     setSavingContact(false);
+  };
+
+  const handleSendDoc = async (file: File) => {
+    if (!active) return;
+    setUploading(true);
+    setUploadError(null);
+    const form = new FormData();
+    form.append("conversationId", active.id);
+    form.append("file", file);
+    try {
+      const r = await fetch("/api/documents/send", { method: "POST", body: form });
+      const j = await r.json();
+      if (!r.ok) {
+        setUploadError(j.error === "send_disabled" ? "Document sending is not enabled. Turn it on in Settings > Files." : j.error ?? "Upload failed");
+        return;
+      }
+      const doc: ConvDoc = j.document;
+      const optimistic: Message = {
+        id: `tmp-doc-${Date.now()}`,
+        conversation_id: active.id,
+        role: "owner",
+        content: JSON.stringify({ filename: doc.file_name, size: doc.file_size }),
+        message_type: "document",
+        attachment_id: doc.id,
+        created_at: new Date().toISOString(),
+        document: doc,
+      };
+      setMessages((m) => [...m, optimistic]);
+      setTimeout(() => transcriptRef.current?.scrollTo({ top: transcriptRef.current.scrollHeight, behavior: "smooth" }), 30);
+    } catch {
+      setUploadError("Network error — upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const downloadDoc = async (docId: string) => {
+    const r = await fetch(`/api/documents/${docId}/url`);
+    if (!r.ok) return;
+    const { url } = await r.json();
+    if (url) window.open(url, "_blank", "noopener");
   };
 
   return (
@@ -712,6 +776,44 @@ export default function ConversationsPage() {
                     const isOwner = m.role === "owner";
                     const prev = messages[i - 1];
                     const grouped = prev?.role === m.role;
+
+                    if (m.message_type === "document" && m.document) {
+                      const doc = m.document;
+                      const isImg = doc.file_type?.startsWith("image/");
+                      return (
+                        <div key={m.id} className={cn("flex gap-2", isCustomer ? "justify-start" : "justify-end")}>
+                          {isCustomer && !grouped ? (
+                            <Avatar name={active.customer_name ?? active.customer_phone} size={24} />
+                          ) : isCustomer ? (
+                            <div className="w-6" />
+                          ) : null}
+                          <div className={cn(
+                            "flex items-center gap-2.5 px-3 py-2 rounded-xl max-w-[75%] text-[12px]",
+                            isCustomer && "bg-surface-input border border-[var(--border)] text-fg",
+                            isAI && "bg-surface-card border border-[var(--border)] text-fg",
+                            isOwner && "bg-ember text-paper"
+                          )}>
+                            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", isOwner ? "bg-white/20" : "bg-surface-hover border border-[var(--border)]")}>
+                              {isImg ? <ImageIcon className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold truncate">{doc.file_name}</p>
+                              <p className={cn("text-[10px] mt-0.5", isOwner ? "opacity-60" : "text-fg-muted")}>
+                                {formatBytes(doc.file_size)} · {doc.uploaded_by === "visitor" ? "From visitor" : "Sent by you"}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => downloadDoc(doc.id)}
+                              className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0 cursor-pointer transition-colors", isOwner ? "bg-white/20 hover:bg-white/30" : "bg-surface-hover hover:bg-surface-input border border-[var(--border)]")}
+                              title="Download"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    }
+
                     return (
                       <div key={m.id} className={cn("flex gap-2", isCustomer ? "justify-start" : "justify-end")}>
                         {isCustomer && !grouped ? (
@@ -758,6 +860,23 @@ export default function ConversationsPage() {
 
               {/* Composer */}
               <form onSubmit={handleSend} className="border-t border-[var(--border)] p-2.5 bg-surface-card">
+                <input
+                  ref={docFileRef}
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp,.docx"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    e.target.value = "";
+                    if (file) handleSendDoc(file);
+                  }}
+                />
+                {uploadError && (
+                  <div className="mb-2 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-danger/8 border border-danger/20">
+                    <p className="text-[11px] text-danger flex-1">{uploadError}</p>
+                    <button type="button" onClick={() => setUploadError(null)} className="text-danger/60 hover:text-danger cursor-pointer"><X className="w-3 h-3" /></button>
+                  </div>
+                )}
                 {showTemplates && (
                   <div className="mb-2 flex flex-wrap gap-1.5">
                     {TEMPLATES.map((t) => (
@@ -780,6 +899,15 @@ export default function ConversationsPage() {
                     title="Saved replies"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={uploading}
+                    onClick={() => docFileRef.current?.click()}
+                    className="h-8 w-8 rounded-lg flex items-center justify-center cursor-pointer shrink-0 transition-colors text-fg-subtle hover:text-fg hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Attach document"
+                  >
+                    {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Paperclip className="w-3.5 h-3.5" />}
                   </button>
                   <textarea
                     value={composerText}
@@ -989,9 +1117,45 @@ export default function ConversationsPage() {
 
             {/* Notes */}
             {active.notes && (
-              <div className="px-3 py-2 shrink-0">
+              <div className="px-3 py-2 border-b border-[var(--border)] shrink-0">
                 <p className="text-[10px] uppercase tracking-wider font-semibold text-fg-subtle mb-1">Notes</p>
                 <p className="text-[11px] text-fg-muted leading-relaxed line-clamp-3">{active.notes}</p>
+              </div>
+            )}
+
+            {/* Documents */}
+            {messages.some((m) => m.message_type === "document" && m.document) && (
+              <div className="px-3 py-2 shrink-0">
+                <div className="flex items-center gap-1 mb-2">
+                  <Paperclip className="w-2.5 h-2.5 text-fg-subtle" />
+                  <p className="text-[10px] uppercase tracking-wider font-semibold text-fg-subtle">Documents</p>
+                </div>
+                <div className="space-y-1.5">
+                  {messages
+                    .filter((m) => m.message_type === "document" && m.document)
+                    .map((m) => {
+                      const doc = m.document!;
+                      const isImg = doc.file_type?.startsWith("image/");
+                      return (
+                        <div key={doc.id} className="flex items-center gap-2 p-1.5 rounded-lg bg-surface-input border border-[var(--border)] hover:border-[var(--border-strong)] transition-colors">
+                          <div className="w-6 h-6 rounded-md bg-surface-hover flex items-center justify-center shrink-0">
+                            {isImg ? <ImageIcon className="w-3 h-3 text-fg-muted" /> : <FileText className="w-3 h-3 text-fg-muted" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[11px] font-medium text-fg truncate">{doc.file_name}</p>
+                            <p className="text-[10px] text-fg-faint">{doc.uploaded_by === "visitor" ? "From visitor" : "Sent by you"}</p>
+                          </div>
+                          <button
+                            onClick={() => downloadDoc(doc.id)}
+                            className="w-6 h-6 rounded-md flex items-center justify-center text-fg-subtle hover:text-ember hover:bg-ember/10 cursor-pointer transition-colors shrink-0"
+                            title="Download"
+                          >
+                            <Download className="w-3 h-3" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
             )}
           </div>
@@ -999,6 +1163,12 @@ export default function ConversationsPage() {
       </div>
     </>
   );
+}
+
+function formatBytes(n: number) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function isRealPhone(phone: string) {

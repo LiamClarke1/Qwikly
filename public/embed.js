@@ -1,4 +1,4 @@
-/* Qwikly Embed Widget v1.0 — cdn.qwikly.co.za/embed.js */
+/* Qwikly Embed Widget v1.1 — cdn.qwikly.co.za/embed.js */
 (function () {
   "use strict";
 
@@ -23,7 +23,11 @@
   var panelBuilt = false;
   var greeted = false;
   var sending = false;
+  var uploading = false;
   var vpListener = null;
+  var pollTimer = null;
+  var lastMsgTime = null;
+  var fileInput = null;
 
   var host = document.createElement("div");
   host.id = "qwikly-host";
@@ -31,6 +35,11 @@
   document.body.appendChild(host);
 
   var BOLT_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="flex-shrink:0"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
+  var SEND_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
+  var ATTACH_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+  var DL_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+  var FILE_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+  var IMG_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
 
   var style = document.createElement("style");
   style.textContent = [
@@ -73,8 +82,34 @@
     ".sndbtn:disabled{opacity:.35;cursor:not-allowed}",
     ".sndbtn svg{pointer-events:none}",
     ".ft{text-align:center;padding:6px;font-size:10px;color:#CBD5E1;border-top:1px solid #F8FAFC;background:#fff;flex-shrink:0}",
+    // Attach button
+    ".attbtn{width:40px;height:40px;border:none;border-radius:12px;background:#F1F5F9;color:#64748B;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:" + MICRO + ";touch-action:manipulation}",
+    ".attbtn:hover{background:#E2E8F0;color:#1F2937}",
+    ".attbtn:active{opacity:.7}",
+    ".attbtn:disabled{opacity:.35;cursor:not-allowed}",
+    // Document card
+    ".doc-card{display:flex;align-items:center;gap:10px;padding:9px 12px;min-width:190px;max-width:100%;cursor:default}",
+    ".doc-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}",
+    ".usr .doc-icon{background:rgba(255,255,255,.22)}",
+    ".bot .doc-icon{background:#E2E8F0}",
+    ".doc-meta{flex:1;min-width:0}",
+    ".doc-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}",
+    ".doc-sz{font-size:11px;opacity:.65;margin-top:2px}",
+    ".doc-dl{width:30px;height:30px;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;touch-action:manipulation}",
+    ".usr .doc-dl{background:rgba(255,255,255,.22);color:#fff}",
+    ".bot .doc-dl{background:#E2E8F0;color:#374151}",
+    ".doc-dl:hover{opacity:.75}",
+    ".doc-dl:disabled{opacity:.35;cursor:default}",
+    // Upload spinner
+    "@keyframes qspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}",
+    ".qspinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:qspin .7s linear infinite}",
+    ".bot .qspinner{border-color:rgba(55,65,81,.2);border-top-color:#374151}",
+    // Upload error
+    ".doc-err{font-size:12px;padding:8px 13px;color:#EF4444;align-self:flex-end}",
+    // Mobile
     "@media(max-width:600px){#launcher{bottom:max(16px,calc(env(safe-area-inset-bottom) + 12px));right:max(16px,calc(env(safe-area-inset-right) + 8px));padding:11px 18px;font-size:13px}#panel{left:8px;right:8px;width:auto;bottom:max(72px,calc(env(safe-area-inset-bottom) + 68px));height:auto;max-height:60vh;border-radius:18px;transition:none}}",
-    "@media(prefers-color-scheme:dark){#panel{background:#1e293b}.bot{background:#334155;color:#f1f5f9}.bot a{color:#60a5fa}.msgs{background:#1e293b}.cin{background:#1e293b;border-top-color:#334155}.cinp{background:#0f172a;border-color:#334155;color:#f1f5f9}.cinp::placeholder{color:#64748b}.ft{background:#1e293b;color:#475569;border-top-color:#334155}}",
+    // Dark mode
+    "@media(prefers-color-scheme:dark){#panel{background:#1e293b}.bot{background:#334155;color:#f1f5f9}.bot a{color:#60a5fa}.msgs{background:#1e293b}.cin{background:#1e293b;border-top-color:#334155}.cinp{background:#0f172a;border-color:#334155;color:#f1f5f9}.cinp::placeholder{color:#64748b}.ft{background:#1e293b;color:#475569;border-top-color:#334155}.attbtn{background:#334155;color:#94a3b8}.attbtn:hover{background:#475569;color:#f1f5f9}.bot .doc-icon{background:#475569}.bot .doc-dl{background:#475569;color:#f1f5f9}}",
   ].join("");
   shadow.appendChild(style);
 
@@ -105,6 +140,11 @@
     var avEl = shadow.getElementById("qw-av");
     if (nameEl) nameEl.textContent = biz();
     if (avEl) renderAvatar(avEl);
+
+    // Show/hide attach button when branding updates after panel is built
+    var attBtn = shadow.getElementById("qw-att");
+    if (attBtn) attBtn.style.display = b.doc_visitor_upload ? "flex" : "none";
+    setupFileInput();
   }
 
   function renderAvatar(el) {
@@ -122,6 +162,261 @@
 
   function biz() { return branding ? (branding.name || "Us") : "Us"; }
   function msgsEl() { return shadow.getElementById("qw-msgs"); }
+
+  // ── File utilities ──────────────────────────────────────────────────────────
+
+  var MIME_TO_EXT = {
+    "application/pdf": ".pdf",
+    "image/jpeg": ".jpg,.jpeg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "application/msword": ".doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+  };
+
+  function mimeToAccept(types) {
+    var exts = [];
+    for (var i = 0; i < types.length; i++) {
+      var e = MIME_TO_EXT[types[i]];
+      if (e) { var parts = e.split(","); for (var j = 0; j < parts.length; j++) if (exts.indexOf(parts[j]) === -1) exts.push(parts[j]); }
+    }
+    return exts.join(",");
+  }
+
+  function formatBytes(n) {
+    if (n < 1024) return n + " B";
+    if (n < 1024 * 1024) return (n / 1024).toFixed(0) + " KB";
+    return (n / (1024 * 1024)).toFixed(1) + " MB";
+  }
+
+  function isImageMime(mime) {
+    return mime && mime.startsWith("image/");
+  }
+
+  function getDocIcon(mime) {
+    return isImageMime(mime) ? IMG_SVG : FILE_SVG;
+  }
+
+  function setupFileInput() {
+    if (fileInput) return;
+    if (!branding || !branding.doc_visitor_upload) return;
+    fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.style.display = "none";
+    var allowed = branding.doc_allowed_types || ["application/pdf", "image/jpeg", "image/png"];
+    fileInput.accept = mimeToAccept(allowed);
+    fileInput.addEventListener("change", function () {
+      var file = fileInput.files && fileInput.files[0];
+      fileInput.value = "";
+      if (file) handleFileSelected(file);
+    });
+    // Append to panel so it lives inside the shadow
+    panel.appendChild(fileInput);
+  }
+
+  // ── Document card rendering ─────────────────────────────────────────────────
+
+  function addDocCard(side, docId, filename, fileSize, pending) {
+    var m = msgsEl(); if (!m) return null;
+    var div = document.createElement("div");
+    div.className = "msg doc-card " + side;
+    if (docId) div.setAttribute("data-doc-id", docId);
+
+    var iconDiv = document.createElement("div");
+    iconDiv.className = "doc-icon";
+    iconDiv.innerHTML = getDocIcon(null);
+
+    var metaDiv = document.createElement("div");
+    metaDiv.className = "doc-meta";
+
+    var nameDiv = document.createElement("div");
+    nameDiv.className = "doc-name";
+    nameDiv.textContent = filename;
+
+    var szDiv = document.createElement("div");
+    szDiv.className = "doc-sz";
+    szDiv.textContent = fileSize ? formatBytes(fileSize) : "";
+
+    metaDiv.appendChild(nameDiv);
+    metaDiv.appendChild(szDiv);
+
+    var dlBtn = document.createElement("button");
+    dlBtn.className = "doc-dl";
+    dlBtn.setAttribute("aria-label", "Download " + filename);
+
+    if (pending) {
+      dlBtn.disabled = true;
+      dlBtn.innerHTML = '<div class="qspinner"></div>';
+    } else {
+      dlBtn.innerHTML = DL_SVG;
+      if (docId) {
+        dlBtn.addEventListener("click", function () { handleDownload(docId, dlBtn); });
+      }
+    }
+
+    div.appendChild(iconDiv);
+    div.appendChild(metaDiv);
+    div.appendChild(dlBtn);
+    m.appendChild(div);
+    m.scrollTop = m.scrollHeight;
+    return div;
+  }
+
+  function finalizePendingCard(card, docId, fileSize, mimeType) {
+    if (!card) return;
+    card.setAttribute("data-doc-id", docId);
+    var szDiv = card.querySelector(".doc-sz");
+    if (szDiv && fileSize) szDiv.textContent = formatBytes(fileSize);
+    var iconDiv = card.querySelector(".doc-icon");
+    if (iconDiv) iconDiv.innerHTML = getDocIcon(mimeType);
+    var dlBtn = card.querySelector(".doc-dl");
+    if (dlBtn) {
+      dlBtn.disabled = false;
+      dlBtn.innerHTML = DL_SVG;
+      dlBtn.addEventListener("click", function () { handleDownload(docId, dlBtn); });
+    }
+  }
+
+  function showUploadError(msg) {
+    var m = msgsEl(); if (!m) return;
+    var div = document.createElement("div");
+    div.className = "doc-err";
+    div.textContent = msg || "Upload failed. Please try again.";
+    m.appendChild(div);
+    m.scrollTop = m.scrollHeight;
+    setTimeout(function () { if (div.parentNode) div.parentNode.removeChild(div); }, 5000);
+  }
+
+  // ── File attach handlers ────────────────────────────────────────────────────
+
+  function handleAttach() {
+    if (uploading || sending) return;
+    if (!conversationId) {
+      showUploadError("Please send a message first to start a conversation.");
+      return;
+    }
+    if (fileInput) fileInput.click();
+  }
+
+  function handleFileSelected(file) {
+    var allowed = branding && branding.doc_allowed_types
+      ? branding.doc_allowed_types
+      : ["application/pdf", "image/jpeg", "image/png"];
+    var maxMb = branding && branding.doc_max_size_mb ? branding.doc_max_size_mb : 10;
+
+    if (file.size > maxMb * 1024 * 1024) {
+      showUploadError("File is too large. Maximum size is " + maxMb + " MB.");
+      return;
+    }
+
+    var attBtn = shadow.getElementById("qw-att");
+    if (attBtn) attBtn.disabled = true;
+    uploading = true;
+
+    var pendingCard = addDocCard("usr", null, file.name, file.size, true);
+    uploadFile(file, pendingCard);
+  }
+
+  async function uploadFile(file, pendingCard) {
+    try {
+      var formData = new FormData();
+      formData.append("tenantId", TENANT_ID);
+      formData.append("sessionId", sessionId);
+      formData.append("conversationId", conversationId);
+      formData.append("file", file);
+
+      var res = await fetch(API_BASE + "/api/web/documents/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      var data = await res.json();
+
+      if (!res.ok || !data.document) {
+        if (pendingCard && pendingCard.parentNode) pendingCard.parentNode.removeChild(pendingCard);
+        var errMsg = "Upload failed. Please try again.";
+        if (res.status === 413) errMsg = "File is too large.";
+        if (data.error === "file_type_not_allowed") errMsg = "That file type is not allowed.";
+        if (data.error === "uploads_disabled") errMsg = "File uploads are not enabled.";
+        showUploadError(errMsg);
+      } else {
+        var doc = data.document;
+        finalizePendingCard(pendingCard, doc.id, doc.file_size, doc.file_type);
+        // Update lastMsgTime so polling doesn't re-show this visitor upload
+        lastMsgTime = doc.created_at || new Date().toISOString();
+      }
+    } catch (err) {
+      if (pendingCard && pendingCard.parentNode) pendingCard.parentNode.removeChild(pendingCard);
+      showUploadError("Upload failed. Please check your connection.");
+    } finally {
+      uploading = false;
+      var attBtn = shadow.getElementById("qw-att");
+      if (attBtn) attBtn.disabled = false;
+    }
+  }
+
+  async function handleDownload(docId, btn) {
+    if (btn) btn.disabled = true;
+    try {
+      var url = API_BASE + "/api/documents/" + docId + "/url?sessionId=" + encodeURIComponent(sessionId);
+      var res = await fetch(url);
+      if (!res.ok) throw new Error("Failed");
+      var data = await res.json();
+      if (data.url) {
+        var a = document.createElement("a");
+        a.href = data.url;
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    } catch (e) {}
+    if (btn) btn.disabled = false;
+  }
+
+  // ── Polling for business-sent messages ─────────────────────────────────────
+
+  function startPolling() {
+    if (pollTimer || !conversationId) return;
+    if (!lastMsgTime) lastMsgTime = new Date().toISOString();
+    pollTimer = setInterval(pollMessages, 8000);
+  }
+
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  async function pollMessages() {
+    if (!conversationId || !panelOpen) return;
+    try {
+      var url = API_BASE + "/api/web/conversation/messages?sessionId=" + encodeURIComponent(sessionId) +
+        "&conversationId=" + encodeURIComponent(conversationId) +
+        "&after=" + encodeURIComponent(lastMsgTime || "");
+      var res = await fetch(url);
+      if (!res.ok) return;
+      var data = await res.json();
+      var msgs = data.messages || [];
+      for (var i = 0; i < msgs.length; i++) {
+        renderIncomingMessage(msgs[i]);
+        lastMsgTime = msgs[i].created_at;
+      }
+    } catch (e) {}
+  }
+
+  function renderIncomingMessage(msg) {
+    if (msg.message_type === "document" && msg.document) {
+      var doc = msg.document;
+      if (doc.status === "deleted") return;
+      var card = addDocCard("bot", doc.id, doc.file_name, doc.file_size, false);
+      var iconDiv = card && card.querySelector(".doc-icon");
+      if (iconDiv) iconDiv.innerHTML = getDocIcon(doc.file_type);
+    } else if (msg.content) {
+      addMsg("bot", msg.content);
+    }
+  }
+
+  // ── Text utilities ──────────────────────────────────────────────────────────
 
   var URL_RE = /(https?:\/\/[^\s<>"]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.(?:co\.za|com|org|net|io|app)(?:\/[^\s<>"]*)?)/g;
 
@@ -181,22 +476,32 @@
     if (btn) btn.disabled = !enabled;
   }
 
-  var SEND_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
+  // ── Panel build ─────────────────────────────────────────────────────────────
 
   function buildPanel() {
+    var showAttach = branding && branding.doc_visitor_upload;
+    var attachHtml = showAttach
+      ? '<button class="attbtn" id="qw-att" aria-label="Attach file" title="Attach file">' + ATTACH_SVG + "</button>"
+      : "";
+
     panel.innerHTML =
       '<div class="hd"><div class="hd-av" id="qw-av"></div>' +
-      '<div class="hd-info"><div class="hd-name" id="qw-name">' + biz() + '</div>' +
+      '<div class="hd-info"><div class="hd-name" id="qw-name">' + biz() + "</div>" +
       '<div class="hd-sub"><span class="hd-dot"></span>Replies shortly</div></div>' +
       '<button class="close" id="qw-x" aria-label="Close chat">\xd7</button></div>' +
       '<div class="msgs" id="qw-msgs"></div>' +
-      '<div class="cin"><textarea class="cinp" id="qw-inp" placeholder="Type a message…" rows="1" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="true"></textarea>' +
-      '<button class="sndbtn" id="qw-snd" aria-label="Send message">' + SEND_SVG + '</button></div>' +
+      '<div class="cin">' + attachHtml +
+      '<textarea class="cinp" id="qw-inp" placeholder="Type a message…" rows="1" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="true"></textarea>' +
+      '<button class="sndbtn" id="qw-snd" aria-label="Send message">' + SEND_SVG + "</button></div>" +
       '<div class="ft">Powered by <strong>Qwikly</strong></div>';
 
     renderAvatar(shadow.getElementById("qw-av"));
     shadow.getElementById("qw-x").addEventListener("click", closePanel);
     shadow.getElementById("qw-snd").addEventListener("click", handleSend);
+
+    var attBtn = shadow.getElementById("qw-att");
+    if (attBtn) attBtn.addEventListener("click", handleAttach);
+
     var inp = shadow.getElementById("qw-inp");
     inp.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
@@ -205,7 +510,11 @@
       this.style.height = "auto";
       this.style.height = Math.min(this.scrollHeight, 88) + "px";
     });
+
+    setupFileInput();
   }
+
+  // ── Send ────────────────────────────────────────────────────────────────────
 
   function handleSend() {
     if (sending) return;
@@ -271,6 +580,8 @@
             if (parsed.conversation_id && !conversationId) {
               conversationId = parsed.conversation_id;
               sessionStorage.setItem("qwikly_cid", conversationId);
+              lastMsgTime = new Date().toISOString();
+              startPolling();
             }
           } catch (e) {}
         }
@@ -288,12 +599,16 @@
     sending = false; setInputEnabled(true);
   }
 
+  // ── Keyboard / viewport ─────────────────────────────────────────────────────
+
   function adjustForKeyboard() {
     var vv = window.visualViewport; if (!vv) return;
     var keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
     panel.style.bottom = (keyboardHeight + 68) + "px";
     panel.style.maxHeight = Math.max(vv.height - 76, 200) + "px";
   }
+
+  // ── Open / close ────────────────────────────────────────────────────────────
 
   function openPanel() {
     if (panelOpen) return;
@@ -320,11 +635,14 @@
     } else {
       if (!isMobile) { var inp = shadow.getElementById("qw-inp"); if (inp) inp.focus(); }
     }
+    if (conversationId) startPolling();
     fireEvent("launcher_opened");
   }
 
   function closePanel() {
-    panelOpen = false; panel.classList.remove("open");
+    panelOpen = false;
+    panel.classList.remove("open");
+    stopPolling();
     if (vpListener && window.visualViewport) {
       window.visualViewport.removeEventListener("resize", vpListener);
       window.visualViewport.removeEventListener("scroll", vpListener);
@@ -332,6 +650,8 @@
     }
     panel.style.bottom = ""; panel.style.maxHeight = "";
   }
+
+  // ── Analytics ───────────────────────────────────────────────────────────────
 
   function fireEvent(type) {
     fetch(API_BASE + "/api/web/event", {
@@ -342,10 +662,15 @@
     }).catch(function () {});
   }
 
+  // ── Route guard ─────────────────────────────────────────────────────────────
+
   function isAppRoute(path) {
     return /^\/(dashboard|onboarding|admin|login|reset-password|sign-in)/.test(path);
   }
-  function destroy() { if (host && host.parentNode) host.parentNode.removeChild(host); }
+  function destroy() {
+    stopPolling();
+    if (host && host.parentNode) host.parentNode.removeChild(host);
+  }
   function checkRoute() { if (isAppRoute(window.location.pathname)) destroy(); }
 
   (function () {
@@ -357,6 +682,8 @@
   window.addEventListener("popstate", checkRoute);
 
   window.QwiklyEmbed = { open: openPanel, close: closePanel };
+
+  // ── Init ────────────────────────────────────────────────────────────────────
 
   function init() {
     checkRoute();

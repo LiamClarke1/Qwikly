@@ -240,9 +240,8 @@ function CancelModal({
               After that, your account will be paused and you won&apos;t be charged again.
             </p>
             <p className="text-small text-fg-muted mb-5">
-              Within your first 30 days?{" "}
-              <a href="mailto:billing@qwikly.co.za" className="text-brand hover:underline">Contact support</a>
-              {" "}for a full refund instead.
+              Subscription fees are non-refundable. Questions?{" "}
+              <a href="mailto:billing@qwikly.co.za" className="text-brand hover:underline">Contact support</a>.
             </p>
             <div className="flex gap-3">
               <Button variant="ghost" onClick={onClose} className="flex-1" disabled={loading}>
@@ -659,16 +658,12 @@ export default function BillingPage() {
         )}
       </div>
 
-      {/* ── E: 30-day money-back notice ──────────────────────────────────── */}
-      <div className="flex items-start gap-3 bg-success/5 border border-success/15 rounded-2xl p-4">
-        <Shield className="w-4 h-4 text-success mt-0.5 shrink-0" aria-hidden="true" />
+      {/* ── E: cancel notice ──────────────────────────────────── */}
+      <div className="flex items-start gap-3 bg-surface/5 border border-line/15 rounded-2xl p-4">
+        <Shield className="w-4 h-4 text-fg-muted mt-0.5 shrink-0" aria-hidden="true" />
         <p className="text-small text-fg-muted leading-relaxed">
-          <span className="font-semibold text-fg">30-day money-back guarantee.</span>{" "}
-          Within 30 days of your first payment?{" "}
-          <a href="mailto:billing@qwikly.co.za" className="text-brand hover:underline">
-            Contact support
-          </a>{" "}
-          for a refund — no questions asked.
+          <span className="font-semibold text-fg">Cancel anytime.</span>{" "}
+          No lock-in contracts. Cancellations take effect at the end of your current billing cycle. Subscription fees are non-refundable.
         </p>
       </div>
 

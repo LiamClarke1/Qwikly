@@ -22,7 +22,7 @@ export async function GET(
   const { data } = await db
     .from("clients")
     .select(
-      "business_name, web_widget_color, web_widget_greeting, ai_greeting, web_widget_launcher_label, web_widget_position, web_widget_enabled, auth_user_id, invoice_logo_url"
+      "business_name, web_widget_color, web_widget_greeting, ai_greeting, web_widget_launcher_label, web_widget_position, web_widget_enabled, auth_user_id, invoice_logo_url, doc_visitor_upload, doc_allowed_types, doc_max_size_mb, doc_visitor_prompt"
     )
     .eq("public_key", tenantId)
     .maybeSingle();
@@ -68,6 +68,10 @@ export async function GET(
       launcher_label: data.web_widget_launcher_label ?? "Message us",
       position: data.web_widget_position ?? "bottom-right",
       logo: data.invoice_logo_url ?? null,
+      doc_visitor_upload:  data.doc_visitor_upload  ?? false,
+      doc_allowed_types:   data.doc_allowed_types   ?? ["application/pdf", "image/jpeg", "image/png"],
+      doc_max_size_mb:     data.doc_max_size_mb      ?? 10,
+      doc_visitor_prompt:  data.doc_visitor_prompt   ?? null,
     },
     { headers: CORS }
   );

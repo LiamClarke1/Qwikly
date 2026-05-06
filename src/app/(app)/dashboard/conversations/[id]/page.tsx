@@ -3,10 +3,25 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CalendarCheck } from "lucide-react";
+import { ArrowLeft, CalendarCheck, FileText, Image as ImageIcon, Download } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/lib/supabase";
+import { cn } from "@/lib/cn";
 import type { Conversation, Message, Booking } from "@/lib/types";
+
+interface ConvDoc {
+  id: string;
+  file_name: string;
+  file_size: number;
+  file_type: string;
+  uploaded_by: "business" | "visitor";
+}
+
+function formatBytes(n: number) {
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(0)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 const STATUS_BADGE: Record<Conversation["status"], string> = {
   active: "bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/20",
@@ -17,10 +32,17 @@ const STATUS_BADGE: Record<Conversation["status"], string> = {
 export default function ConversationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<(Message & { document?: ConvDoc | null })[]>([]);
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const downloadDoc = async (docId: string) => {
+    const r = await fetch(`/api/documents/${docId}/url`);
+    if (!r.ok) return;
+    const { url } = await r.json();
+    if (url) window.open(url, "_blank", "noopener");
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -37,14 +59,19 @@ export default function ConversationDetailPage() {
 
       setConversation(convo as Conversation);
 
-      const { data: msgs } = await supabase
-        .from("messages_log")
-        .select("*")
-        .eq("conversation_id", id)
-        .order("created_at", { ascending: true });
+      const [{ data: msgs }, { data: docsData }] = await Promise.all([
+        supabase.from("messages_log").select("*").eq("conversation_id", id).order("created_at", { ascending: true }),
+        supabase.from("conversation_documents").select("id, file_name, file_size, file_type, uploaded_by").eq("conversation_id", id).eq("status", "active"),
+      ]);
 
       if (msgs) {
-        setMessages(msgs as Message[]);
+        const docsMap = Object.fromEntries(((docsData ?? []) as ConvDoc[]).map((d) => [d.id, d]));
+        setMessages(
+          (msgs as (Message & { message_type?: string; attachment_id?: string })[]).map((m) => ({
+            ...m,
+            document: m.attachment_id ? (docsMap[m.attachment_id] ?? null) : null,
+          }))
+        );
       }
 
       const { data: linkedBooking } = await supabase
@@ -144,14 +171,46 @@ export default function ConversationDetailPage() {
         ) : (
           messages.map((msg) => {
             const isAssistant = msg.role === "assistant";
+            const isOwner = msg.role === "owner";
+
+            if ((msg as { message_type?: string }).message_type === "document" && msg.document) {
+              const doc = msg.document;
+              const isImg = doc.file_type?.startsWith("image/");
+              return (
+                <div key={msg.id} className={`flex ${isOwner ? "justify-end" : "justify-start"}`}>
+                  <div className={cn(
+                    "flex items-center gap-3 max-w-[75%] rounded-xl px-3 py-2.5",
+                    isOwner ? "bg-brand/10 border border-brand/25" : "bg-surface-input border border-[var(--border)]"
+                  )}>
+                    <div className="w-8 h-8 rounded-lg bg-surface-hover border border-[var(--border)] flex items-center justify-center shrink-0">
+                      {isImg ? <ImageIcon className="w-4 h-4 text-fg-muted" /> : <FileText className="w-4 h-4 text-fg-muted" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-fg truncate">{doc.file_name}</p>
+                      <p className="text-xs text-fg-subtle mt-0.5">
+                        {formatBytes(doc.file_size)} · {doc.uploaded_by === "visitor" ? "From visitor" : "Sent by you"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => downloadDoc(doc.id)}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-fg-subtle hover:text-fg hover:bg-surface-hover cursor-pointer transition-colors shrink-0"
+                      title="Download"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={msg.id}
-                className={`flex ${isAssistant ? "justify-end" : "justify-start"}`}
+                className={`flex ${isAssistant || isOwner ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`max-w-[75%] rounded-xl px-4 py-3 ${
-                    isAssistant
+                    isAssistant || isOwner
                       ? "bg-brand/10 border border-brand/25"
                       : "bg-surface-input border border-[var(--border)]"
                   }`}

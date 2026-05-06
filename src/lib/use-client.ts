@@ -117,6 +117,13 @@ export interface ClientRow {
   scraped_at?: string | null;
   scrape_confidence?: Record<string, string> | null;
   auth_user_id?: string | null;
+  // document sharing fields (20260506_document_sharing.sql)
+  doc_visitor_upload?: boolean | null;
+  doc_business_send?: boolean | null;
+  doc_allowed_types?: string[] | null;
+  doc_max_size_mb?: number | null;
+  doc_visitor_prompt?: string | null;
+  doc_business_send_label?: string | null;
   // knowledge-base migration fields (migration-knowledge-base.sql)
   website_url?: string | null;
   contact_email?: string | null;
