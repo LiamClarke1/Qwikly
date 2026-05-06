@@ -30,7 +30,14 @@ export async function GET() {
     .eq("id", auth.businessId)
     .maybeSingle();
 
-  if (error || !data) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (error) {
+    console.error("[business GET] db error:", error);
+    return NextResponse.json(
+      { error: "db_error", message: error.message, hint: error.hint ?? null },
+      { status: 500 }
+    );
+  }
+  if (!data) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
   return NextResponse.json({
     ...data,

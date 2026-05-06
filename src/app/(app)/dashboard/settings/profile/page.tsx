@@ -545,7 +545,9 @@ function NotificationsCard({
         const res = await fetch("/api/business", { cache: "no-store" });
         if (!alive) return;
         if (!res.ok) {
-          show("Couldn't load notification settings", "danger");
+          const body = await res.json().catch(() => ({}));
+          const detail = body.message || body.error || `HTTP ${res.status}`;
+          show(`Couldn't load notification settings: ${detail}`, "danger");
           setLoading(false);
           return;
         }
@@ -555,8 +557,9 @@ function NotificationsCard({
           lead_emails_enabled: data.lead_emails_enabled !== false,
         });
         setDefaultEmail(data.contact_email ?? "");
-      } catch {
-        show("Couldn't load notification settings", "danger");
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "network error";
+        show(`Couldn't load notification settings: ${msg}`, "danger");
       } finally {
         if (alive) setLoading(false);
       }
