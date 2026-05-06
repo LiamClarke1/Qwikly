@@ -13,7 +13,6 @@ const PUBLIC_PREFIXES = [
   "/",
   "/how-it-works",
   "/pricing",
-  "/get-started",
   "/legal",
   "/about",
   "/contact",
