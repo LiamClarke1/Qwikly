@@ -217,11 +217,21 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Build Anthropic messages from history + current
-  const claudeMessages: Anthropic.MessageParam[] = (historyRows ?? []).map((r) => ({
+  // Build Anthropic messages from history + current.
+  // If this is the very first message (no DB history yet), inject the opening greeting as a
+  // synthetic assistant turn so Claude knows it was already shown and won't re-greet the visitor.
+  const priorHistory = (historyRows ?? []).map((r) => ({
     role: r.role === "assistant" ? ("assistant" as const) : ("user" as const),
     content: r.content,
   }));
+
+  const claudeMessages: Anthropic.MessageParam[] = [];
+
+  if (priorHistory.length === 0 && client.ai_greeting?.trim()) {
+    claudeMessages.push({ role: "assistant" as const, content: client.ai_greeting.trim() });
+  }
+
+  claudeMessages.push(...priorHistory);
   claudeMessages.push({ role: "user", content: message });
 
   const encoder = new TextEncoder();

@@ -200,7 +200,7 @@ export function buildClientSystemPrompt(c: ClientPromptData, customSystemPrompt?
 
   const ownerRef     = c.owner_name ? ` ${c.owner_name} or` : "";
   const greetingNote = c.ai_greeting
-    ? `Opening message template: "${c.ai_greeting}"`
+    ? `Opening message (already shown to the visitor — do NOT repeat it): "${c.ai_greeting}"\n\nRespond directly to what they say first. The opener was already displayed.`
     : `Start with: "Hi, welcome to ${biz}. What's your name and how can I help you today?"`;
   const tradeQ = getTradeQuestion(trade);
 

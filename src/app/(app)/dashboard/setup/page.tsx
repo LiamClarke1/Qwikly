@@ -1435,7 +1435,9 @@ export default function SetupPage() {
       trade: form.trade.toLowerCase(),
       google_calendar_id: form.google_calendar_email,
       address: form.areas.trim() || null,
-      system_prompt: buildSystemPrompt(form),
+      // Do NOT save system_prompt here. buildClientSystemPrompt() dynamically generates a rich
+      // prompt from the individual fields (tone, style, conversion arc, greeting, sign-off).
+      // Saving a static dump here would override it and bypass all those settings.
       years_in_business: form.years_in_business,
       certifications: form.certifications,
       brands_used: form.brands_used,
