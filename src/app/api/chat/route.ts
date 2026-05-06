@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       booking_preference, response_time, after_hours,
       unique_selling_point, guarantees, star_rating, review_count, testimonials,
       common_questions, common_objections, faq,
-      tone, ai_tone, ai_language, ai_response_style, ai_greeting, ai_sign_off,
+      tone, ai_tone, ai_language, ai_response_style, ai_conversation_speed, ai_greeting, ai_sign_off,
       ai_always_do, ai_never_say, ai_unhappy_customer,
       ai_escalation_triggers, ai_escalation_custom
     `)

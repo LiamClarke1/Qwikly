@@ -47,6 +47,7 @@ export type ClientPromptData = {
   ai_tone?: string | null;
   ai_language?: string | null;
   ai_response_style?: string | null;
+  ai_conversation_speed?: string | null;
   ai_greeting?: string | null;
   ai_sign_off?: string | null;
   ai_always_do?: string | null;
@@ -116,6 +117,7 @@ export function buildClientSystemPrompt(c: ClientPromptData, customSystemPrompt?
   const toneDetail = (c.ai_tone && !SETUP_TONE_KEYS.has(c.ai_tone)) ? ` ${c.ai_tone}.` : "";
   const styleNote  = RESPONSE_STYLE_MAP[c.ai_response_style ?? ""] ?? RESPONSE_STYLE_MAP.conversational;
   const langNote   = c.ai_language ? `Communicate in ${c.ai_language}.` : "";
+  const speed      = c.ai_conversation_speed ?? "balanced";
 
   const identity: string[] = [];
   if (c.owner_name)        identity.push(`Owner / contact: ${c.owner_name}`);
@@ -249,7 +251,10 @@ Follow these stages in order. Skip ahead if the visitor is already further along
 
 ${greetingNote}
 
-Ask for the visitor's first name and what they need in ONE message. Two questions maximum.
+${speed === "fast"
+  ? "Ask for the visitor's first name only. Do not ask about their problem or service type yet. One question, one sentence."
+  : "Ask for the visitor's first name and what they need in ONE message. Two questions maximum."
+}
 
 Generate the opener fresh every conversation. Read the tone and energy of what they wrote and match it exactly. A casual "hi" gets a casual, direct response. A detailed question gets a brief answer then the name ask. A sceptical message gets a no-nonsense opener. Never sound like you're reading from a script, never repeat the same opener twice.
 
@@ -259,9 +264,10 @@ Do NOT ask for email or phone yet. That comes in Stage 5. First, warm them up.
 
 ### Stage 2 — Discover the Need
 
-Ask ONE targeted question to understand their exact problem. Never ask two at once. Choose based on what they've told you and what you know about this trade.
-
-Default for this trade: "${tradeQ}"
+${speed === "fast"
+  ? `Ask ONE question that gets their business or service type AND surfaces their main problem at the same time. Make it earn double-duty. Default for this trade: "${tradeQ}"`
+  : `Ask ONE targeted question to understand their exact problem. Never ask two at once. Choose based on what they've told you and what you know about this trade.\n\nDefault for this trade: "${tradeQ}"`
+}
 
 Think about urgency, scale, history, the specific nature of the problem, and location. Draw on your understanding of how people in this trade experience problems. Generate the question from the context of this conversation, not from a fixed list. The question should feel like it came from someone who has dealt with this kind of job many times before.
 
@@ -269,9 +275,12 @@ After they answer, acknowledge in ONE sentence that validates what they said. Th
 
 ### Stage 3 — Qualify and Quantify
 
-Ask one more question to understand the severity or scope. One question only.
-
-Think about impact on their daily life, safety, cost of leaving it unfixed, timeline, or budget. Use whichever angle is most relevant to what they've told you. Generate the question from context.
+${speed === "fast"
+  ? "SKIP this stage if the pain is already clear from Stage 2. If you do ask, ask ONE question only — severity, urgency, or timeline. Never ask about both scope and severity. Move straight to Stage 4 as soon as you have enough context."
+  : speed === "thorough"
+  ? "Ask ONE question about severity or scope. Then ask a second question about timeline or budget. Always one question per message. After both answers, acknowledge and move to Stage 4."
+  : "Ask one more question to understand the severity or scope. One question only.\n\nThink about impact on their daily life, safety, cost of leaving it unfixed, timeline, or budget. Use whichever angle is most relevant to what they've told you. Generate the question from context."
+}
 
 After they answer, acknowledge and move directly to Stage 4.
 

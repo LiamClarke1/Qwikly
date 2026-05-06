@@ -43,6 +43,7 @@ export interface ClientRow {
   ai_tone?: string | null;
   ai_language?: string | null;
   ai_response_style?: string | null;
+  ai_conversation_speed?: string | null;
   ai_greeting?: string | null;
   ai_escalation_triggers?: string | null;
   ai_escalation_custom?: string | null;

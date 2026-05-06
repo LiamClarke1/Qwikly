@@ -107,16 +107,17 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
     address:                client.address                ?? "",
     system_prompt:          client.system_prompt          ?? "",
     faq:                    JSON.stringify(client.faq     ?? []),
-    ai_tone:                client.ai_tone                ?? "",
-    ai_language:            client.ai_language            ?? "",
-    ai_response_style:      client.ai_response_style      ?? "",
-    ai_greeting:            client.ai_greeting            ?? "",
-    ai_escalation_triggers: client.ai_escalation_triggers ?? "",
-    ai_escalation_custom:   client.ai_escalation_custom   ?? "",
-    ai_unhappy_customer:    client.ai_unhappy_customer     ?? "",
-    ai_always_do:           client.ai_always_do            ?? "",
-    ai_never_say:           client.ai_never_say            ?? "",
-    ai_sign_off:            client.ai_sign_off             ?? "",
+    ai_tone:                   client.ai_tone                   ?? "",
+    ai_language:               client.ai_language               ?? "",
+    ai_response_style:         client.ai_response_style         ?? "",
+    ai_conversation_speed:     client.ai_conversation_speed     ?? "",
+    ai_greeting:               client.ai_greeting               ?? "",
+    ai_escalation_triggers:    client.ai_escalation_triggers    ?? "",
+    ai_escalation_custom:      client.ai_escalation_custom      ?? "",
+    ai_unhappy_customer:       client.ai_unhappy_customer       ?? "",
+    ai_always_do:              client.ai_always_do              ?? "",
+    ai_never_say:              client.ai_never_say              ?? "",
+    ai_sign_off:               client.ai_sign_off               ?? "",
   });
 
   const [tone, setTone] = useState(client.tone ?? "");
@@ -124,16 +125,17 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
   const [prompt, setPrompt] = useState(client.system_prompt ?? "");
   const [faq, setFaq] = useState<{ q: string; a: string }[]>(client.faq ?? []);
   const [personality, setPersonality] = useState({
-    ai_tone:                client.ai_tone                ?? "",
-    ai_language:            client.ai_language            ?? "",
-    ai_response_style:      client.ai_response_style      ?? "",
-    ai_greeting:            client.ai_greeting            ?? "",
-    ai_escalation_triggers: client.ai_escalation_triggers ?? "",
-    ai_escalation_custom:   client.ai_escalation_custom   ?? "",
-    ai_unhappy_customer:    client.ai_unhappy_customer     ?? "",
-    ai_always_do:           client.ai_always_do            ?? "",
-    ai_never_say:           client.ai_never_say            ?? "",
-    ai_sign_off:            client.ai_sign_off             ?? "",
+    ai_tone:                   client.ai_tone                   ?? "",
+    ai_language:               client.ai_language               ?? "",
+    ai_response_style:         client.ai_response_style         ?? "",
+    ai_conversation_speed:     client.ai_conversation_speed     ?? "",
+    ai_greeting:               client.ai_greeting               ?? "",
+    ai_escalation_triggers:    client.ai_escalation_triggers    ?? "",
+    ai_escalation_custom:      client.ai_escalation_custom      ?? "",
+    ai_unhappy_customer:       client.ai_unhappy_customer       ?? "",
+    ai_always_do:              client.ai_always_do              ?? "",
+    ai_never_say:              client.ai_never_say              ?? "",
+    ai_sign_off:               client.ai_sign_off               ?? "",
   });
   const setp = (k: keyof typeof personality) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setPersonality({ ...personality, [k]: e.target.value });
@@ -193,6 +195,14 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
               <option value="brief">Brief &amp; punchy</option>
               <option value="balanced">Balanced</option>
               <option value="detailed">Detailed &amp; thorough</option>
+            </Select>
+          </Field>
+          <Field label="Lead capture speed" hint="How quickly the assistant moves from greeting to booking.">
+            <Select value={personality.ai_conversation_speed} onChange={setp("ai_conversation_speed")}>
+              <option value="">Select speed</option>
+              <option value="fast">Fast — name, one question, then CTA</option>
+              <option value="balanced">Balanced — discover, qualify, then CTA</option>
+              <option value="thorough">Thorough — full discovery before CTA</option>
             </Select>
           </Field>
           <div className="md:col-span-2">
