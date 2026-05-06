@@ -41,13 +41,39 @@ export async function POST(req: NextRequest) {
     }
   );
 
-  const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  const db = supabaseAdmin();
+
+  // Create + auto-confirm via admin API. This avoids Supabase's confirmation
+  // email send (which is rate-limited on the free tier and fails as
+  // "Error sending confirmation email" once the per-hour cap is hit).
+  const { data: createData, error: createError } = await db.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+
+  if (createError) {
+    const msg = createError.message.toLowerCase();
+    if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+      return NextResponse.json({ error: "User already registered" }, { status: 400 });
+    }
+    return NextResponse.json({ error: createError.message }, { status: 400 });
   }
 
+  if (!createData.user) {
+    return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+  }
+
+  // Sign the new user in so they get a browser session and can be redirected
+  // straight to /dashboard/setup without an email confirmation step.
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+  if (signInError) {
+    return NextResponse.json({ error: signInError.message }, { status: 400 });
+  }
+
+  const data = { user: createData.user, session: { token: "set-via-cookie" } };
+
   if (data.user) {
-    const db = supabaseAdmin();
 
     const { error: bizError } = await db.from("businesses").upsert({
       user_id: data.user.id,
