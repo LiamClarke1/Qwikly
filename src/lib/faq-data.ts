@@ -7,12 +7,12 @@ export const FAQ_DATA = [
   {
     question: "How much does it cost?",
     answer:
-      "Qwikly offers four plans. Trial is free for 14 days with full Pro features and up to 25 leads. Starter is R399/month for 75 qualified leads. Pro is R999/month for 250 qualified leads with custom branding and CSV exports. Premium is R2,499/month for up to 1,000 qualified leads with API access and dedicated support. Pay annually and save 15%. No per-job fees, no commissions.",
+      "Qwikly has three paid plans. Pro is R999/month for 75 qualified leads. Premium is R1,999/month for 250 qualified leads, with custom branding and CSV exports. Billions is R2,999/month for 1,000 qualified leads with API access and dedicated support. All plans start with a free 14-day trial (full Pro features, 75 leads). Pay annually and save 15%. Extra leads are R20 each. No per-job fees, no commissions ever.",
   },
   {
     question: "What counts as a qualified lead?",
     answer:
-      "A qualified lead is a visitor who has provided their contact details and answered your qualifying questions: service type, location, and buying intent. Bounced chats and spam are not counted against your monthly cap.",
+      "A lead only counts when a visitor shares their phone number or email address. Just opening the chat or asking a question is not a lead — curiosity is free. Bounced chats, visitors who give only their name, and spam are never counted. A visitor who confirms booking intent still counts as just one lead, not extra.",
   },
   {
     question: "What happens when I hit my monthly lead limit?",
@@ -37,7 +37,7 @@ export const FAQ_DATA = [
   {
     question: "Can I use my own branding?",
     answer:
-      "Yes. On Pro and Premium plans, your digital assistant uses your logo and colour scheme, with no Qwikly branding. Starter plans show 'Powered by Qwikly' in the footer.",
+      "Yes. On Premium and Billions plans, your digital assistant uses your logo and colour scheme with no Qwikly branding. Pro plans show 'Powered by Qwikly' in the footer.",
   },
   {
     question: "Can I see what the assistant is saying to visitors?",
