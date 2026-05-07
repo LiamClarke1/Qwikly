@@ -11,6 +11,11 @@
   var COMPACT = script && script.getAttribute("data-compact") === "true";
   var PANEL_W = COMPACT ? 320 : 375;
   var PANEL_H = COMPACT ? 440 : 540;
+  // Optional teaser bubble next to the launcher. Used on the home page so first
+  // time visitors notice the chat without having it auto-open in their face.
+  var SHOW_PEEK = script && script.getAttribute("data-peek") === "true";
+  var PEEK_DELAY = 5000;
+  var PEEK_DURATION = 6000;
 
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var isMobile = window.matchMedia("(max-width: 600px)").matches;
@@ -111,8 +116,15 @@
     ".bot .qspinner{border-color:rgba(55,65,81,.2);border-top-color:#374151}",
     // Upload error
     ".doc-err{font-size:12px;padding:8px 13px;color:#EF4444;align-self:flex-end}",
+    // Peek teaser
+    "#peek{position:fixed;bottom:96px;right:28px;z-index:2147483646;max-width:248px;background:#fff;color:#0F172A;border-radius:14px;padding:11px 10px 11px 14px;box-shadow:0 14px 36px rgba(15,23,42,.16),0 2px 8px rgba(15,23,42,.06);font-size:14px;line-height:1.4;font-weight:500;letter-spacing:-.01em;display:flex;align-items:center;gap:6px;opacity:0;transform:translateY(6px) scale(.96);pointer-events:none;transition:" + (prefersReduced ? "none" : "opacity .25s ease, transform .25s ease") + "}",
+    "#peek.open{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}",
+    "#peek-body{flex:1;cursor:pointer;padding:1px 0}",
+    "#peek-x{background:none;border:none;color:#94A3B8;cursor:pointer;font-size:18px;line-height:1;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;padding:0;transition:" + MICRO + "}",
+    "#peek-x:hover{background:#F1F5F9;color:#475569}",
+    "#peek::after{content:\"\";position:absolute;bottom:-5px;right:38px;width:12px;height:12px;background:#fff;transform:rotate(45deg);box-shadow:3px 3px 6px rgba(15,23,42,.04)}",
     // Mobile
-    "@media(max-width:600px){#launcher{bottom:max(20px,calc(env(safe-area-inset-bottom) + 16px));right:max(20px,calc(env(safe-area-inset-right) + 12px));padding:14px 24px;font-size:15px}#panel{left:8px;right:8px;width:auto;bottom:max(72px,calc(env(safe-area-inset-bottom) + 68px));height:auto;max-height:60vh;border-radius:18px;transition:none}}",
+    "@media(max-width:600px){#launcher{bottom:max(20px,calc(env(safe-area-inset-bottom) + 16px));right:max(20px,calc(env(safe-area-inset-right) + 12px));padding:14px 24px;font-size:15px}#panel{left:8px;right:8px;width:auto;bottom:max(72px,calc(env(safe-area-inset-bottom) + 68px));height:auto;max-height:60vh;border-radius:18px;transition:none}#peek{right:max(20px,calc(env(safe-area-inset-right) + 12px));bottom:max(78px,calc(env(safe-area-inset-bottom) + 74px));max-width:220px;font-size:13px}}",
     // Dark mode
     "@media(prefers-color-scheme:dark){#panel{background:#1e293b}.bot{background:#334155;color:#f1f5f9}.bot a{color:#60a5fa}.msgs{background:#1e293b}.cin{background:#1e293b;border-top-color:#334155}.cinp{background:#0f172a;border-color:#334155;color:#f1f5f9}.cinp::placeholder{color:#64748b}.ft{background:#1e293b;color:#475569;border-top-color:#334155}.attbtn{background:#334155;color:#94a3b8}.attbtn:hover{background:#475569;color:#f1f5f9}.bot .doc-icon{background:#475569}.bot .doc-dl{background:#475569;color:#f1f5f9}}",
   ].join("");
@@ -734,7 +746,48 @@
       .then(function (b) { if (b) applyBranding(b); })
       .catch(function () {});
     launcher.addEventListener("click", openPanel);
+    if (SHOW_PEEK) setupPeek();
     fireEvent("widget_loaded");
+  }
+
+  function setupPeek() {
+    var peek = document.createElement("div");
+    peek.id = "peek";
+    peek.setAttribute("role", "status");
+    peek.setAttribute("aria-live", "polite");
+    var body = document.createElement("div");
+    body.id = "peek-body";
+    body.textContent = "Got a question? Chat now.";
+    var x = document.createElement("button");
+    x.id = "peek-x";
+    x.setAttribute("aria-label", "Dismiss");
+    x.innerHTML = "&times;";
+    peek.appendChild(body);
+    peek.appendChild(x);
+    shadow.appendChild(peek);
+
+    var hideTimer = null;
+    var dismissed = false;
+    function hide() {
+      peek.classList.remove("open");
+      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    }
+    function show() {
+      if (dismissed || panelOpen) return;
+      peek.classList.add("open");
+      hideTimer = setTimeout(hide, PEEK_DURATION);
+    }
+    body.addEventListener("click", function () {
+      dismissed = true;
+      hide();
+      openPanel();
+    });
+    x.addEventListener("click", function (e) {
+      e.stopPropagation();
+      dismissed = true;
+      hide();
+    });
+    setTimeout(show, PEEK_DELAY);
   }
 
   if (document.readyState === "loading") {

@@ -10,6 +10,9 @@ export default function WidgetLoader({ publicKey }: { publicKey: string }) {
     el.src = "/embed.js";
     el.setAttribute("data-qwikly-id", publicKey);
     el.setAttribute("data-api", window.location.origin);
+    if (window.location.pathname === "/") {
+      el.setAttribute("data-peek", "true");
+    }
     el.async = true;
     document.body.appendChild(el);
 
