@@ -6,7 +6,6 @@ import { submitContactForm, type ContactFormState } from "./actions";
 const SUBJECTS = [
   "Book a setup call",
   "Pricing question",
-  "Setup help",
   "Technical issue",
   "Billing enquiry",
   "Partnership",
