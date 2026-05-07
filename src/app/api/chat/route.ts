@@ -31,7 +31,7 @@ export async function OPTIONS() {
 
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const ipOk = await checkRateLimit(`chat:ip:${ip}`, 20);
+  const ipOk = await checkRateLimit(`chat:ip:${ip}`, 30);
   if (!ipOk) {
     return NextResponse.json(
       { error: "Too many requests. Please slow down." },
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400, headers: CORS });
   }
 
-  const tenantOk = await checkRateLimit(`chat:tenant:${tenantId}`, 200, "hour");
+  const tenantOk = await checkRateLimit(`chat:tenant:${tenantId}`, 2000, "hour");
   if (!tenantOk) {
     return NextResponse.json(
       { error: "Tenant hourly rate limit exceeded." },
