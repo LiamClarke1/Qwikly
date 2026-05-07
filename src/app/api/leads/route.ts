@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { log } from "@/lib/log";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { v2Auth } from "@/lib/v2-auth";
 import { resend, FROM } from "@/lib/resend";
@@ -133,12 +134,20 @@ export async function POST(req: NextRequest) {
           subject: "You've hit your Qwikly lead cap — upgrade to keep capturing",
           html: capReachedNotificationHtml({ businessName: business.name }),
         })
-        .catch((err) => console.error("[leads] cap-reached email failed:", { businessId: business.id, err }));
+        .catch((err) =>
+          log("error", "leads_cap_reached_email_failed", {
+            businessId: business.id,
+            error: err instanceof Error ? err.message : String(err),
+          })
+        );
     }
     return NextResponse.json({ ok: true, capped: true }, { headers: CORS });
   }
 
   // ── Store lead ────────────────────────────────────────────────────────────────
+  // T3.7 — start with email_status: 'pending' so the dashboard shows the
+  // notification is in-flight; the .then/.catch on the resend promise will
+  // settle this to 'sent' or 'failed' once the network call resolves.
   const { data: lead, error: leadError } = await db
     .from("leads")
     .insert({
@@ -149,17 +158,18 @@ export async function POST(req: NextRequest) {
       preferred_time: body.preferred_time ?? null,
       visitor_email: body.visitor_email ?? null,
       raw_conversation: body.raw_conversation ?? null,
+      email_status: "pending",
     })
     .select("id, confirm_token, name, need, preferred_time, visitor_email")
     .single();
 
   if (leadError || !lead) {
-    console.error("[leads] insert error:", leadError?.message);
+    log("error", "leads_insert_failed", { error: leadError?.message });
     return NextResponse.json({ error: "failed_to_store" }, { status: 500, headers: CORS });
   }
 
   if (!lead.confirm_token) {
-    console.error("[leads] confirm_token missing on lead:", lead.id);
+    log("error", "leads_confirm_token_missing", { leadId: lead.id });
     return NextResponse.json({ error: "failed_to_store" }, { status: 500, headers: CORS });
   }
 
@@ -191,9 +201,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, lead_id: lead.id, email_skipped: true }, { headers: CORS });
   }
 
-  // Fire-and-forget the email but record the outcome so failures are visible
-  // in the dashboard and we never silently lose a notification.
-  resend.emails
+  // T3.7 — Fire-and-forget the email but record the outcome so failures are
+  // visible in the dashboard and we never silently lose a notification.
+  // The lead row was inserted with email_status='pending'; the .then/.catch
+  // chain below settles it to 'sent' or 'failed'.
+  void resend.emails
     .send({
       from: FROM,
       to: [recipient],
@@ -226,7 +238,11 @@ export async function POST(req: NextRequest) {
     })
     .then(async ({ data, error }) => {
       if (error) {
-        console.error("[leads] lead notification email failed:", { leadId: lead.id, businessId: business.id, error });
+        log("error", "leads_notification_email_failed", {
+          leadId: lead.id,
+          businessId: business.id,
+          error: error.message ?? String(error),
+        });
         await db
           .from("leads")
           .update({ email_status: "failed", email_error: error.message ?? String(error) })
@@ -243,7 +259,11 @@ export async function POST(req: NextRequest) {
       }
     })
     .catch(async (err) => {
-      console.error("[leads] lead notification email threw:", { leadId: lead.id, businessId: business.id, err });
+      log("error", "leads_notification_email_threw", {
+        leadId: lead.id,
+        businessId: business.id,
+        error: err?.message ?? String(err),
+      });
       await db
         .from("leads")
         .update({ email_status: "failed", email_error: err?.message ?? String(err) })

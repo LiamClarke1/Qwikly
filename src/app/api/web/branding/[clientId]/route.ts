@@ -26,8 +26,11 @@ export async function GET(
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  // Check trial expiry for non-hardcoded clients
-  if (clientId !== "1") {
+  // T3.9 — Skip trial-expiry check for the Qwikly owner tenant.
+  // Sourced from QWIKLY_OWNER_CLIENT_ID env var (see .env.example).
+  const ownerClientId = process.env.QWIKLY_OWNER_CLIENT_ID ?? "1";
+  // Check trial expiry for every client EXCEPT the Qwikly-owned tenant
+  if (clientId !== ownerClientId) {
     const { data: client } = await supabaseAdmin
       .from("clients")
       .select("auth_user_id")

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { Suspense } from "react";
 import { Sidebar } from "@/components/shell/sidebar";
@@ -50,7 +51,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [isDark]);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
       if (!data.session) {
         router.push("/login");
         return;

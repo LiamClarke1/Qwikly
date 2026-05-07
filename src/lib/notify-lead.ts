@@ -20,7 +20,9 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.qwikly.co.za";
 // stored on the businesses row. Set this in Vercel env. Falls back to the
 // standard businesses.notification_email/contact_email lookup if unset.
 const QWIKLY_OWN_NOTIFICATION_EMAIL = (process.env.QWIKLY_OWN_NOTIFICATION_EMAIL ?? "").trim() || null;
-const QWIKLY_OWN_CLIENT_ID = "1";
+// T3.9 — sourced from QWIKLY_OWNER_CLIENT_ID env var (see .env.example).
+// Falls back to "1" so local dev without the env var still works.
+const QWIKLY_OWN_CLIENT_ID = process.env.QWIKLY_OWNER_CLIENT_ID ?? "1";
 
 export function resolveQwiklyOwnRecipientOverride(clientId: number | string | null | undefined): string | null {
   if (clientId == null) return null;

@@ -922,7 +922,7 @@ function DetailPanel({
               <Send className="w-3 h-3" /> Ready to send
             </p>
             <p className="text-tiny text-ink-600 leading-relaxed mb-2.5 italic">
-              "{followUpMessage}"
+              &ldquo;{followUpMessage}&rdquo;
             </p>
             <div className="flex gap-1.5">
               <button type="button" onClick={copyMessage}

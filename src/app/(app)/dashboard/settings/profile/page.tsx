@@ -6,6 +6,7 @@ import { useEffect, useState, useRef, useCallback, FormEvent, ChangeEvent } from
 import {
   Save, Check, AlertCircle, User, Camera, Lock, Move,
 } from "lucide-react";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,7 +78,7 @@ function AccountCard({ show }: { show: (msg: string, tone?: "success" | "danger"
   const [adjustOpen, setAdjustOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
       const u = data.session?.user ?? null;
       setUser(u);
       setForm({

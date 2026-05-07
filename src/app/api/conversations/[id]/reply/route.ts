@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { sendWhatsAppMessage } from "@/lib/twilio-whatsapp";
 import { Resend } from "resend";
+import { log } from "@/lib/log";
 
 export async function POST(
   req: NextRequest,
@@ -104,7 +105,10 @@ export async function POST(
 
     return NextResponse.json(deliveryResult);
   } catch (err) {
-    console.error("[conversations/reply] Error:", err);
+    log("error", "conversations_reply_error", {
+      conversationId: params.id,
+      error: err instanceof Error ? err.message : String(err),
+    });
     return NextResponse.json({ error: "send_failed" }, { status: 500 });
   }
 }

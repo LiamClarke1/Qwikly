@@ -180,7 +180,7 @@ export default function CrmClientDetailPage() {
                 {deletionDaysLeft !== null && ` — ${deletionDaysLeft} day${deletionDaysLeft !== 1 ? "s" : ""} remaining`}
               </p>
               <p className="text-[12px] text-red-600 mt-0.5">
-                This client's access has been revoked. All data will be permanently deleted
+                This client&apos;s access has been revoked. All data will be permanently deleted
                 {client.deletion_scheduled_at
                   ? ` on ${new Date(new Date(client.deletion_scheduled_at).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" })}.`
                   : " after 30 days."

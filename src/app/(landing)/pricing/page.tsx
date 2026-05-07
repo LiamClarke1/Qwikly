@@ -599,7 +599,7 @@ export default function PricingPage() {
               <h3 className="font-display text-2xl text-ink mb-3">Booking intent</h3>
               <p className="text-ink-600 text-sm leading-relaxed mb-6">
                 Visitor confirms they want a callback, meeting, or is heading to sign up. Flagged as
-                "Hot" in your dashboard so you know who to call first. Still only 1 lead, no extra charge.
+                &ldquo;Hot&rdquo; in your dashboard so you know who to call first. Still only 1 lead, no extra charge.
               </p>
               <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
                 <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
