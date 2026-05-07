@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import {
   CheckCircle, AlertTriangle, Clock, Phone, MessageCircle,
-  Upload, CreditCard, Banknote, FileText, X, Loader2
+  Upload, Banknote, FileText, X, Loader2
 } from "lucide-react";
 import { fmt, fmtDateLong } from "@/lib/money";
 import { cn } from "@/lib/cn";
@@ -202,7 +202,6 @@ export default function PublicInvoicePage() {
   const [notFound, setNotFound] = useState(false);
   const [showEft, setShowEft] = useState(false);
   const [paymentMsg, setPaymentMsg] = useState<string | null>(null);
-  const [checkingOut, setCheckingOut] = useState(false);
 
   const paymentStatus = searchParams.get("payment");
 
@@ -217,35 +216,10 @@ export default function PublicInvoicePage() {
   useEffect(() => { loadInvoice(); }, [loadInvoice]);
 
   useEffect(() => {
-    if (paymentStatus === "success") setPaymentMsg("Payment successful! Your receipt will be sent shortly.");
-    if (paymentStatus === "failed") setPaymentMsg("Payment failed. Please try again or use EFT.");
+    if (paymentStatus === "success") setPaymentMsg("Payment recorded. Your receipt will be sent shortly.");
+    if (paymentStatus === "failed") setPaymentMsg(null);
     if (paymentStatus === "cancelled") setPaymentMsg(null);
   }, [paymentStatus]);
-
-  async function handleCardPay() {
-    if (!invoice) return;
-    setCheckingOut(true);
-    try {
-      const res = await fetch(`/api/invoices/${invoice.id}/checkout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-      const data = await res.json();
-      if (data.redirectUrl) {
-        window.location.href = data.redirectUrl;
-      } else if (data.mode === "eft_only") {
-        setPaymentMsg("Card payments are not set up yet. Please use EFT.");
-        setShowEft(true);
-      } else {
-        setPaymentMsg(data.error ?? "Payment error. Please try EFT.");
-      }
-    } catch {
-      setPaymentMsg("Network error. Please try again.");
-    } finally {
-      setCheckingOut(false);
-    }
-  }
 
   if (loading) {
     return (
@@ -410,21 +384,12 @@ export default function PublicInvoicePage() {
         {canPay && (
           <div className="mt-5 space-y-3">
             <button
-              onClick={handleCardPay}
-              disabled={checkingOut}
-              className="w-full py-4 rounded-2xl text-white text-base font-semibold flex items-center justify-center gap-2.5 transition-opacity hover:opacity-90 active:opacity-80 cursor-pointer disabled:opacity-50"
+              onClick={() => setShowEft(true)}
+              className="w-full py-4 rounded-2xl text-white text-base font-semibold flex items-center justify-center gap-2.5 transition-opacity hover:opacity-90 active:opacity-80 cursor-pointer"
               style={{ background: `linear-gradient(135deg, ${accent} 0%, #C3431C 100%)` }}
             >
-              {checkingOut ? <Loader2 className="w-5 h-5 animate-spin" /> : <CreditCard className="w-5 h-5" />}
-              Pay {fmt(amountDue)} now
-            </button>
-
-            <button
-              onClick={() => setShowEft(true)}
-              className="w-full py-3.5 rounded-2xl bg-white/[0.06] border border-white/10 text-white text-sm font-medium flex items-center justify-center gap-2 hover:bg-white/[0.10] transition-colors cursor-pointer"
-            >
-              <Banknote className="w-4 h-4" />
-              I paid via EFT
+              <Banknote className="w-5 h-5" />
+              Pay {fmt(amountDue)} by EFT
             </button>
 
             {invoice.clients.allow_cash_invoices && (

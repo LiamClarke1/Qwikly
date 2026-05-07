@@ -85,7 +85,6 @@ function RecordPaymentModal({ invoiceId, amountDue, onClose, onDone }: {
               className="w-full bg-white/5 border border-line rounded-xl px-4 py-2.5 text-body text-fg outline-none focus:border-brand/40 cursor-pointer">
               <option value="eft">EFT</option>
               <option value="cash">Cash</option>
-              <option value="yoco_card">Card</option>
               <option value="other">Other</option>
             </select>
           </div>

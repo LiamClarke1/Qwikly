@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/ui/page";
 import { Skeleton } from "@/components/ui/empty";
 import { cn } from "@/lib/cn";
 import { fmt, fmtDateLong } from "@/lib/money";
+import ManualPaymentModal, { type ManualPaymentPlan } from "@/components/ManualPaymentModal";
 
 async function verifyPassword(password: string): Promise<boolean> {
   const res = await fetch("/api/auth/verify-password", {
@@ -72,13 +73,6 @@ async function requestPlanChange(plan: PlanId, cycle: BillingCycle): Promise<str
 
 async function requestCancel(): Promise<void> {
   await fetch("/api/subscription/cancel", { method: "POST" });
-}
-
-async function requestPaymentMethodUpdate(): Promise<string | null> {
-  const res = await fetch("/api/subscription/payment-method", { method: "POST" });
-  if (!res.ok) return null;
-  const { url } = await res.json();
-  return url ?? null;
 }
 
 // ─── Pricing constants ────────────────────────────────────────────────────────
@@ -383,7 +377,7 @@ export default function BillingPage() {
     (sub?.plan as string) === "business" ? "premium" as PlanId :
     isTrialPlan ? "pro" as PlanId : (sub?.plan as PlanId);
   const [showCancel, setShowCancel] = useState(false);
-  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [manualPlan, setManualPlan] = useState<{ plan: ManualPaymentPlan; cycle: BillingCycle } | null>(null);
 
   // Trial days remaining
   const trialDaysLeft = (() => {
@@ -442,13 +436,6 @@ export default function BillingPage() {
   async function handleCancel() {
     await requestCancel();
     await loadData();
-  }
-
-  async function handleUpdatePayment() {
-    setPaymentLoading(true);
-    const url = await requestPaymentMethodUpdate();
-    if (url) window.location.href = url;
-    setPaymentLoading(false);
   }
 
   return (
@@ -516,7 +503,7 @@ export default function BillingPage() {
           <p className="text-small font-semibold text-fg">Current subscription</p>
           {isMonthly && (
             <button
-              onClick={() => setPendingChange({ plan: currentPlanId, cycle: "annual" })}
+              onClick={() => setManualPlan({ plan: currentPlanId as ManualPaymentPlan, cycle: "annual" })}
               className="flex items-center gap-1 text-tiny font-medium text-brand hover:underline cursor-pointer transition-colors"
             >
               Switch to annual — save {fmt(annualSaving)}/yr
@@ -660,7 +647,11 @@ export default function BillingPage() {
                       variant={isUpgrade ? "primary" : "outline"}
                       size="sm"
                       className="w-full justify-center"
-                      onClick={() => setPendingChange({ plan: planId, cycle: "monthly" })}
+                      onClick={() =>
+                        isUpgrade
+                          ? setManualPlan({ plan: planId as ManualPaymentPlan, cycle: effectiveSub.cycle })
+                          : setPendingChange({ plan: planId, cycle: "monthly" })
+                      }
                     >
                       {isTrialPlan ? "Activate" : isUpgrade ? "Upgrade" : "Downgrade"}
                     </Button>
@@ -677,27 +668,23 @@ export default function BillingPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-small font-semibold text-fg mb-2">Payment method</p>
-            {effectiveSub.paymentMethod ? (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-7 bg-white/8 border border-line rounded flex items-center justify-center">
-                  <CreditCard className="w-4 h-4 text-fg-muted" aria-hidden="true" />
-                </div>
-                <p className="text-small text-fg capitalize">
-                  {effectiveSub.paymentMethod!.brand} ending in {effectiveSub.paymentMethod!.last4}
-                </p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-7 bg-white/8 border border-line rounded flex items-center justify-center">
+                <CreditCard className="w-4 h-4 text-fg-muted" aria-hidden="true" />
               </div>
-            ) : (
-              <p className="text-small text-fg-muted">No card on file</p>
-            )}
+              <p className="text-small text-fg">EFT, monthly invoice</p>
+            </div>
+            <p className="text-tiny text-fg-muted mt-2 max-w-md">
+              Invoices are emailed to your business contact. Pay by EFT to the bank details on the invoice.
+              No card needed.
+            </p>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleUpdatePayment}
-            loading={paymentLoading}
+          <a
+            href="mailto:hello@qwikly.co.za?subject=Billing%20question"
+            className="inline-flex items-center justify-center px-3 py-2 rounded-lg bg-white/5 border border-line text-tiny font-medium text-fg hover:bg-white/10 transition-colors cursor-pointer"
           >
-            Update payment method
-          </Button>
+            Email billing
+          </a>
         </div>
       </div>
 
@@ -802,6 +789,14 @@ export default function BillingPage() {
           renewsAt={effectiveSub.renewsAt}
           onClose={() => setShowCancel(false)}
           onConfirm={handleCancel}
+        />
+      )}
+      {manualPlan && (
+        <ManualPaymentModal
+          open={!!manualPlan}
+          plan={manualPlan.plan}
+          cycle={manualPlan.cycle}
+          onClose={() => setManualPlan(null)}
         />
       )}
     </div>

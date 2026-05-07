@@ -6,7 +6,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft, CheckCircle, AlertTriangle, Clock, Lock,
-  Receipt, ExternalLink, MessageSquare, Loader2
+  Receipt, ExternalLink, MessageSquare, Banknote
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/empty";
@@ -100,7 +100,6 @@ export default function BillingPeriodPage() {
   const [period, setPeriod] = useState<PeriodDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDispute, setShowDispute] = useState(false);
-  const [payLoading, setPayLoading] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/billing/periods/${params.period_id}`);
@@ -110,15 +109,6 @@ export default function BillingPeriodPage() {
   }, [params.period_id]);
 
   useEffect(() => { load(); }, [load]);
-
-  async function payNow() {
-    if (!period?.qwikly_billing_invoices?.id) return;
-    setPayLoading(true);
-    const res = await fetch(`/api/billing/checkout/${period.qwikly_billing_invoices.id}`, { method: "POST" });
-    const { url } = await res.json();
-    if (url) window.location.href = url;
-    setPayLoading(false);
-  }
 
   if (loading) {
     return (
@@ -173,9 +163,10 @@ export default function BillingPeriodPage() {
             </Button>
           )}
           {canPay && (
-            <Button size="sm" loading={payLoading} onClick={payNow} icon={<Receipt className="w-3.5 h-3.5" />}>
-              Pay {fmt(commissionPlusVat)}
-            </Button>
+            <span className="inline-flex items-center gap-1.5 text-tiny text-fg-muted px-3 py-1.5 rounded-full bg-white/5 border border-line">
+              <Banknote className="w-3.5 h-3.5" />
+              Pay by EFT, see invoice email
+            </span>
           )}
         </div>
       </div>
@@ -261,9 +252,10 @@ export default function BillingPeriodPage() {
                   Paid {billingInvoice.paid_at ? fmtDate(billingInvoice.paid_at) : ""}
                 </div>
               ) : canPay ? (
-                <Button onClick={payNow} loading={payLoading} size="sm" className="w-full">
-                  Pay now
-                </Button>
+                <div className="flex items-start gap-2 rounded-lg bg-white/[0.04] border border-line/60 p-3 text-tiny text-fg-muted leading-relaxed">
+                  <Banknote className="w-3.5 h-3.5 mt-0.5 shrink-0 text-fg-muted" />
+                  <span>Pay by EFT to the bank details on your invoice email. Reference the invoice number above.</span>
+                </div>
               ) : null}
             </div>
           )}

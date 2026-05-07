@@ -34,8 +34,6 @@ const PUBLIC_PREFIXES = [
   // v2 public endpoints
   "/api/widget-config",
   "/api/leads/confirm",
-  "/api/webhooks/paystack",
-  "/api/webhooks/yoco",
   "/api/signup",
   "/api/login",
   "/api/auth/forgot-password",

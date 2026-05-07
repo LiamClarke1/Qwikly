@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Minus } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
+import ManualPaymentModal, { type ManualPaymentPlan } from "@/components/ManualPaymentModal";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 /* ─────────────────────────────────────────────────────────────
@@ -821,6 +822,7 @@ const faqTeaser = [
 export default function Home() {
   useScrollReveal();
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+  const [paymentPlan, setPaymentPlan] = useState<ManualPaymentPlan | null>(null);
 
   return (
     <>
@@ -1148,14 +1150,37 @@ export default function Home() {
                   ))}
                 </ul>
 
-                <CTAButton
-                  href={tier.href}
-                  variant={tier.isTrial ? "primary" : tier.variant}
-                  size="md"
-                  className={`w-full justify-center ${tier.isTrial ? "!bg-emerald-600 !text-white hover:!bg-emerald-700" : ""}`}
-                >
-                  {tier.cta}
-                </CTAButton>
+                {tier.isTrial ? (
+                  <CTAButton
+                    href={tier.href}
+                    variant="primary"
+                    size="md"
+                    className="w-full justify-center !bg-emerald-600 !text-white hover:!bg-emerald-700"
+                  >
+                    {tier.cta}
+                  </CTAButton>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setPaymentPlan(tier.name.toLowerCase() as ManualPaymentPlan)}
+                    className={`btn-ember ${tier.variant === "solid" ? "btn-ember-solid" : ""} px-6 py-3 text-[0.95rem] w-full justify-center cursor-pointer`}
+                  >
+                    <span className="relative z-10">{tier.cta}</span>
+                    <svg
+                      className="btn-arrow w-4 h-4 relative z-10"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.25"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -1368,6 +1393,14 @@ export default function Home() {
           </p>
         </div>
       </section>
+
+      {paymentPlan && (
+        <ManualPaymentModal
+          open={!!paymentPlan}
+          plan={paymentPlan}
+          onClose={() => setPaymentPlan(null)}
+        />
+      )}
     </>
   );
 }

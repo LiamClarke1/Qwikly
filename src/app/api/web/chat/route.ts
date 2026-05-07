@@ -435,7 +435,7 @@ Pricing & billing:
 - If they exceed the monthly lead cap on a paid plan: extra leads are R20 each.
 - Setup help service: R500 one-time, the team plugs everything in for you live on a call.
 - Cancel anytime, no lock-in, no cancellation fee. Plan stays active until end of billing period.
-- Annual billing, refund policy, payment methods (EFT/Yoco/SnapScan/etc): not confirmed, redirect to qwikly.co.za/contact.
+- Payment is by monthly EFT invoice only (no card payments). For annual billing or refund policy: not confirmed, redirect to qwikly.co.za/contact.
 
 Compliance & data:
 - POPIA compliant.

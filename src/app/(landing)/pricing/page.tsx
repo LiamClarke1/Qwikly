@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, Minus, Plus, Shield, MapPin, Clock, Zap, Users, TrendingDown, MessageSquare, Phone, X } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
+import ManualPaymentModal, { type ManualPaymentPlan } from "@/components/ManualPaymentModal";
 
 // "billions" tier is intentionally hidden from public pricing for now (kept in
 // types/billing infra so existing accounts still work). Re-include it in the
@@ -146,6 +147,7 @@ export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [compareTab, setCompareTab] = useState<CompareTab>("premium");
+  const [paymentPlan, setPaymentPlan] = useState<ManualPaymentPlan | null>(null);
 
   function displayPrice(id: TierId) {
     if (id === "trial") return 0;
@@ -294,14 +296,37 @@ export default function PricingPage() {
                     })}
                   </ul>
 
-                  <CTAButton
-                    href={`/signup?plan=${tier.id}`}
-                    variant={tier.highlight ? "solid" : "primary"}
-                    size="md"
-                    className="w-full justify-center"
-                  >
-                    {tier.cta}
-                  </CTAButton>
+                  {tier.id === "trial" ? (
+                    <CTAButton
+                      href={`/signup?plan=${tier.id}`}
+                      variant={tier.highlight ? "solid" : "primary"}
+                      size="md"
+                      className="w-full justify-center"
+                    >
+                      {tier.cta}
+                    </CTAButton>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setPaymentPlan(tier.id as ManualPaymentPlan)}
+                      className={`btn-ember ${tier.highlight ? "btn-ember-solid" : ""} px-6 py-3 text-[0.95rem] w-full justify-center cursor-pointer`}
+                    >
+                      <span className="relative z-10">{tier.cta}</span>
+                      <svg
+                        className="btn-arrow w-4 h-4 relative z-10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.25"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="m12 5 7 7-7 7" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -746,15 +771,41 @@ export default function PricingPage() {
             Free to start. No per-job fees, ever.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <CTAButton size="lg" variant="solid" href="/signup?plan=premium">
-              Start with Premium
-            </CTAButton>
+            <button
+              type="button"
+              onClick={() => setPaymentPlan("premium")}
+              className="btn-ember btn-ember-solid px-8 py-[1.05rem] text-[1rem] cursor-pointer"
+            >
+              <span className="relative z-10">Start with Premium</span>
+              <svg
+                className="btn-arrow w-4 h-4 relative z-10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.25"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+            </button>
             <CTAButton size="lg" variant="outline-light" href="/signup?plan=trial" withArrow={false}>
               Start Free
             </CTAButton>
           </div>
         </div>
       </section>
+
+      {paymentPlan && (
+        <ManualPaymentModal
+          open={!!paymentPlan}
+          plan={paymentPlan}
+          cycle={annual ? "annual" : "monthly"}
+          onClose={() => setPaymentPlan(null)}
+        />
+      )}
     </div>
   );
 }

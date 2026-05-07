@@ -9,9 +9,6 @@ export type V2AuthContext = {
   businessId: string;
   plan: PlanTier;
   subscriptionStatus: string;
-  paystackCustomerCode: string | null;
-  paystackSubscriptionCode: string | null;
-  paystackEmailToken: string | null;
   cancelAtPeriodEnd: boolean;
 };
 
@@ -41,7 +38,7 @@ export async function v2Auth(): Promise<V2AuthContext | null> {
   const [{ data: existingBusiness }, { data: sub }] = await Promise.all([
     db.from("businesses").select("id").eq("user_id", user.id).maybeSingle(),
     db.from("subscriptions")
-      .select("plan, status, paystack_customer_code, paystack_subscription_code, paystack_email_token, cancel_at_period_end")
+      .select("plan, status, cancel_at_period_end")
       .eq("user_id", user.id)
       .maybeSingle(),
   ]);
@@ -81,9 +78,6 @@ export async function v2Auth(): Promise<V2AuthContext | null> {
     businessId: business.id,
     plan: (sub?.plan as PlanTier) ?? "trial",
     subscriptionStatus: sub?.status ?? "active",
-    paystackCustomerCode: sub?.paystack_customer_code ?? null,
-    paystackSubscriptionCode: sub?.paystack_subscription_code ?? null,
-    paystackEmailToken: sub?.paystack_email_token ?? null,
     cancelAtPeriodEnd: sub?.cancel_at_period_end ?? false,
   };
 }

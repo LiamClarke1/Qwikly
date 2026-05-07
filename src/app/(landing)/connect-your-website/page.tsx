@@ -77,8 +77,8 @@ export default function ConnectYourWebsitePage() {
             leads get qualified, and their details land in your inbox. Even at 11 pm.
           </p>
           <div className="flex flex-wrap gap-4 items-center">
-            <CTAButton href="/signup?plan=pro" size="lg">
-              Start with Pro
+            <CTAButton href="/pricing" size="lg">
+              See plans
             </CTAButton>
             <Link
               href="#how-it-works"
