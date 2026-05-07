@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import ContactForm from "./ContactForm";
-import ContactDemoWidget from "@/components/landing/ContactDemoWidget";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -13,11 +12,10 @@ export default function ContactPage() {
   return (
     <div className="bg-paper min-h-screen">
       {/*
-        The Qwikly chat widget is the demo on this page: it loads via the same
-        public /embed.js that customers paste into their own sites and auto-
-        opens after 2s so visitors land in the product, not a static form.
+        The Qwikly chat widget loads site-wide via WidgetLoader (mounted in
+        the landing layout), so /contact gets it for free with the same
+        compact mode as every other page. No per-page mount needed.
       */}
-      <ContactDemoWidget />
 
       <section className="pt-36 pb-24 px-6">
         <div className="max-w-3xl mx-auto">
