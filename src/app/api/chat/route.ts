@@ -406,26 +406,35 @@ export async function POST(req: NextRequest) {
 
             await db.from("conversations").update(updates).eq("id", convoId);
 
-            // Fire the lead-alert email on the transition to lead. Background
-            // dispatch — never block the chat reply on email delivery.
+            // Fire the lead-alert email on the transition to lead. Awaited
+            // (not fire-and-forget) because the response stream closes right
+            // after persistOnce returns, and Vercel can recycle the function
+            // before a dangling promise resolves — the previous fire-and-
+            // forget pattern dropped the email entirely. The chat reply was
+            // already streamed by the time persistOnce runs, so awaiting
+            // here doesn't slow the user-facing response.
+            //
+            // The try/catch is required so a Resend hiccup never escapes
+            // into the persistOnce retry loop and triggers duplicate sends.
             if (!wasAlreadyLead) {
-              notifyLeadCaptured({
-                clientId: client.id,
-                conversationId: convoId,
-                lead: {
-                  id: convoId,
-                  name: visitorInfo.name ?? null,
-                  contact: visitorInfo.phone ?? visitorInfo.email ?? "",
-                  need: visitorInfo.job_type ?? null,
-                  preferredTime: visitorInfo.preferred_time ?? null,
-                  visitorEmail: visitorInfo.email ?? null,
-                },
-              })
-                .then((r) => {
-                  if (!r.ok) console.warn("[chat] lead notify skipped:", { clientId: client.id, convoId, ...r });
-                  else       console.log("[chat] lead notify sent:", { clientId: client.id, convoId, recipient: r.recipient });
-                })
-                .catch((err) => console.error("[chat] lead notify threw:", err));
+              try {
+                const r = await notifyLeadCaptured({
+                  clientId: client.id,
+                  conversationId: convoId,
+                  lead: {
+                    id: convoId,
+                    name: visitorInfo.name ?? null,
+                    contact: visitorInfo.phone ?? visitorInfo.email ?? "",
+                    need: visitorInfo.job_type ?? null,
+                    preferredTime: visitorInfo.preferred_time ?? null,
+                    visitorEmail: visitorInfo.email ?? null,
+                  },
+                });
+                if (!r.ok) console.warn("[chat] lead notify skipped:", { clientId: client.id, convoId, ...r });
+                else       console.log("[chat] lead notify sent:",    { clientId: client.id, convoId, recipient: r.recipient });
+              } catch (err) {
+                console.error("[chat] lead notify threw:", err);
+              }
             }
 
             if (visitorInfo.email) {
