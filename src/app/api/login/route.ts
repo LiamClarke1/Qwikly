@@ -34,19 +34,18 @@ export async function POST(req: NextRequest) {
     }
   );
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 401 });
   }
 
-  // Replace the body of the response (cookies are already set on the response object)
+  // Do NOT return the access_token in the JSON body — it would leak into the
+  // page's JS context and any extension / inline script. The Supabase SSR
+  // cookie adapter above has already set HttpOnly cookies on `response`,
+  // which is the correct, secure session transport. The client just needs to
+  // know it's authenticated; the redirect target tells it where to go.
   return NextResponse.json(
-    {
-      user: { id: data.user.id, email: data.user.email },
-      access_token: data.session.access_token,
-    },
-    {
-      headers: response.headers,
-    }
+    { ok: true, redirect: "/dashboard" },
+    { headers: response.headers }
   );
 }

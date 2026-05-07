@@ -158,8 +158,28 @@
   }
 
   function renderAvatar(el) {
+    // Clear whatever was in there.
+    while (el.firstChild) el.removeChild(el.firstChild);
+
     if (branding && branding.logo) {
-      el.innerHTML = "<img src='" + branding.logo + "' alt='" + biz() + "' style='width:100%;height:100%;object-fit:contain;border-radius:50%;display:block;background:#fff;padding:3px;' onerror=\"this.parentNode.textContent='" + biz().charAt(0).toUpperCase() + "'\" />";
+      // Build the <img> with DOM APIs — never via innerHTML — so an attacker
+      // who controls branding.logo or branding.name cannot inject script /
+      // event handlers into our shadow DOM.
+      var img = document.createElement("img");
+      img.src = branding.logo;
+      img.alt = biz();
+      img.style.width = "100%";
+      img.style.height = "100%";
+      img.style.objectFit = "contain";
+      img.style.borderRadius = "50%";
+      img.style.display = "block";
+      img.style.background = "#fff";
+      img.style.padding = "3px";
+      img.onerror = function () {
+        var parent = img.parentNode;
+        if (parent) parent.textContent = biz().charAt(0).toUpperCase();
+      };
+      el.appendChild(img);
     } else {
       el.textContent = biz().charAt(0).toUpperCase();
     }

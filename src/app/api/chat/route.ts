@@ -8,6 +8,8 @@ import { ensureKbEmbeddings, searchKb, embedText } from "@/lib/embeddings";
 import { enrollLeadInSequences } from "@/lib/email/sequences";
 import { resolvePlan, PLAN_CONFIG } from "@/lib/plan";
 import { log } from "@/lib/log";
+import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
+import { wrapUntrustedConfig, PROMPT_SAFETY_NOTE } from "@/lib/prompt-safety";
 import {
   buildClientSystemPrompt,
   CLIENT_TOOLS,
@@ -28,6 +30,18 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ipOk = await checkRateLimit(`chat:ip:${ip}`, 20);
+  if (!ipOk) {
+    return NextResponse.json(
+      { error: "Too many requests. Please slow down." },
+      {
+        status: 429,
+        headers: { ...CORS, "Retry-After": String(retryAfterSeconds("minute")) },
+      }
+    );
+  }
+
   let body: {
     tenantId?: string;
     sessionId?: string;
@@ -44,6 +58,17 @@ export async function POST(req: NextRequest) {
   const { tenantId, sessionId, message, context } = body;
   if (!tenantId || !message) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400, headers: CORS });
+  }
+
+  const tenantOk = await checkRateLimit(`chat:tenant:${tenantId}`, 200, "hour");
+  if (!tenantOk) {
+    return NextResponse.json(
+      { error: "Tenant hourly rate limit exceeded." },
+      {
+        status: 429,
+        headers: { ...CORS, "Retry-After": String(retryAfterSeconds("hour")) },
+      }
+    );
   }
 
   const db = createSupabaseAdmin();
@@ -124,8 +149,29 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Prompt-injection guardrail: wrap every customer-supplied free-text field
+  // in <customer_config> tags so the model treats them as data, not as
+  // instructions. See src/lib/prompt-safety.ts.
+  const clientData = client as ClientPromptData;
+  const safeClient: ClientPromptData = {
+    ...clientData,
+    ai_greeting:      wrapUntrustedConfig("ai_greeting",      clientData.ai_greeting)      || null,
+    ai_sign_off:      wrapUntrustedConfig("ai_sign_off",      clientData.ai_sign_off)      || null,
+    common_questions: wrapUntrustedConfig("common_questions", clientData.common_questions) || null,
+    faq: Array.isArray(clientData.faq)
+      ? clientData.faq.map((item) => ({
+          q: wrapUntrustedConfig("faq_q", item.q),
+          a: wrapUntrustedConfig("faq_a", item.a),
+        }))
+      : (clientData.faq ?? null),
+  };
+  const safeCustomSystemPrompt = client.system_prompt
+    ? wrapUntrustedConfig("system_prompt", client.system_prompt)
+    : null;
+
   // Build fully personalized system prompt
-  const baseSystemPrompt = buildClientSystemPrompt(client as ClientPromptData, client.system_prompt);
+  const baseSystemPromptCore = buildClientSystemPrompt(safeClient, safeCustomSystemPrompt);
+  const baseSystemPrompt = `${baseSystemPromptCore}\n\n${PROMPT_SAFETY_NOTE}`;
 
   // Lazy embed any un-embedded KB articles for this tenant
   try {

@@ -7,9 +7,17 @@ export const maxDuration = 300; // 5 min Vercel Pro limit
 
 // Runs on the 1st of each month — generates + emails reports for all active clients
 export async function POST(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret");
-  if (secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  // Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}` by default.
+  // We also accept the legacy `x-cron-secret` header for backward compat
+  // with the internal fan-out call below.
+  const authHeader = req.headers.get("authorization");
+  const legacyHeader = req.headers.get("x-cron-secret");
+  const secret = process.env.CRON_SECRET;
+  if (
+    !secret ||
+    (authHeader !== `Bearer ${secret}` && legacyHeader !== secret)
+  ) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const db = supabaseAdmin();

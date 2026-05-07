@@ -13,6 +13,8 @@ import {
 } from "@/lib/assistant-prompt";
 import { getAvailableSlots } from "@/lib/booking-availability";
 import { bookMeeting } from "@/lib/booking-create";
+import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
+import { wrapUntrustedConfig, PROMPT_SAFETY_NOTE } from "@/lib/prompt-safety";
 
 const QWIKLY_OWN_CLIENT_ID = "1";
 
@@ -430,6 +432,18 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
+  // Tighter per-IP cap (5/min) than the standard /api/chat path because this
+  // route is tool-calling capable (book_meeting, get_availability) for the
+  // Qwikly own-site sales chat — abuse here is more expensive.
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ipOk = await checkRateLimit(`web-chat:ip:${ip}`, 5);
+  if (!ipOk) {
+    return NextResponse.json(
+      { error: "Too many requests. Please slow down." },
+      { status: 429, headers: { ...CORS, "Retry-After": String(retryAfterSeconds("minute")) } }
+    );
+  }
+
   const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   let body: {
     client_id?: string;
@@ -446,6 +460,18 @@ export async function POST(req: NextRequest) {
   const { client_id, message, history = [], visitor_id, page_url, conversation_id: existingCid } = body;
   if (!client_id || !message) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400, headers: CORS });
+  }
+
+  // Per-tenant hourly cap (skip for the Qwikly own-site sales chat sentinel,
+  // since its traffic is intentionally driven by Qwikly's own marketing).
+  if (client_id !== QWIKLY_OWN_CLIENT_ID) {
+    const tenantOk = await checkRateLimit(`web-chat:tenant:${client_id}`, 200, "hour");
+    if (!tenantOk) {
+      return NextResponse.json(
+        { error: "Tenant hourly rate limit exceeded." },
+        { status: 429, headers: { ...CORS, "Retry-After": String(retryAfterSeconds("hour")) } }
+      );
+    }
   }
 
   const now = new Date();
@@ -503,7 +529,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    systemPrompt = buildClientSystemPrompt(clientRow ?? {}, clientRow?.system_prompt);
+    // Prompt-injection guardrail: wrap every free-text field that the
+    // customer can edit in <customer_config> tags so the model treats them
+    // as data, not as instructions. See src/lib/prompt-safety.ts.
+    const safeRow: ClientPromptData = {
+      ...(clientRow as ClientPromptData),
+      ai_greeting:      wrapUntrustedConfig("ai_greeting",      clientRow?.ai_greeting)      || null,
+      ai_sign_off:      wrapUntrustedConfig("ai_sign_off",      clientRow?.ai_sign_off)      || null,
+      common_questions: wrapUntrustedConfig("common_questions", clientRow?.common_questions) || null,
+      faq: Array.isArray(clientRow?.faq)
+        ? (clientRow.faq as { q: string; a: string }[]).map((item) => ({
+            q: wrapUntrustedConfig("faq_q", item.q),
+            a: wrapUntrustedConfig("faq_a", item.a),
+          }))
+        : (clientRow?.faq ?? null),
+    };
+    const safeSystemPrompt = clientRow?.system_prompt
+      ? wrapUntrustedConfig("system_prompt", clientRow.system_prompt)
+      : null;
+    systemPrompt = buildClientSystemPrompt(safeRow, safeSystemPrompt);
+    systemPrompt += `\n\n${PROMPT_SAFETY_NOTE}`;
 
     // ── Lead cap check ─────────────────────────────────────────
     const tier = resolvePlan(clientRow?.plan);
