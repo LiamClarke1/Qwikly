@@ -34,7 +34,7 @@ type Options = {
 
 const DEFAULTS: Required<Options> = {
   durationMin: 15,
-  bufferMin: 15,
+  bufferMin: 20,
   workingHoursStart: 9,
   workingHoursEnd: 17,
   weekendHoursStart: 10,
@@ -207,7 +207,7 @@ export function isSlotStillFree(
   slotStart: string,
   slotEnd: string,
   busy: Array<{ start: Date; end: Date }>,
-  bufferMin = 15
+  bufferMin = 20
 ): boolean {
   const start = new Date(slotStart);
   const end = new Date(slotEnd);
