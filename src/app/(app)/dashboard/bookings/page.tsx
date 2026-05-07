@@ -1185,25 +1185,31 @@ export default function BookingsPage() {
                     {activeBooking.is_emergency ? "Remove emergency flag" : "Mark as emergency"}
                   </button>
 
-                  <div>
-                    <p className="text-tiny text-fg-subtle font-medium mb-2">Update status</p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {["booked", "completed", "cancelled", "no-show"].map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => updateStatus(activeBooking.id, s)}
-                          className={cn(
-                            "h-9 rounded-lg text-small font-medium cursor-pointer transition-colors duration-150 capitalize",
-                            activeBooking.status === s
-                              ? "bg-surface-active text-fg border border-[var(--border-strong)]"
-                              : "bg-surface-input text-fg-muted border border-[var(--border)] hover:text-fg hover:bg-surface-hover"
-                          )}
-                        >
-                          {s}
-                        </button>
-                      ))}
+                  {/* Standard status grid only renders once the booking is
+                      out of tentative state. Tentative bookings must go
+                      through the Confirm / Release path above so the
+                      tentative_until + tentative_action fields get cleared. */}
+                  {activeBooking.status !== "tentative" && (
+                    <div>
+                      <p className="text-tiny text-fg-subtle font-medium mb-2">Update status</p>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {["booked", "completed", "cancelled", "no-show"].map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => updateStatus(activeBooking.id, s)}
+                            className={cn(
+                              "h-9 rounded-lg text-small font-medium cursor-pointer transition-colors duration-150 capitalize",
+                              activeBooking.status === s
+                                ? "bg-surface-active text-fg border border-[var(--border-strong)]"
+                                : "bg-surface-input text-fg-muted border border-[var(--border)] hover:text-fg hover:bg-surface-hover"
+                            )}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="pt-2 border-t border-[var(--border)]">
                     <button
