@@ -618,7 +618,6 @@
       var reader = res.body.getReader();
       var decoder = new TextDecoder();
       var buffer = "";
-      var anchored = false;
 
       while (true) {
         var result = await reader.read();
@@ -640,7 +639,11 @@
               while (botDiv.firstChild) botDiv.removeChild(botDiv.firstChild);
               var nodes = textToNodes(fullText);
               for (var j = 0; j < nodes.length; j++) botDiv.appendChild(nodes[j]);
-              if (m && !anchored) { anchorTop(m, botDiv); anchored = true; }
+              // Re-apply each chunk: as the bubble grows, this pushes the
+              // view down as far as it can go while keeping the bot's top
+              // edge in sight. Browser clamps to maxScrollTop early on, then
+              // honors the target once enough content streams in.
+              if (m) m.scrollTop = Math.max(0, botDiv.offsetTop - 8);
             }
             if (parsed.conversation_id && !conversationId) {
               conversationId = parsed.conversation_id;
