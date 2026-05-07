@@ -8,9 +8,17 @@ export const dynamic = "force-dynamic";
 // and whose crm_status is still "pending_deletion".
 // Deletes all associated data in dependency order before removing the client row.
 export async function POST(req: NextRequest) {
-  const secret = req.headers.get("x-cron-secret");
-  if (secret !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  // Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}` by default.
+  // We also accept the legacy `x-cron-secret` header for backward compat
+  // with any existing manual triggers.
+  const authHeader = req.headers.get("authorization");
+  const legacyHeader = req.headers.get("x-cron-secret");
+  const secret = process.env.CRON_SECRET;
+  if (
+    !secret ||
+    (authHeader !== `Bearer ${secret}` && legacyHeader !== secret)
+  ) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const db = supabaseAdmin();

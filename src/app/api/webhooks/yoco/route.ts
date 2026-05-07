@@ -46,16 +46,27 @@ export async function POST(req: NextRequest) {
   const paymentData = event.payload as Record<string, unknown> ?? {};
   const externalId = (paymentData.id ?? event.id) as string;
 
-  // Idempotency: reject duplicate webhook events
+  if (!externalId) {
+    // Without a stable external id we cannot dedupe — refuse rather than
+    // risk double-crediting an invoice on a redelivered webhook.
+    return NextResponse.json({ error: "Missing external id" }, { status: 400 });
+  }
+
+  // Idempotency: explicit (provider, external_id) lookup before insert.
+  // Mirrors the Paystack handler so a Yoco-redelivered event (network
+  // hiccup, retry, etc.) returns 200 OK without re-firing handlers.
+  // TODO: replace with a DB-level UNIQUE constraint on
+  //   webhook_events(provider, external_id)
+  // once Terminal 3 lands the migration in supabase/migrations (T3.4-style
+  // work). Until then, this app-layer check + the upsert below cover us.
   const { data: existing } = await db
     .from("webhook_events")
-    .select("id")
+    .select("id, processed")
     .eq("provider", "yoco")
     .eq("external_id", externalId)
-    .eq("processed", true)
     .maybeSingle();
 
-  if (existing) {
+  if (existing?.processed) {
     return NextResponse.json({ ok: true, duplicate: true });
   }
 

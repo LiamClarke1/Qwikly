@@ -7,8 +7,15 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
+  // Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}` by default.
+  // We also accept the legacy `x-cron-secret` header for backward compat.
   const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("x-cron-secret") !== secret) {
+  const authHeader = req.headers.get("authorization");
+  const legacyHeader = req.headers.get("x-cron-secret");
+  if (
+    !secret ||
+    (authHeader !== `Bearer ${secret}` && legacyHeader !== secret)
+  ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

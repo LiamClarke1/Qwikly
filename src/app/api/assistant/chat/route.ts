@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { embedQuery } from "@/lib/knowledge/embed";
+import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
+
+// TODO: per-account-per-day token budget for KB-backed assistant — would
+// require summing Anthropic input+output tokens per tenantId per day in a new
+// `assistant_token_usage` table. Punted to a follow-up to keep this hardening
+// sprint scoped to per-IP / per-tenant request rate limits.
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -74,6 +80,15 @@ ${knowledge || "(No knowledge base content available yet. Ask the business owner
 }
 
 export async function POST(req: NextRequest) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ipOk = await checkRateLimit(`assistant:ip:${ip}`, 20);
+  if (!ipOk) {
+    return NextResponse.json(
+      { error: "Too many requests. Please slow down." },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds("minute")) } }
+    );
+  }
+
   let body: {
     tenantId: string;
     message: string;
@@ -92,6 +107,14 @@ export async function POST(req: NextRequest) {
   const { tenantId, message, history = [] } = body;
   if (!tenantId || !message?.trim()) {
     return NextResponse.json({ error: "tenantId and message required" }, { status: 400 });
+  }
+
+  const tenantOk = await checkRateLimit(`assistant:tenant:${tenantId}`, 200, "hour");
+  if (!tenantOk) {
+    return NextResponse.json(
+      { error: "Tenant hourly rate limit exceeded." },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds("hour")) } }
+    );
   }
 
   const db = supabaseAdmin();
