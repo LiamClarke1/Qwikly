@@ -292,7 +292,7 @@ export async function POST(req: NextRequest) {
       try {
         // Phase 1: stream (may include a tool_use block before or instead of text)
         const stream1 = anthropic.messages.stream({
-          model: "claude-haiku-4-5-20251001",
+          model: "claude-sonnet-4-6",
           max_tokens: 600,
           system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
           tools: CLIENT_TOOLS,
@@ -324,7 +324,7 @@ export async function POST(req: NextRequest) {
         // Phase 2: if tool was called, stream the follow-up reply
         if (toolUseBlock && finalMsg1.stop_reason === "tool_use") {
           const stream2 = anthropic.messages.stream({
-            model: "claude-haiku-4-5-20251001",
+            model: "claude-sonnet-4-6",
             max_tokens: 600,
             system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
             tools: CLIENT_TOOLS,
