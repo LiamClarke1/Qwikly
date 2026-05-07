@@ -7,7 +7,6 @@ import { supabase } from "@/lib/supabase";
 import { Suspense } from "react";
 import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
-import { AssistantChat } from "@/components/shell/assistant-chat";
 import { MobileBottomNav } from "@/components/shell/mobile-bottom-nav";
 import { VerifyEmailBanner } from "@/components/shell/verify-email-banner";
 
@@ -106,7 +105,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       <MobileBottomNav />
-      <AssistantChat />
     </div>
   );
 }

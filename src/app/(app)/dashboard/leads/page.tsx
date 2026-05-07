@@ -752,17 +752,25 @@ function DetailPanel({
   }
 
   return (
-    <div className={cn(
-      isMobile
-        ? "fixed inset-0 z-40 bg-white overflow-y-auto overflow-x-hidden overscroll-contain pb-20"
-        : "flex flex-col h-full bg-white border-l border-ink/[0.08] overflow-y-auto overflow-x-hidden"
-    )}>
+    <div
+      className={cn(
+        isMobile
+          ? "fixed inset-0 z-[60] bg-white overflow-y-auto overflow-x-hidden overscroll-contain pb-20"
+          : "flex flex-col h-full bg-white border-l border-ink/[0.08] overflow-y-auto overflow-x-hidden"
+      )}
+      style={isMobile ? { paddingTop: "env(safe-area-inset-top)" } : undefined}
+    >
 
-      {/* Mobile back bar */}
+      {/* Mobile back bar, sits above topbar (z-30) and bottom nav (z-30); pads for iOS notch */}
       {isMobile && (
-        <div className="sticky top-0 z-10 flex items-center gap-2 px-4 h-12 bg-white/95 backdrop-blur border-b border-ink/[0.08]">
-          <button type="button" onClick={onClose} className="flex items-center gap-1.5 text-small font-semibold text-ember cursor-pointer">
-            <ArrowLeft className="w-4 h-4" /> Back to leads
+        <div className="sticky top-0 z-[5] flex items-center gap-2 px-2 h-14 bg-white/95 backdrop-blur border-b border-ink/[0.08]">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Back to leads"
+            className="flex items-center gap-1.5 px-3 h-11 -ml-1 rounded-lg text-small font-semibold text-ember cursor-pointer active:bg-ember/[0.08]"
+          >
+            <ArrowLeft className="w-5 h-5" /> Back to leads
           </button>
         </div>
       )}
