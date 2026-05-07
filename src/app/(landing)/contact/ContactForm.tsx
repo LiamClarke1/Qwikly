@@ -49,10 +49,19 @@ export default function ContactForm() {
         <h3 className="font-display text-xl text-ink mb-2">
           {state.setupCallTriggered ? "Slots on the way" : "Message sent"}
         </h3>
-        <p className="text-ink-500 text-sm">
-          {state.setupCallTriggered
-            ? "We've just emailed you 3 setup-call slots. Pick one and you're booked. Check your junk if it doesn't land within a few minutes."
-            : "We’ll get back to you within one business day at the email you provided."}
+        <p className="text-ink-500 text-sm leading-relaxed">
+          {state.setupCallTriggered ? (
+            <>
+              We&rsquo;ve just emailed <span className="text-ink font-medium">{state.sentToEmail}</span> with 3 setup-call slots. Pick one and you&rsquo;re booked.
+            </>
+          ) : (
+            <>
+              A confirmation has been sent to <span className="text-ink font-medium">{state.sentToEmail}</span>. We&rsquo;ll get back to you within one business day.
+            </>
+          )}
+        </p>
+        <p className="text-ink-400 text-xs mt-3">
+          Don&rsquo;t see it? Check your <span className="text-ink-500 font-medium">spam or junk folder</span> in case it got filtered.
         </p>
       </div>
     );

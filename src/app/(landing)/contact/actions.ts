@@ -2,7 +2,13 @@
 
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase-server";
-import { resend, FROM, setupCallSlotPickerHtml, contactFormHostNotificationHtml } from "@/lib/resend";
+import {
+  resend,
+  FROM,
+  setupCallSlotPickerHtml,
+  contactFormHostNotificationHtml,
+  contactFormVisitorAckHtml,
+} from "@/lib/resend";
 import { getAvailableSlots } from "@/lib/booking-availability";
 import { signBookingToken, signRescheduleToken } from "@/lib/booking-link";
 
@@ -23,6 +29,7 @@ export type ContactFormState = {
   error?: string;
   fieldErrors?: Record<string, string[]>;
   setupCallTriggered?: boolean;
+  sentToEmail?: string;
 };
 
 export async function submitContactForm(
@@ -72,6 +79,20 @@ export async function submitContactForm(
     html: contactFormHostNotificationHtml({ name, email, phone: phone ?? null, subject, message }),
   });
 
+  // Always send the visitor a branded ack so they know we got it. The slot
+  // picker (below) only fires for the "Book a setup call" subject; without
+  // this ack, every other subject leaves the visitor with no email at all.
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: [email],
+      subject: `We got your message, ${name.split(" ")[0]}`,
+      html: contactFormVisitorAckHtml({ visitorName: name, subject, message }),
+    });
+  } catch (err) {
+    console.error("[contact] visitor ack send failed:", err);
+  }
+
   let setupCallTriggered = false;
   if (subject === SETUP_CALL_SUBJECT) {
     try {
@@ -114,5 +135,5 @@ export async function submitContactForm(
     }
   }
 
-  return { success: true, setupCallTriggered };
+  return { success: true, setupCallTriggered, sentToEmail: email };
 }

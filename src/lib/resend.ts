@@ -485,6 +485,47 @@ export function contactFormHostNotificationHtml({
 </html>`;
 }
 
+export function contactFormVisitorAckHtml({
+  visitorName,
+  subject,
+  message,
+}: {
+  visitorName: string;
+  subject: string;
+  message: string;
+}) {
+  const first = visitorName.split(" ")[0] || visitorName;
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#07080B;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#07080B;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="padding-bottom:32px;"><span style="font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.5px;">Qwikly<span style="color:#E85A2C;">.</span></span></td></tr>
+        <tr><td style="background:#0D111A;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:32px;">
+          <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;">Got your message, ${escHtml(first)}</p>
+          <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.3px;">Thanks for reaching out.</h1>
+          <p style="margin:0 0 20px;font-size:14px;color:#9CA3AF;line-height:1.65;">
+            We&rsquo;ve got your message and one of the team will get back to you within one business day. Here&rsquo;s a copy for your records.
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid rgba(255,255,255,0.06);margin-bottom:18px;">
+            <tr><td style="padding:12px 0 6px;color:#9CA3AF;font-size:13px;">Subject</td><td style="padding:12px 0 6px;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;">${escHtml(subject)}</td></tr>
+          </table>
+          <p style="margin:0 0 6px;font-size:13px;color:#F4F4F5;font-weight:600;">Your message</p>
+          <p style="margin:0 0 24px;font-size:13px;color:#9CA3AF;line-height:1.65;white-space:pre-wrap;">${escHtml(message)}</p>
+          <p style="margin:0;font-size:13px;color:#6B7280;line-height:1.6;">
+            If you don&rsquo;t hear from us within one business day, reply to this email or check your junk folder in case our reply got filtered.
+          </p>
+        </td></tr>
+        <tr><td style="padding-top:24px;text-align:center;"><p style="margin:0;font-size:11px;color:#4B5563;">Sent by <a href="https://qwikly.co.za" style="color:#E85A2C;text-decoration:none;">Qwikly</a></p></td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export function rescheduleHostNotificationHtml({
   name,
   email,
