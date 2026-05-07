@@ -22,7 +22,7 @@ export async function GET(
   const { data } = await db
     .from("clients")
     .select(
-      "business_name, web_widget_color, web_widget_greeting, ai_greeting, web_widget_launcher_label, web_widget_position, web_widget_enabled, ai_paused, auth_user_id, invoice_logo_url, doc_visitor_upload, doc_allowed_types, doc_max_size_mb, doc_visitor_prompt"
+      "business_name, web_widget_color, web_widget_greeting, ai_greeting, web_widget_launcher_label, web_widget_position, web_widget_enabled, auth_user_id, invoice_logo_url, doc_visitor_upload, doc_allowed_types, doc_max_size_mb, doc_visitor_prompt"
     )
     .eq("public_key", tenantId)
     .maybeSingle();
@@ -33,7 +33,16 @@ export async function GET(
   if (!data.web_widget_enabled) {
     return NextResponse.json({ error: "disabled" }, { status: 403, headers: CORS });
   }
-  if (data.ai_paused) {
+
+  // Manual pause by owner. Read in a second select so this route is
+  // safe to deploy before the ai_paused migration is applied, the
+  // second select fails soft and we treat it as not-paused.
+  const { data: pauseRow } = await db
+    .from("clients")
+    .select("ai_paused")
+    .eq("public_key", tenantId)
+    .maybeSingle();
+  if (pauseRow?.ai_paused) {
     return NextResponse.json({ error: "paused" }, { status: 403, headers: CORS });
   }
 

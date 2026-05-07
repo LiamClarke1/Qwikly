@@ -594,7 +594,7 @@ export async function POST(req: NextRequest) {
   if (client_id !== "1") {
     const { data: clientRow } = await supabaseAdmin
       .from("clients")
-      .select("system_prompt, business_name, owner_name, trade, phone, address, years_in_business, certifications, brands_used, team_size, services_offered, services_excluded, emergency_response, charge_type, callout_fee, example_prices, minimum_job, free_quotes, payment_methods, payment_terms, working_hours_text, booking_lead_time, booking_preference, response_time, after_hours, unique_selling_point, guarantees, star_rating, review_count, testimonials, common_questions, common_objections, faq, tone, ai_tone, ai_language, ai_response_style, ai_conversation_speed, ai_greeting, ai_sign_off, ai_always_do, ai_never_say, ai_unhappy_customer, ai_escalation_triggers, ai_escalation_custom, web_widget_greeting, plan, auth_user_id, crm_status, ai_paused")
+      .select("system_prompt, business_name, owner_name, trade, phone, address, years_in_business, certifications, brands_used, team_size, services_offered, services_excluded, emergency_response, charge_type, callout_fee, example_prices, minimum_job, free_quotes, payment_methods, payment_terms, working_hours_text, booking_lead_time, booking_preference, response_time, after_hours, unique_selling_point, guarantees, star_rating, review_count, testimonials, common_questions, common_objections, faq, tone, ai_tone, ai_language, ai_response_style, ai_conversation_speed, ai_greeting, ai_sign_off, ai_always_do, ai_never_say, ai_unhappy_customer, ai_escalation_triggers, ai_escalation_custom, web_widget_greeting, plan, auth_user_id, crm_status")
       .eq("id", client_id)
       .maybeSingle();
 
@@ -604,7 +604,15 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Manual pause by owner ─────────────────────────────────
-    if (clientRow?.ai_paused) {
+    // Reads ai_paused from a separate select so this route stays safe
+    // if the migration hasn't been applied yet, the second select fails
+    // soft and we treat it as "not paused" rather than 500ing the chat.
+    const { data: pauseRow } = await supabaseAdmin
+      .from("clients")
+      .select("ai_paused")
+      .eq("id", client_id)
+      .maybeSingle();
+    if (pauseRow?.ai_paused) {
       return NextResponse.json({ error: "paused" }, { status: 403, headers: CORS });
     }
 

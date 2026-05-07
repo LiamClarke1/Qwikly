@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
   const clientIdNum = Number(client_id);
   const { data: clientCheck, error: clientCheckError } = await supabaseAdmin
     .from("clients")
-    .select("id, auth_user_id, ai_paused, crm_status")
+    .select("id, auth_user_id, crm_status")
     .eq("id", clientIdNum)
     .limit(1)
     .maybeSingle();
@@ -91,7 +91,15 @@ export async function POST(req: NextRequest) {
   if (clientCheck.crm_status === "pending_deletion") {
     return NextResponse.json({ error: "service_suspended" }, { status: 403, headers: CORS });
   }
-  if (clientCheck.ai_paused) {
+  // Manual pause by owner. Separate select so this route is safe to ship
+  // before the ai_paused migration is applied — failure here is treated
+  // as not-paused rather than blocking lead capture.
+  const { data: pauseRow } = await supabaseAdmin
+    .from("clients")
+    .select("ai_paused")
+    .eq("id", clientIdNum)
+    .maybeSingle();
+  if (pauseRow?.ai_paused) {
     return NextResponse.json({ error: "paused" }, { status: 403, headers: CORS });
   }
   if (clientCheck.auth_user_id) {
