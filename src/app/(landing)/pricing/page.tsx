@@ -75,6 +75,7 @@ const featureRows: { label: string; pro: FeatureCell; premium: FeatureCell }[] =
   { label: "POPIA compliant",                  pro: true,    premium: true     },
   { label: "Email support",                    pro: true,    premium: true     },
   { label: "Qualified leads / month",          pro: "75",    premium: "250"    },
+  { label: "Extra leads beyond plan",          pro: "R20 / lead", premium: "R20 / lead" },
   { label: '"Powered by Qwikly" branding',    pro: true,    premium: false    },
   { label: "Custom branding (your logo)",      pro: false,   premium: true     },
   { label: "Custom greeting & questions",      pro: false,   premium: true     },

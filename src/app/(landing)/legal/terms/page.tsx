@@ -182,10 +182,10 @@ export default function TermsPage() {
                   Downgrades take effect at the start of the next billing cycle. Disputes regarding
                   billing must be raised within 30 days of the relevant invoice date by contacting{" "}
                   <a
-                    href="mailto:clarkeagency1@outlook.com"
+                    href="mailto:hello@qwikly.co.za"
                     className="text-ember underline transition-colors"
                   >
-                    clarkeagency1@outlook.com
+                    hello@qwikly.co.za
                   </a>
                   .
                 </p>
@@ -235,10 +235,10 @@ export default function TermsPage() {
                   to access, correct, or request deletion of their information. Requests should be directed
                   to{" "}
                   <a
-                    href="mailto:clarkeagency1@outlook.com"
+                    href="mailto:hello@qwikly.co.za"
                     className="text-ember underline transition-colors"
                   >
-                    clarkeagency1@outlook.com
+                    hello@qwikly.co.za
                   </a>
                   .
                 </p>
@@ -359,10 +359,10 @@ export default function TermsPage() {
                 <p>
                   You may terminate your account at any time by contacting us at{" "}
                   <a
-                    href="mailto:clarkeagency1@outlook.com"
+                    href="mailto:hello@qwikly.co.za"
                     className="text-ember underline transition-colors"
                   >
-                    clarkeagency1@outlook.com
+                    hello@qwikly.co.za
                   </a>
                   . Termination takes effect at the end of the current billing cycle. Any subscription
                   fees already paid for the current billing cycle are non-refundable.
@@ -512,19 +512,19 @@ export default function TermsPage() {
                   <p className="text-sm">
                     <span className="eyebrow text-ink-500 mr-3">Email</span>
                     <a
-                      href="mailto:clarkeagency1@outlook.com"
+                      href="mailto:hello@qwikly.co.za"
                       className="text-ember underline transition-colors"
                     >
-                      clarkeagency1@outlook.com
+                      hello@qwikly.co.za
                     </a>
                   </p>
                   <p className="text-sm">
                     <span className="eyebrow text-ink-500 mr-3">Also</span>
                     <a
-                      href="mailto:clarkeagency1@outlook.com"
+                      href="mailto:hello@qwikly.co.za"
                       className="text-ember underline transition-colors"
                     >
-                      clarkeagency1@outlook.com
+                      hello@qwikly.co.za
                     </a>
                   </p>
                 </div>

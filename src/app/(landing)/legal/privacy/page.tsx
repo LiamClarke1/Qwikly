@@ -58,10 +58,10 @@ export default function PrivacyPage() {
                 <p>
                   Contact for all data-related enquiries:{" "}
                   <a
-                    href="mailto:clarkeagency1@outlook.com"
+                    href="mailto:hello@qwikly.co.za"
                     className="text-ember underline transition-colors"
                   >
-                    clarkeagency1@outlook.com
+                    hello@qwikly.co.za
                   </a>
                 </p>
               </div>
@@ -294,10 +294,10 @@ export default function PrivacyPage() {
                 <p>
                   To exercise any of these rights, contact us at{" "}
                   <a
-                    href="mailto:clarkeagency1@outlook.com"
+                    href="mailto:hello@qwikly.co.za"
                     className="text-ember underline transition-colors"
                   >
-                    clarkeagency1@outlook.com
+                    hello@qwikly.co.za
                   </a>
                   . We will respond within 30 days.
                 </p>
@@ -384,10 +384,10 @@ export default function PrivacyPage() {
                   No system is completely secure. If you believe your account or data has been compromised,
                   contact us immediately at{" "}
                   <a
-                    href="mailto:clarkeagency1@outlook.com"
+                    href="mailto:hello@qwikly.co.za"
                     className="text-ember underline transition-colors"
                   >
-                    clarkeagency1@outlook.com
+                    hello@qwikly.co.za
                   </a>
                   .
                 </p>
@@ -458,19 +458,19 @@ export default function PrivacyPage() {
                   <p className="text-sm">
                     <span className="eyebrow text-ink-500 mr-3">Email</span>
                     <a
-                      href="mailto:clarkeagency1@outlook.com"
+                      href="mailto:hello@qwikly.co.za"
                       className="text-ember underline transition-colors"
                     >
-                      clarkeagency1@outlook.com
+                      hello@qwikly.co.za
                     </a>
                   </p>
                   <p className="text-sm">
                     <span className="eyebrow text-ink-500 mr-3">Also</span>
                     <a
-                      href="mailto:clarkeagency1@outlook.com"
+                      href="mailto:hello@qwikly.co.za"
                       className="text-ember underline transition-colors"
                     >
-                      clarkeagency1@outlook.com
+                      hello@qwikly.co.za
                     </a>
                   </p>
                 </div>

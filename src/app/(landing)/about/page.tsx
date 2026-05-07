@@ -99,15 +99,15 @@ export default function AboutPage() {
                 <div className="flex gap-6">
                   <span className="eyebrow text-ink-500 w-28 shrink-0">Email</span>
                   <a
-                    href="mailto:clarkeagency1@outlook.com"
+                    href="mailto:hello@qwikly.co.za"
                     className="text-ember underline transition-colors"
                   >
-                    clarkeagency1@outlook.com
+                    hello@qwikly.co.za
                   </a>
                 </div>
                 <div className="flex gap-6">
                   <span className="eyebrow text-ink-500 w-28 shrink-0">Data Officer</span>
-                  <span>Liam Clarke, clarkeagency1@outlook.com</span>
+                  <span>Liam Clarke, hello@qwikly.co.za</span>
                 </div>
               </div>
             </div>
@@ -136,10 +136,10 @@ export default function AboutPage() {
                 <p>
                   If you have a question about your data or want to make a data request, email{" "}
                   <a
-                    href="mailto:clarkeagency1@outlook.com"
+                    href="mailto:hello@qwikly.co.za"
                     className="text-ember underline transition-colors"
                   >
-                    clarkeagency1@outlook.com
+                    hello@qwikly.co.za
                   </a>
                   .
                 </p>

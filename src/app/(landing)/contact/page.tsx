@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ContactForm from "./ContactForm";
+import ContactDemoWidget from "@/components/landing/ContactDemoWidget";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -11,6 +12,13 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <div className="bg-paper min-h-screen">
+      {/*
+        The Qwikly chat widget is the demo on this page: it loads via the same
+        public /embed.js that customers paste into their own sites and auto-
+        opens after 2s so visitors land in the product, not a static form.
+      */}
+      <ContactDemoWidget />
+
       <section className="pt-36 pb-24 px-6">
         <div className="max-w-3xl mx-auto">
           <p className="eyebrow text-ink-500 mb-6">Contact</p>
@@ -20,8 +28,10 @@ export default function ContactPage() {
             <em className="italic font-light">Talk to a human.</em>
           </h1>
           <p className="text-ink-700 text-lg leading-relaxed mb-16 max-w-xl">
-            Questions about pricing, setup, or whether Qwikly works for your business. We
-            reply within one business day.
+            The chat in the corner is Qwikly itself. Ask it anything about
+            pricing, setup, or whether it&rsquo;ll work for your business, it
+            replies straight away. Prefer email or the form? Use whichever feels
+            right.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
@@ -30,10 +40,10 @@ export default function ContactPage() {
               <div>
                 <p className="eyebrow text-ink-500 mb-3">Email</p>
                 <a
-                  href="mailto:clarkeagency1@outlook.com"
+                  href="mailto:hello@qwikly.co.za"
                   className="font-display text-lg text-ink hover:text-ember transition-colors"
                 >
-                  clarkeagency1@outlook.com
+                  hello@qwikly.co.za
                 </a>
               </div>
 

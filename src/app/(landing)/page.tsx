@@ -30,6 +30,128 @@ function LiveClock() {
    BROWSER WIDGET MOCKUP
    ───────────────────────────────────────────────────────────── */
 
+function PhoneWidgetMockup() {
+  return (
+    <div
+      className="relative w-[224px] flex-shrink-0"
+      style={{
+        filter:
+          "drop-shadow(0 40px 60px rgba(14,14,12,0.30)) drop-shadow(0 12px 20px rgba(14,14,12,0.18))",
+      }}
+    >
+      {/* Phone frame: rounded bezel */}
+      <div
+        className="relative rounded-[40px] bg-[#0E0E0C] p-[6px]"
+        style={{ boxShadow: "0 0 0 1px rgba(14,14,12,0.6)" }}
+      >
+        {/* Inner screen */}
+        <div className="relative rounded-[34px] overflow-hidden bg-white" style={{ aspectRatio: "9 / 19.5" }}>
+          {/* Notch / dynamic island */}
+          <div className="absolute top-1 left-1/2 -translate-x-1/2 z-20 w-20 h-5 rounded-full bg-[#0E0E0C]" />
+
+          {/* iOS-ish status bar */}
+          <div className="relative z-10 px-4 pt-1.5 pb-1 flex items-center justify-between text-[8px] font-medium text-ink">
+            <span className="font-mono">9:41</span>
+            <div className="flex items-center gap-1 opacity-80">
+              <svg viewBox="0 0 18 12" className="w-3 h-2.5" fill="currentColor">
+                <rect x="0"  y="8" width="2" height="4" rx="0.5" />
+                <rect x="4"  y="6" width="2" height="6" rx="0.5" />
+                <rect x="8"  y="3" width="2" height="9" rx="0.5" />
+                <rect x="12" y="0" width="2" height="12" rx="0.5" />
+              </svg>
+              <svg viewBox="0 0 22 12" className="w-3.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="1">
+                <rect x="0.5" y="0.5" width="18" height="11" rx="2" />
+                <rect x="2"   y="2"   width="14" height="8"  rx="1" fill="currentColor" />
+                <rect x="20"  y="4"   width="1.5" height="4" fill="currentColor" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Mobile address bar */}
+          <div className="relative z-10 px-4 pt-1.5 pb-2">
+            <div className="flex items-center gap-2 bg-ink/[0.06] rounded-full h-6 px-3">
+              <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 text-ink/40" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0110 0v4" />
+              </svg>
+              <span className="text-[9px] text-ink/50 font-mono truncate">salon-luxe.co.za</span>
+            </div>
+          </div>
+
+          {/* Faux salon site */}
+          <div
+            className="relative px-4 pt-3 pb-4"
+            style={{ background: "linear-gradient(160deg, #1f1110 0%, #4a1d1a 60%, #8a3b2a 100%)" }}
+          >
+            <div className="text-paper space-y-1.5">
+              <p className="text-[9px] uppercase tracking-[0.2em] text-paper/55 font-medium">Salon Luxe</p>
+              <p className="text-[14px] font-display font-medium leading-tight">
+                Cuts, colour <em className="italic font-light">+ care.</em>
+              </p>
+              <div className="flex gap-1 pt-2">
+                <div className="px-2.5 py-1 rounded-full bg-paper text-[8px] text-ink font-medium">Book now</div>
+                <div className="px-2.5 py-1 rounded-full border border-paper/30 text-[8px] text-paper/85">Services</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Body skeleton */}
+          <div className="px-4 py-3 space-y-1.5">
+            <div className="w-full h-1.5 bg-ink/10 rounded" />
+            <div className="w-4/5 h-1.5 bg-ink/10 rounded" />
+            <div className="w-3/5 h-1.5 bg-ink/[0.07] rounded" />
+            <div className="grid grid-cols-2 gap-1.5 mt-2">
+              <div className="h-12 bg-ink/[0.05] rounded-md" />
+              <div className="h-12 bg-ink/[0.05] rounded-md" />
+            </div>
+          </div>
+
+          {/* In-context Qwikly widget (mini expanded panel) */}
+          <div className="absolute left-2 right-2 bottom-2">
+            <div className="rounded-2xl overflow-hidden bg-white" style={{ boxShadow: "0 18px 32px -8px rgba(14,14,12,0.28), 0 0 0 1px rgba(14,14,12,0.06)" }}>
+              <div className="bg-ink px-3 py-2 flex items-center gap-2">
+                <div className="w-5 h-5 rounded-full bg-ember flex items-center justify-center flex-shrink-0">
+                  <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 text-paper" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-paper text-[8px] font-semibold leading-none">Qwikly Assistant</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="w-1 h-1 rounded-full bg-green-400" />
+                    <p className="text-paper/50 text-[7px] leading-none">Online now</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-2 space-y-1.5 bg-[#F9F6F2]">
+                <div className="bg-white rounded-lg rounded-tl-sm px-2 py-1.5 max-w-[92%] border border-ink/[0.06]">
+                  <p className="text-ink text-[8px] leading-snug">Hi! Looking to book a cut for the weekend?</p>
+                </div>
+                <div className="bg-ember rounded-lg rounded-tr-sm px-2 py-1.5 max-w-[68%] ml-auto">
+                  <p className="text-paper text-[8px]">Saturday 2pm?</p>
+                </div>
+              </div>
+              <div className="border-t border-ink/[0.06] px-2.5 py-1.5 bg-white flex items-center gap-2">
+                <div className="flex-1 bg-[#F4EEE4] rounded-md h-4 px-1.5 flex items-center">
+                  <span className="text-ink/30 text-[7px]">Type a message…</span>
+                </div>
+                <div className="w-4 h-4 rounded-full bg-ember flex items-center justify-center flex-shrink-0">
+                  <svg viewBox="0 0 24 24" className="w-2 h-2 text-paper" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Home indicator */}
+          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-16 h-0.5 rounded-full bg-ink/30" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BrowserWidgetMockup() {
   return (
     <div className="relative w-full max-w-[760px] mx-auto">
@@ -734,8 +856,13 @@ export default function Home() {
                 Captures every enquiry, qualifies it, and sends it to your inbox. Even when you&rsquo;re asleep.
               </p>
               <div className="flex flex-col gap-4 lg:items-end lg:text-right">
-                <div className="flex flex-wrap gap-4 lg:justify-end">
-                  <CTAButton size="lg" variant="primary" href="/signup?plan=trial">
+                <div className="flex flex-wrap gap-4 lg:justify-end items-center">
+                  <CTAButton
+                    size="lg"
+                    variant="solid"
+                    href="/signup?plan=trial"
+                    className="px-9 py-[1.2rem] text-[1.05rem] font-semibold shadow-[0_18px_36px_-18px_rgba(232,90,44,0.6)]"
+                  >
                     Start Free Trial
                   </CTAButton>
                   <CTAButton size="lg" variant="outline" href="#how-it-works" withArrow={false}>
@@ -756,9 +883,20 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Hero visual */}
+          {/* Hero visual: same widget in two contexts (desktop site + phone) */}
           <div className="mt-20 md:mt-28 reveal-scale">
-            <BrowserWidgetMockup />
+            <div className="relative w-full max-w-[760px] mx-auto">
+              <BrowserWidgetMockup />
+              {/* Phone perched at the bottom-right of the browser, slightly rotated.
+                  Hidden on small viewports — the user is already on a phone, so a
+                  miniature phone-in-a-phone reads as noise. */}
+              <div
+                className="hidden md:block absolute -right-10 lg:-right-14 -bottom-10 lg:-bottom-14"
+                style={{ transform: "rotate(4deg)" }}
+              >
+                <PhoneWidgetMockup />
+              </div>
+            </div>
           </div>
 
         </div>
@@ -774,6 +912,13 @@ export default function Home() {
           {/* Right fade */}
           <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 z-10 pointer-events-none" style={{ background: "linear-gradient(to left, #F4EEE4, transparent)" }} />
 
+          {/*
+            INTENTIONAL DUPLICATION: the .ticker-scroll keyframe in globals.css
+            translates this row by -50% to loop seamlessly, which only works if
+            the list is rendered twice in the DOM (every category therefore
+            appears twice — that's the design, not a bug). If you want fewer
+            categories, edit `businessLogos` above; do NOT split this spread.
+          */}
           <div className="ticker-scroll flex items-center w-max">
             {[...businessLogos, ...businessLogos].map((b, i) => (
               <div
@@ -1219,7 +1364,7 @@ export default function Home() {
             </CTAButton>
           </div>
           <p className="mt-8 text-sm text-paper/40 reveal-up">
-            POPIA compliant · Hosted in South Africa · clarkeagency1@outlook.com
+            POPIA compliant · Hosted in South Africa · hello@qwikly.co.za
           </p>
         </div>
       </section>

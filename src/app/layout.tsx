@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     template: "%s | Qwikly",
   },
   description:
-    "Qwikly is the AI assistant for your website. It captures every lead, qualifies them, and books them in — even when you're asleep. Flat monthly plans from free. No per-job fees, ever.",
+    "Qwikly is the digital assistant for your website. It captures every lead, qualifies them, and books them in, even when you're asleep. Flat monthly plans from free. No per-job fees, ever.",
   keywords: [
     "website chat widget South Africa",
     "lead capture widget South Africa",
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Qwikly | Never Miss a Lead Again",
     description:
-      "The AI assistant for your website. Captures every lead, qualifies them, books them in. Flat monthly plans from free. No per-job fees, ever.",
+      "The digital assistant for your website. Captures every lead, qualifies them, books them in. Flat monthly plans from free. No per-job fees, ever.",
     type: "website",
     url: "https://www.qwikly.co.za",
     siteName: "Qwikly",
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Qwikly — digital assistant for South African service businesses",
+        alt: "Qwikly, digital assistant for South African service businesses",
       },
     ],
   },
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Qwikly | Never Miss a Lead Again",
     description:
-      "The digital assistant for your website. Captures every lead, qualifies them, and delivers them to your inbox — 24/7.",
+      "The digital assistant for your website. Captures every lead, qualifies them, and delivers them to your inbox, 24/7.",
     images: ["/og-image.png"],
   },
   robots: {
@@ -104,7 +104,7 @@ const organizationSchema = {
   url: "https://www.qwikly.co.za",
   logo: "https://www.qwikly.co.za/og-image.png",
   description:
-    "Digital assistant for South African service businesses. Captures every website visitor, qualifies them, and delivers warm leads to your inbox — 24/7, even while you sleep.",
+    "Digital assistant for South African service businesses. Captures every website visitor, qualifies them, and delivers warm leads to your inbox, 24/7, even while you sleep.",
   address: {
     "@type": "PostalAddress",
     addressLocality: "Cape Town",

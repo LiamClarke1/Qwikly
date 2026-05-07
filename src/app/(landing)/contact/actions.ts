@@ -63,7 +63,7 @@ export async function submitContactForm(
 
   await resend.emails.send({
     from: "Qwikly Contact <hello@qwikly.co.za>",
-    to: ["clarkeagency1@outlook.com"],
+    to: ["hello@qwikly.co.za"],
     replyTo: email,
     subject: `[Qwikly Contact] ${subject}`,
     html: `
