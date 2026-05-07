@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "tenantId and message required" }, { status: 400 });
   }
 
-  const tenantOk = await checkRateLimit(`assistant:tenant:${tenantId}`, 200, "hour");
+  const tenantOk = await checkRateLimit(`assistant:tenant:${tenantId}`, 500, "hour");
   if (!tenantOk) {
     return NextResponse.json(
       { error: "Tenant hourly rate limit exceeded." },
