@@ -34,7 +34,7 @@
     },
     {
       "path": "/api/cron/expire-tentative",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 2 * * *"
     }
   ]
 }
