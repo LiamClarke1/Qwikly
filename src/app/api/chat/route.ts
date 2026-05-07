@@ -6,6 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin as createSupabaseAdmin } from "@/lib/supabase-server";
 import { ensureKbEmbeddings, searchKb, embedText } from "@/lib/embeddings";
 import { enrollLeadInSequences } from "@/lib/email/sequences";
+import { notifyLeadCaptured } from "@/lib/notify-lead";
 import { resolvePlan, PLAN_CONFIG } from "@/lib/plan";
 import { log } from "@/lib/log";
 import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
@@ -392,7 +393,40 @@ export async function POST(req: NextRequest) {
             if (visitorInfo.area)           updates.area           = visitorInfo.area;
             if (visitorInfo.preferred_time) updates.preferred_time = visitorInfo.preferred_time;
             if (isTopUp)                    updates.is_top_up      = true;
+
+            // Detect "first time becoming a lead" so the alert email fires
+            // exactly once per conversation, not on every follow-up message
+            // that re-enters this branch.
+            const { data: priorConvo } = await db
+              .from("conversations")
+              .select("is_lead")
+              .eq("id", convoId)
+              .maybeSingle();
+            const wasAlreadyLead = (priorConvo as { is_lead?: boolean | null } | null)?.is_lead === true;
+
             await db.from("conversations").update(updates).eq("id", convoId);
+
+            // Fire the lead-alert email on the transition to lead. Background
+            // dispatch — never block the chat reply on email delivery.
+            if (!wasAlreadyLead) {
+              notifyLeadCaptured({
+                clientId: client.id,
+                conversationId: convoId,
+                lead: {
+                  id: convoId,
+                  name: visitorInfo.name ?? null,
+                  contact: visitorInfo.phone ?? visitorInfo.email ?? "",
+                  need: visitorInfo.job_type ?? null,
+                  preferredTime: visitorInfo.preferred_time ?? null,
+                  visitorEmail: visitorInfo.email ?? null,
+                },
+              })
+                .then((r) => {
+                  if (!r.ok) console.warn("[chat] lead notify skipped:", { clientId: client.id, convoId, ...r });
+                  else       console.log("[chat] lead notify sent:", { clientId: client.id, convoId, recipient: r.recipient });
+                })
+                .catch((err) => console.error("[chat] lead notify threw:", err));
+            }
 
             if (visitorInfo.email) {
               try {
