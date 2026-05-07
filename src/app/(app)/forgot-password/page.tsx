@@ -24,12 +24,12 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email }),
       });
       if (!res.ok) {
-        setError("Something went wrong. Please try again or contact clarkeagency1@outlook.com.");
+        setError("Something went wrong. Please try again or contact hello@qwikly.co.za.");
         setLoading(false);
         return;
       }
     } catch {
-      setError("Something went wrong. Please try again or contact clarkeagency1@outlook.com.");
+      setError("Something went wrong. Please try again or contact hello@qwikly.co.za.");
       setLoading(false);
       return;
     }
