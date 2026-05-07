@@ -7,6 +7,7 @@ import { supabaseAdmin as createSupabaseAdmin } from "@/lib/supabase-server";
 import { ensureKbEmbeddings, searchKb, embedText } from "@/lib/embeddings";
 import { enrollLeadInSequences } from "@/lib/email/sequences";
 import { resolvePlan, PLAN_CONFIG } from "@/lib/plan";
+import { log } from "@/lib/log";
 import {
   buildClientSystemPrompt,
   CLIENT_TOOLS,
@@ -306,7 +307,7 @@ export async function POST(req: NextRequest) {
           }
         }
       } catch (err) {
-        console.error("[chat] stream error:", {
+        log("error", "chat_stream_error", {
           tenantId,
           sessionId,
           error: err instanceof Error ? err.message : String(err),
@@ -315,60 +316,103 @@ export async function POST(req: NextRequest) {
         fullReply = fallback;
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta: fallback, isError: true })}\n\n`));
       } finally {
-        try {
-          if (convoId && fullReply) {
-            await db.from("messages_log").insert({
-              conversation_id: convoId,
-              role: "assistant",
-              content: fullReply,
-            });
+        // T3.6 — chat persistence: 3x retry with exponential backoff
+        // (200ms, 800ms, 2400ms). On final failure, write the payload to
+        // chat_persist_dlq so it can be replayed by an operator. Without
+        // this, a transient DB blip silently drops the assistant turn.
+        const persistOnce = async () => {
+          if (!(convoId && fullReply)) return;
+          await db.from("messages_log").insert({
+            conversation_id: convoId,
+            role: "assistant",
+            content: fullReply,
+          });
 
-            // Lead capture: tool-based, no pattern matching
-            const hasContact = !!(visitorInfo?.phone || visitorInfo?.email);
+          // Lead capture: tool-based, no pattern matching
+          const hasContact = !!(visitorInfo?.phone || visitorInfo?.email);
 
-            if (visitorInfo && hasContact) {
-              // Real lead: contact info captured, count against monthly cap
-              const updates: Record<string, string | boolean> = {
-                status: "new",
-                is_lead: true,
+          if (visitorInfo && hasContact) {
+            // Real lead: contact info captured, count against monthly cap
+            const updates: Record<string, string | boolean> = {
+              status: "new",
+              is_lead: true,
+              updated_at: new Date().toISOString(),
+            };
+            if (visitorInfo.name)           updates.customer_name  = visitorInfo.name;
+            if (visitorInfo.phone)          updates.customer_phone = visitorInfo.phone;
+            if (visitorInfo.email)          updates.customer_email = visitorInfo.email;
+            if (visitorInfo.booking_intent) updates.booking_intent = true;
+            if (visitorInfo.job_type)       updates.job_type       = visitorInfo.job_type;
+            if (visitorInfo.area)           updates.area           = visitorInfo.area;
+            if (visitorInfo.preferred_time) updates.preferred_time = visitorInfo.preferred_time;
+            if (isTopUp)                    updates.is_top_up      = true;
+            await db.from("conversations").update(updates).eq("id", convoId);
+
+            if (visitorInfo.email) {
+              try {
+                await enrollLeadInSequences(client.id, visitorInfo.email, visitorInfo.name ?? null, convoId);
+              } catch (err) {
+                console.error("[sequences] enroll error", { clientId: client.id, email: visitorInfo.email, convoId, err });
+              }
+            }
+          } else if (visitorInfo) {
+            // Name-only or booking_intent without contact — save but don't count as lead
+            const nameFields: Record<string, string | boolean> = {};
+            if (visitorInfo.name)           nameFields.customer_name = visitorInfo.name;
+            if (visitorInfo.booking_intent) nameFields.booking_intent = true;
+            if (Object.keys(nameFields).length > 0) {
+              await db.from("conversations").update({
+                ...nameFields,
                 updated_at: new Date().toISOString(),
-              };
-              if (visitorInfo.name)           updates.customer_name  = visitorInfo.name;
-              if (visitorInfo.phone)          updates.customer_phone = visitorInfo.phone;
-              if (visitorInfo.email)          updates.customer_email = visitorInfo.email;
-              if (visitorInfo.booking_intent) updates.booking_intent = true;
-              if (visitorInfo.job_type)       updates.job_type       = visitorInfo.job_type;
-              if (visitorInfo.area)           updates.area           = visitorInfo.area;
-              if (visitorInfo.preferred_time) updates.preferred_time = visitorInfo.preferred_time;
-              if (isTopUp)                    updates.is_top_up      = true;
-              await db.from("conversations").update(updates).eq("id", convoId);
-
-              if (visitorInfo.email) {
-                try {
-                  await enrollLeadInSequences(client.id, visitorInfo.email, visitorInfo.name ?? null, convoId);
-                } catch (err) {
-                  console.error("[sequences] enroll error", { clientId: client.id, email: visitorInfo.email, convoId, err });
-                }
-              }
-            } else if (visitorInfo) {
-              // Name-only or booking_intent without contact — save but don't count as lead
-              const nameFields: Record<string, string | boolean> = {};
-              if (visitorInfo.name)           nameFields.customer_name = visitorInfo.name;
-              if (visitorInfo.booking_intent) nameFields.booking_intent = true;
-              if (Object.keys(nameFields).length > 0) {
-                await db.from("conversations").update({
-                  ...nameFields,
-                  updated_at: new Date().toISOString(),
-                }).eq("id", convoId);
-              } else {
-                await db.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", convoId);
-              }
+              }).eq("id", convoId);
             } else {
               await db.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", convoId);
             }
+          } else {
+            await db.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", convoId);
           }
-        } catch (persistErr) {
-          console.error("Persist error:", persistErr);
+        };
+
+        const backoffsMs = [200, 800, 2400];
+        let lastErr: unknown = null;
+        for (let attempt = 0; attempt < backoffsMs.length; attempt++) {
+          try {
+            await persistOnce();
+            lastErr = null;
+            break;
+          } catch (persistErr) {
+            lastErr = persistErr;
+            const wait = backoffsMs[attempt];
+            // eslint-disable-next-line no-await-in-loop
+            await new Promise((r) => setTimeout(r, wait));
+          }
+        }
+        if (lastErr) {
+          const errMsg = lastErr instanceof Error ? lastErr.message : String(lastErr);
+          log("error", "chat_persist_failed_all_retries", {
+            tenantId,
+            sessionId,
+            convoId,
+            error: errMsg,
+          });
+          try {
+            await db.from("chat_persist_dlq").insert({
+              client_id: client?.id ?? null,
+              conversation_id: convoId ?? null,
+              payload: {
+                role: "assistant",
+                content: fullReply,
+                visitorInfo: visitorInfo ?? null,
+                isTopUp: isTopUp ?? false,
+              },
+              error_message: errMsg,
+              attempts: backoffsMs.length,
+            });
+          } catch (dlqErr) {
+            log("error", "chat_persist_dlq_insert_failed", {
+              error: dlqErr instanceof Error ? dlqErr.message : String(dlqErr),
+            });
+          }
         }
 
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ conversation_id: convoId })}\n\n`));

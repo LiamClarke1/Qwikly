@@ -153,9 +153,9 @@ function applyAutoFill(data: Record<string, string>, base: FormData): { form: Fo
   // Wipe every field this scraper can populate before writing fresh data.
   // Without this, stale values from a previous setup bleed into any slot
   // that the new scrape returns empty for.
-  for (const fk of new Set(Object.values(map))) {
-    next[fk] = "";
-  }
+  Array.from(new Set(Object.values(map))).forEach((fk) => {
+    next[fk as keyof typeof next] = "";
+  });
   let count = 0;
   for (const [k, fk] of Object.entries(map)) {
     const v = data[k];
@@ -1370,7 +1370,7 @@ function Step7InstallTest({
   return (
     <div className="space-y-6">
       <p className="text-fg-muted text-small leading-relaxed">
-        Paste the snippet on your website, then send a test message to make sure your assistant is asking the right things for your business. You'll spot anything missing before real customers hit it.
+        Paste the snippet on your website, then send a test message to make sure your assistant is asking the right things for your business. You&apos;ll spot anything missing before real customers hit it.
       </p>
 
       {/* Install panel */}

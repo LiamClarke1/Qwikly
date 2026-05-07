@@ -180,28 +180,28 @@ export default function ConversationsPage() {
     if (clientLoading) return;
     if (!client?.id) { setLoading(false); return; }
     (async () => {
-      const { data } = await supabase
-        .from("conversations")
-        .select("*")
-        .eq("client_id", client.id)
-        .order("updated_at", { ascending: false });
-      const list = (data as Convo[]) ?? [];
-
-      const enriched = await Promise.all(
-        list.map(async (c) => {
-          const { data: msgs } = await supabase
-            .from("messages_log")
-            .select("content, created_at")
-            .eq("conversation_id", c.id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-          return {
-            ...c,
-            last_message: msgs?.[0]?.content,
-            last_message_time: msgs?.[0]?.created_at ?? c.updated_at,
-          };
-        })
-      );
+      // T3.3 — single RPC call replaces the previous N+1
+      // (1 list query + 1 last_message query per conversation).
+      // See supabase/migrations/20260507075148_get_conversations_with_last_message.sql
+      const { data, error } = await supabase.rpc("get_conversations_with_last_message", {
+        p_account_id: client.id,
+        p_limit: 100,
+        p_offset: 0,
+      });
+      let enriched = (data as Convo[]) ?? [];
+      if (error) {
+        // Fall back to the simple list if the RPC isn't available
+        // (e.g. local dev without the migration applied yet).
+        const { data: fallback } = await supabase
+          .from("conversations")
+          .select("*")
+          .eq("client_id", client.id)
+          .order("updated_at", { ascending: false });
+        enriched = ((fallback as Convo[]) ?? []).map((c) => ({
+          ...c,
+          last_message_time: c.updated_at,
+        }));
+      }
       setConvos(enriched);
       setLoading(false);
       if (!activeId && enriched.length && typeof window !== "undefined" && window.innerWidth >= 1024) {

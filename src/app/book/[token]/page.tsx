@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { verifyBookingToken } from "@/lib/booking-link";
 import { bookMeeting } from "@/lib/booking-create";
 
-const QWIKLY_OWN_CLIENT_ID = "1";
+// T3.9 — sourced from QWIKLY_OWNER_CLIENT_ID env var (see .env.example).
+// Falls back to "1" so local dev without the env var still works.
+const QWIKLY_OWN_CLIENT_ID = process.env.QWIKLY_OWNER_CLIENT_ID ?? "1";
 
 export const dynamic = "force-dynamic";
 

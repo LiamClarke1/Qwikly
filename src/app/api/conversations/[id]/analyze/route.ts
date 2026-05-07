@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { log } from "@/lib/log";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -117,7 +118,10 @@ Use empty arrays [] for requirements/concerns if none exist.`,
 
     return NextResponse.json(parsed);
   } catch (err) {
-    console.error("[conversations/analyze] Error:", err);
+    log("error", "conversations_analyze_error", {
+      conversationId: params.id,
+      error: err instanceof Error ? err.message : String(err),
+    });
     return NextResponse.json({ error: "analysis_failed" }, { status: 500 });
   }
 }
