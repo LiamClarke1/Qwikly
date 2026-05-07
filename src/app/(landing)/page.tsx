@@ -779,6 +779,13 @@ export default function Home() {
           {/* Right fade */}
           <div className="absolute right-0 top-0 bottom-0 w-24 md:w-40 z-10 pointer-events-none" style={{ background: "linear-gradient(to left, #F4EEE4, transparent)" }} />
 
+          {/*
+            INTENTIONAL DUPLICATION: the .ticker-scroll keyframe in globals.css
+            translates this row by -50% to loop seamlessly, which only works if
+            the list is rendered twice in the DOM (every category therefore
+            appears twice — that's the design, not a bug). If you want fewer
+            categories, edit `businessLogos` above; do NOT split this spread.
+          */}
           <div className="ticker-scroll flex items-center w-max">
             {[...businessLogos, ...businessLogos].map((b, i) => (
               <div
