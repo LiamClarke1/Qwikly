@@ -47,11 +47,20 @@ const nextConfig = {
   },
   async headers() {
     return [
-      // Embed surfaces — cross-origin loadable, no X-Frame-Options.
+      // Embed surfaces, cross-origin loadable, no X-Frame-Options.
       { source: "/embed.js", headers: EMBED_SECURITY_HEADERS },
       { source: "/api/embed/:path*", headers: EMBED_SECURITY_HEADERS },
       // Everything else gets the full hardened header set.
       { source: "/:path*", headers: SECURITY_HEADERS },
+    ];
+  },
+  async redirects() {
+    return [
+      // /booking was previously surfaced as a public route but only
+      // rendered the sign-in page. Send the action-intent traffic to
+      // signup so it lands somewhere useful, and keep search engines
+      // out of the misleading URL.
+      { source: "/booking", destination: "/signup", permanent: true },
     ];
   },
 };

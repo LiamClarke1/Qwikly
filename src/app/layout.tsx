@@ -44,19 +44,17 @@ export const metadata: Metadata = {
     template: "%s | Qwikly",
   },
   description:
-    "Qwikly is the digital assistant for your website. It captures every lead, qualifies them, and books them in, even when you're asleep. Flat monthly plans from free. No per-job fees, ever.",
-  keywords: [
-    "website chat widget South Africa",
-    "lead capture widget South Africa",
-    "digital assistant for websites",
-    "website lead generation South Africa",
-    "service business booking software",
-    "electrician booking software",
-    "plumber booking software",
-    "digital assistant for tradespeople",
-    "never miss a lead",
-    "website visitor capture South Africa",
-  ],
+    "Qwikly is the digital assistant for South African service businesses. It captures every website lead, qualifies it, and books it in, 24/7. Flat monthly plans, no per-job fees, POPIA compliant.",
+  applicationName: "Qwikly",
+  authors: [{ name: "Clarke Agency", url: "https://www.qwikly.co.za/about" }],
+  creator: "Clarke Agency",
+  publisher: "Clarke Agency",
+  category: "Business",
+  icons: {
+    icon: [{ url: "/favicon.ico" }, { url: "/icon.png", type: "image/png", sizes: "32x32" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "Qwikly | Never Miss a Lead Again",
     description:
@@ -96,28 +94,104 @@ export const metadata: Metadata = {
   },
 };
 
+// Canonical brand sentence. Reused in JSON-LD, og:description, llms.txt,
+// the About page, and the footer so every model trains on the same definition.
+const BRAND_SENTENCE =
+  "Qwikly is the digital assistant for South African service businesses. It captures every website lead, qualifies it, and books it in, 24/7, even while you sleep. Flat monthly plans, no per-job fees, POPIA compliant, hosted in South Africa.";
+
 const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": "https://www.qwikly.co.za/#organization",
   name: "Qwikly",
-  alternateName: "Clarke Agency",
+  alternateName: ["Clarke Agency", "Qwikly Digital Assistant"],
   url: "https://www.qwikly.co.za",
-  logo: "https://www.qwikly.co.za/og-image.png",
-  description:
-    "Digital assistant for South African service businesses. Captures every website visitor, qualifies them, and delivers warm leads to your inbox, 24/7, even while you sleep.",
+  logo: {
+    "@type": "ImageObject",
+    url: "https://www.qwikly.co.za/og-image.png",
+    width: 1200,
+    height: 630,
+  },
+  image: "https://www.qwikly.co.za/og-image.png",
+  description: BRAND_SENTENCE,
+  slogan: "Never miss a lead again.",
+  foundingDate: "2025",
+  founder: {
+    "@type": "Person",
+    name: "Liam Clarke",
+    jobTitle: "Founder",
+    url: "https://www.qwikly.co.za/about",
+  },
   address: {
     "@type": "PostalAddress",
     addressLocality: "Cape Town",
+    addressRegion: "Western Cape",
     addressCountry: "ZA",
   },
-  contactPoint: {
-    "@type": "ContactPoint",
-    email: "hello@qwikly.co.za",
-    contactType: "customer support",
-    availableLanguage: "English",
-    areaServed: "ZA",
-  },
+  contactPoint: [
+    {
+      "@type": "ContactPoint",
+      email: "hello@qwikly.co.za",
+      contactType: "customer support",
+      availableLanguage: ["English"],
+      areaServed: "ZA",
+    },
+    {
+      "@type": "ContactPoint",
+      email: "hello@qwikly.co.za",
+      contactType: "sales",
+      availableLanguage: ["English"],
+      areaServed: "ZA",
+    },
+  ],
+  areaServed: { "@type": "Country", name: "South Africa" },
+  knowsAbout: [
+    "Lead capture",
+    "Website chat widget",
+    "Conversational booking",
+    "POPIA compliance",
+    "South African service businesses",
+    "Digital assistants for websites",
+  ],
   sameAs: [],
+};
+
+const localBusinessSchema = {
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "@id": "https://www.qwikly.co.za/#localbusiness",
+  name: "Qwikly",
+  url: "https://www.qwikly.co.za",
+  image: "https://www.qwikly.co.za/og-image.png",
+  description: BRAND_SENTENCE,
+  priceRange: "R0–R1999",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Cape Town",
+    addressRegion: "Western Cape",
+    addressCountry: "ZA",
+  },
+  areaServed: { "@type": "Country", name: "South Africa" },
+  parentOrganization: { "@id": "https://www.qwikly.co.za/#organization" },
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": "https://www.qwikly.co.za/#website",
+  url: "https://www.qwikly.co.za",
+  name: "Qwikly",
+  description: BRAND_SENTENCE,
+  publisher: { "@id": "https://www.qwikly.co.za/#organization" },
+  inLanguage: "en-ZA",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: "https://www.qwikly.co.za/faq?q={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
 };
 
 export default function RootLayout({
@@ -134,6 +208,14 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
       </head>
       <body className="antialiased bg-paper text-ink">

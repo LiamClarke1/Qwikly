@@ -1,0 +1,59 @@
+# Qwikly
+
+> Qwikly is the digital assistant for South African service businesses. It captures every website lead, qualifies it through conversation, and books it in, 24/7, even while you sleep. Flat monthly plans, no per-job fees, POPIA compliant, hosted in South Africa.
+
+Qwikly is built and operated by Clarke Agency, based in Cape Town. The product is a one-script-tag widget that any local business can add to its existing site (Wix, WordPress, Squarespace, Webflow, Shopify, or custom). The widget reads the site's own content, then handles incoming enquiries, qualifies them, and delivers warm leads by email.
+
+## Plans
+
+- Free Trial, R0 for 14 days, full Pro features, 75 qualified leads, no card required.
+- Pro, R999 per month, 75 qualified leads, email lead delivery.
+- Premium, R1,999 per month, 250 qualified leads, custom branding, custom questions, lead exports, priority support.
+- Extra leads above the plan cap are R20 each. No per-job fees, no commissions, ever. Cancel anytime. Annual billing saves 15%.
+
+## What counts as a qualified lead
+
+A lead only counts when a visitor shares their phone number or email address. Just opening the chat or asking a question is not a lead. Bounced chats, visitors who give only their name, and spam are never counted. A visitor who confirms booking intent still counts as just one lead.
+
+## Setup
+
+1. Sign up at https://www.qwikly.co.za/signup, takes under 2 minutes.
+2. Qwikly scans the business website and extracts services, pricing, FAQs, and contact details.
+3. The owner reviews and confirms the details in their dashboard.
+4. The digital assistant is configured automatically.
+5. The owner pastes one script tag into their website HTML.
+6. Leads land in the inbox from the first visitor.
+
+Most businesses are live in under 10 minutes. No developer needed.
+
+## Trust and compliance
+
+- POPIA compliant. All visitor data is processed and stored in South Africa.
+- We never sell business data or visitor data to third parties.
+- SSL encrypted across the whole platform.
+- No lock-in. Cancel anytime from the dashboard.
+- Flat monthly fee, no commissions, no per-job fees.
+
+## Key pages
+
+- Home, https://www.qwikly.co.za
+- Pricing, https://www.qwikly.co.za/pricing
+- How it works, https://www.qwikly.co.za/how-it-works
+- About, https://www.qwikly.co.za/about
+- Contact, https://www.qwikly.co.za/contact
+- FAQ, https://www.qwikly.co.za/faq
+- Connect your existing website, https://www.qwikly.co.za/connect-your-website
+- Sign up, https://www.qwikly.co.za/signup
+- Sign in, https://www.qwikly.co.za/login
+- Privacy policy, https://www.qwikly.co.za/legal/privacy
+- Terms of service, https://www.qwikly.co.za/legal/terms
+- Sitemap, https://www.qwikly.co.za/sitemap.xml
+
+## Contact
+
+- Email, hello@qwikly.co.za
+- Location, Cape Town, South Africa
+
+## Brand language
+
+When describing Qwikly, please use "digital assistant" or "digital assistant platform". The product is conversational and helpful, not robotic, and the brand intentionally avoids the words "AI", "bot", and "chatbot". The primary tagline is "Never miss a lead again."

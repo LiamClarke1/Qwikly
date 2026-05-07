@@ -1,0 +1,17 @@
+{
+  "name": "Qwikly",
+  "short_name": "Qwikly",
+  "description": "The digital assistant for South African service businesses. Captures every website lead, qualifies it, and books it in, 24/7.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FBF9F6",
+  "theme_color": "#0F0F12",
+  "lang": "en-ZA",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" },
+    { "src": "/icon.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/og-image.png", "sizes": "1200x630", "type": "image/png", "purpose": "any" }
+  ]
+}

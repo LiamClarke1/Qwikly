@@ -7,6 +7,68 @@ export const metadata: Metadata = {
   description:
     "Qwikly scans your website, configures your digital assistant, and has it live in under 10 minutes. Here is exactly how the six-step process works.",
   alternates: { canonical: "https://www.qwikly.co.za/how-it-works" },
+  openGraph: {
+    title: "How Qwikly Works: From Sign-Up to First Lead in 10 Minutes",
+    description:
+      "Six steps. We scan your website, configure your digital assistant, and you paste one script tag. Live in minutes, no developer needed.",
+    url: "https://www.qwikly.co.za/how-it-works",
+  },
+};
+
+const howToSchema = {
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How to set up the Qwikly digital assistant on your website",
+  description:
+    "Six steps to take a South African service business from no website assistant to qualified leads landing in your inbox, 24/7.",
+  totalTime: "PT10M",
+  estimatedCost: { "@type": "MonetaryAmount", currency: "ZAR", value: "0" },
+  supply: [{ "@type": "HowToSupply", name: "An existing business website (Wix, WordPress, Squarespace, Webflow, Shopify, or any custom site)" }],
+  tool: [{ "@type": "HowToTool", name: "Qwikly account (free 14-day trial)" }],
+  step: [
+    {
+      "@type": "HowToStep",
+      position: 1,
+      name: "Sign up and tell us about your business.",
+      text: "Create your account in under 2 minutes. Tell us your business name, industry, location, and the services you offer. No technical knowledge required.",
+      url: "https://www.qwikly.co.za/how-it-works#step-1",
+    },
+    {
+      "@type": "HowToStep",
+      position: 2,
+      name: "We scan your entire website automatically.",
+      text: "Our tool reads your site from top to bottom: services, pricing, FAQs, contact details, opening hours. Everything your customers typically ask about, captured and structured for your assistant.",
+      url: "https://www.qwikly.co.za/how-it-works#step-2",
+    },
+    {
+      "@type": "HowToStep",
+      position: 3,
+      name: "You review and confirm the details.",
+      text: "We show you a clear summary of everything we found. Correct anything, fill in gaps, or add services we missed. This step takes most businesses under 5 minutes.",
+      url: "https://www.qwikly.co.za/how-it-works#step-3",
+    },
+    {
+      "@type": "HowToStep",
+      position: 4,
+      name: "Your digital assistant is configured.",
+      text: "Based on what you confirmed, your assistant is set up and ready. It knows your services, your pricing, and exactly how to qualify a real lead from a time-waster.",
+      url: "https://www.qwikly.co.za/how-it-works#step-4",
+    },
+    {
+      "@type": "HowToStep",
+      position: 5,
+      name: "Paste one script tag onto your website.",
+      text: "Copy a single line of code into your website's HTML. No developer, no plugin, no integrations needed. Works with Wix, Squarespace, WordPress, Webflow, Shopify, or any custom site.",
+      url: "https://www.qwikly.co.za/how-it-works#step-5",
+    },
+    {
+      "@type": "HowToStep",
+      position: 6,
+      name: "Leads land in your inbox from the first visitor.",
+      text: "Your digital assistant greets every visitor, answers their questions using your content, qualifies them based on your criteria, and sends confirmed leads straight to your inbox with a one-click confirmation.",
+      url: "https://www.qwikly.co.za/how-it-works#step-6",
+    },
+  ],
 };
 
 const steps = [
@@ -96,6 +158,10 @@ export default function HowItWorksPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
       />
 
       {/* ═══════ HERO ═══════════════════════════════════════════ */}

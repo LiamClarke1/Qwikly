@@ -815,6 +815,67 @@ const faqTeaser = [
   },
 ];
 
+const homeFaqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqTeaser.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+
+const serviceSchema = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "@id": "https://www.qwikly.co.za/#service",
+  name: "Qwikly Digital Assistant Platform",
+  serviceType: "Digital assistant for service business websites",
+  description:
+    "A digital assistant that lives on your website, captures every visitor enquiry, qualifies it through conversation, and delivers warm leads with one-click booking confirmation to your inbox 24/7. POPIA compliant, hosted in South Africa, no per-job fees.",
+  provider: { "@id": "https://www.qwikly.co.za/#organization" },
+  areaServed: { "@type": "Country", name: "South Africa" },
+  audience: {
+    "@type": "BusinessAudience",
+    audienceType: "South African service businesses, tradespeople, clinics, salons, restaurants, contractors, and any local business that takes enquiries through its website.",
+  },
+  termsOfService: "https://www.qwikly.co.za/legal/terms",
+  url: "https://www.qwikly.co.za",
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Qwikly plans",
+    itemListElement: [
+      {
+        "@type": "Offer",
+        name: "Free Trial",
+        priceCurrency: "ZAR",
+        price: "0",
+        description: "14-day free trial. Full Pro features, 75 qualified leads. No card required.",
+        url: "https://www.qwikly.co.za/pricing",
+        availability: "https://schema.org/InStock",
+      },
+      {
+        "@type": "Offer",
+        name: "Pro",
+        priceCurrency: "ZAR",
+        price: "999",
+        description: "75 qualified leads per month. Email lead delivery. POPIA compliant. R999 per month.",
+        url: "https://www.qwikly.co.za/pricing",
+        availability: "https://schema.org/InStock",
+      },
+      {
+        "@type": "Offer",
+        name: "Premium",
+        priceCurrency: "ZAR",
+        price: "1999",
+        description: "250 qualified leads per month. Custom branding, custom questions, lead exports, priority support. R1,999 per month.",
+        url: "https://www.qwikly.co.za/pricing",
+        availability: "https://schema.org/InStock",
+      },
+    ],
+  },
+};
+
 /* ─────────────────────────────────────────────────────────────
    PAGE
    ───────────────────────────────────────────────────────────── */
@@ -826,6 +887,14 @@ export default function Home() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeFaqSchema) }}
+      />
       {/* ═══════ 01 · HERO ═══════════════════════════════════════ */}
       <section className="relative pt-32 pb-24 md:pt-40 md:pb-32 overflow-hidden grain">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
@@ -979,8 +1048,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════ 04 · FEATURES ═══════════════════════════════════ */}
-      <section className="relative py-28 md:py-40 overflow-hidden grain">
+      {/* ═══════ 04 · FEATURES (a.k.a. Outcomes) ═════════════════ */}
+      <section id="outcomes" className="relative py-28 md:py-40 overflow-hidden grain scroll-mt-24">
         <div className="dot-grid-ink absolute inset-0 opacity-40" />
 
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
