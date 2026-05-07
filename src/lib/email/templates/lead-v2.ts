@@ -275,10 +275,13 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
   <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F4EEE4;padding:36px 16px;">
     <tr><td align="center">
 
-      <!-- Brand wordmark -->
+      <!-- Brand wordmark — uses the customer's business name so the email is
+           branded as their business, not Qwikly. The accent dot stays for
+           editorial polish. Qwikly's own house tenant naturally renders as
+           "Qwikly." here since its business_name is "Qwikly". -->
       <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:580px;margin:0 auto 18px;">
         <tr><td style="padding:0 4px 0 4px;">
-          <span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:500;color:#0E0E0C;letter-spacing:-0.5px;">Qwikly<span style="color:#E85A2C;">.</span></span>
+          <span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:500;color:#0E0E0C;letter-spacing:-0.5px;">${esc(businessName)}<span style="color:#E85A2C;">.</span></span>
         </td></tr>
       </table>
 
@@ -354,21 +357,23 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
 
         </td></tr>
 
-        <!-- Footer -->
+        <!-- Footer — phrased as the customer's own assistant, with a small
+             "Powered by Qwikly" attribution so credit stays without the email
+             reading like a Qwikly broadcast. -->
         <tr><td class="qw-pad" style="padding:20px 36px 26px;border-top:1px solid #F0EAE0;">
           <p style="margin:0;font-size:12px;color:#8F8F86;line-height:1.6;">
-            Captured by your <a href="https://www.qwikly.co.za/dashboard" style="color:#6A6A63;text-decoration:underline;">Qwikly</a> assistant &nbsp;·&nbsp;
+            Captured by your <a href="https://www.qwikly.co.za/dashboard" style="color:#6A6A63;text-decoration:underline;">${esc(businessName)}</a> assistant &nbsp;·&nbsp;
             <a href="https://www.qwikly.co.za/dashboard/settings/profile" style="color:#8F8F86;text-decoration:underline;">Manage alerts</a>
           </p>
         </td></tr>
 
       </table>
 
-      <!-- Outer footer slogan -->
+      <!-- Outer Powered-by attribution -->
       <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:580px;margin:18px auto 0;">
         <tr><td style="text-align:center;padding:0 4px;">
           <p style="margin:0;font-size:11px;color:#8F8F86;letter-spacing:0.04em;">
-            Never miss a lead. <a href="https://www.qwikly.co.za" style="color:#6A6A63;text-decoration:underline;">qwikly.co.za</a>
+            Powered by <a href="https://www.qwikly.co.za" style="color:#6A6A63;text-decoration:underline;">Qwikly</a>
           </p>
         </td></tr>
       </table>
@@ -435,8 +440,10 @@ export function leadNotificationText(args: LeadEmailArgs) {
     `  Confirm slot:         ${confirmUrl}`,
     `  Suggest another time: ${suggestUrl}`,
     "",
-    "— Captured by your Qwikly assistant",
+    `— Captured by your ${businessName} assistant`,
     "  Manage alerts: https://www.qwikly.co.za/dashboard/settings/profile",
+    "",
+    "  Powered by Qwikly · https://www.qwikly.co.za",
   );
   return lines.filter((l) => l !== null && l !== undefined).join("\n");
 }
