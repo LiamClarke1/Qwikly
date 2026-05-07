@@ -499,8 +499,21 @@
     div.className = "msg " + cls;
     if (text) { var nodes = textToNodes(text); for (var i = 0; i < nodes.length; i++) div.appendChild(nodes[i]); }
     m.appendChild(div);
-    m.scrollTop = m.scrollHeight;
+    if (cls === "bot" && text) {
+      anchorTop(m, div);
+    } else if (cls !== "bot") {
+      m.scrollTop = m.scrollHeight;
+    }
+    // Empty bot placeholder (streaming) is anchored on the first chunk.
     return div;
+  }
+
+  // Pin the top of a bot bubble near the top of the visible area so long
+  // replies are read top-to-bottom, instead of dumping the reader at the end.
+  function anchorTop(container, el) {
+    requestAnimationFrame(function () {
+      container.scrollTop = Math.max(0, el.offsetTop - 8);
+    });
   }
 
   function showTyping() {
@@ -598,6 +611,7 @@
       var reader = res.body.getReader();
       var decoder = new TextDecoder();
       var buffer = "";
+      var anchored = false;
 
       while (true) {
         var result = await reader.read();
@@ -619,7 +633,7 @@
               while (botDiv.firstChild) botDiv.removeChild(botDiv.firstChild);
               var nodes = textToNodes(fullText);
               for (var j = 0; j < nodes.length; j++) botDiv.appendChild(nodes[j]);
-              if (m) m.scrollTop = m.scrollHeight;
+              if (m && !anchored) { anchorTop(m, botDiv); anchored = true; }
             }
             if (parsed.conversation_id && !conversationId) {
               conversationId = parsed.conversation_id;
