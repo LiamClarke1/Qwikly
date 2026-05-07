@@ -90,7 +90,8 @@ export async function POST(req: NextRequest) {
       tone, ai_tone, ai_language, ai_response_style, ai_conversation_speed, ai_greeting, ai_sign_off,
       ai_always_do, ai_never_say, ai_unhappy_customer,
       ai_escalation_triggers, ai_escalation_custom,
-      doc_visitor_upload, doc_visitor_prompt
+      doc_visitor_upload, doc_visitor_prompt,
+      quote_mode, quote_playbook
     `)
     .eq("public_key", tenantId)
     .maybeSingle();

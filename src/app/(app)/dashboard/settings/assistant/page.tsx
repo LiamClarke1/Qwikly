@@ -118,6 +118,8 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
     ai_always_do:              client.ai_always_do              ?? "",
     ai_never_say:              client.ai_never_say              ?? "",
     ai_sign_off:               client.ai_sign_off               ?? "",
+    quote_mode:                client.quote_mode                ?? "never",
+    quote_playbook:            client.quote_playbook            ?? "",
   });
 
   const [tone, setTone] = useState(client.tone ?? "");
@@ -136,6 +138,8 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
     ai_always_do:              client.ai_always_do              ?? "",
     ai_never_say:              client.ai_never_say              ?? "",
     ai_sign_off:               client.ai_sign_off               ?? "",
+    quote_mode:                client.quote_mode                ?? "never",
+    quote_playbook:            client.quote_playbook            ?? "",
   });
   const setp = (k: keyof typeof personality) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setPersonality({ ...personality, [k]: e.target.value });
@@ -248,6 +252,36 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
           </Field>
           <Field label="Never say">
             <Textarea value={personality.ai_never_say} onChange={setp("ai_never_say")} rows={3} placeholder="e.g. Never give a fixed price before seeing the job" />
+          </Field>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Quoting"
+          description="Decide how your assistant handles pricing on the chat. Customers love a ballpark, but only when you have one to give."
+        />
+        <div className="space-y-4">
+          <Field label="When a customer asks about price">
+            <Select value={personality.quote_mode} onChange={setp("quote_mode")}>
+              <option value="never">Never quote in chat — always defer to a callback or on-site quote</option>
+              <option value="range">Give a range when there&apos;s enough info (recommended)</option>
+              <option value="exact">Give exact prices for known jobs</option>
+            </Select>
+          </Field>
+          <Field
+            label="Your pricing playbook"
+            hint="Plain English. List the jobs you typically handle and what they run at. The assistant only uses what you write here, it never invents prices."
+          >
+            <Textarea
+              value={personality.quote_playbook}
+              onChange={setp("quote_playbook")}
+              rows={8}
+              placeholder={`DB tripping callout, R450 to R750.
+Geyser swap including parts, R3,500 to R5,500.
+Kitchen rewire, R8k to R15k depending on size.
+Solar install, always quote on site, never give a number in chat.`}
+            />
           </Field>
         </div>
       </Card>

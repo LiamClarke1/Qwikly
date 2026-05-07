@@ -51,6 +51,9 @@ export interface ClientRow {
   ai_always_do?: string | null;
   ai_never_say?: string | null;
   ai_sign_off?: string | null;
+  // 20260509_quote_settings.sql
+  quote_mode?: "never" | "range" | "exact" | null;
+  quote_playbook?: string | null;
   // existing settings fields
   address?: string | null;
   faq?: { q: string; a: string }[] | null;

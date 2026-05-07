@@ -62,6 +62,8 @@ export type ClientPromptData = {
   ai_escalation_custom?: string | null;
   doc_visitor_upload?: boolean | null;
   doc_visitor_prompt?: string | null;
+  quote_mode?: "never" | "range" | "exact" | string | null;
+  quote_playbook?: string | null;
 };
 
 export const CLIENT_TONE_MAP: Record<string, string> = {
@@ -432,6 +434,55 @@ export function buildClientSystemPrompt(c: ClientPromptData, customSystemPrompt?
 
   const alwaysDo  = c.ai_always_do ? `\nAlways do:\n${c.ai_always_do}` : "";
   const neverSay  = c.ai_never_say ? `\nNever say:\n${c.ai_never_say}` : "";
+
+  const quoteMode = (c.quote_mode ?? "never").toLowerCase();
+  const quotePlaybook = c.quote_playbook?.trim();
+  const quotingSection = (() => {
+    if (quoteMode === "never" || !quotePlaybook) {
+      return `## QUOTING
+
+Do NOT give prices, ranges, or even ballpark numbers in chat. The customer hasn't authorised live quoting.
+
+When the visitor asks "how much?", "what's the price?", or anything similar:
+- Acknowledge in one short sentence.
+- Tell them you'll get a quote to them properly once you've got their details and the basics of the job.
+- Move into capturing their details and booking a callback or on-site visit.
+
+Never invent a number, never say "from R...", never say "around R...". Pricing happens after the chat, not in it.`;
+    }
+
+    if (quoteMode === "exact") {
+      return `## QUOTING
+
+You can give exact prices for jobs you have flat rates for. Use the playbook below as your only source of truth. Never round, never invent, never quote anything not listed.
+
+### Pricing playbook (the customer's own words, treat as authoritative)
+${quotePlaybook}
+
+How to use it:
+- Match the visitor's described job to the closest playbook item only after you have enough info (photo where relevant, scope, location).
+- If their job clearly matches one in the playbook, give the exact price in one sentence, then move forward to booking.
+- If their job is partly in the playbook but the scope is unclear, ask ONE clarifying question, then quote.
+- If their job isn't in the playbook at all, say so honestly: "That one I'd want eyes on before pricing." Capture details and book a callback or site visit.
+- Never blend, average, or extrapolate from playbook items. Quote what's there or defer.`;
+    }
+
+    // quoteMode === "range" (default once a playbook is set)
+    return `## QUOTING
+
+You can give a low-to-high range when you have enough info, drawing only from the playbook below. The range gives the visitor confidence without pinning the customer to a number they can't honour.
+
+### Pricing playbook (the customer's own words, treat as authoritative)
+${quotePlaybook}
+
+How to use it:
+- Quote ONLY after you've got the key info: photo where the playbook implies one matters, scope, location. Don't blurt a number off the first message.
+- Match the visitor's described job to the closest playbook item, then give the range in their language: "That'd usually run somewhere between R450 and R750 for the callout and the diagnosis." One sentence, then move forward.
+- If the playbook says "always quote on site" for that kind of job, do that, even if the visitor pushes for a number.
+- If the job isn't in the playbook, say so honestly: "That one I'd want eyes on before pricing." Capture details and book a callback or on-site visit.
+- Never invent a range. Never extrapolate. Never blend two playbook items. Quote what's written or defer.
+- Always pair the range with the next step (booking, callout, on-site visit). Pricing isn't the close, the booking is.`;
+  })();
   // Use || so an empty string saved to the DB still falls back to the default.
   const afterHours = c.after_hours?.trim() ||
     "Let the visitor know the team is unavailable right now, but capture their details for a callback first thing.";
@@ -586,6 +637,8 @@ Never repeat a question already answered. Move forward.
 ## SOUND HUMAN — NEVER ROBOTIC
 
 You are not a customer service script. You are a person who knows ${biz} inside out, talking to another person who needs help. Read what the visitor actually said and react to it before moving on, don't just push the next question. Use their own words back at them. Vary the shape of every reply, never two messages with the same opening or closing structure. Skip the filler ("Let me explain", "What I can do is", "I can help you with that", "Here are some options") and just answer. Match the visitor's energy: short and casual when they are, sharper and direct when they are. It is okay to give a real opinion or recommendation when it helps them decide. If a reply could have been written by a chatbot from a template, rewrite it.
+
+${quotingSection}
 
 ## USING UPLOADS — READ EVERYTHING THE VISITOR SHARES
 
