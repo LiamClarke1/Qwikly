@@ -251,7 +251,7 @@ export async function POST(req: NextRequest) {
   const { data: historyRows } = convoId
     ? await db
         .from("messages_log")
-        .select("role, content")
+        .select("role, content, message_type")
         .eq("conversation_id", convoId)
         .order("created_at", { ascending: true })
         .limit(20)
@@ -267,11 +267,48 @@ export async function POST(req: NextRequest) {
   }
 
   // Build Anthropic messages from history + current.
-  // If this is the very first message (no DB history yet), inject the opening greeting as a
-  // synthetic assistant turn so Claude knows it was already shown and won't re-greet the visitor.
-  const priorHistory = (historyRows ?? []).map((r) => ({
-    role: r.role === "assistant" ? ("assistant" as const) : ("user" as const),
-    content: r.content,
+  // For document rows we serve the actual content to Claude:
+  //   - images get a fresh signed URL as a vision block
+  //   - PDFs/DOCX get their extracted text inlined
+  // so the assistant can READ what the visitor uploaded, not just see "[file.pdf, 2KB]".
+  const priorHistory = await Promise.all((historyRows ?? []).map(async (r) => {
+    const role = r.role === "assistant" ? ("assistant" as const) : ("user" as const);
+
+    if (r.message_type === "document" && role === "user") {
+      try {
+        const meta = JSON.parse(r.content) as {
+          filename?: string; size?: number; mime?: string;
+          storage_path?: string; extracted_text?: string | null;
+        };
+        const filename = meta.filename || "uploaded file";
+
+        if (meta.mime?.startsWith("image/") && meta.storage_path) {
+          const { data: signed } = await db.storage
+            .from("conversation-documents")
+            .createSignedUrl(meta.storage_path, 60 * 60);
+          if (signed?.signedUrl) {
+            const content: Anthropic.ContentBlockParam[] = [
+              { type: "text", text: `[Visitor uploaded an image: ${filename}]` },
+              { type: "image", source: { type: "url", url: signed.signedUrl } },
+            ];
+            return { role, content };
+          }
+        }
+
+        if (meta.extracted_text && meta.extracted_text.trim()) {
+          return {
+            role,
+            content: `[Visitor uploaded ${filename}]\n\n${meta.extracted_text}`,
+          };
+        }
+
+        return { role, content: `[Visitor uploaded ${filename}]` };
+      } catch {
+        return { role, content: r.content };
+      }
+    }
+
+    return { role, content: r.content };
   }));
 
   const claudeMessages: Anthropic.MessageParam[] = [];

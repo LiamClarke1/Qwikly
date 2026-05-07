@@ -1,8 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { randomUUID } from "crypto";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfParse = require("pdf-parse");
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const mammoth = require("mammoth");
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 30;
+
+// Cap how much extracted text we inject into the conversation. Real visitor
+// PDFs (quotes, plans, invoices) usually fit; over-long extracts get tail-
+// trimmed with a marker so the chat route doesn't blow the prompt budget.
+const MAX_EXTRACTED_CHARS = 8000;
+
+async function extractText(buffer: Buffer, mime: string): Promise<string | null> {
+  try {
+    if (mime === "application/pdf") {
+      const r = await pdfParse(buffer);
+      return (r.text ?? "").trim() || null;
+    }
+    if (mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+      const r = await mammoth.extractRawText({ buffer });
+      return (r.value ?? "").trim() || null;
+    }
+    return null;
+  } catch (err) {
+    console.warn("[web/documents/upload] text extraction failed:", err);
+    return null;
+  }
+}
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -129,11 +157,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "db_failed" }, { status: 500, headers: CORS });
     }
 
-    // Insert message_log entry
+    // Extract text from PDFs and DOCX so the assistant can actually READ what
+    // the visitor uploaded. Images get no extraction here, the chat route
+    // serves them to Claude as a vision URL on the next turn.
+    const extractedRaw = await extractText(Buffer.from(fileBuffer), detectedMime);
+    const extractedText = extractedRaw && extractedRaw.length > MAX_EXTRACTED_CHARS
+      ? extractedRaw.slice(0, MAX_EXTRACTED_CHARS) + "\n\n[content truncated]"
+      : extractedRaw;
+
+    // Insert message_log entry. Storage path is recorded so the chat route
+    // can mint a fresh signed URL for vision on each chat turn.
     await db.from("messages_log").insert({
       conversation_id: conversationId,
       role:            "customer",
-      content:         JSON.stringify({ filename: file.name, size: file.size }),
+      content:         JSON.stringify({
+        filename:       file.name,
+        size:           file.size,
+        mime:           detectedMime,
+        storage_path:   storagePath,
+        extracted_text: extractedText,
+      }),
       message_type:    "document",
       attachment_id:   docId,
     });
