@@ -64,12 +64,14 @@ export async function POST(req: NextRequest) {
   } = parsed.data;
 
   // T3.8 — verify client_id refers to a real client before we insert a conversation.
-  // This prevents orphan conversations and gives the embed a clear 404 when the
-  // host site is misconfigured.
+  // Also enforces the same pause gates the chat route uses, so an expired
+  // trial or a manually-paused tenant cannot leak leads via the structured
+  // intake form. Without this, a visitor whose widget cached pre-pause
+  // could still submit and leave an orphaned conversation behind.
   const clientIdNum = Number(client_id);
   const { data: clientCheck, error: clientCheckError } = await supabaseAdmin
     .from("clients")
-    .select("id")
+    .select("id, auth_user_id, ai_paused, crm_status")
     .eq("id", clientIdNum)
     .limit(1)
     .maybeSingle();
@@ -85,6 +87,26 @@ export async function POST(req: NextRequest) {
       { error: "client_not_found", client_id },
       { status: 404, headers: CORS }
     );
+  }
+  if (clientCheck.crm_status === "pending_deletion") {
+    return NextResponse.json({ error: "service_suspended" }, { status: 403, headers: CORS });
+  }
+  if (clientCheck.ai_paused) {
+    return NextResponse.json({ error: "paused" }, { status: 403, headers: CORS });
+  }
+  if (clientCheck.auth_user_id) {
+    const { data: sub } = await supabaseAdmin
+      .from("subscriptions")
+      .select("plan, trial_ends_at")
+      .eq("user_id", clientCheck.auth_user_id)
+      .maybeSingle();
+    const trialExpired =
+      (sub?.plan === "trial" || !sub) &&
+      sub?.trial_ends_at &&
+      new Date(sub.trial_ends_at) < new Date();
+    if (trialExpired) {
+      return NextResponse.json({ error: "trial_expired" }, { status: 403, headers: CORS });
+    }
   }
 
   // Create the conversation
