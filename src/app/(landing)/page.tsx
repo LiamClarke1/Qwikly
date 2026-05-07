@@ -734,8 +734,13 @@ export default function Home() {
                 Captures every enquiry, qualifies it, and sends it to your inbox. Even when you&rsquo;re asleep.
               </p>
               <div className="flex flex-col gap-4 lg:items-end lg:text-right">
-                <div className="flex flex-wrap gap-4 lg:justify-end">
-                  <CTAButton size="lg" variant="primary" href="/signup?plan=trial">
+                <div className="flex flex-wrap gap-4 lg:justify-end items-center">
+                  <CTAButton
+                    size="lg"
+                    variant="solid"
+                    href="/signup?plan=trial"
+                    className="px-9 py-[1.2rem] text-[1.05rem] font-semibold shadow-[0_18px_36px_-18px_rgba(232,90,44,0.6)]"
+                  >
                     Start Free Trial
                   </CTAButton>
                   <CTAButton size="lg" variant="outline" href="#how-it-works" withArrow={false}>
