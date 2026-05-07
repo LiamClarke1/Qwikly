@@ -293,18 +293,8 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
             Unsaved changes
           </span>
         )}
-        <Button loading={saving} icon={<Save className="w-4 h-4" />} onClick={handleSave}>Save changes</Button>
+        <Button loading={saving} icon={<Save className="w-4 h-4" />} onClick={handleSave}>Update assistant knowledge</Button>
       </div>
-
-      {isDirty && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 panel-strong px-4 py-3 flex items-center gap-3 shadow-xl rounded-xl border border-[var(--border)]">
-          <span className="text-tiny text-fg-muted flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-ember inline-block animate-pulse" />
-            Unsaved changes
-          </span>
-          <Button loading={saving} size="sm" icon={<Save className="w-4 h-4" />} onClick={handleSave}>Save</Button>
-        </div>
-      )}
     </div>
   );
 }
