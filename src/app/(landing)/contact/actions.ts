@@ -61,9 +61,16 @@ export async function submitContactForm(
     return { success: false, error: "Could not save message. Please try emailing us directly." };
   }
 
+  // NOTE: temporarily routing to clarkeagency1@outlook.com directly while we
+  // sort out SPF for Resend on qwikly.co.za. Sending hello@ -> hello@ over
+  // Resend was getting rejected at the MX (SPF fail + self-domain loop check),
+  // so the form silently dropped the first test submission. Visible labels
+  // everywhere still show hello@qwikly.co.za. Once SPF includes
+  // amazonses.com and qwikly.co.za is verified in Resend, flip back to
+  // ["hello@qwikly.co.za"] for brand consistency.
   await resend.emails.send({
     from: "Qwikly Contact <hello@qwikly.co.za>",
-    to: ["hello@qwikly.co.za"],
+    to: ["clarkeagency1@outlook.com"],
     replyTo: email,
     subject: `[Qwikly Contact] ${subject}`,
     html: `
