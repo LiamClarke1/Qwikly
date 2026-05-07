@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { supabaseAdmin } from "@/lib/supabase-server";
+import { headers } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,14 @@ interface Service {
   name: string;
   description: string;
   status: ServiceStatus;
+  latencyMs?: number;
+}
+
+interface HealthResponse {
+  status: "ok" | "degraded";
+  timestamp: string;
+  uptime_ms: number;
+  services: { name: string; status: "ok" | "error"; latency_ms?: number; error?: string }[];
 }
 
 const STATUS_CONFIG: Record<
@@ -43,53 +51,58 @@ const STATUS_CONFIG: Record<
   },
 };
 
-async function getServices(): Promise<Service[]> {
-  const checks: Record<string, boolean> = {};
+// /api/health returns short check names like "database", "whatsapp", "email",
+// "ai". This page presents a friendlier service breakdown — derive each row
+// from the underlying check it depends on.
+const SERVICE_VIEW: { name: string; description: string; deps: string[] }[] = [
+  { name: "Web Application", description: "Dashboard and public site", deps: ["database"] },
+  { name: "Assistant Messaging", description: "Lead qualification and booking", deps: ["ai", "whatsapp"] },
+  { name: "WhatsApp Delivery", description: "Twilio message delivery layer", deps: ["whatsapp"] },
+  { name: "Email Delivery", description: "Booking confirmations and notifications", deps: ["email"] },
+];
 
+async function getHealth(): Promise<{
+  data: HealthResponse | null;
+  ok: boolean;
+  fetchedAt: string;
+}> {
+  const fetchedAt = new Date().toISOString();
   try {
-    const db = supabaseAdmin();
-    const { error } = await db.from("clients").select("id").limit(1);
-    checks.database = !error;
+    const h = headers();
+    const host = h.get("host") ?? "www.qwikly.co.za";
+    const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+    const res = await fetch(`${proto}://${host}/api/health`, { cache: "no-store" });
+    const data = (await res.json()) as HealthResponse;
+    return { data, ok: res.ok, fetchedAt };
   } catch {
-    checks.database = false;
+    return { data: null, ok: false, fetchedAt };
   }
+}
 
-  checks.whatsapp = !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN);
-  checks.email = !!process.env.RESEND_API_KEY;
-  checks.messaging = !!process.env.ANTHROPIC_API_KEY;
+function deriveServices(data: HealthResponse | null): Service[] {
+  const checkMap = new Map<string, { ok: boolean; latency?: number }>();
+  data?.services.forEach((s) => {
+    checkMap.set(s.name, { ok: s.status === "ok", latency: s.latency_ms });
+  });
 
-  return [
-    {
-      name: "Web Application",
-      description: "Dashboard and public site",
-      status: checks.database ? "operational" : "degraded",
-    },
-    {
-      name: "Assistant Messaging",
-      description: "WhatsApp lead qualification and booking",
-      status: checks.messaging && checks.whatsapp ? "operational" : "outage",
-    },
-    {
-      name: "WhatsApp Delivery",
-      description: "Twilio message delivery layer",
-      status: checks.whatsapp ? "operational" : "outage",
-    },
-    {
-      name: "Calendar Sync",
-      description: "Google Calendar integration",
-      status: "operational",
-    },
-    {
-      name: "Email Delivery",
-      description: "Booking confirmations and notifications",
-      status: checks.email ? "operational" : "outage",
-    },
-  ];
+  return SERVICE_VIEW.map(({ name, description, deps }) => {
+    const states = deps.map((d) => checkMap.get(d));
+    const anyMissing = states.some((s) => !s);
+    const allOk = states.every((s) => s?.ok);
+    const status: ServiceStatus = anyMissing ? "degraded" : allOk ? "operational" : "outage";
+    const latencyMs = states.find((s) => s?.latency !== undefined)?.latency;
+    return { name, description, status, latencyMs };
+  });
 }
 
 export default async function StatusPage() {
-  const services = await getServices();
-  const allOperational = services.every((s) => s.status === "operational");
+  const { data, ok, fetchedAt } = await getHealth();
+  const services = deriveServices(data);
+  const allOperational = ok && data?.status === "ok" && services.every((s) => s.status === "operational");
+  const lastChecked = data?.timestamp ?? fetchedAt;
+  const lastCheckedLabel = new Date(lastChecked).toLocaleString("en-ZA", {
+    timeZone: "Africa/Johannesburg",
+  });
 
   return (
     <div className="bg-paper min-h-screen">
@@ -97,7 +110,12 @@ export default async function StatusPage() {
         <div className="max-w-3xl mx-auto">
           <p className="eyebrow text-ink-500 mb-6">System status</p>
           <h1 className="font-display font-medium text-[clamp(2.5rem,5vw,4rem)] leading-tight tracking-tight text-ink mb-4">
-            {allOperational ? (
+            {!data ? (
+              <>
+                Health check{" "}
+                <em className="italic font-light text-yellow-600">unavailable.</em>
+              </>
+            ) : allOperational ? (
               <>
                 All systems{" "}
                 <em className="italic font-light text-green-600">operational.</em>
@@ -110,7 +128,8 @@ export default async function StatusPage() {
             )}
           </h1>
           <p className="text-ink-500 text-sm mb-16">
-            Last checked: {new Date().toLocaleString("en-ZA", { timeZone: "Africa/Johannesburg" })} SAST
+            Last checked: {lastCheckedLabel} SAST
+            {data ? ` · uptime check ${data.uptime_ms} ms` : ""}
           </p>
 
           <div className="space-y-4">
@@ -138,6 +157,7 @@ export default async function StatusPage() {
                       className={`shrink-0 text-xs px-3 py-1 rounded-full border font-medium ${cfg.badge}`}
                     >
                       {cfg.label}
+                      {svc.latencyMs !== undefined ? ` · ${svc.latencyMs} ms` : ""}
                     </span>
                   </div>
                 </div>
@@ -147,16 +167,24 @@ export default async function StatusPage() {
 
           <div className="mt-12 bg-paper-deep border border-ink/[0.07] rounded-2xl p-6">
             <p className="eyebrow text-ink-500 mb-3">Incident history</p>
-            <p className="text-sm text-ink-500 italic">No incidents in the last 90 days.</p>
+            <p className="text-sm text-ink-500 italic">
+              {/*
+                /api/health (Terminal 3) doesn't yet return an incident log.
+                Until it does we say "no formal log" rather than fake a green
+                "no incidents in 90 days" claim.
+              */}
+              No formal incident log yet. We&rsquo;re wiring the API to expose
+              one, when it lands you&rsquo;ll see the last 90 days here.
+            </p>
           </div>
 
           <p className="mt-8 text-xs text-ink-400">
             For urgent issues, email{" "}
             <a
-              href="mailto:clarkeagency1@outlook.com"
+              href="mailto:hello@qwikly.co.za"
               className="text-ember underline transition-colors"
             >
-              clarkeagency1@outlook.com
+              hello@qwikly.co.za
             </a>
             .
           </p>
