@@ -380,7 +380,7 @@ export async function POST(req: NextRequest) {
 
           if (visitorInfo && hasContact) {
             // Real lead: contact info captured, count against monthly cap
-            const updates: Record<string, string | boolean> = {
+            const updates: Record<string, string | boolean | number> = {
               status: "new",
               is_lead: true,
               updated_at: new Date().toISOString(),
@@ -392,6 +392,12 @@ export async function POST(req: NextRequest) {
             if (visitorInfo.job_type)       updates.job_type       = visitorInfo.job_type;
             if (visitorInfo.area)           updates.area           = visitorInfo.area;
             if (visitorInfo.preferred_time) updates.preferred_time = visitorInfo.preferred_time;
+            if (visitorInfo.is_urgent)      updates.is_urgent      = true;
+            if (typeof visitorInfo.expected_days === "number"
+                && visitorInfo.expected_days >= 1
+                && visitorInfo.expected_days <= 14) {
+              updates.expected_days = visitorInfo.expected_days;
+            }
             if (isTopUp)                    updates.is_top_up      = true;
 
             // Detect "first time becoming a lead" so the alert email fires
@@ -428,6 +434,8 @@ export async function POST(req: NextRequest) {
                     need: visitorInfo.job_type ?? null,
                     preferredTime: visitorInfo.preferred_time ?? null,
                     visitorEmail: visitorInfo.email ?? null,
+                    isUrgent: !!visitorInfo.is_urgent,
+                    expectedDays: typeof visitorInfo.expected_days === "number" ? visitorInfo.expected_days : null,
                   },
                 });
                 if (!r.ok) console.warn("[chat] lead notify skipped:", { clientId: client.id, convoId, ...r });
@@ -446,9 +454,18 @@ export async function POST(req: NextRequest) {
             }
           } else if (visitorInfo) {
             // Name-only or booking_intent without contact — save but don't count as lead
-            const nameFields: Record<string, string | boolean> = {};
+            const nameFields: Record<string, string | boolean | number> = {};
             if (visitorInfo.name)           nameFields.customer_name = visitorInfo.name;
             if (visitorInfo.booking_intent) nameFields.booking_intent = true;
+            if (visitorInfo.job_type)       nameFields.job_type      = visitorInfo.job_type;
+            if (visitorInfo.area)           nameFields.area          = visitorInfo.area;
+            if (visitorInfo.preferred_time) nameFields.preferred_time = visitorInfo.preferred_time;
+            if (visitorInfo.is_urgent)      nameFields.is_urgent     = true;
+            if (typeof visitorInfo.expected_days === "number"
+                && visitorInfo.expected_days >= 1
+                && visitorInfo.expected_days <= 14) {
+              nameFields.expected_days = visitorInfo.expected_days;
+            }
             if (Object.keys(nameFields).length > 0) {
               await db.from("conversations").update({
                 ...nameFields,

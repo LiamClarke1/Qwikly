@@ -24,6 +24,10 @@ export type LeadEmailArgs = {
   documents?: SharedDocument[] | null;
   /** First name of the business owner — used to personalise the auto-filled reply. */
   ownerFirstName?: string | null;
+  /** Visitor said the job is urgent (today/ASAP). Renders a red URGENT banner. */
+  isUrgent?: boolean | null;
+  /** Visitor said the job will likely span multiple days. Surfaces in the summary. */
+  expectedDays?: number | null;
 };
 
 export function leadNotificationHtml(args: LeadEmailArgs) {
@@ -39,6 +43,8 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
     conversation,
     documents,
     ownerFirstName,
+    isUrgent,
+    expectedDays,
   } = args;
   // Detect whether the visitor gave us a phone number or an email so the
   // "tap to call / email / WhatsApp" buttons can deep-link appropriately.
@@ -212,6 +218,23 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
   const greetingName = ownerFirstName?.trim() || "";
   const greeting = greetingName ? `Hi ${esc(greetingName)},` : "Hi,";
 
+  // ── URGENT banner — visitor flagged the job as needing attention today.
+  //     Sits above the subject line so it's the first thing the tradesman
+  //     sees in the inbox preview AND in the open email.
+  const urgentBanner = isUrgent
+    ? `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 14px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:6px;">
+        <tr><td style="padding:10px 14px;font-size:13px;color:#991B1B;line-height:1.5;">
+          <strong style="color:#991B1B;letter-spacing:0.04em;">URGENT</strong> · Visitor said this needs sorting today. Reply or call now.
+        </td></tr>
+      </table>`
+    : "";
+
+  const expectedDaysLine = expectedDays && expectedDays > 1
+    ? `<p style="margin:0 0 12px;font-size:13px;color:#374151;line-height:1.55;background:#FFFBEB;border-left:3px solid #F59E0B;padding:8px 12px;border-radius:4px;">
+        <strong style="color:#92400E;">Multi-day job:</strong> Visitor estimates this will take ${expectedDays} day${expectedDays === 1 ? "" : "s"}. Hold a follow-up slot when you book.
+      </p>`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -235,7 +258,7 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
 
   <!-- Hidden preheader (preview text in inbox lists) -->
   <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#F9FAFB;opacity:0;">
-    ${esc(displayName)} reached out${need ? " about " + esc(need.slice(0, 80)) : ""}. ${(documents?.length ?? 0) > 0 ? `${documents!.length} file${documents!.length === 1 ? "" : "s"} attached.` : "Tap a button to reply."}
+    ${isUrgent ? "URGENT — " : ""}${esc(displayName)} reached out${need ? " about " + esc(need.slice(0, 80)) : ""}. ${(documents?.length ?? 0) > 0 ? `${documents!.length} file${documents!.length === 1 ? "" : "s"} attached.` : "Tap a button to reply."}
   </div>
 
   <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F9FAFB;padding:32px 16px;">
@@ -260,10 +283,15 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
           <!-- Attachments at top, like Gmail -->
           ${docsTopBlock}
 
+          <!-- Urgency banner (only if flagged) -->
+          ${urgentBanner}
+
           <!-- Subject line -->
-          <h1 style="margin:0 0 16px;font-size:20px;font-weight:600;color:#111827;line-height:1.3;letter-spacing:-0.2px;">
-            New lead: ${esc(displayName)}${need ? ` — ${esc(need.length > 50 ? need.slice(0, 50) + "…" : need)}` : ""}
+          <h1 style="margin:0 0 16px;font-size:20px;font-weight:600;color:${isUrgent ? "#991B1B" : "#111827"};line-height:1.3;letter-spacing:-0.2px;">
+            ${isUrgent ? "Urgent lead" : "New lead"}: ${esc(displayName)}${need ? ` — ${esc(need.length > 50 ? need.slice(0, 50) + "…" : need)}` : ""}
           </h1>
+
+          ${expectedDaysLine}
 
           <!-- Greeting and human intro -->
           <p style="margin:0 0 14px;font-size:15px;color:#111827;line-height:1.55;">
@@ -346,16 +374,20 @@ export function leadNotificationText(args: LeadEmailArgs) {
     suggestUrl,
     conversation,
     documents,
+    isUrgent,
+    expectedDays,
   } = args;
   const lines: string[] = [
-    `New lead — ${businessName}`,
+    `${isUrgent ? "URGENT lead" : "New lead"} — ${businessName}`,
     "",
     `${leadName ?? "A new visitor"} would like to hear back from you.`,
+    isUrgent ? "** Visitor said this needs sorting today. **" : "",
     "",
     `Contact: ${contact}`,
     visitorEmail ? `Email:   ${visitorEmail}` : "",
     need ? `Need:    ${need}` : "",
     preferredTime ? `Time:    ${preferredTime}` : "",
+    expectedDays && expectedDays > 1 ? `Job span: ~${expectedDays} days (hold a follow-up slot)` : "",
   ];
 
   const turns = Array.isArray(conversation) ? conversation : [];

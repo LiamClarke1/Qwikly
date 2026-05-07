@@ -50,6 +50,12 @@ type NotifyLeadInput = {
     preferredTime: string | null;
     visitorEmail: string | null;
     confirmToken?: string | null;
+    /** Visitor flagged the job as urgent (today/ASAP). Switches the email
+     *  to URGENT styling + subject line. */
+    isUrgent?: boolean | null;
+    /** Visitor's estimate of how many days the job will take. Surfaced in
+     *  the email so the tradesman knows to hold a follow-up slot. */
+    expectedDays?: number | null;
   };
 };
 
@@ -187,15 +193,24 @@ export async function notifyLeadCaptured(input: NotifyLeadInput): Promise<Notify
     suggestUrl,
     conversation,
     documents,
+    isUrgent: input.lead.isUrgent ?? false,
+    expectedDays: input.lead.expectedDays ?? null,
   };
+
+  const subject = input.lead.isUrgent
+    ? `URGENT lead — ${input.lead.name ?? input.lead.contact}`
+    : `New lead — ${input.lead.name ?? input.lead.contact}`;
 
   const { data, error } = await resend.emails.send({
     from: FROM,
     to: [recipient],
     replyTo: input.lead.visitorEmail ?? undefined,
-    subject: `New lead — ${input.lead.name ?? input.lead.contact}`,
+    subject,
     html: leadNotificationHtml(templateArgs),
     text: leadNotificationText(templateArgs),
+    headers: input.lead.isUrgent
+      ? { "X-Priority": "1", "X-MSMail-Priority": "High", Importance: "high" }
+      : undefined,
   });
 
   if (error) {

@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   CalendarDays, ChevronLeft, ChevronRight, Plus, Rows3, LayoutGrid,
   Phone, MessageSquare, MapPin, Search, X, Check, Clock, Link2,
-  Trash2, Calendar, Pencil,
+  Trash2, Calendar, Pencil, AlertTriangle, CalendarPlus, Hourglass,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
@@ -31,9 +31,13 @@ interface Booking {
   service_price: number | null;
   price_display: string | null;
   notes: string | null;
+  is_emergency: boolean;
+  parent_booking_id: string | null;
+  tentative_until: string | null;
+  tentative_action: "confirm" | "release" | null;
 }
 
-const FILTERS = ["All", "Booked", "Completed", "Cancelled", "No-show"] as const;
+const FILTERS = ["All", "Emergency", "Tentative", "Booked", "Completed", "Cancelled", "No-show"] as const;
 type Filter = (typeof FILTERS)[number];
 
 const TONE: Record<string, "brand" | "success" | "danger" | "warning" | "neutral"> = {
@@ -41,12 +45,14 @@ const TONE: Record<string, "brand" | "success" | "danger" | "warning" | "neutral
   completed: "success",
   cancelled: "danger",
   "no-show": "warning",
+  tentative: "warning",
 };
 
 const SLOT_COLOR: Record<string, string> = {
   completed: "bg-success/15 text-success border border-success/20",
   cancelled: "bg-danger/15 text-danger border border-danger/20",
   "no-show": "bg-warning/15 text-warning border border-warning/20",
+  tentative: "bg-warning/10 text-warning border border-warning/30 border-dashed",
   gcal: "bg-[#6366f1]/15 text-[#818cf8] border border-[#6366f1]/25",
 };
 
@@ -55,7 +61,19 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   completed: { label: "Completed", color: "bg-success/15 text-success border border-success/25" },
   cancelled: { label: "Cancelled", color: "bg-danger/15 text-danger border border-danger/25" },
   "no-show": { label: "No-show",   color: "bg-warning/15 text-warning border border-warning/25" },
+  tentative: { label: "Tentative", color: "bg-warning/10 text-warning border border-warning/30 border-dashed" },
 };
+
+// Format the time-left countdown shown on tentative bookings, e.g. "12 min left".
+function tentativeCountdown(iso: string | null): string {
+  if (!iso) return "";
+  const ms = new Date(iso).getTime() - Date.now();
+  if (ms <= 0) return "expiring now";
+  const min = Math.round(ms / 60_000);
+  if (min < 60) return `${min} min left`;
+  const hr = Math.round(min / 60);
+  return `${hr} hr left`;
+}
 
 function startOfWeek(d: Date) {
   const x = new Date(d);
@@ -71,7 +89,7 @@ const PRICE_TYPES = ["fixed", "range", "cash", "no-cash"] as const;
 type PriceType = typeof PRICE_TYPES[number];
 const PRICE_LABELS: Record<PriceType, string> = { fixed: "Fixed", range: "Range", cash: "Cash", "no-cash": "No Cash" };
 
-const BLANK = { customer_name: "", customer_phone: "", customer_email: "", job_type: "", area: "", date: "", time: "09:00", priceType: "fixed" as PriceType, priceMin: "", priceMax: "", notes: "" };
+const BLANK = { customer_name: "", customer_phone: "", customer_email: "", job_type: "", area: "", date: "", time: "09:00", priceType: "fixed" as PriceType, priceMin: "", priceMax: "", notes: "", isEmergency: false, expectedDays: 1 };
 
 interface GCalEvent {
   id: string | null | undefined;
@@ -128,7 +146,10 @@ export default function BookingsPage() {
   }, [client?.id, weekStart]);
 
   const filtered = useMemo(() => {
-    let list = filter === "All" ? bookings : bookings.filter((b) => b.status.toLowerCase() === filter.toLowerCase());
+    let list: Booking[];
+    if (filter === "All") list = bookings;
+    else if (filter === "Emergency") list = bookings.filter((b) => b.is_emergency);
+    else list = bookings.filter((b) => b.status.toLowerCase() === filter.toLowerCase());
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((b) =>
@@ -140,6 +161,52 @@ export default function BookingsPage() {
     }
     return list;
   }, [bookings, filter, search]);
+
+  // Visible emergency bookings: anything still actionable (tentative or
+  // upcoming booked) flagged as is_emergency. Sorted soonest first.
+  const emergencyLane = useMemo(() => {
+    const now = Date.now();
+    return bookings
+      .filter((b) =>
+        b.is_emergency
+        && b.status !== "completed"
+        && b.status !== "cancelled"
+        && b.status !== "no-show"
+        && (!b.booking_datetime || new Date(b.booking_datetime).getTime() >= now - 24 * 60 * 60_000)
+      )
+      .sort((a, b) => {
+        // Tentative first (needs decision), then by start time
+        if (a.status === "tentative" && b.status !== "tentative") return -1;
+        if (a.status !== "tentative" && b.status === "tentative") return 1;
+        const at = a.booking_datetime ? new Date(a.booking_datetime).getTime() : Infinity;
+        const bt = b.booking_datetime ? new Date(b.booking_datetime).getTime() : Infinity;
+        return at - bt;
+      });
+  }, [bookings]);
+
+  // Group bookings into "jobs": parent + its follow-up days, keyed by parent id.
+  // Standalone bookings (no parent + no children) stay as a single-entry job.
+  const jobsById = useMemo(() => {
+    const childrenByParent = new Map<string, Booking[]>();
+    for (const b of bookings) {
+      if (b.parent_booking_id) {
+        const list = childrenByParent.get(b.parent_booking_id) ?? [];
+        list.push(b);
+        childrenByParent.set(b.parent_booking_id, list);
+      }
+    }
+    const m = new Map<string, Booking[]>();
+    for (const b of bookings) {
+      if (b.parent_booking_id) continue;
+      const children = (childrenByParent.get(b.id) ?? []).sort((a, c) => {
+        const at = a.booking_datetime ? new Date(a.booking_datetime).getTime() : 0;
+        const ct = c.booking_datetime ? new Date(c.booking_datetime).getTime() : 0;
+        return at - ct;
+      });
+      m.set(b.id, [b, ...children]);
+    }
+    return m;
+  }, [bookings]);
 
   const days = useMemo(() =>
     Array.from({ length: 7 }, (_, i) => {
@@ -172,6 +239,8 @@ export default function BookingsPage() {
     upcoming: bookings.filter((b) => b.booking_datetime && new Date(b.booking_datetime) > new Date() && b.status === "booked").length,
     completed: bookings.filter((b) => b.status === "completed").length,
     revenue: bookings.filter((b) => b.status === "completed").reduce((sum, b) => sum + (b.service_price ?? 0), 0),
+    emergency: bookings.filter((b) => b.is_emergency && b.status !== "completed" && b.status !== "cancelled" && b.status !== "no-show").length,
+    tentative: bookings.filter((b) => b.status === "tentative").length,
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -193,6 +262,74 @@ export default function BookingsPage() {
       showToast("Failed to delete booking", false);
     }
     setDeleteLoading(false);
+  };
+
+  // Promote a tentative booking → 'booked'.
+  const confirmBooking = async (id: string) => {
+    const r = await fetch(`/api/bookings/${id}/confirm`, { method: "POST" });
+    if (r.ok) {
+      const { booking } = await r.json();
+      setBookings((bs) => bs.map((b) => (b.id === id ? booking : b)));
+      if (active && !("_isGcal" in active) && (active as Booking).id === id) {
+        setActive(booking);
+      }
+      showToast("Slot confirmed");
+    } else {
+      showToast("Could not confirm slot", false);
+    }
+  };
+
+  // Cancel a tentative booking → frees the slot.
+  const releaseBooking = async (id: string) => {
+    const r = await fetch(`/api/bookings/${id}/release`, { method: "POST" });
+    if (r.ok) {
+      const { booking } = await r.json();
+      setBookings((bs) => bs.map((b) => (b.id === id ? booking : b)));
+      if (active && !("_isGcal" in active) && (active as Booking).id === id) {
+        setActive(booking);
+      }
+      showToast("Slot released");
+    } else {
+      showToast("Could not release slot", false);
+    }
+  };
+
+  // Add another follow-up day to an existing job. The server picks the next
+  // day-offset that isn't already taken.
+  const extendBooking = async (parentId: string) => {
+    const existingChildren = bookings.filter((b) => b.parent_booking_id === parentId);
+    const nextOffset = existingChildren.length + 1;
+    const r = await fetch(`/api/bookings/${parentId}/extend`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ daysFromParent: nextOffset }),
+    });
+    if (r.ok) {
+      const { booking } = await r.json();
+      setBookings((bs) => [booking as Booking, ...bs]);
+      showToast(`Day ${nextOffset + 1} held — confirm after day 1`);
+    } else {
+      showToast("Could not add follow-up day", false);
+    }
+  };
+
+  // Toggle the is_emergency flag after the fact.
+  const toggleEmergency = async (id: string, value: boolean) => {
+    const r = await fetch(`/api/bookings/${id}/mark-emergency`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value }),
+    });
+    if (r.ok) {
+      const { booking } = await r.json();
+      setBookings((bs) => bs.map((b) => (b.id === id ? booking : b)));
+      if (active && !("_isGcal" in active) && (active as Booking).id === id) {
+        setActive(booking);
+      }
+      showToast(value ? "Marked as emergency" : "Emergency flag removed");
+    } else {
+      showToast("Could not update emergency flag", false);
+    }
   };
 
   const openAddForSlot = (d: Date, h: number) => {
@@ -241,6 +378,7 @@ export default function BookingsPage() {
       status: "booked",
       service_price,
       notes: addForm.notes || null,
+      is_emergency: !!addForm.isEmergency,
     };
 
     let { data, error } = await supabase.from("bookings").insert([{ ...bookingBase, price_display }]).select().maybeSingle();
@@ -250,6 +388,28 @@ export default function BookingsPage() {
     }
     if (!error && data) {
       setBookings((bs) => [data as Booking, ...bs]);
+
+      // Multi-day jobs: chain N follow-up days (each tentative) onto the
+      // parent we just created. Done sequentially so the server can apply
+      // the same parent-time-of-day to each child.
+      const days = Math.max(1, Math.min(addForm.expectedDays ?? 1, 7));
+      if (days > 1 && data.id) {
+        for (let i = 1; i < days; i++) {
+          try {
+            const r = await fetch(`/api/bookings/${data.id}/extend`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ daysFromParent: i }),
+            });
+            if (r.ok) {
+              const json = await r.json();
+              if (json?.booking) setBookings((bs) => [json.booking as Booking, ...bs]);
+            }
+          } catch (err) {
+            console.error("[bookings] follow-up create failed", err);
+          }
+        }
+      }
       setShowAdd(false);
       setAddForm(BLANK);
       setWeekStart(startOfWeek(dt));
@@ -367,11 +527,85 @@ export default function BookingsPage() {
         }
       />
 
+      {/* Emergency lane — anything urgent + still actionable. Always
+          visible at the top so the tradesman can't miss it. */}
+      {emergencyLane.length > 0 && (
+        <Card className="!p-0 mb-4 overflow-hidden border-danger/40 bg-danger/5">
+          <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-danger/30 bg-danger/10">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-danger" />
+              <p className="text-small font-semibold text-danger">
+                Emergency lane · {emergencyLane.length} {emergencyLane.length === 1 ? "job needs attention" : "jobs need attention"}
+              </p>
+            </div>
+            <p className="text-tiny text-fg-muted hidden sm:block">Confirm or reroute below</p>
+          </div>
+          <div className="divide-y divide-danger/20">
+            {emergencyLane.map((b) => (
+              <div key={b.id} className="px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setActive({ ...b, _isGcal: false })}
+                  className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer text-left"
+                >
+                  <Avatar name={b.customer_name} size={32} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-small font-semibold text-fg truncate">{b.customer_name}</p>
+                      {b.status === "tentative" && (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-warning/15 text-warning border border-warning/30">
+                          <Hourglass className="w-2.5 h-2.5" />
+                          {tentativeCountdown(b.tentative_until)}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-tiny text-fg-muted truncate">
+                      {b.job_type ?? "Service"}{b.area ? ` · ${b.area}` : ""}{b.booking_datetime ? ` · ${formatTime(b.booking_datetime)}` : ""}
+                    </p>
+                  </div>
+                </button>
+                <div className="flex gap-1.5 shrink-0">
+                  {b.status === "tentative" && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => confirmBooking(b.id)}
+                        className="min-h-[36px] px-3 rounded-lg bg-success/15 border border-success/30 text-tiny font-semibold text-success hover:bg-success/25 cursor-pointer transition-colors flex items-center gap-1"
+                      >
+                        <Check className="w-3.5 h-3.5" /> Confirm
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => releaseBooking(b.id)}
+                        className="min-h-[36px] px-3 rounded-lg bg-surface-input border border-[var(--border)] text-tiny font-medium text-fg-muted hover:text-fg hover:bg-surface-hover cursor-pointer transition-colors"
+                      >
+                        Reroute
+                      </button>
+                    </>
+                  )}
+                  <a
+                    href={`tel:${b.customer_phone.replace(/[^0-9+]/g, "")}`}
+                    className="min-h-[36px] min-w-[36px] px-2 rounded-lg bg-danger/15 border border-danger/30 text-tiny font-semibold text-danger hover:bg-danger/25 cursor-pointer transition-colors flex items-center gap-1"
+                    aria-label={`Call ${b.customer_name}`}
+                  >
+                    <Phone className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Call now</span>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         {[
-          { label: "Total bookings", value: stats.total, color: "#38BDF8" },
-          { label: "Upcoming", value: stats.upcoming, color: "#60A5FA" },
+          stats.emergency > 0
+            ? { label: "Emergency open", value: stats.emergency, color: "#DC2626" }
+            : { label: "Total bookings", value: stats.total, color: "#38BDF8" },
+          stats.tentative > 0
+            ? { label: "Awaiting decision", value: stats.tentative, color: "#F59E0B" }
+            : { label: "Upcoming", value: stats.upcoming, color: "#60A5FA" },
           { label: "Completed", value: stats.completed, color: "#22C55E" },
           { label: "Est. revenue", value: `R${stats.revenue.toLocaleString("en-ZA")}`, color: "#8B5CF6" },
         ].map((s, i) => (
@@ -525,21 +759,51 @@ export default function BookingsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border)]">
-                    {filtered.map((b) => (
-                      <tr key={b.id} className="hover:bg-surface-hover cursor-pointer transition-colors" onClick={() => setActive({ ...b, _isGcal: false })}>
-                        <td className="px-5 py-3 font-medium">
-                          <div className="flex items-center gap-3">
-                            <Avatar name={b.customer_name} size={28} />
-                            <span className="text-fg">{b.customer_name}</span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-3 text-fg-muted num">{formatPhone(b.customer_phone)}</td>
-                        <td className="px-5 py-3 text-fg-muted">{b.job_type ?? "N/A"}</td>
-                        <td className="px-5 py-3 text-fg-muted">{b.area ?? "N/A"}</td>
-                        <td className="px-5 py-3 text-fg-muted num">{formatDateTime(b.booking_datetime)}</td>
-                        <td className="px-5 py-3"><Badge tone={TONE[b.status] ?? "neutral"} dot>{b.status}</Badge></td>
-                      </tr>
-                    ))}
+                    {filtered.map((b) => {
+                      const followUps = jobsById.get(b.id);
+                      const dayCount = followUps && followUps.length > 1 ? followUps.length : null;
+                      return (
+                        <tr key={b.id} className="hover:bg-surface-hover cursor-pointer transition-colors" onClick={() => setActive({ ...b, _isGcal: false })}>
+                          <td className="px-5 py-3 font-medium">
+                            <div className="flex items-center gap-3">
+                              <Avatar name={b.customer_name} size={28} />
+                              <div className="flex flex-col min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-fg truncate">{b.customer_name}</span>
+                                  {b.is_emergency && (
+                                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-danger/15 text-danger border border-danger/30">
+                                      <AlertTriangle className="w-2.5 h-2.5" /> Urgent
+                                    </span>
+                                  )}
+                                  {dayCount && (
+                                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[#6366f1]/15 text-[#818cf8] border border-[#6366f1]/30">
+                                      <CalendarDays className="w-2.5 h-2.5" /> {dayCount}-day job
+                                    </span>
+                                  )}
+                                  {b.parent_booking_id && (
+                                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-surface-input text-fg-muted border border-[var(--border)]">
+                                      Follow-up
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-5 py-3 text-fg-muted num">{formatPhone(b.customer_phone)}</td>
+                          <td className="px-5 py-3 text-fg-muted">{b.job_type ?? "N/A"}</td>
+                          <td className="px-5 py-3 text-fg-muted">{b.area ?? "N/A"}</td>
+                          <td className="px-5 py-3 text-fg-muted num">{formatDateTime(b.booking_datetime)}</td>
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-1.5">
+                              <Badge tone={TONE[b.status] ?? "neutral"} dot>{b.status}</Badge>
+                              {b.status === "tentative" && b.tentative_until && (
+                                <span className="text-[10px] text-warning font-medium">{tentativeCountdown(b.tentative_until)}</span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -699,14 +963,45 @@ export default function BookingsPage() {
               {/* Qwikly booking */}
               {activeBooking && (
                 <>
+                  {/* Emergency banner — sits at the very top so it's the
+                      first thing the tradesman sees when they open the panel. */}
+                  {activeBooking.is_emergency && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-danger/10 border border-danger/30">
+                      <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
+                      <p className="text-small font-semibold text-danger">Urgent · visitor flagged this for same-day attention</p>
+                    </div>
+                  )}
+
+                  {/* Tentative-hold banner with countdown + auto-action note. */}
+                  {activeBooking.status === "tentative" && activeBooking.tentative_until && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-warning/10 border border-warning/30">
+                      <Hourglass className="w-4 h-4 text-warning shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-small font-semibold text-warning">
+                          Tentative · {tentativeCountdown(activeBooking.tentative_until)}
+                        </p>
+                        <p className="text-tiny text-fg-muted">
+                          {activeBooking.tentative_action === "release"
+                            ? "Auto-releases if you don't confirm by the deadline."
+                            : "Auto-confirms if you don't reroute by the deadline."}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="text-center py-2">
                     <Avatar name={activeBooking.customer_name} size={60} className="mx-auto mb-3" />
                     <p className="text-h2 text-fg">{activeBooking.customer_name}</p>
                     <p className="text-small text-fg-muted mt-0.5 num">{formatPhone(activeBooking.customer_phone)}</p>
-                    <div className="mt-2 flex justify-center">
+                    <div className="mt-2 flex justify-center gap-1.5 flex-wrap">
                       <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-lg text-tiny font-semibold capitalize", STATUS_CONFIG[activeBooking.status]?.color ?? "bg-surface-input text-fg-muted border border-[var(--border)]")}>
                         {STATUS_CONFIG[activeBooking.status]?.label ?? activeBooking.status}
                       </span>
+                      {activeBooking.parent_booking_id && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-tiny font-medium bg-surface-input text-fg-muted border border-[var(--border)]">
+                          Follow-up day
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -783,6 +1078,112 @@ export default function BookingsPage() {
                       </div>
                     </div>
                   )}
+
+                  {/* Tentative actions — only shown when this booking is held */}
+                  {activeBooking.status === "tentative" && (
+                    <div>
+                      <p className="text-tiny text-fg-subtle font-medium mb-2">Decide on this slot</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => confirmBooking(activeBooking.id)}
+                          className="min-h-[44px] rounded-xl bg-success/15 border border-success/30 flex items-center justify-center gap-2 text-small font-semibold text-success hover:bg-success/25 cursor-pointer transition-colors"
+                        >
+                          <Check className="w-4 h-4" /> Confirm slot
+                        </button>
+                        <button
+                          onClick={() => releaseBooking(activeBooking.id)}
+                          className="min-h-[44px] rounded-xl bg-surface-input border border-[var(--border)] flex items-center justify-center gap-2 text-small font-medium text-fg-muted hover:text-fg hover:bg-surface-hover cursor-pointer transition-colors"
+                        >
+                          <X className="w-4 h-4" /> Release / reroute
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Multi-day job panel — parent shows its follow-up children
+                      with confirm/release controls per day. Only renders when
+                      this is the day-1 root (no parent) and has children. */}
+                  {!activeBooking.parent_booking_id && (jobsById.get(activeBooking.id)?.length ?? 0) > 1 && (
+                    <div>
+                      <p className="text-tiny text-fg-subtle font-medium mb-2">Multi-day job</p>
+                      <div className="panel !p-3 space-y-2">
+                        {jobsById.get(activeBooking.id)!.map((day, idx) => (
+                          <div key={day.id} className={cn("flex items-center gap-2", idx > 0 ? "pt-2 border-t border-[var(--border)]" : "")}>
+                            <div className="w-8 h-8 rounded-lg bg-surface-input border border-[var(--border)] flex items-center justify-center shrink-0">
+                              <span className="text-tiny font-semibold text-fg num">{idx + 1}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-small text-fg num truncate">{formatDateTime(day.booking_datetime)}</p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold capitalize", STATUS_CONFIG[day.status]?.color ?? "bg-surface-input text-fg-muted border border-[var(--border)]")}>
+                                  {STATUS_CONFIG[day.status]?.label ?? day.status}
+                                </span>
+                                {day.status === "tentative" && day.tentative_until && (
+                                  <span className="text-[10px] text-warning">{tentativeCountdown(day.tentative_until)}</span>
+                                )}
+                              </div>
+                            </div>
+                            {day.id !== activeBooking.id && day.status === "tentative" && (
+                              <div className="flex gap-1 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => confirmBooking(day.id)}
+                                  className="min-h-[36px] px-2.5 rounded-lg bg-success/15 border border-success/30 text-tiny font-semibold text-success hover:bg-success/25 cursor-pointer transition-colors"
+                                  aria-label={`Confirm day ${idx + 1}`}
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => releaseBooking(day.id)}
+                                  className="min-h-[36px] px-2.5 rounded-lg bg-surface-input border border-[var(--border)] text-tiny font-medium text-fg-muted hover:text-fg hover:bg-surface-hover cursor-pointer transition-colors"
+                                  aria-label={`Release day ${idx + 1}`}
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => extendBooking(activeBooking.id)}
+                          className="w-full min-h-[40px] rounded-lg bg-surface-input border border-dashed border-[var(--border-strong)] text-small font-medium text-fg-muted hover:text-fg hover:bg-surface-hover cursor-pointer transition-colors flex items-center justify-center gap-1.5 mt-1"
+                        >
+                          <CalendarPlus className="w-4 h-4" /> Add another follow-up day
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Add a follow-up day from a standalone booking (parent
+                      with no children yet). Lets the tradesman extend after
+                      seeing the job in person. */}
+                  {!activeBooking.parent_booking_id && (jobsById.get(activeBooking.id)?.length ?? 0) <= 1 && activeBooking.status !== "cancelled" && (
+                    <button
+                      type="button"
+                      onClick={() => extendBooking(activeBooking.id)}
+                      className="w-full min-h-[44px] rounded-xl bg-surface-input border border-dashed border-[var(--border-strong)] text-small font-medium text-fg-muted hover:text-fg hover:bg-surface-hover cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <CalendarPlus className="w-4 h-4" /> Add a follow-up day
+                    </button>
+                  )}
+
+                  {/* Emergency toggle — flip after the fact when the
+                      tradesman realises the job is/isn't urgent. */}
+                  <button
+                    type="button"
+                    onClick={() => toggleEmergency(activeBooking.id, !activeBooking.is_emergency)}
+                    className={cn(
+                      "w-full min-h-[44px] rounded-xl text-small font-medium cursor-pointer transition-colors flex items-center justify-center gap-1.5",
+                      activeBooking.is_emergency
+                        ? "bg-surface-input border border-[var(--border)] text-fg-muted hover:text-fg hover:bg-surface-hover"
+                        : "bg-danger/10 border border-danger/30 text-danger hover:bg-danger/20"
+                    )}
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    {activeBooking.is_emergency ? "Remove emergency flag" : "Mark as emergency"}
+                  </button>
 
                   <div>
                     <p className="text-tiny text-fg-subtle font-medium mb-2">Update status</p>
@@ -943,6 +1344,65 @@ export default function BookingsPage() {
                   className="w-full px-3 py-2 rounded-xl bg-surface-input border border-[var(--border)] text-small text-fg placeholder:text-fg-faint outline-none focus:border-ember/50 transition-colors resize-none"
                 />
               </ModalField>
+
+              {/* Emergency + multi-day toggles. Both small enough to share
+                  one row, but stack on narrow screens. */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <ModalField label="Urgency">
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={addForm.isEmergency}
+                    onClick={() => setAddForm({ ...addForm, isEmergency: !addForm.isEmergency })}
+                    className={cn(
+                      "w-full min-h-[44px] px-3 rounded-xl border flex items-center gap-2 text-small font-medium cursor-pointer transition-colors",
+                      addForm.isEmergency
+                        ? "bg-danger/10 border-danger/30 text-danger"
+                        : "bg-surface-input border-[var(--border)] text-fg-muted hover:text-fg hover:bg-surface-hover"
+                    )}
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    <span className="flex-1 text-left">{addForm.isEmergency ? "Marked as urgent" : "Mark as urgent"}</span>
+                    <span className={cn(
+                      "relative inline-block w-9 h-5 rounded-full transition-colors",
+                      addForm.isEmergency ? "bg-danger" : "bg-[var(--border-strong)]"
+                    )}>
+                      <span className={cn(
+                        "absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all",
+                        addForm.isEmergency ? "left-[18px]" : "left-0.5"
+                      )} />
+                    </span>
+                  </button>
+                </ModalField>
+                <ModalField label="Job spans how many days?">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setAddForm({ ...addForm, expectedDays: Math.max(1, (addForm.expectedDays ?? 1) - 1) })}
+                      className="w-9 min-h-[44px] flex items-center justify-center rounded-lg bg-surface-input border border-[var(--border)] text-fg-muted hover:text-fg cursor-pointer transition-colors shrink-0"
+                      aria-label="Fewer days"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="flex-1 min-h-[44px] px-3 rounded-xl bg-surface-input border border-[var(--border)] flex items-center justify-center text-small text-fg num">
+                      {addForm.expectedDays === 1 ? "1 day (single visit)" : `${addForm.expectedDays} days`}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setAddForm({ ...addForm, expectedDays: Math.min(7, (addForm.expectedDays ?? 1) + 1) })}
+                      className="w-9 min-h-[44px] flex items-center justify-center rounded-lg bg-surface-input border border-[var(--border)] text-fg-muted hover:text-fg cursor-pointer transition-colors shrink-0"
+                      aria-label="More days"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  {addForm.expectedDays > 1 && (
+                    <p className="text-[11px] text-fg-subtle mt-1.5 leading-snug">
+                      Day 1 is booked firmly. Days 2–{addForm.expectedDays} are held tentatively and need a tap to confirm after day 1.
+                    </p>
+                  )}
+                </ModalField>
+              </div>
             </div>
             {addForm.date && addForm.time && new Date(`${addForm.date}T${addForm.time}:00`) < new Date() && (
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/10 border border-warning/25 text-tiny text-warning mt-3">

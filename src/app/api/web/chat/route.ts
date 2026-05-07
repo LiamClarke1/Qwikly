@@ -479,7 +479,7 @@ If any check fails, rewrite before sending.`;
 // ── Tool definition (Qwikly own-site assistant) ───────────
 const TOOL_UPDATE_VISITOR: Anthropic.Tool = {
   name: "update_visitor",
-  description: "Save what you know about this visitor. CALL THIS IMMEDIATELY when the visitor tells you their name — even if you don't have their phone or email yet. Call it again when you get their phone number, email address, or when they commit to a call or booking.",
+  description: "Save what you know about this visitor. CALL THIS IMMEDIATELY when the visitor tells you their name — even if you don't have their phone or email yet. Call it again when you get their phone number, email address, or when they commit to a call or booking. ALSO set is_urgent=true the moment they signal urgency (today / ASAP / emergency / can't wait / right now), and set expected_days when they say or imply the job will take more than one day.",
   input_schema: {
     type: "object" as const,
     properties: {
@@ -490,6 +490,8 @@ const TOOL_UPDATE_VISITOR: Anthropic.Tool = {
       job_type:       { type: "string",  description: "Type of work or service the visitor needs (e.g. 'burst pipe', 'new installation', 'quote for electrical')" },
       area:           { type: "string",  description: "Area, suburb, or city the visitor is located in or needs service at" },
       preferred_time: { type: "string",  description: "When the visitor prefers to be contacted or have the job done (e.g. 'mornings', 'this week', 'ASAP')" },
+      is_urgent:      { type: "boolean", description: "Set to true when the visitor signals urgency: 'today', 'ASAP', 'emergency', 'right now', 'can't wait', 'no power', 'burst pipe', 'water everywhere', 'no hot water and family arriving', or any phrasing that implies same-day attention is needed. Default false. NEVER guess; only set true when the visitor's own words make it clear." },
+      expected_days:  { type: "integer", description: "Visitor's estimate of how many days the job will take, 1–14. Set to 2+ when they say or strongly imply a multi-day job (e.g. 'rewire whole house', 'install kitchen', 'won't finish today', 'come back tomorrow'). Leave unset when scope is unclear." },
     },
     required: [],
   },
@@ -932,7 +934,7 @@ export async function POST(req: NextRequest) {
           .gte("created_at", startOfMonth);
         if ((priorLeads ?? 0) >= leadCap) raceTopUp = true;
       }
-      const updates: Record<string, string | boolean> = { status: "lead", is_lead: true };
+      const updates: Record<string, string | boolean | number> = { status: "lead", is_lead: true };
       if (visitorInfo.name)           updates.customer_name  = visitorInfo.name;
       if (visitorInfo.phone)          updates.customer_phone = visitorInfo.phone;
       if (visitorInfo.email)          updates.customer_email = visitorInfo.email;
@@ -940,6 +942,12 @@ export async function POST(req: NextRequest) {
       if (visitorInfo.job_type)       updates.job_type       = visitorInfo.job_type;
       if (visitorInfo.area)           updates.area           = visitorInfo.area;
       if (visitorInfo.preferred_time) updates.preferred_time = visitorInfo.preferred_time;
+      if (visitorInfo.is_urgent)      updates.is_urgent      = true;
+      if (typeof visitorInfo.expected_days === "number"
+          && visitorInfo.expected_days >= 1
+          && visitorInfo.expected_days <= 14) {
+        updates.expected_days = visitorInfo.expected_days;
+      }
       if (isTopUp || raceTopUp)       updates.is_top_up      = true;
 
       // Detect "first time becoming a lead" so we only fire the notification
@@ -967,6 +975,8 @@ export async function POST(req: NextRequest) {
             need: visitorInfo.job_type ?? null,
             preferredTime: visitorInfo.preferred_time ?? null,
             visitorEmail: visitorInfo.email ?? null,
+            isUrgent: !!visitorInfo.is_urgent,
+            expectedDays: typeof visitorInfo.expected_days === "number" ? visitorInfo.expected_days : null,
           },
         })
           .then((r) => {
@@ -984,12 +994,18 @@ export async function POST(req: NextRequest) {
       }
     } else {
       // Name only (or booking_intent without contact) — save name and intent but do not count as a lead
-      const nameUpdate: Record<string, string | boolean> = {};
+      const nameUpdate: Record<string, string | boolean | number> = {};
       if (visitorInfo.name)           nameUpdate.customer_name  = visitorInfo.name;
       if (visitorInfo.booking_intent) nameUpdate.booking_intent = true;
       if (visitorInfo.job_type)       nameUpdate.job_type       = visitorInfo.job_type;
       if (visitorInfo.area)           nameUpdate.area           = visitorInfo.area;
       if (visitorInfo.preferred_time) nameUpdate.preferred_time = visitorInfo.preferred_time;
+      if (visitorInfo.is_urgent)      nameUpdate.is_urgent      = true;
+      if (typeof visitorInfo.expected_days === "number"
+          && visitorInfo.expected_days >= 1
+          && visitorInfo.expected_days <= 14) {
+        nameUpdate.expected_days = visitorInfo.expected_days;
+      }
       if (Object.keys(nameUpdate).length > 0) {
         await supabaseAdmin.from("conversations").update(nameUpdate).eq("id", convoId);
       }
