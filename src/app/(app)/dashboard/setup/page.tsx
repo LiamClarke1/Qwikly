@@ -1637,6 +1637,28 @@ export default function SetupPage() {
       setForm(filled);
       setAutoFillResult({ data: json.data, confidence: json.confidence ?? {}, filledCount: count, highlights });
 
+      // Persist uploaded documents as a searchable knowledge base so the
+      // assistant can quote certificates, insurance, qualifications, and
+      // anything else when a visitor asks. Fire-and-forget — the wizard
+      // doesn't wait for indexing, but the docs are extracted, chunked and
+      // embedded in the background and become available within seconds.
+      if (files.length > 0) {
+        for (const f of files) {
+          fetch("/api/knowledge/process", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type:       "file",
+              fileBase64: f.base64,
+              fileType:   f.mediaType,
+              filename:   f.name,
+            }),
+          }).catch((err) => {
+            console.warn("[setup] knowledge ingest failed for", f.name, err);
+          });
+        }
+      }
+
       // Brief pause at 100% before showing done
       setTimeout(() => setView("done"), 600);
     } catch (err) {

@@ -212,7 +212,7 @@ export async function POST(req: NextRequest) {
   }
 
   const systemPrompt = kbParts.length > 0
-    ? baseSystemPrompt + "\n\n## Knowledge Base\n\nUse the following information to answer specific questions accurately. Do not recite it unprompted — only use it when directly relevant to what the visitor asks.\n\n" + kbParts.join("\n\n")
+    ? baseSystemPrompt + "\n\n## KNOWLEDGE BASE — THE BUSINESS'S OWN DOCUMENTS\n\nThe excerpts below are pulled from documents the business has uploaded: certificates, insurance, qualifications, COCs, price lists, brochures, anything they've added. Treat them as authoritative. When a visitor asks about credentials, registrations, certifications, insurance, qualifications, accreditations, guarantees, or anything specific the documents cover, quote or paraphrase the relevant detail directly. Do not recite unprompted, only use what's directly relevant to what the visitor asked. If the visitor asks about something the documents don't cover, say so honestly and capture their email so the team can follow up.\n\n" + kbParts.join("\n\n")
     : baseSystemPrompt;
 
   const validSessionId = sessionId && sessionId.trim() ? sessionId.trim() : null;

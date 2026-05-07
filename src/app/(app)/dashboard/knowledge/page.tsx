@@ -2,8 +2,8 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useMemo, useState } from "react";
-import { Plus, Search, Trash2, X, Check, BookOpen } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Search, Trash2, X, Check, BookOpen, Upload, FileText, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,16 @@ interface Article {
   body: string;
   is_active: boolean;
   updated_at: string;
+}
+
+interface KnowledgeSource {
+  id: string;
+  type: "paste" | "file" | "url" | "qa";
+  original_filename: string | null;
+  source_url: string | null;
+  status: "processing" | "done" | "error";
+  chunk_count: number | null;
+  created_at: string;
 }
 
 export default function KnowledgePage() {
@@ -68,8 +78,10 @@ export default function KnowledgePage() {
         }
       />
 
-      <div className="max-w-3xl">
-        <div className="relative mb-4">
+      <div className="max-w-3xl space-y-6">
+        <DocumentsSection />
+
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-subtle" />
           <Input placeholder="Search…" value={query} onChange={(e) => setQuery(e.target.value)} className="pl-10" />
         </div>
@@ -133,6 +145,148 @@ export default function KnowledgePage() {
         />
       )}
     </>
+  );
+}
+
+function DocumentsSection() {
+  const [sources, setSources] = useState<KnowledgeSource[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      const r = await fetch("/api/knowledge/process");
+      const j = await r.json();
+      setSources((j.sources as KnowledgeSource[]) ?? []);
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { refresh(); }, []);
+
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(",")[1] ?? "");
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const upload = async (filesList: FileList | null) => {
+    if (!filesList || filesList.length === 0) return;
+    setError(null);
+    setUploading(true);
+    try {
+      for (const file of Array.from(filesList)) {
+        if (file.size > 10 * 1024 * 1024) {
+          setError(`${file.name} is over 10MB. Skipped.`);
+          continue;
+        }
+        const base64 = await fileToBase64(file);
+        const r = await fetch("/api/knowledge/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type:       "file",
+            fileBase64: base64,
+            fileType:   file.type,
+            filename:   file.name,
+          }),
+        });
+        if (!r.ok) {
+          const j = await r.json().catch(() => ({}));
+          setError(j.error ?? `Upload failed for ${file.name}`);
+        }
+      }
+      await refresh();
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const remove = async (sourceId: string, label: string) => {
+    if (!confirm(`Delete "${label}"?`)) return;
+    await fetch(`/api/knowledge/process?sourceId=${encodeURIComponent(sourceId)}`, { method: "DELETE" });
+    setSources((list) => list.filter((s) => s.id !== sourceId));
+  };
+
+  const fileSources = sources.filter((s) => s.type === "file");
+
+  return (
+    <Card>
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <h2 className="text-body font-semibold text-fg flex items-center gap-2">
+            <FileText className="w-4 h-4 text-brand" />
+            Documents &amp; certificates
+          </h2>
+          <p className="text-tiny text-fg-muted mt-1 max-w-xl">
+            Upload your business documents, COC certificates, insurance, qualifications, price lists, brochures. Your assistant reads them and references the details when a visitor asks.
+          </p>
+        </div>
+        <Button
+          variant="primary"
+          size="sm"
+          icon={<Upload className="w-4 h-4" />}
+          loading={uploading}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          Upload
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept=".pdf,.txt,.doc,.docx"
+          className="hidden"
+          onChange={(e) => upload(e.target.files)}
+        />
+      </div>
+
+      {error && (
+        <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl bg-danger/[0.08] border border-danger/25 mb-3">
+          <AlertCircle className="w-4 h-4 text-danger shrink-0 mt-0.5" />
+          <p className="text-tiny text-danger">{error}</p>
+        </div>
+      )}
+
+      {loading ? (
+        <Skeleton className="h-16" />
+      ) : fileSources.length === 0 ? (
+        <p className="text-small text-fg-muted">No documents uploaded yet. Drop in a certificate or price list and your assistant will start referencing it on the chat.</p>
+      ) : (
+        <div className="divide-y divide-line rounded-xl border border-white/[0.06] bg-[#0D111A] overflow-hidden">
+          {fileSources.map((s) => (
+            <div key={s.id} className="p-4 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center shrink-0">
+                <FileText className="w-4 h-4 text-fg-muted" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-small font-medium text-fg truncate">{s.original_filename ?? "Untitled document"}</p>
+                <p className="text-tiny text-fg-muted">
+                  {s.status === "processing" && "Indexing…"}
+                  {s.status === "done" && `${s.chunk_count ?? 0} sections indexed · ${timeAgo(s.created_at)}`}
+                  {s.status === "error" && <span className="text-danger">Failed to index</span>}
+                </p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => remove(s.id, s.original_filename ?? "this document")}>
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }
 
