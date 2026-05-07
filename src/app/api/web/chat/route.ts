@@ -772,7 +772,7 @@ export async function POST(req: NextRequest) {
 
   try {
     response = await anthropic.messages.create({
-      model: "claude-opus-4-7",
+      model: "claude-sonnet-4-6",
       max_tokens: 220,
       temperature: 0.5,
       system: systemBlocks,
@@ -853,7 +853,7 @@ export async function POST(req: NextRequest) {
 
     try {
       response = await anthropic.messages.create({
-        model: "claude-opus-4-7",
+        model: "claude-sonnet-4-6",
         max_tokens: 220,
         temperature: 0.5,
         system: systemBlocks,
