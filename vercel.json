@@ -27,6 +27,10 @@
     {
       "path": "/api/cron/trial-reminders",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/support-digest",
+      "schedule": "0 5 * * *"
     }
   ]
 }
