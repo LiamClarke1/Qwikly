@@ -8,12 +8,6 @@ import { useEffect } from "react";
 // uses for Qwikly's own account.
 const TENANT_ID = process.env.NEXT_PUBLIC_QWIKLY_OWNER_CLIENT_ID || "1";
 
-declare global {
-  interface Window {
-    QwiklyEmbed?: { open: () => void; close: () => void };
-  }
-}
-
 // TODO (supervisor): set this contact-page greeting copy on the Qwikly tenant's
 // branding row so the widget opens with: "Got a question about Qwikly? Ask away."
 // embed.js reads the greeting from the tenant's branding API, not from a data-
@@ -29,19 +23,13 @@ export default function ContactDemoWidget() {
     // Point the widget at the same origin the page is served from, so
     // embed.js doesn't hard-code https://qwikly.co.za and break in dev/preview.
     s.setAttribute("data-api", window.location.origin);
+    // Compact mode shrinks the panel from 375x540 to 320x440 so it doesn't
+    // dominate the contact page. Customer deployments don't pass this flag,
+    // so their default size is unchanged.
+    s.setAttribute("data-compact", "true");
     s.setAttribute("data-qwikly-loader", "contact");
 
-    let openTimer: number | undefined;
-    s.addEventListener("load", () => {
-      openTimer = window.setTimeout(() => {
-        window.QwiklyEmbed?.open();
-      }, 2000);
-    });
-
     document.body.appendChild(s);
-    return () => {
-      if (openTimer) window.clearTimeout(openTimer);
-    };
   }, []);
 
   return null;

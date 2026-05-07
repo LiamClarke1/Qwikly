@@ -6,6 +6,11 @@
   var TENANT_ID = script && script.getAttribute("data-qwikly-id");
   if (!TENANT_ID) return;
   var API_BASE = (script && script.getAttribute("data-api")) || "https://qwikly.co.za";
+  // Optional compact mode: smaller panel + smaller launcher. Used on Qwikly's
+  // own /contact page so the demo doesn't dominate the screen.
+  var COMPACT = script && script.getAttribute("data-compact") === "true";
+  var PANEL_W = COMPACT ? 320 : 375;
+  var PANEL_H = COMPACT ? 440 : 540;
 
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var isMobile = window.matchMedia("(max-width: 600px)").matches;
@@ -50,7 +55,7 @@
     "#launcher:active{transform:translateY(0);box-shadow:0 4px 16px rgba(232,90,44,.35)}",
     ".pulse{width:8px;height:8px;border-radius:50%;background:#22C55E;flex-shrink:0;animation:" + (prefersReduced ? "none" : "pulse 2s ease-in-out infinite") + "}",
     "@keyframes pulse{0%,100%{opacity:.4;transform:scale(.9)}50%{opacity:1;transform:scale(1.1)}}",
-    "#panel{position:fixed;bottom:84px;right:24px;z-index:2147483646;width:375px;height:540px;background:#fff;border-radius:20px;box-shadow:0 24px 72px rgba(0,0,0,.18),0 4px 16px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateY(20px) scale(.98);pointer-events:none;transition:" + TRANSITION + ";transform-origin:bottom right}",
+    "#panel{position:fixed;bottom:84px;right:24px;z-index:2147483646;width:" + PANEL_W + "px;height:" + PANEL_H + "px;background:#fff;border-radius:20px;box-shadow:0 24px 72px rgba(0,0,0,.18),0 4px 16px rgba(0,0,0,.08);display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translateY(20px) scale(.98);pointer-events:none;transition:" + TRANSITION + ";transform-origin:bottom right}",
     "#panel.open{opacity:1;transform:translateY(0) scale(1);pointer-events:all}",
     ".hd{padding:14px 16px;display:flex;align-items:center;gap:11px;flex-shrink:0;background:var(--qc,#E85A2C)}",
     ".hd-av{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;letter-spacing:-.5px;color:#fff}",
