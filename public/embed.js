@@ -11,6 +11,13 @@
   var COMPACT = script && script.getAttribute("data-compact") === "true";
   var PANEL_W = COMPACT ? 320 : 375;
   var PANEL_H = COMPACT ? 440 : 540;
+  // In compact mode the textarea + buttons need to be tighter so a long
+  // input (like an email) doesn't blow out the available height.
+  var INPUT_FONT = COMPACT ? 15 : 16;
+  var INPUT_MAXH = COMPACT ? 60 : 88;
+  var INPUT_PAD  = COMPACT ? "8px 12px" : "10px 13px";
+  var BTN_SIZE   = COMPACT ? 36 : 40;
+  var CIN_PAD    = COMPACT ? "8px 10px 10px" : "10px 12px 12px";
   // Optional teaser bubble next to the launcher. Used on the home page so first
   // time visitors notice the chat without having it auto-open in their face.
   var SHOW_PEEK = script && script.getAttribute("data-peek") === "true";
@@ -81,19 +88,19 @@
     ".dot{width:6px;height:6px;border-radius:50%;background:#9CA3AF;animation:" + (prefersReduced ? "none" : "blink 1.3s ease-in-out infinite") + "}",
     ".dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}",
     "@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}",
-    ".cin{display:flex;align-items:flex-end;gap:8px;padding:10px 12px 12px;border-top:1px solid #F1F5F9;flex-shrink:0;background:#fff}",
-    ".cinp{flex:1;padding:10px 13px;border:1.5px solid #E2E8F0;border-radius:14px;font-size:16px;outline:none;resize:none;color:#1F2937;font-family:inherit;line-height:1.4;max-height:88px;overflow-y:auto;touch-action:manipulation;-webkit-text-size-adjust:100%}",
+    ".cin{display:flex;align-items:flex-end;gap:" + (COMPACT ? 6 : 8) + "px;padding:" + CIN_PAD + ";border-top:1px solid #F1F5F9;flex-shrink:0;background:#fff}",
+    ".cinp{flex:1;padding:" + INPUT_PAD + ";border:1.5px solid #E2E8F0;border-radius:" + (COMPACT ? 12 : 14) + "px;font-size:" + INPUT_FONT + "px;outline:none;resize:none;color:#1F2937;font-family:inherit;line-height:1.4;max-height:" + INPUT_MAXH + "px;overflow-y:auto;touch-action:manipulation;-webkit-text-size-adjust:100%}",
     ".cinp:focus{border-color:var(--qc,#E85A2C);box-shadow:0 0 0 3px rgba(232,90,44,.1)}",
     ".cinp:disabled{opacity:.5;cursor:not-allowed}",
     ".cinp::placeholder{color:#9CA3AF}",
-    ".sndbtn{width:40px;height:40px;border:none;border-radius:12px;background:var(--qc,#E85A2C);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;touch-action:manipulation}",
+    ".sndbtn{width:" + BTN_SIZE + "px;height:" + BTN_SIZE + "px;border:none;border-radius:" + (COMPACT ? 10 : 12) + "px;background:var(--qc,#E85A2C);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity .15s;touch-action:manipulation}",
     ".sndbtn:hover{opacity:.85}",
     ".sndbtn:active{opacity:.7}",
     ".sndbtn:disabled{opacity:.35;cursor:not-allowed}",
     ".sndbtn svg{pointer-events:none}",
     ".ft{text-align:center;padding:6px;font-size:10px;color:#CBD5E1;border-top:1px solid #F8FAFC;background:#fff;flex-shrink:0}",
     // Attach button
-    ".attbtn{width:40px;height:40px;border:none;border-radius:12px;background:#F1F5F9;color:#64748B;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:" + MICRO + ";touch-action:manipulation}",
+    ".attbtn{width:" + BTN_SIZE + "px;height:" + BTN_SIZE + "px;border:none;border-radius:" + (COMPACT ? 10 : 12) + "px;background:#F1F5F9;color:#64748B;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:" + MICRO + ";touch-action:manipulation}",
     ".attbtn:hover{background:#E2E8F0;color:#1F2937}",
     ".attbtn:active{opacity:.7}",
     ".attbtn:disabled{opacity:.35;cursor:not-allowed}",
