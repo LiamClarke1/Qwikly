@@ -95,7 +95,7 @@ export default function FilesSettingsPage() {
 
       {toast && (
         <div className={cn(
-          "fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-pop text-sm font-medium",
+          "fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom)+1rem)] md:bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-pop text-sm font-medium",
           toast.tone === "success" ? "bg-success text-white" : "bg-danger text-white"
         )}>
           {toast.tone === "success" && <Check className="w-4 h-4" />}

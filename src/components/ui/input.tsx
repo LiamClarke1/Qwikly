@@ -4,7 +4,7 @@ import { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttr
 import { cn } from "@/lib/cn";
 
 const baseInput =
-  "w-full bg-surface-input border border-[var(--border)] rounded-xl px-4 py-2.5 text-body text-fg placeholder:text-fg-faint outline-none focus:border-ember/40 focus:ring-2 focus:ring-ember/10 transition-colors duration-150 hover:border-[var(--border-strong)]";
+  "w-full bg-surface-input border border-[var(--border)] rounded-xl px-4 py-2.5 text-[16px] md:text-body text-fg placeholder:text-fg-faint outline-none focus:border-ember/40 focus:ring-2 focus:ring-ember/10 transition-colors duration-150 hover:border-[var(--border-strong)]";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   function Input({ className, ...rest }, ref) {

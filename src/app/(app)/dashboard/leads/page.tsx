@@ -758,7 +758,7 @@ function DetailPanel({
           ? "fixed inset-0 z-[60] bg-white overflow-y-auto overflow-x-hidden overscroll-contain pb-20"
           : "flex flex-col h-full bg-white border-l border-ink/[0.08] overflow-y-auto overflow-x-hidden"
       )}
-      style={isMobile ? { paddingTop: "env(safe-area-inset-top)" } : undefined}
+      style={isMobile ? { paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" } : undefined}
     >
 
       {/* Mobile back bar, sits above topbar (z-30) and bottom nav (z-30); pads for iOS notch */}

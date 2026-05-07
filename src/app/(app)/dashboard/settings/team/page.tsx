@@ -254,7 +254,7 @@ function InviteModal({ onClose, onInvited }: { onClose: () => void; onInvited: (
         <Card className="w-full max-w-md pointer-events-auto animate-slide-up">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-h2 text-fg">Invite team member</h2>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-hover cursor-pointer">
+            <button onClick={onClose} aria-label="Close" className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-surface-hover cursor-pointer">
               <XIcon className="w-4 h-4 text-fg-muted" />
             </button>
           </div>

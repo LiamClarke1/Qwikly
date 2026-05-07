@@ -175,7 +175,7 @@ function DeleteConfirmModal({ onClose, onConfirmed }: {
               <AlertTriangle className="w-5 h-5 text-red-500" />
               <h2 className="text-h2 text-fg">Confirm deletion</h2>
             </div>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-hover cursor-pointer">
+            <button onClick={onClose} aria-label="Close" className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-surface-hover cursor-pointer">
               <XIcon className="w-4 h-4 text-fg-muted" />
             </button>
           </div>

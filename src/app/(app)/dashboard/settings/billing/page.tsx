@@ -164,7 +164,7 @@ function PlanChangeModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-[#1a1f2e] border border-line rounded-2xl p-6 w-full max-w-md">
         {done ? (
           <div className="text-center py-4">
@@ -286,7 +286,7 @@ function CancelModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-[#1a1f2e] border border-line rounded-2xl p-6 w-full max-w-md">
         {done ? (
           <div className="text-center py-4">

@@ -331,7 +331,7 @@ function Editor({
         <Card className="w-full max-w-xl my-8 pointer-events-auto animate-slide-up">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-h2 text-fg">{initial ? "Edit answer" : "Add answer"}</h2>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] cursor-pointer"><X className="w-4 h-4 text-fg-muted" /></button>
+            <button onClick={onClose} aria-label="Close" className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-white/[0.06] cursor-pointer"><X className="w-4 h-4 text-fg-muted" /></button>
           </div>
 
           <div className="space-y-4">

@@ -816,7 +816,7 @@ export default function BookingsPage() {
       {active && (
         <>
           <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => { setActive(null); setEditingGcal(false); }} />
-          <aside className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto bg-surface-card rounded-t-2xl border-t border-[var(--border)] scrollbar-thin animate-slide-up md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md md:max-h-[88vh] md:rounded-2xl md:border md:shadow-pop">
+          <aside className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-y-auto bg-surface-card rounded-t-2xl border-t border-[var(--border)] scrollbar-thin animate-slide-up md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md md:max-h-[88vh] md:rounded-2xl md:border md:shadow-pop" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
             {/* Drag handle — mobile only */}
             <div className="flex justify-center pt-3 pb-1 md:hidden">
               <div className="w-10 h-1 rounded-full bg-[var(--border-strong)]" />

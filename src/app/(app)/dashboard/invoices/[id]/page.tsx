@@ -70,7 +70,7 @@ function RecordPaymentModal({ invoiceId, amountDue, onClose, onDone }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-[#1a1f2e] border border-line rounded-2xl p-6 w-full max-w-sm">
         <h3 className="text-h2 text-fg mb-5">Record payment</h3>
         <form onSubmit={submit} className="space-y-4">

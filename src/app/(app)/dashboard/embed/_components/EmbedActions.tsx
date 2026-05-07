@@ -168,7 +168,7 @@ export function EmbedActions({ publicKey, tenantName }: EmbedActionsProps) {
               <button
                 onClick={() => setModalOpen(false)}
                 aria-label="Close"
-                className="w-7 h-7 rounded-lg flex items-center justify-center text-ink-400 hover:text-ink hover:bg-ink/[0.06] cursor-pointer transition-colors ml-2 shrink-0"
+                className="w-11 h-11 rounded-lg flex items-center justify-center text-ink-400 hover:text-ink hover:bg-ink/[0.06] cursor-pointer transition-colors ml-2 shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>

@@ -305,7 +305,8 @@ function ContactDrawer({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer"
+            aria-label="Close"
+            className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-surface-hover transition-colors cursor-pointer"
           >
             <X className="w-4 h-4 text-fg-muted" />
           </button>
@@ -452,7 +453,8 @@ function CreateContactModal({
             <h2 className="text-h2 text-fg">Add contact</h2>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-lg hover:bg-surface-hover transition-colors cursor-pointer"
+              aria-label="Close"
+              className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-surface-hover transition-colors cursor-pointer"
             >
               <X className="w-4 h-4 text-fg-muted" />
             </button>

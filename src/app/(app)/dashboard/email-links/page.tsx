@@ -83,7 +83,7 @@ export default function EmailLinksPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <p className="text-body font-semibold text-fg font-mono text-small">
+                    <p className="text-body font-semibold text-fg font-mono text-small truncate">
                       qwikly.co.za/l/{link.slug}
                     </p>
                     {link.campaign && (
@@ -177,7 +177,7 @@ function CreateLinkModal({
           <Card className="w-full max-w-md pointer-events-auto animate-slide-up">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-h2 text-fg">New tracked link</h2>
-              <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] cursor-pointer">
+              <button onClick={onClose} aria-label="Close" className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-white/[0.06] cursor-pointer">
                 <Plus className="w-4 h-4 text-fg-muted rotate-45" />
               </button>
             </div>
