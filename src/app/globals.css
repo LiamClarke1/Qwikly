@@ -148,9 +148,9 @@ select {
   .display-huge {
     font-family: var(--font-fraunces), Georgia, serif;
     font-weight: 700;
-    font-size: clamp(3rem, 8.5vw, 9rem);
-    line-height: 0.9;
-    letter-spacing: -0.04em;
+    font-size: clamp(2.75rem, 6.5vw, 6.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.035em;
     font-optical-sizing: auto;
   }
 
