@@ -301,10 +301,12 @@ export function setupCallSlotPickerHtml({
   visitorName,
   slots,
   baseUrl,
+  rescheduleToken,
 }: {
   visitorName: string;
   slots: { token: string; label: string }[];
   baseUrl: string;
+  rescheduleToken?: string;
 }) {
   const slotButtons = slots
     .map(
@@ -316,6 +318,12 @@ export function setupCallSlotPickerHtml({
     </table>`
     )
     .join("");
+
+  const rescheduleCta = rescheduleToken
+    ? `<table cellpadding="0" cellspacing="0" style="margin:18px 0 0;width:100%;"><tr><td style="border:1px dashed rgba(232,90,44,0.45);border-radius:10px;background:rgba(232,90,44,0.05);">
+         <a href="${baseUrl}/reschedule/${rescheduleToken}" style="display:block;padding:14px 18px;font-size:13px;font-weight:600;color:#E85A2C;text-decoration:none;letter-spacing:-.005em;text-align:center;">None of these work? Tell us when does &nbsp;→</a>
+       </td></tr></table>`
+    : "";
 
   return `<!DOCTYPE html>
 <html>
@@ -341,8 +349,10 @@ export function setupCallSlotPickerHtml({
 
           ${slotButtons}
 
+          ${rescheduleCta}
+
           <p style="margin:18px 0 0;font-size:12px;color:#6B7280;line-height:1.55;">
-            None of these work? Reply to this email and we'll send fresh times. Slots hold for 48 hours.
+            Slots hold for 48 hours. Reply to this email if you'd rather chat over text.
           </p>
         </td></tr>
 
@@ -405,6 +415,146 @@ export function bookingReminderHtml({
           <p style="margin:0;font-size:11px;color:#4B5563;">Powered by <a href="https://qwikly.co.za" style="color:#E85A2C;text-decoration:none;">Qwikly</a></p>
         </td></tr>
 
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+// ─── Host-side templates (sent to the Clarke Agency inbox, not customers) ───
+
+function escHtml(s: string) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+export function contactFormHostNotificationHtml({
+  name,
+  email,
+  phone,
+  subject,
+  message,
+}: {
+  name: string;
+  email: string;
+  phone?: string | null;
+  subject: string;
+  message: string;
+}) {
+  const submittedAt = new Date().toLocaleString("en-ZA", {
+    timeZone: "Africa/Johannesburg",
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#07080B;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#07080B;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="padding-bottom:32px;"><span style="font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.5px;">Qwikly<span style="color:#E85A2C;">.</span></span></td></tr>
+        <tr><td style="background:#0D111A;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:32px;">
+          <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;">New contact</p>
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.3px;">${escHtml(subject)}</h1>
+          <p style="margin:0 0 24px;font-size:13px;color:#9CA3AF;line-height:1.6;">Submitted ${submittedAt} SAST</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid rgba(255,255,255,0.06);margin-bottom:18px;">
+            <tr><td style="padding:12px 0 6px;color:#9CA3AF;font-size:13px;">From</td><td style="padding:12px 0 6px;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;">${escHtml(name)}</td></tr>
+            <tr><td style="padding:6px 0;color:#9CA3AF;font-size:13px;">Email</td><td style="padding:6px 0;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;"><a href="mailto:${escHtml(email)}" style="color:#F4F4F5;text-decoration:none;">${escHtml(email)}</a></td></tr>
+            ${phone ? `<tr><td style="padding:6px 0 12px;color:#9CA3AF;font-size:13px;">Phone</td><td style="padding:6px 0 12px;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;">${escHtml(phone)}</td></tr>` : ""}
+          </table>
+          <p style="margin:0 0 6px;font-size:13px;color:#F4F4F5;font-weight:600;">Message</p>
+          <p style="margin:0 0 24px;font-size:13px;color:#9CA3AF;line-height:1.65;white-space:pre-wrap;">${escHtml(message)}</p>
+          <table cellpadding="0" cellspacing="0" style="margin:0;"><tr><td style="background:#E85A2C;border-radius:10px;">
+            <a href="mailto:${escHtml(email)}?subject=${encodeURIComponent("Re: " + subject)}" style="display:inline-block;padding:13px 22px;font-size:14px;font-weight:700;color:#fff;text-decoration:none;letter-spacing:-.005em;">Reply to ${escHtml(name.split(" ")[0])}</a>
+          </td></tr></table>
+        </td></tr>
+        <tr><td style="padding-top:24px;text-align:center;"><p style="margin:0;font-size:11px;color:#4B5563;">Sent by <a href="https://qwikly.co.za" style="color:#E85A2C;text-decoration:none;">Qwikly</a></p></td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export function rescheduleHostNotificationHtml({
+  name,
+  email,
+  phone,
+  preferredTimes,
+  originalSlots,
+}: {
+  name: string;
+  email: string;
+  phone?: string | null;
+  preferredTimes: string;
+  originalSlots: string[];
+}) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#07080B;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#07080B;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="padding-bottom:32px;"><span style="font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.5px;">Qwikly<span style="color:#E85A2C;">.</span></span></td></tr>
+        <tr><td style="background:#0D111A;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:32px;">
+          <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;">Reschedule request</p>
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.3px;">${escHtml(name)} needs different times</h1>
+          <p style="margin:0 0 24px;font-size:14px;color:#9CA3AF;line-height:1.6;">The 3 slots you offered didn't work. Send fresh ones.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid rgba(255,255,255,0.06);margin-bottom:18px;">
+            <tr><td style="padding:12px 0 6px;color:#9CA3AF;font-size:13px;">Email</td><td style="padding:12px 0 6px;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;"><a href="mailto:${escHtml(email)}" style="color:#F4F4F5;text-decoration:none;">${escHtml(email)}</a></td></tr>
+            ${phone ? `<tr><td style="padding:6px 0;color:#9CA3AF;font-size:13px;">Phone</td><td style="padding:6px 0;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;">${escHtml(phone)}</td></tr>` : ""}
+          </table>
+          <p style="margin:0 0 6px;font-size:13px;color:#F4F4F5;font-weight:600;">When does work for them</p>
+          <p style="margin:0 0 18px;font-size:13px;color:#9CA3AF;line-height:1.65;white-space:pre-wrap;">${escHtml(preferredTimes)}</p>
+          <p style="margin:0 0 6px;font-size:13px;color:#F4F4F5;font-weight:600;">Slots offered (declined)</p>
+          <p style="margin:0 0 24px;font-size:12px;color:#6B7280;line-height:1.55;">${originalSlots.map(escHtml).join(" · ")}</p>
+          <table cellpadding="0" cellspacing="0" style="margin:0;"><tr><td style="background:#E85A2C;border-radius:10px;">
+            <a href="mailto:${escHtml(email)}?subject=${encodeURIComponent("New times for your Qwikly setup call")}" style="display:inline-block;padding:13px 22px;font-size:14px;font-weight:700;color:#fff;text-decoration:none;letter-spacing:-.005em;">Email ${escHtml(name.split(" ")[0])} new slots</a>
+          </td></tr></table>
+        </td></tr>
+        <tr><td style="padding-top:24px;text-align:center;"><p style="margin:0;font-size:11px;color:#4B5563;">Sent by <a href="https://qwikly.co.za" style="color:#E85A2C;text-decoration:none;">Qwikly</a></p></td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+export function rescheduleAcknowledgmentHtml({
+  visitorName,
+}: {
+  visitorName: string;
+}) {
+  const first = visitorName.split(" ")[0] || visitorName;
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#07080B;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#07080B;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="padding-bottom:32px;"><span style="font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.5px;">Qwikly<span style="color:#E85A2C;">.</span></span></td></tr>
+        <tr><td style="background:#0D111A;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:32px;">
+          <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;">Got it, ${escHtml(first)}</p>
+          <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.3px;">We'll come back with fresh times.</h1>
+          <p style="margin:0 0 16px;font-size:14px;color:#9CA3AF;line-height:1.65;">
+            Thanks for letting us know. The Qwikly team has the times you suggested and will reach out within one business day with a slot that works for both of us.
+          </p>
+          <p style="margin:0;font-size:13px;color:#6B7280;line-height:1.6;">
+            If anything urgent comes up before then, just reply to this email.
+          </p>
+        </td></tr>
+        <tr><td style="padding-top:24px;text-align:center;"><p style="margin:0;font-size:11px;color:#4B5563;">Sent by <a href="https://qwikly.co.za" style="color:#E85A2C;text-decoration:none;">Qwikly</a></p></td></tr>
       </table>
     </td></tr>
   </table>

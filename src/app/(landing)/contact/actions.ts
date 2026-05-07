@@ -2,9 +2,9 @@
 
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase-server";
-import { resend, FROM, setupCallSlotPickerHtml } from "@/lib/resend";
+import { resend, FROM, setupCallSlotPickerHtml, contactFormHostNotificationHtml } from "@/lib/resend";
 import { getAvailableSlots } from "@/lib/booking-availability";
-import { signBookingToken } from "@/lib/booking-link";
+import { signBookingToken, signRescheduleToken } from "@/lib/booking-link";
 
 const QWIKLY_OWN_CLIENT_ID = "1";
 const SETUP_CALL_SUBJECT = "Book a setup call";
@@ -47,10 +47,6 @@ export async function submitContactForm(
 
   const { name, email, phone, subject, message } = parsed.data;
 
-  function esc(s: string) {
-    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
-
   const db = supabaseAdmin();
   const { error: dbError } = await db
     .from("support_messages")
@@ -73,12 +69,7 @@ export async function submitContactForm(
     to: ["clarkeagency1@outlook.com"],
     replyTo: email,
     subject: `[Qwikly Contact] ${subject}`,
-    html: `
-      <p><strong>From:</strong> ${esc(name)} &lt;${esc(email)}&gt;${phone ? ` | ${esc(phone)}` : ""}</p>
-      <p><strong>Subject:</strong> ${esc(subject)}</p>
-      <hr />
-      <p style="white-space:pre-wrap">${esc(message)}</p>
-    `,
+    html: contactFormHostNotificationHtml({ name, email, phone: phone ?? null, subject, message }),
   });
 
   let setupCallTriggered = false;
@@ -101,11 +92,18 @@ export async function submitContactForm(
         }));
         const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://qwikly.co.za").replace(/\/$/, "");
         const firstName = name.split(" ")[0];
+        const rescheduleToken = signRescheduleToken({
+          n: name,
+          e: email,
+          p: phone ?? "",
+          l: top3.map((s) => s.label),
+          x: exp,
+        });
         await resend.emails.send({
           from: FROM,
           to: [email],
           subject: "Pick a time for your Qwikly setup call",
-          html: setupCallSlotPickerHtml({ visitorName: firstName, slots, baseUrl }),
+          html: setupCallSlotPickerHtml({ visitorName: firstName, slots, baseUrl, rescheduleToken }),
         });
         setupCallTriggered = true;
       } else {

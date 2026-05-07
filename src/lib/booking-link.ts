@@ -57,3 +57,47 @@ export function verifyBookingToken(token: string): BookingTokenResult {
   }
   return { ok: true, payload };
 }
+
+// ─── Reschedule token (used when a visitor declines all offered slots) ──
+export type ReschedulePayload = {
+  n: string;       // visitor name
+  e: string;       // visitor email
+  p?: string;      // visitor phone (optional)
+  l: string[];     // labels of the slots originally offered
+  x: number;       // expiry (unix seconds)
+};
+
+export function signRescheduleToken(payload: ReschedulePayload): string {
+  if (!SECRET) throw new Error("BOOKING_LINK_SECRET (or CRON_SECRET) is not configured");
+  const body = b64url(JSON.stringify({ ...payload, _t: "reschedule" }));
+  const sig = b64url(createHmac("sha256", SECRET).update(body).digest());
+  return `${body}.${sig}`;
+}
+
+export type RescheduleTokenResult =
+  | { ok: true; payload: ReschedulePayload }
+  | { ok: false; reason: "malformed" | "bad_signature" | "expired" };
+
+export function verifyRescheduleToken(token: string): RescheduleTokenResult {
+  if (!SECRET) return { ok: false, reason: "bad_signature" };
+  const parts = token.split(".");
+  if (parts.length !== 2) return { ok: false, reason: "malformed" };
+  const [body, sig] = parts;
+
+  const expectedSig = b64url(createHmac("sha256", SECRET).update(body).digest());
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expectedSig);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    return { ok: false, reason: "bad_signature" };
+  }
+
+  let payload: ReschedulePayload & { _t?: string };
+  try {
+    payload = JSON.parse(b64urlDecode(body).toString("utf8"));
+  } catch {
+    return { ok: false, reason: "malformed" };
+  }
+  if (payload._t !== "reschedule") return { ok: false, reason: "malformed" };
+  if (Math.floor(Date.now() / 1000) > payload.x) return { ok: false, reason: "expired" };
+  return { ok: true, payload };
+}

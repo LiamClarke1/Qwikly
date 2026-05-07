@@ -29,6 +29,8 @@ const PUBLIC_PREFIXES = [
   "/api/pdf",
   "/connect-your-website",
   "/widget",
+  "/book",
+  "/reschedule",
   // v2 public endpoints
   "/api/widget-config",
   "/api/leads/confirm",
