@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="paperGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F4EEE4"/>
+      <stop offset="1" stop-color="#EAE1D1"/>
+    </linearGradient>
+    <radialGradient id="emberGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#E85A2C" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#E85A2C" stop-opacity="0"/>
+    </radialGradient>
+    <style><![CDATA[
+      .display { font-family: "Fraunces", "Georgia", "Times New Roman", serif; }
+      .body    { font-family: "Inter", -apple-system, "Helvetica Neue", system-ui, sans-serif; }
+      .mono    { font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace; }
+    ]]></style>
+  </defs>
+
+  <!-- Cream paper canvas with subtle gradient -->
+  <rect width="1200" height="630" fill="url(#paperGrad)"/>
+
+  <!-- Soft ember glow lower-right -->
+  <circle cx="1080" cy="540" r="280" fill="url(#emberGlow)"/>
+
+  <!-- Hairline frame, paper-deep -->
+  <rect x="40" y="40" width="1120" height="550" fill="none" stroke="#0E0E0C" stroke-opacity="0.08" stroke-width="1"/>
+
+  <!-- Top eyebrow row -->
+  <g transform="translate(96 112)">
+    <rect x="0" y="-14" width="6" height="20" fill="#E85A2C"/>
+    <text x="20" y="2" class="body" font-size="18" letter-spacing="3" fill="#3C3C38" font-weight="500">DIGITAL ASSISTANT FOR SERVICE BUSINESSES</text>
+  </g>
+
+  <!-- Wordmark -->
+  <g transform="translate(96 200)">
+    <text class="display" font-size="64" font-weight="600" fill="#0E0E0C" letter-spacing="-1.2">Qwikly<tspan fill="#E85A2C">.</tspan></text>
+  </g>
+
+  <!-- Headline -->
+  <g transform="translate(96 340)">
+    <text class="display" font-size="80" font-weight="600" fill="#0E0E0C" letter-spacing="-1.6">Never miss a lead,</text>
+    <text y="92" class="display" font-size="80" font-style="italic" font-weight="500" fill="#0E0E0C" letter-spacing="-1.6">again.</text>
+  </g>
+
+  <!-- Bottom row -->
+  <g transform="translate(96 555)">
+    <text class="body" font-size="22" fill="#3C3C38" font-weight="500">Captures every visitor, qualifies them, books them in.</text>
+  </g>
+
+  <g transform="translate(1104 562)">
+    <text text-anchor="end" class="mono" font-size="20" fill="#0E0E0C" font-weight="500">qwikly.co.za</text>
+  </g>
+</svg>
