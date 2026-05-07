@@ -474,27 +474,35 @@
 
   var URL_RE = /(https?:\/\/[^\s<>"]+|[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.(?:co\.za|com|org|net|io|app)(?:\/[^\s<>"]*)?)/g;
 
+  function linkifyInto(parent, seg) {
+    var last = 0, m;
+    URL_RE.lastIndex = 0;
+    while ((m = URL_RE.exec(seg)) !== null) {
+      if (m.index > last) parent.appendChild(document.createTextNode(seg.slice(last, m.index)));
+      var a = document.createElement("a");
+      a.href = m[0].startsWith("http") ? m[0] : "https://" + m[0];
+      a.target = "_blank"; a.rel = "noopener noreferrer";
+      a.textContent = m[0];
+      parent.appendChild(a);
+      last = URL_RE.lastIndex;
+    }
+    if (last < seg.length) parent.appendChild(document.createTextNode(seg.slice(last)));
+  }
+
   function textToNodes(text) {
     var nodes = [];
     var parts = text.split(/\*\*(.*?)\*\*/g);
     for (var p = 0; p < parts.length; p++) {
       if (p % 2 === 1) {
+        // Bolded chunk — still linkify any URLs inside it so the bold CTA
+        // and its link are both honored.
         var strong = document.createElement("strong");
-        strong.textContent = parts[p];
+        linkifyInto(strong, parts[p]);
         nodes.push(strong);
       } else {
-        var seg = parts[p], last = 0, m;
-        URL_RE.lastIndex = 0;
-        while ((m = URL_RE.exec(seg)) !== null) {
-          if (m.index > last) nodes.push(document.createTextNode(seg.slice(last, m.index)));
-          var a = document.createElement("a");
-          a.href = m[0].startsWith("http") ? m[0] : "https://" + m[0];
-          a.target = "_blank"; a.rel = "noopener noreferrer";
-          a.textContent = m[0];
-          nodes.push(a);
-          last = URL_RE.lastIndex;
-        }
-        if (last < seg.length) nodes.push(document.createTextNode(seg.slice(last)));
+        var wrap = document.createDocumentFragment();
+        linkifyInto(wrap, parts[p]);
+        nodes.push(wrap);
       }
     }
     return nodes;
