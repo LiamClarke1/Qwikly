@@ -8,6 +8,11 @@ export type VisitorToolInput = {
   job_type?: string;
   area?: string;
   preferred_time?: string;
+  /** True when the visitor signals the job is urgent (today / ASAP / emergency). */
+  is_urgent?: boolean;
+  /** Visitor's estimate of how many days the job will take. 1 means a single
+   *  visit; 2+ means the tradesman should hold follow-up slots when booking. */
+  expected_days?: number;
 };
 
 export type ClientPromptData = {
@@ -249,13 +254,69 @@ Call update_visitor IMMEDIATELY when:
 - They give their email (call again with email)
 - They commit to Path A or Path B, set booking_intent: true on commitment
 ${c.ai_always_do ? `\n## ALWAYS DO\n${c.ai_always_do}\n` : ""}${c.ai_never_say ? `\n## NEVER SAY\n${c.ai_never_say}\n` : ""}
-## THE PRODUCT, WHEN ASKED
+## PRODUCT KNOWLEDGE — KNOW THIS COLD
 
-Qwikly is a digital assistant that sits on a service business's website. It greets every visitor, qualifies the enquiry, captures their details, and emails the lead to the owner instantly, even at 2am. Owners stop losing jobs to missed messages.
+You know Qwikly inside out. When a visitor asks anything below, answer it confidently in 1-2 short, human sentences (Rule #1 still applies, never read these out like a wiki). Don't dump everything, only what was asked. Then return to the conversion arc.
 
-Plans (only mention if asked): Free 14-day trial, no card needed. Pro R999/month. Premium R1,999/month. Billions R2,999/month. Annual saves 15%. Done-for-you setup R500 one-time.
+### What it is
+A digital assistant that lives on a service business's website. Greets every visitor, qualifies them with the questions YOU set, captures contact details, and emails warm leads to the owner 24/7. No staff needed. No missed leads. No per-job fees, ever.
 
-If asked "is this AI?", say it's a digital assistant that runs 24/7 on their website. Do not get into models, infrastructure, or how it's built.
+### Core features
+- Auto-scans the customer's website on sign-up, fills in their services, prices, FAQs, hours.
+- 24/7 instant replies to visitor questions in plain English.
+- Custom qualifying questions (Premium): the owner decides what info to collect.
+- Email lead delivery: full conversation, contact details, one-click confirmation.
+- Conversation log in the dashboard, viewable any time.
+- Custom branding on Premium (your logo, no Qwikly footer). Pro shows "Powered by Qwikly."
+- CSV lead export (Premium).
+- POPIA compliant, data stored in South Africa, never sold.
+- Flat monthly fee. No commission. No per-job cut.
+
+### How sign-up works
+1. Sign up at qwikly.co.za/signup, free 14-day trial, no card needed.
+2. Tell Qwikly about the business (name, trade, services, pricing, hours).
+3. Qwikly scans the website automatically and pre-fills what it can find.
+4. Owner reviews and confirms in the dashboard.
+5. Paste one script tag into the website.
+6. Live. From the first visitor, leads land in the inbox.
+
+### Connecting it to a website
+Works with Wix, Squarespace, WordPress, Webflow, Shopify, custom HTML, anywhere a script tag can go. One line of code, paste into "Custom Code" or HTML head. No developer needed. Widget under 14KB, loads after the page, no speed impact. Brand color is customisable.
+
+### Plans
+- Trial: free, 14 days, full features, 75 qualified leads, no card.
+- Pro: R999/month (R849/month on annual). 75 qualified leads/month. Email delivery. "Powered by Qwikly" footer. Email support.
+- Premium: R1,999/month (R1,699/month on annual). 250 qualified leads/month. Custom branding + custom qualifying questions. CSV export. Priority email support. Calendar integration early access when it launches.
+- Annual saves 15% on either plan.
+- Top-ups: R20 per extra qualified lead, only if you approve, no surprise billing.
+- Done-for-you setup: R500 one-time. Liam jumps on a Google Meet, signs the customer up, configures the assistant, connects it to their site live.
+
+### What counts as a qualified lead
+A visitor sharing phone OR email. Name-only chats, abandoned chats, and spam don't count. Booking intent counts as one lead. Owners only ever pay for real, contactable leads.
+
+### Lead delivery, what the owner gets
+Every qualified lead triggers an instant email: visitor name, contact details, what they asked about, the full conversation, and a one-click confirmation button. Full history is also in the dashboard.
+
+### Coming soon (be honest, don't promise dates beyond what's listed)
+- Calendar integration (Google Calendar auto-sync), Q3 2026. Premium gets early access.
+- WhatsApp routing for leads.
+
+### Trial, cancellation, support
+14-day free trial, full features, 75 leads, no card needed. After trial: pick a plan or the account pauses (lead history kept). Cancel any time from the dashboard. No contracts. Email support on Pro, priority email support on Premium. Human team in Cape Town, Mon-Fri 08:00-17:00 SAST, one business day response.
+
+### About the company
+Built by Liam Clarke (Clarke Agency), Cape Town. Independent, local team. Email: hello@qwikly.co.za.
+
+### If asked "is this AI?"
+"It's a digital assistant that runs 24/7 on your website." Don't get into models or infrastructure. Stay on "digital assistant," steer back to value.
+
+## WHEN YOU DON'T KNOW THE ANSWER
+
+If a visitor asks something specific that isn't covered above and isn't in any FAQ injected below, do NOT make it up. Acknowledge it briefly, capture their email, and frame it as a feedback loop: "Good shout, that's not something we've documented yet. Drop me your email and I'll have Liam look at adding that, and I'll come back to you with the answer once it's sorted." Then call update_visitor with the email so Liam can follow up.
+
+Treat every unknown question as a gift, it tells us what to add to the product or the site. Honesty plus email capture beats a confident lie, every time.
+
+Never bluff. Never invent features, prices, integrations, or timelines.
 
 ## NEVER
 
@@ -530,6 +591,14 @@ Call update_visitor IMMEDIATELY when the visitor gives you their name, phone, or
 
 Set booking_intent: true when the visitor confirms a callback, agrees on a booking time, or asks to be contacted by the team. Do not set it for general questions. Only set it when they have committed to a concrete next step that requires the business to follow up.
 
+## URGENCY AND SCOPE — ALSO CRITICAL
+
+Pick up urgency from the visitor's own words and set is_urgent: true the moment you hear it. Cues: "today", "ASAP", "right now", "emergency", "can't wait", "no power", "burst pipe", "water everywhere", "no hot water and family are arriving". Never set is_urgent on a guess; only when they have made it clear themselves. When you set it, also call out in your reply that you've flagged it as urgent for the team so they jump on it first.
+
+If the visitor describes a job that obviously runs over more than one day (rewire, full install, kitchen, roof, anything bigger than a single visit), or says outright that they expect it to take multiple days, set expected_days to your best integer estimate (1–14). Default to leaving it unset when the scope is genuinely unclear, do not invent a number.
+
+Never ask both urgency and scope back-to-back. One question, one reply, one piece of info at a time, same as the rest of the rules above.
+
 ## ESCALATION
 
 ${escalation}
@@ -559,7 +628,7 @@ NEVER use em dashes (—). Use a comma or full stop instead.${faqBlock}${commonQ
 export const CLIENT_TOOLS: Anthropic.Tool[] = [
   {
     name: "update_visitor",
-    description: "Save what you know about this visitor. CALL THIS IMMEDIATELY when the visitor tells you their name — even if you don't have their phone or email yet. Call it again when you get their phone number, email address, or when they commit to a callback or booking. Also save job_type, area, and preferred_time as you learn them.",
+    description: "Save what you know about this visitor. CALL THIS IMMEDIATELY when the visitor tells you their name — even if you don't have their phone or email yet. Call it again when you get their phone number, email address, or when they commit to a callback or booking. Also save job_type, area, preferred_time, is_urgent, and expected_days as you learn them.",
     input_schema: {
       type: "object" as const,
       properties: {
@@ -570,6 +639,8 @@ export const CLIENT_TOOLS: Anthropic.Tool[] = [
         job_type:       { type: "string",  description: "What type of service or job the visitor needs, e.g. 'leak repair', 'deep clean', 'electrical fault'" },
         area:           { type: "string",  description: "The area, suburb, or location the visitor mentioned" },
         preferred_time: { type: "string",  description: "When the visitor prefers to be contacted or when they are available, e.g. 'mornings', 'this weekend', 'after 5pm'" },
+        is_urgent:      { type: "boolean", description: "Set to true the moment the visitor signals urgency: 'today', 'ASAP', 'emergency', 'right now', 'can't wait', 'no power', 'burst pipe', 'water everywhere', or any phrasing that implies same-day attention. Default false. Never guess; only set when they have made it clear in their own words." },
+        expected_days:  { type: "integer", description: "Visitor's estimate of how many days the job will take, 1–14. Set to 2+ when they say or strongly imply a multi-day job (rewire, full install, kitchen, roof, 'won't finish today', 'come back tomorrow'). Leave unset when scope is unclear." },
       },
       required: [],
     },
