@@ -148,7 +148,7 @@ export default function ReschedulePage({
           Hey {firstName}, when does work for you?
         </h1>
         <p className="text-ink-500 leading-relaxed mb-8">
-          Tell us a few times that suit you over the next week and we'll send fresh slots within one business day.
+          Tell us a few times that suit you over the next week and we&rsquo;ll send fresh slots within one business day.
         </p>
 
         {searchParams.status === "missing" && (
@@ -158,7 +158,7 @@ export default function ReschedulePage({
         )}
         {searchParams.status === "too_long" && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 mb-6">
-            That's a lot of detail. Trim to the essentials, please (max 600 characters).
+            That&rsquo;s a lot of detail. Trim to the essentials, please (max 600 characters).
           </div>
         )}
 
