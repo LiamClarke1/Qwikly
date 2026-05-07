@@ -96,21 +96,29 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
     timeZone: "Africa/Johannesburg",
   });
 
-  // ── Quick-action buttons (call / WhatsApp / SMS / email) — small text-link
-  //     style, sits below the body like a normal email signature would.
+  // ── Quick-action buttons (call / WhatsApp / SMS / email)
+  // Primary action gets the ember brand color, secondaries are ghost-style on
+  // cream so the email feels on-brand with qwikly.co.za. The first available
+  // action becomes primary; the rest are secondary.
   const quickButtons: string[] = [];
-  if (callHref) {
-    quickButtons.push(`<a href="${esc(callHref)}" style="display:inline-block;margin:0 8px 8px 0;padding:9px 16px;background:#111827;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">Call</a>`);
-  }
-  if (whatsappHref) {
-    quickButtons.push(`<a href="${esc(whatsappHref)}" style="display:inline-block;margin:0 8px 8px 0;padding:9px 16px;background:#25D366;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">WhatsApp</a>`);
-  }
-  if (smsHref) {
-    quickButtons.push(`<a href="${esc(smsHref)}" style="display:inline-block;margin:0 8px 8px 0;padding:9px 16px;background:#FFFFFF;color:#111827;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;border:1px solid #E5E7EB;">Text</a>`);
-  }
-  if (emailHref) {
-    quickButtons.push(`<a href="${esc(emailHref)}" style="display:inline-block;margin:0 8px 8px 0;padding:9px 16px;background:#FFFFFF;color:#111827;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;border:1px solid #E5E7EB;">Email back</a>`);
-  }
+  const primaryBtn = (label: string, href: string) =>
+    `<a href="${esc(href)}" style="display:inline-block;margin:0 8px 8px 0;padding:11px 18px;background:#E85A2C;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;letter-spacing:-0.1px;">${label}</a>`;
+  const secondaryBtn = (label: string, href: string) =>
+    `<a href="${esc(href)}" style="display:inline-block;margin:0 8px 8px 0;padding:11px 18px;background:#FFFFFF;color:#0E0E0C;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;letter-spacing:-0.1px;border:1px solid #D6D2C8;">${label}</a>`;
+  let assignedPrimary = false;
+  const addBtn = (label: string, href: string | null) => {
+    if (!href) return;
+    if (!assignedPrimary) {
+      quickButtons.push(primaryBtn(label, href));
+      assignedPrimary = true;
+    } else {
+      quickButtons.push(secondaryBtn(label, href));
+    }
+  };
+  addBtn("Call", callHref);
+  addBtn("WhatsApp", whatsappHref);
+  addBtn("Text", smsHref);
+  addBtn("Email back", emailHref);
 
   // ── Documents shared — Gmail-style "attachment chips" pinned to the very top
   const docsTopBlock = (() => {
@@ -133,23 +141,23 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
 
     const chips = docs.map((d) => `
       <td style="padding:0 8px 8px 0;vertical-align:top;">
-        <a href="${esc(d.viewUrl)}" style="display:block;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;padding:10px 12px;text-decoration:none;min-width:180px;">
+        <a href="${esc(d.viewUrl)}" style="display:block;background:#FFFFFF;border:1px solid #E6E0D4;border-radius:8px;padding:12px 14px;text-decoration:none;min-width:180px;">
           <table cellpadding="0" cellspacing="0" role="presentation"><tr>
-            <td style="vertical-align:middle;width:36px;">
-              <span style="display:inline-block;background:#F3F4F6;color:#6B7280;font-size:10px;font-weight:700;letter-spacing:0.04em;padding:6px 7px;border-radius:5px;">${fileIcon(d.fileType)}</span>
+            <td style="vertical-align:middle;width:40px;">
+              <span style="display:inline-block;background:rgba(232,90,44,0.10);color:#C3431C;font-size:10px;font-weight:700;letter-spacing:0.06em;padding:6px 8px;border-radius:5px;">${fileIcon(d.fileType)}</span>
             </td>
             <td style="vertical-align:middle;padding-left:10px;">
-              <div style="font-size:13px;font-weight:600;color:#111827;line-height:1.3;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(d.fileName)}</div>
-              <div style="font-size:11px;color:#6B7280;margin-top:2px;">${sizeLabel(d.fileSizeBytes ?? null) || esc(d.fileType)}</div>
+              <div style="font-size:13px;font-weight:600;color:#0E0E0C;line-height:1.3;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(d.fileName)}</div>
+              <div style="font-size:11px;color:#6A6A63;margin-top:3px;">${sizeLabel(d.fileSizeBytes ?? null) || esc(d.fileType)}</div>
             </td>
           </tr></table>
         </a>
       </td>`).join("");
 
     return `
-      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:24px;">
-        <tr><td style="font-size:12px;color:#6B7280;padding-bottom:8px;">
-          📎 ${docs.length} attachment${docs.length === 1 ? "" : "s"} from the visitor
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:28px;">
+        <tr><td style="font-size:11px;color:#6A6A63;padding-bottom:10px;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;">
+          ${docs.length} attachment${docs.length === 1 ? "" : "s"} from the visitor
         </td></tr>
         <tr><td>
           <table cellpadding="0" cellspacing="0" role="presentation"><tr>${chips}</tr></table>
@@ -173,23 +181,25 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
       const text = (t.content || "").trim();
       if (!text) return "";
       const who = isVisitor ? visitorLabel : "Your assistant";
-      const whoColor = isVisitor ? "#111827" : "#6B7280";
+      const whoColor = isVisitor ? "#0E0E0C" : "#C3431C";
       return `
-        <tr><td style="padding:6px 0;font-size:14px;line-height:1.55;color:#374151;">
-          <strong style="color:${whoColor};">${esc(who)}:</strong> ${esc(text)}
+        <tr><td style="padding:8px 0;font-size:14px;line-height:1.6;color:#2A2A27;">
+          <strong style="color:${whoColor};font-weight:600;">${esc(who)}</strong>
+          <span style="color:#8F8F86;"> · </span>
+          ${esc(text)}
         </td></tr>`;
     }).filter(Boolean).join("");
 
     if (!lines) return "";
 
     const trimmedNotice = turns.length > recent.length
-      ? `<p style="margin:0 0 8px;font-size:12px;color:#9CA3AF;font-style:italic;">Showing the last ${recent.length} of ${turns.length} messages.</p>`
+      ? `<p style="margin:0 0 10px;font-size:12px;color:#8F8F86;font-style:italic;">Showing the last ${recent.length} of ${turns.length} messages.</p>`
       : "";
 
     return `
-      <p style="margin:24px 0 8px;font-size:13px;font-weight:600;color:#111827;">Conversation</p>
+      <p style="margin:32px 0 12px;font-size:11px;font-weight:600;color:#6A6A63;letter-spacing:0.12em;text-transform:uppercase;">Conversation</p>
       ${trimmedNotice}
-      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 24px;border-left:3px solid #E5E7EB;padding-left:14px;">
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 28px;background:#FFFFFF;border:1px solid #E6E0D4;border-radius:8px;padding:8px 18px;">
         ${lines}
       </table>`;
   })();
@@ -199,8 +209,8 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
   const detailRow = (label: string, value: string | null | undefined) =>
     value && value.trim()
       ? `<tr>
-          <td style="padding:6px 16px 6px 0;color:#6B7280;font-size:13px;width:120px;vertical-align:top;">${esc(label)}</td>
-          <td style="padding:6px 0;color:#111827;font-size:14px;line-height:1.5;">${esc(value)}</td>
+          <td style="padding:9px 18px 9px 0;color:#6A6A63;font-size:12px;width:120px;vertical-align:top;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;">${esc(label)}</td>
+          <td style="padding:9px 0;color:#0E0E0C;font-size:15px;line-height:1.5;font-weight:500;">${esc(value)}</td>
         </tr>`
       : "";
 
@@ -222,16 +232,16 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
   //     Sits above the subject line so it's the first thing the tradesman
   //     sees in the inbox preview AND in the open email.
   const urgentBanner = isUrgent
-    ? `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 14px;background:#FEF2F2;border:1px solid #FCA5A5;border-radius:6px;">
-        <tr><td style="padding:10px 14px;font-size:13px;color:#991B1B;line-height:1.5;">
-          <strong style="color:#991B1B;letter-spacing:0.04em;">URGENT</strong> · Visitor said this needs sorting today. Reply or call now.
+    ? `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 18px;background:#E85A2C;border-radius:6px;">
+        <tr><td style="padding:12px 16px;font-size:13px;color:#FFFFFF;line-height:1.5;">
+          <strong style="letter-spacing:0.12em;text-transform:uppercase;">Urgent</strong> &nbsp;·&nbsp; Visitor said this needs sorting today. Reply or call now.
         </td></tr>
       </table>`
     : "";
 
   const expectedDaysLine = expectedDays && expectedDays > 1
-    ? `<p style="margin:0 0 12px;font-size:13px;color:#374151;line-height:1.55;background:#FFFBEB;border-left:3px solid #F59E0B;padding:8px 12px;border-radius:4px;">
-        <strong style="color:#92400E;">Multi-day job:</strong> Visitor estimates this will take ${expectedDays} day${expectedDays === 1 ? "" : "s"}. Hold a follow-up slot when you book.
+    ? `<p style="margin:0 0 18px;font-size:13px;color:#2A2A27;line-height:1.6;background:rgba(232,90,44,0.08);border-left:3px solid #E85A2C;padding:10px 14px;border-radius:4px;">
+        <strong style="color:#0E0E0C;">Multi-day job</strong> · Visitor estimates this will take ${expectedDays} day${expectedDays === 1 ? "" : "s"}. Hold a follow-up slot when you book.
       </p>`
     : "";
 
@@ -244,115 +254,125 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
   <meta name="supported-color-schemes" content="light">
   <title>New lead — ${esc(displayName)}</title>
   <!--[if mso]>
-  <style>td,a,h1,h2,p { font-family: Arial, sans-serif !important; }</style>
+  <style>td,a,h1,h2,p { font-family: Arial, sans-serif !important; } .qw-display { font-family: Georgia, 'Times New Roman', serif !important; }</style>
   <![endif]-->
   <style>
     @media (max-width:560px) {
-      .qw-pad { padding:24px 20px !important; }
+      .qw-pad { padding:28px 22px !important; }
+      .qw-display { font-size:30px !important; line-height:1.15 !important; }
       .qw-actions td { display:block !important; width:100% !important; padding:0 0 8px !important; }
       .qw-actions a { width:100% !important; box-sizing:border-box !important; text-align:center !important; }
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background:#F9FAFB;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;color:#111827;">
+<body style="margin:0;padding:0;background:#F4EEE4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;color:#0E0E0C;">
 
   <!-- Hidden preheader (preview text in inbox lists) -->
-  <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#F9FAFB;opacity:0;">
+  <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#F4EEE4;opacity:0;">
     ${isUrgent ? "URGENT — " : ""}${esc(displayName)} reached out${need ? " about " + esc(need.slice(0, 80)) : ""}. ${(documents?.length ?? 0) > 0 ? `${documents!.length} file${documents!.length === 1 ? "" : "s"} attached.` : "Tap a button to reply."}
   </div>
 
-  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F9FAFB;padding:32px 16px;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F4EEE4;padding:36px 16px;">
     <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:560px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:8px;">
 
-        <!-- Sender header -->
-        <tr><td class="qw-pad" style="padding:24px 32px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
-            <tr>
-              <td style="vertical-align:middle;">
-                <div style="font-size:13px;color:#6B7280;">From <strong style="color:#111827;">Qwikly Assistant</strong> · ${esc(businessName)}</div>
-                <div style="font-size:12px;color:#9CA3AF;margin-top:2px;">${esc(capturedAt)} (SAST)</div>
-              </td>
-            </tr>
-          </table>
+      <!-- Brand wordmark -->
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:580px;margin:0 auto 18px;">
+        <tr><td style="padding:0 4px 0 4px;">
+          <span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:500;color:#0E0E0C;letter-spacing:-0.5px;">Qwikly<span style="color:#E85A2C;">.</span></span>
+        </td></tr>
+      </table>
+
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:580px;background:#FFFFFF;border:1px solid #E6E0D4;border-radius:12px;box-shadow:0 1px 0 rgba(14,14,12,0.04);">
+
+        <!-- Eyebrow + timestamp -->
+        <tr><td class="qw-pad" style="padding:30px 36px 0;">
+          <p style="margin:0 0 14px;font-size:11px;color:#6A6A63;letter-spacing:0.16em;text-transform:uppercase;font-weight:600;">
+            ${isUrgent ? "Urgent lead" : "New lead"} &nbsp;·&nbsp; ${esc(capturedAt)} SAST &nbsp;·&nbsp; ${esc(businessName)}
+          </p>
         </td></tr>
 
         <!-- Body -->
-        <tr><td class="qw-pad" style="padding:20px 32px 8px;">
+        <tr><td class="qw-pad" style="padding:0 36px 8px;">
 
-          <!-- Attachments at top, like Gmail -->
+          <!-- Attachments at top -->
           ${docsTopBlock}
 
-          <!-- Urgency banner (only if flagged) -->
+          <!-- Urgency banner -->
           ${urgentBanner}
 
-          <!-- Subject line -->
-          <h1 style="margin:0 0 16px;font-size:20px;font-weight:600;color:${isUrgent ? "#991B1B" : "#111827"};line-height:1.3;letter-spacing:-0.2px;">
-            ${isUrgent ? "Urgent lead" : "New lead"}: ${esc(displayName)}${need ? ` — ${esc(need.length > 50 ? need.slice(0, 50) + "…" : need)}` : ""}
+          <!-- Editorial display headline -->
+          <h1 class="qw-display" style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:34px;font-weight:400;color:#0E0E0C;line-height:1.15;letter-spacing:-0.6px;">
+            You've got a <em style="font-style:italic;font-weight:400;color:#0E0E0C;">new lead</em>${need ? `<span style="color:#6A6A63;font-style:normal;">.</span>` : `<span style="color:#E85A2C;">.</span>`}
           </h1>
 
           ${expectedDaysLine}
 
-          <!-- Greeting and human intro -->
-          <p style="margin:0 0 14px;font-size:15px;color:#111827;line-height:1.55;">
-            ${greeting}
-          </p>
-          <p style="margin:0 0 18px;font-size:15px;color:#374151;line-height:1.6;">
-            <strong style="color:#111827;">${esc(displayName)}</strong> just reached out via your website${need ? ` about <em>${esc(need)}</em>` : ""}.
-            ${preferredTime ? `They mentioned: <em>"${esc(preferredTime)}"</em>.` : ""}
-            Here's everything they shared:
+          <!-- Intro line -->
+          <p style="margin:0 0 26px;font-size:15px;color:#2A2A27;line-height:1.6;">
+            ${greeting} <strong style="color:#0E0E0C;font-weight:600;">${esc(displayName)}</strong> just came through your website${need ? ` about <em style="color:#0E0E0C;">${esc(need)}</em>` : ""}.${preferredTime ? ` They mentioned: <em style="color:#0E0E0C;">"${esc(preferredTime)}"</em>.` : ""}
           </p>
 
           <!-- Lead details -->
-          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 8px;background:#F9FAFB;border-radius:6px;padding:6px 14px;">
+          <p style="margin:0 0 10px;font-size:11px;font-weight:600;color:#6A6A63;letter-spacing:0.12em;text-transform:uppercase;">Details</p>
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 4px;background:#FAF5EC;border:1px solid #E6E0D4;border-radius:8px;padding:6px 18px;">
             ${detailRows}
           </table>
 
           <!-- Conversation transcript -->
           ${conversationBlock}
 
-          <!-- Pre-typed reply notice + buttons -->
+          <!-- Pre-typed reply -->
           ${quickButtons.length > 0 ? `
-          <p style="margin:24px 0 6px;font-size:13px;font-weight:600;color:#111827;">Reply now</p>
-          <p style="margin:0 0 12px;font-size:13px;color:#6B7280;line-height:1.55;">
-            Tap a button below — your reply is already typed. Just review and send.
+          <p style="margin:32px 0 10px;font-size:11px;font-weight:600;color:#6A6A63;letter-spacing:0.12em;text-transform:uppercase;">Reply now</p>
+          <p style="margin:0 0 14px;font-size:14px;color:#2A2A27;line-height:1.6;">
+            Tap a button below, your reply is already drafted. Just review and send.
           </p>
           <p style="margin:0 0 16px;">
             ${quickButtons.join("")}
           </p>
-          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 24px;background:#F3F4F6;border-radius:6px;padding:14px 16px;">
-            <tr><td style="font-size:13px;color:#374151;line-height:1.55;font-style:italic;white-space:pre-wrap;">${esc(followUpMessage)}</td></tr>
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 28px;background:#FAF5EC;border:1px solid #E6E0D4;border-radius:8px;padding:16px 18px;">
+            <tr><td style="font-size:14px;color:#2A2A27;line-height:1.6;font-style:italic;white-space:pre-wrap;">${esc(followUpMessage)}</td></tr>
           </table>` : ""}
 
           <!-- Booking confirm/suggest -->
-          <p style="margin:0 0 10px;font-size:13px;font-weight:600;color:#111827;">Or respond to their requested time</p>
+          <p style="margin:0 0 12px;font-size:11px;font-weight:600;color:#6A6A63;letter-spacing:0.12em;text-transform:uppercase;">Or respond to their time</p>
           <table class="qw-actions" cellpadding="0" cellspacing="0" role="presentation">
             <tr>
               <td style="padding-right:8px;">
-                <a href="${esc(confirmUrl)}" style="display:inline-block;padding:9px 18px;background:#111827;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;">Confirm slot</a>
+                <a href="${esc(confirmUrl)}" style="display:inline-block;padding:11px 20px;background:#0E0E0C;color:#FFFFFF;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;letter-spacing:-0.1px;">Confirm slot</a>
               </td>
               <td>
-                <a href="${esc(suggestUrl)}" style="display:inline-block;padding:9px 18px;background:#FFFFFF;color:#111827;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;border:1px solid #E5E7EB;">Suggest another time</a>
+                <a href="${esc(suggestUrl)}" style="display:inline-block;padding:11px 20px;background:#FFFFFF;color:#0E0E0C;text-decoration:none;border-radius:6px;font-size:14px;font-weight:600;letter-spacing:-0.1px;border:1px solid #D6D2C8;">Suggest another time</a>
               </td>
             </tr>
           </table>
 
           <!-- Reply tip -->
-          <p style="margin:24px 0 0;font-size:13px;color:#6B7280;line-height:1.55;border-top:1px solid #F3F4F6;padding-top:16px;">
-            ${visitorEmail || contactIsEmail ? `Tip: Just hit <strong style="color:#374151;">Reply</strong> on this email and your response will go straight to ${esc(visitorEmail || contact)}.` : "Tip: Reply to this email to add private notes for yourself."}
+          <p style="margin:28px 0 0;font-size:13px;color:#6A6A63;line-height:1.6;border-top:1px solid #E6E0D4;padding-top:18px;">
+            ${visitorEmail || contactIsEmail ? `Tip · hit <strong style="color:#2A2A27;font-weight:600;">Reply</strong> and your response goes straight to ${esc(visitorEmail || contact)}.` : "Tip · reply to this email to add private notes for yourself."}
           </p>
 
         </td></tr>
 
         <!-- Footer -->
-        <tr><td class="qw-pad" style="padding:18px 32px 24px;border-top:1px solid #F3F4F6;">
-          <p style="margin:0;font-size:12px;color:#9CA3AF;line-height:1.5;">
-            Captured by your <a href="https://www.qwikly.co.za/dashboard" style="color:#6B7280;text-decoration:underline;">Qwikly</a> assistant ·
-            <a href="https://www.qwikly.co.za/dashboard/settings/profile" style="color:#9CA3AF;text-decoration:underline;">Manage alerts</a>
+        <tr><td class="qw-pad" style="padding:20px 36px 26px;border-top:1px solid #F0EAE0;">
+          <p style="margin:0;font-size:12px;color:#8F8F86;line-height:1.6;">
+            Captured by your <a href="https://www.qwikly.co.za/dashboard" style="color:#6A6A63;text-decoration:underline;">Qwikly</a> assistant &nbsp;·&nbsp;
+            <a href="https://www.qwikly.co.za/dashboard/settings/profile" style="color:#8F8F86;text-decoration:underline;">Manage alerts</a>
           </p>
         </td></tr>
 
       </table>
+
+      <!-- Outer footer slogan -->
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width:580px;margin:18px auto 0;">
+        <tr><td style="text-align:center;padding:0 4px;">
+          <p style="margin:0;font-size:11px;color:#8F8F86;letter-spacing:0.04em;">
+            Never miss a lead. <a href="https://www.qwikly.co.za" style="color:#6A6A63;text-decoration:underline;">qwikly.co.za</a>
+          </p>
+        </td></tr>
+      </table>
+
     </td></tr>
   </table>
 </body>
