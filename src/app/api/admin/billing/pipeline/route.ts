@@ -23,7 +23,7 @@ export async function GET(_req: NextRequest) {
     return NextResponse.json({ error: clientsRes.error.message }, { status: 500 });
   }
 
-  const upcoming = (clientsRes.data ?? [])
+  const allUpcoming = (clientsRes.data ?? [])
     .map(c => {
       const anchor = c.billing_anchor_day as number;
       const days = daysUntilNextAnchor(anchor, today);
@@ -36,8 +36,9 @@ export async function GET(_req: NextRequest) {
         plan: c.plan,
       };
     })
-    .filter(c => c.days_until <= 14)
     .sort((a, b) => a.days_until - b.days_until);
+
+  const upcoming = allUpcoming.filter(c => c.days_until <= 14);
 
   // Awaiting verification
   const awaitingRes = await sb
@@ -69,8 +70,8 @@ export async function GET(_req: NextRequest) {
     .eq("status", "draft")
     .order("created_at", { ascending: false });
 
-  const forecast7 = upcoming.filter(u => u.days_until <= 7).reduce((s, u) => s + u.estimated_amount_zar, 0);
-  const forecast30 = upcoming.reduce((s, u) => s + u.estimated_amount_zar, 0);
+  const forecast7 = allUpcoming.filter(u => u.days_until <= 7).reduce((s, u) => s + u.estimated_amount_zar, 0);
+  const forecast30 = allUpcoming.filter(u => u.days_until <= 30).reduce((s, u) => s + u.estimated_amount_zar, 0);
 
   return NextResponse.json({
     today: today.toISOString().slice(0, 10),
