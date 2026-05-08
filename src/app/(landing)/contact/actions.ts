@@ -5,16 +5,13 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 import {
   resend,
   FROM,
-  setupCallSlotPickerHtml,
   contactFormHostNotificationHtml,
   contactFormVisitorAckHtml,
 } from "@/lib/resend";
-import { getAvailableSlots } from "@/lib/booking-availability";
-import { signBookingToken, signRescheduleToken } from "@/lib/booking-link";
+import { bookMeeting } from "@/lib/booking-create";
 
-const QWIKLY_OWN_CLIENT_ID = "1";
+const QWIKLY_OWN_CLIENT_ID = process.env.QWIKLY_OWNER_CLIENT_ID ?? "1";
 const SETUP_CALL_SUBJECT = "Book a setup call";
-const SLOT_EXPIRY_SECONDS = 48 * 60 * 60;
 
 const schema = z.object({
   name: z.string().min(2, "Name required").max(100),
@@ -30,6 +27,7 @@ export type ContactFormState = {
   fieldErrors?: Record<string, string[]>;
   setupCallTriggered?: boolean;
   sentToEmail?: string;
+  bookedLabel?: string;
 };
 
 export async function submitContactForm(
@@ -64,13 +62,6 @@ export async function submitContactForm(
     return { success: false, error: "Could not save message. Please try emailing us directly." };
   }
 
-  // NOTE: temporarily routing to clarkeagency1@outlook.com directly while we
-  // sort out SPF for Resend on qwikly.co.za. Sending hello@ -> hello@ over
-  // Resend was getting rejected at the MX (SPF fail + self-domain loop check),
-  // so the form silently dropped the first test submission. Visible labels
-  // everywhere still show hello@qwikly.co.za. Once SPF includes
-  // amazonses.com and qwikly.co.za is verified in Resend, flip back to
-  // ["hello@qwikly.co.za"] for brand consistency.
   await resend.emails.send({
     from: "Qwikly Contact <hello@qwikly.co.za>",
     to: ["clarkeagency1@outlook.com"],
@@ -79,9 +70,6 @@ export async function submitContactForm(
     html: contactFormHostNotificationHtml({ name, email, phone: phone ?? null, subject, message }),
   });
 
-  // Always send the visitor a branded ack so they know we got it. The slot
-  // picker (below) only fires for the "Book a setup call" subject; without
-  // this ack, every other subject leaves the visitor with no email at all.
   try {
     await resend.emails.send({
       from: FROM,
@@ -93,47 +81,98 @@ export async function submitContactForm(
     console.error("[contact] visitor ack send failed:", err);
   }
 
-  let setupCallTriggered = false;
-  if (subject === SETUP_CALL_SUBJECT) {
-    try {
-      const avail = await getAvailableSlots(QWIKLY_OWN_CLIENT_ID, { maxSlots: 6, maxPerDay: 2 });
-      if (avail.ok && avail.slots.length > 0) {
-        const top3 = avail.slots.slice(0, 3);
-        const exp = Math.floor(Date.now() / 1000) + SLOT_EXPIRY_SECONDS;
-        const slots = top3.map((s) => ({
-          token: signBookingToken({
-            n: name,
-            e: email,
-            p: phone ?? "",
-            s: s.start,
-            d: s.end,
-            x: exp,
-          }),
-          label: s.label,
-        }));
-        const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://qwikly.co.za").replace(/\/$/, "");
-        const firstName = name.split(" ")[0];
-        const rescheduleToken = signRescheduleToken({
-          n: name,
-          e: email,
-          p: phone ?? "",
-          l: top3.map((s) => s.label),
-          x: exp,
-        });
-        await resend.emails.send({
-          from: FROM,
-          to: [email],
-          subject: "Pick a time for your Qwikly setup call",
-          html: setupCallSlotPickerHtml({ visitorName: firstName, slots, baseUrl, rescheduleToken }),
-        });
-        setupCallTriggered = true;
-      } else {
-        console.warn("[contact] setup-call slots unavailable:", avail);
-      }
-    } catch (err) {
-      console.error("[contact] setup-call slot email failed:", err);
-    }
+  return { success: true, sentToEmail: email };
+}
+
+const setupCallSchema = z.object({
+  name: z.string().min(2, "Name required").max(100),
+  email: z.string().email("Valid email required"),
+  phone: z.string().max(20).optional(),
+  slot_start: z.string().datetime({ offset: true }),
+  slot_end: z.string().datetime({ offset: true }),
+});
+
+export type SetupCallState = {
+  success: boolean;
+  error?: string;
+  fieldErrors?: Record<string, string[]>;
+  revertToTextarea?: boolean;
+  retry?: boolean;
+  setupCallTriggered?: boolean;
+  sentToEmail?: string;
+  bookedLabel?: string;
+};
+
+export async function bookSetupCall(
+  _prev: SetupCallState,
+  formData: FormData
+): Promise<SetupCallState> {
+  const raw = {
+    name: formData.get("name"),
+    email: formData.get("email"),
+    phone: formData.get("phone") || undefined,
+    slot_start: formData.get("slot_start"),
+    slot_end: formData.get("slot_end"),
+  };
+
+  const parsed = setupCallSchema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      success: false,
+      fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    };
   }
 
-  return { success: true, setupCallTriggered, sentToEmail: email };
+  const { name, email, phone, slot_start, slot_end } = parsed.data;
+
+  const db = supabaseAdmin();
+  const { error: dbError } = await db.from("support_messages").insert({
+    name,
+    email,
+    phone: phone ?? null,
+    subject: SETUP_CALL_SUBJECT,
+    message: `Slot booked via /contact picker: ${slot_start} → ${slot_end}`,
+  });
+  if (dbError) {
+    console.error("[bookSetupCall] support_messages insert error:", dbError);
+  }
+
+  const result = await bookMeeting({
+    clientId: QWIKLY_OWN_CLIENT_ID,
+    visitorName: name,
+    visitorEmail: email,
+    visitorPhone: phone ?? null,
+    start: slot_start,
+    end: slot_end,
+    notes: "Booked via /contact setup-call picker.",
+    conversationId: null,
+  });
+
+  if (!result.ok) {
+    if (result.reason === "slot_taken") {
+      return {
+        success: false,
+        error: "That slot was just taken — pick another time.",
+        retry: true,
+      };
+    }
+    if (result.reason === "calendar_not_connected" || result.reason === "calendar_disconnected") {
+      return {
+        success: false,
+        error: "Live calendar is offline right now — drop us a note instead.",
+        revertToTextarea: true,
+      };
+    }
+    return {
+      success: false,
+      error: "Couldn't lock that in. Try another time, or send a note instead.",
+    };
+  }
+
+  return {
+    success: true,
+    setupCallTriggered: true,
+    sentToEmail: email,
+    bookedLabel: result.label,
+  };
 }
