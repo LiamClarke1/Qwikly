@@ -11,6 +11,15 @@ export type InvoiceStatus =
   | "written_off"
   | "refunded";
 
+export type QwiklyBillingInvoiceStatus =
+  | "draft"
+  | "sent"
+  | "awaiting_verification"
+  | "paid"
+  | "overdue"
+  | "written_off"
+  | "disputed";
+
 export interface LineItem {
   id?: string;
   sort_order: number;
@@ -131,7 +140,7 @@ export interface QwiklyBillingInvoice {
   invoice_number: string | null;
   total_zar: number;
   vat_zar: number;
-  status: string;
+  status: QwiklyBillingInvoiceStatus;
   due_at: string | null;
   sent_at: string | null;
   paid_at: string | null;

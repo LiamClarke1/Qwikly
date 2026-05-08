@@ -232,6 +232,14 @@ export default function CrmClientDetailPage() {
         <StatCard label="MRR" value={client.mrr_zar ? formatZAR(client.mrr_zar / 100) : "—"} sub="/month" />
       </div>
 
+      {/* Billing day */}
+      <BillingDaySection
+        clientId={client.id}
+        initialDay={client.billing_anchor_day}
+        initialSetAt={client.billing_anchor_set_at}
+        onSaved={loadClient}
+      />
+
       {/* Tabs */}
       <div
         className="flex gap-0 mb-6 border-b border-slate-200 overflow-x-auto overflow-y-hidden scrollbar-none -mx-4 md:mx-0 px-4 md:px-0 select-none"
@@ -392,6 +400,86 @@ function TrialCountdown({ endsAt }: { endsAt: string | null }) {
     )}>
       {days}d left in trial
     </span>
+  );
+}
+
+// ─── Billing day section ──────────────────────────────────────────────────────
+function BillingDaySection({
+  clientId,
+  initialDay,
+  initialSetAt,
+  onSaved,
+}: {
+  clientId: number;
+  initialDay: number | null;
+  initialSetAt: string | null;
+  onSaved?: () => void;
+}) {
+  const [day, setDay] = useState<number>(initialDay ?? 1);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState<string | null>(initialSetAt);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save() {
+    setSaving(true);
+    setError(null);
+    const now = new Date().toISOString();
+    const res = await fetch(`/api/admin/crm/clients/${clientId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        billing_anchor_day: day,
+        // Always stamp now: invoice-generator uses set_at as the window-start clip,
+        // so a re-save after a corrected anchor day must reset the window.
+        billing_anchor_set_at: now,
+      }),
+    });
+    setSaving(false);
+    if (res.ok) {
+      setSavedAt(now);
+      onSaved?.();
+    } else {
+      const j = await res.json().catch(() => ({}));
+      setError(j.error ?? "Save failed");
+    }
+  }
+
+  return (
+    <section id="billing" className="bg-white border border-slate-200 rounded-2xl p-5 mb-4">
+      <h2 className="text-[15px] font-semibold text-slate-800 mb-2">Billing day</h2>
+      <p className="text-[12px] text-slate-500 mb-3">
+        The day of each month this client is invoiced. Set after their first paid invoice clears.
+      </p>
+      <div className="flex items-center gap-3 flex-wrap">
+        <select
+          value={day}
+          onChange={e => setDay(Number(e.target.value))}
+          className="rounded-xl border border-slate-200 px-3 py-2 text-[13px] cursor-pointer"
+        >
+          {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+            <option key={d} value={d}>{d}</option>
+          ))}
+        </select>
+        <button
+          onClick={save}
+          disabled={saving}
+          className="px-3 py-2 rounded-xl bg-[#E85A2C] text-white text-[13px] font-semibold hover:bg-[#d04f25] disabled:opacity-60 cursor-pointer"
+        >
+          {saving ? "Saving..." : initialDay === day && initialDay !== null ? "Saved" : "Save"}
+        </button>
+        {savedAt && (
+          <span className="text-[11px] text-slate-400">
+            Set {new Date(savedAt).toLocaleDateString()}
+          </span>
+        )}
+      </div>
+      {day > 28 && (
+        <p className="text-[11px] text-amber-600 mt-2">
+          Note, in shorter months billing falls on the last day of the month.
+        </p>
+      )}
+      {error && <p className="text-[11px] text-red-600 mt-2">{error}</p>}
+    </section>
   );
 }
 
