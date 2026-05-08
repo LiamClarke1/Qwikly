@@ -40,13 +40,20 @@ export async function GET(
   const id = parseInt(params.id, 10);
   if (isNaN(id)) return NextResponse.json({ error: "Invalid id" }, { status: 400 });
 
-  const [clientRes, tagsRes, convosRes, notesCountRes, tasksOpenRes, bookingsRes] = await Promise.all([
+  // Month-to-date window in SAST: leads counted from 1st of current SAST month to now.
+  const now = new Date();
+  const sastNow = new Date(now.toLocaleString("en-US", { timeZone: "Africa/Johannesburg" }));
+  const monthStart = new Date(Date.UTC(sastNow.getFullYear(), sastNow.getMonth(), 1)).toISOString();
+
+  const [clientRes, tagsRes, convosRes, notesCountRes, tasksOpenRes, bookingsRes, leadsMtdRes] = await Promise.all([
     db.from("clients").select("*").eq("id", id).maybeSingle(),
     db.from("crm_client_tags").select("crm_tags(id,name,color)").eq("client_id", id),
     db.from("conversations").select("channel, created_at").eq("client_id", id).order("created_at", { ascending: false }).limit(5000),
     db.from("crm_notes").select("id", { count: "exact", head: true }).eq("client_id", id),
     db.from("crm_tasks").select("id", { count: "exact", head: true }).eq("client_id", id).eq("status", "open"),
     db.from("bookings").select("id", { count: "exact", head: true }).eq("client_id", id),
+    db.from("conversations").select("id", { count: "exact", head: true })
+      .eq("client_id", id).eq("is_lead", true).gte("created_at", monthStart),
   ]);
 
   if (!clientRes.data) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -72,6 +79,9 @@ export async function GET(
       notes_count: notesCountRes.count ?? 0,
       tasks_open: tasksOpenRes.count ?? 0,
       bookings_total: bookingsRes.count ?? 0,
+      // Real month-to-date lead count from conversations.is_lead.
+      // Computed on demand rather than stored, so it never goes stale.
+      leads_used_mtd: leadsMtdRes.count ?? 0,
     },
   });
 }
