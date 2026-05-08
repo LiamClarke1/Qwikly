@@ -38,13 +38,33 @@ export default function AdminRiskPage() {
   const [clients, setClients] = useState<RiskClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "high" | "medium" | "paused">("all");
+  const [recalculating, setRecalculating] = useState(false);
+  const [recalcMessage, setRecalcMessage] = useState<string | null>(null);
 
-  useEffect(() => {
+  function load() {
+    setLoading(true);
     fetch("/api/admin/risk").then(r => r.ok ? r.json() : { clients: [] }).then(d => {
       setClients(d.clients ?? []);
       setLoading(false);
     });
-  }, []);
+  }
+
+  useEffect(() => { load(); }, []);
+
+  async function recalculate() {
+    setRecalculating(true);
+    setRecalcMessage(null);
+    const r = await fetch("/api/admin/risk/recalculate", { method: "POST" });
+    setRecalculating(false);
+    if (r.ok) {
+      const d = await r.json();
+      const seconds = Math.round((d.elapsed_ms ?? 0) / 100) / 10;
+      setRecalcMessage(`Recalculated ${d.updated} clients in ${seconds}s${d.errors ? `, ${d.errors} errors` : ""}.`);
+      load();
+    } else {
+      setRecalcMessage("Recalculation failed, please try again.");
+    }
+  }
 
   const filtered = clients.filter(c => {
     if (filter === "high") return c.risk_score >= 70;
@@ -55,11 +75,30 @@ export default function AdminRiskPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="mb-6">
-        <p className="text-[13px] text-[#E85A2C] font-medium mb-1">Admin</p>
-        <h1 className="text-[28px] font-bold leading-tight text-slate-900">Risk</h1>
-        <p className="text-[13px] text-slate-500 mt-1">Client risk scores and flags from automated monitoring.</p>
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <p className="text-[13px] text-[#E85A2C] font-medium mb-1">Admin</p>
+          <h1 className="text-[28px] font-bold leading-tight text-slate-900">Risk</h1>
+          <p className="text-[13px] text-slate-500 mt-1">Client risk scores and flags from automated monitoring. Auto-recomputed daily at 02:00 SAST.</p>
+        </div>
+        <button
+          onClick={recalculate}
+          disabled={recalculating}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#E85A2C] text-white text-[13px] font-semibold hover:bg-[#d04f25] disabled:opacity-60 cursor-pointer shadow-sm whitespace-nowrap"
+        >
+          <ShieldAlert className="w-4 h-4" />
+          {recalculating ? "Recalculating..." : "Recalculate scores"}
+        </button>
       </div>
+
+      {recalcMessage && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 mb-4 flex items-center justify-between gap-3">
+          <p className="text-[13px] text-emerald-700">{recalcMessage}</p>
+          <button onClick={() => setRecalcMessage(null)} className="text-[12px] text-emerald-600 hover:text-emerald-800 font-medium cursor-pointer">
+            Dismiss
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center gap-1 overflow-x-auto no-scrollbar border border-slate-200 rounded-xl p-1 bg-white mb-4 max-w-sm shadow-sm">
         {(["all", "high", "medium", "paused"] as const).map(f => (
