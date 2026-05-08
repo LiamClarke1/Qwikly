@@ -135,10 +135,17 @@
     ".bp-h{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#475569}",
     ".bp-t{font-size:14px;font-weight:600;color:#0F172A;line-height:1.3}",
     ".bp-sub{font-size:12px;color:#64748B}",
-    ".bp-day{display:flex;flex-direction:column;gap:6px}",
-    ".bp-day-h{font-size:12px;font-weight:600;color:#0F172A}",
+    ".bp-list{display:flex;flex-direction:column;gap:6px}",
+    ".bp-row{display:flex;align-items:center;gap:10px;width:100%;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;cursor:pointer;transition:" + MICRO + ";min-height:44px;font-family:inherit;text-align:left}",
+    ".bp-row:hover{background:#F1F5F9;border-color:var(--qc,#E85A2C)}",
+    ".bp-row:active{transform:scale(.99)}",
+    ".bp-row-l{flex:1;font-size:13px;font-weight:600;color:#0F172A}",
+    ".bp-row-m{font-size:11px;color:#64748B}",
+    ".bp-row-c{font-size:18px;color:#94A3B8;line-height:1}",
+    ".bp-back{align-self:flex-start;background:none;border:none;color:var(--qc,#E85A2C);font-size:12px;font-weight:600;cursor:pointer;padding:0;font-family:inherit;line-height:1.4}",
+    ".bp-back:hover{opacity:.75}",
     ".bp-slots{display:flex;flex-wrap:wrap;gap:6px}",
-    ".bp-slot{font-size:13px;font-weight:600;color:#0F172A;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:8px 12px;cursor:pointer;transition:" + MICRO + ";min-height:36px;font-family:inherit}",
+    ".bp-slot{font-size:13px;font-weight:600;color:#0F172A;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 14px;cursor:pointer;transition:" + MICRO + ";min-height:44px;min-width:72px;font-family:inherit;text-align:center}",
     ".bp-slot:hover{background:#F1F5F9;border-color:var(--qc,#E85A2C);color:var(--qc,#E85A2C)}",
     ".bp-slot:active{transform:scale(.97)}",
     ".bp-empty{font-size:13px;color:#64748B;padding:8px 0}",
@@ -558,10 +565,12 @@
   // The assistant emits the literal token [[booking-picker]] at the end of a
   // reply when the visitor commits to Path B. The streaming path strips that
   // token from visible text and calls renderBookingPicker(), which mounts a
-  // two-step picker (slot → details → confirm) inside the chat thread, then
-  // posts to /api/web/bookings. Backend handles Google Calendar + emails.
+  // 3-step picker (day → time → details) inside the chat thread, then posts
+  // to /api/web/bookings. Backend re-checks the calendar before locking the
+  // event in (slot_taken short-circuit) and sends both confirmation emails.
   var BOOKING_MARKER = /\[\[booking-picker\]\]/g;
   var bookingMounted = false;
+  var pickerSlots = [];
 
   function renderBookingPicker() {
     if (bookingMounted) return; // never mount twice in one conversation
@@ -572,8 +581,8 @@
     card.className = "bp";
     card.innerHTML =
       '<div class="bp-h">Book a setup call</div>' +
-      '<div class="bp-t">Loading available times…</div>' +
-      '<div class="bp-sub">30 min · Google Meet · Africa/Johannesburg</div>';
+      '<div class="bp-t">Checking the calendar…</div>' +
+      '<div class="bp-sub">30 min · Google Meet</div>';
     m.appendChild(card);
     requestAnimationFrame(function () { card.scrollIntoView({ behavior: "smooth", block: "end" }); });
 
@@ -584,7 +593,8 @@
           renderPickerUnavailable(card, out.body && out.body.reason);
           return;
         }
-        renderPickerStep1(card, out.body.slots || []);
+        pickerSlots = out.body.slots || [];
+        renderPickerStepDay(card);
       })
       .catch(function () { renderPickerUnavailable(card, "network"); });
   }
@@ -602,62 +612,100 @@
     var s = document.createElement("div"); s.className = "bp-sub"; s.textContent = msg; card.appendChild(s);
   }
 
-  function renderPickerStep1(card, slots) {
-    card.innerHTML = "";
-    var h = document.createElement("div"); h.className = "bp-h"; h.textContent = "Pick a time"; card.appendChild(h);
-    var t = document.createElement("div"); t.className = "bp-t"; t.textContent = "30 min on Google Meet."; card.appendChild(t);
-    var s = document.createElement("div"); s.className = "bp-sub"; s.textContent = "Africa/Johannesburg"; card.appendChild(s);
-
-    if (!slots || slots.length === 0) {
-      var empty = document.createElement("div"); empty.className = "bp-empty";
-      empty.textContent = "No open slots in the next 7 days. Email hello@qwikly.co.za and we'll find a time.";
-      card.appendChild(empty);
-      return;
-    }
-
-    // Group slots by SAST date label, e.g. "Monday, 12 May"
+  // Group the flat slot list into [{ key: "Tuesday, 12 May", short: "Tue 12 May", slots: [...] }]
+  function groupSlotsByDay(slots) {
     var groups = {};
     var order = [];
     for (var i = 0; i < slots.length; i++) {
       var sl = slots[i];
-      // sl.label is a full sentence "Monday, 12 May, 14:00", parse out the date prefix.
-      var parts = String(sl.label || "").split(",");
-      var dayKey = parts.length >= 2 ? (parts[0] + "," + parts[1]).trim() : sl.label;
-      if (!groups[dayKey]) { groups[dayKey] = []; order.push(dayKey); }
-      groups[dayKey].push(sl);
+      // label format from the API: "Tuesday, 12 May at 14:00", split on " at " for the day part.
+      var beforeAt = String(sl.label || "").split(" at ")[0].trim();
+      var key = beforeAt || sl.label;
+      // Build a compact form too: "Tuesday, 12 May" → "Tue 12 May" using the short_label.
+      var shortBeforeSpaceTime = String(sl.short_label || "").replace(/\s+\d{1,2}:\d{2}.*$/, "").trim();
+      if (!groups[key]) { groups[key] = { key: key, short: shortBeforeSpaceTime || key, slots: [] }; order.push(key); }
+      groups[key].slots.push(sl);
     }
-
-    for (var d = 0; d < order.length; d++) {
-      var key = order[d];
-      var dayWrap = document.createElement("div"); dayWrap.className = "bp-day";
-      var dh = document.createElement("div"); dh.className = "bp-day-h"; dh.textContent = key;
-      dayWrap.appendChild(dh);
-      var slotsRow = document.createElement("div"); slotsRow.className = "bp-slots";
-      var dayList = groups[key];
-      for (var k = 0; k < dayList.length; k++) {
-        (function (slot) {
-          var btn = document.createElement("button");
-          btn.type = "button"; btn.className = "bp-slot";
-          btn.textContent = slot.short_label || slot.label;
-          btn.addEventListener("click", function () { renderPickerStep2(card, slot); });
-          slotsRow.appendChild(btn);
-        })(dayList[k]);
-      }
-      dayWrap.appendChild(slotsRow);
-      card.appendChild(dayWrap);
-    }
+    return order.map(function (k) { return groups[k]; });
   }
 
-  function renderPickerStep2(card, slot) {
+  // ── Step 1: pick a day ──
+  function renderPickerStepDay(card) {
     card.innerHTML = "";
-    var h = document.createElement("div"); h.className = "bp-h"; h.textContent = "Your details"; card.appendChild(h);
+    var h = document.createElement("div"); h.className = "bp-h"; h.textContent = "Pick a day"; card.appendChild(h);
+    var t = document.createElement("div"); t.className = "bp-t"; t.textContent = "What works for you?"; card.appendChild(t);
+    var s = document.createElement("div"); s.className = "bp-sub"; s.textContent = "30 min · Google Meet · Africa/Johannesburg"; card.appendChild(s);
 
+    var days = groupSlotsByDay(pickerSlots);
+    if (days.length === 0) {
+      var empty = document.createElement("div"); empty.className = "bp-empty";
+      empty.textContent = "No open days in the next week. Email hello@qwikly.co.za and we'll find one.";
+      card.appendChild(empty);
+      return;
+    }
+
+    var list = document.createElement("div"); list.className = "bp-list";
+    for (var i = 0; i < days.length; i++) {
+      (function (day) {
+        var btn = document.createElement("button");
+        btn.type = "button"; btn.className = "bp-row";
+        var label = document.createElement("span"); label.className = "bp-row-l"; label.textContent = day.key;
+        var meta = document.createElement("span"); meta.className = "bp-row-m";
+        meta.textContent = day.slots.length + (day.slots.length === 1 ? " time" : " times");
+        var caret = document.createElement("span"); caret.className = "bp-row-c"; caret.textContent = "›";
+        btn.appendChild(label); btn.appendChild(meta); btn.appendChild(caret);
+        btn.addEventListener("click", function () { renderPickerStepTime(card, day); });
+        list.appendChild(btn);
+      })(days[i]);
+    }
+    card.appendChild(list);
+  }
+
+  // ── Step 2: pick a time on the chosen day ──
+  function renderPickerStepTime(card, day) {
+    card.innerHTML = "";
+    var back = document.createElement("button"); back.type = "button"; back.className = "bp-back";
+    back.innerHTML = "&lsaquo; Back to days";
+    back.addEventListener("click", function () { renderPickerStepDay(card); });
+    card.appendChild(back);
+    var h = document.createElement("div"); h.className = "bp-h"; h.textContent = day.key; card.appendChild(h);
+    var t = document.createElement("div"); t.className = "bp-t"; t.textContent = "What time works?"; card.appendChild(t);
+
+    var slotsRow = document.createElement("div"); slotsRow.className = "bp-slots";
+    for (var k = 0; k < day.slots.length; k++) {
+      (function (slot) {
+        var btn = document.createElement("button");
+        btn.type = "button"; btn.className = "bp-slot";
+        // Pull just the HH:MM out of the label; falls back to short_label if format ever changes.
+        var afterAt = String(slot.label || "").split(" at ")[1];
+        btn.textContent = (afterAt && afterAt.trim()) || slot.short_label || slot.label;
+        btn.addEventListener("click", function () { renderPickerStepDetails(card, day, slot); });
+        slotsRow.appendChild(btn);
+      })(day.slots[k]);
+    }
+    card.appendChild(slotsRow);
+  }
+
+  // ── Step 3: name + email + confirm ──
+  function renderPickerStepDetails(card, day, slot) {
+    card.innerHTML = "";
+    var back = document.createElement("button"); back.type = "button"; back.className = "bp-back";
+    back.innerHTML = "&lsaquo; Back to times";
+    back.addEventListener("click", function () { renderPickerStepTime(card, day); });
+    card.appendChild(back);
+
+    var h = document.createElement("div"); h.className = "bp-h"; h.textContent = "Last bit"; card.appendChild(h);
     var pick = document.createElement("div"); pick.className = "bp-pick";
     pick.innerHTML = "<strong></strong>"; pick.querySelector("strong").textContent = slot.label;
     var sub = document.createElement("span"); sub.style.display = "block"; sub.style.marginTop = "2px";
     sub.style.fontSize = "11px"; sub.style.color = "#64748B"; sub.textContent = "30 min · Google Meet";
     pick.appendChild(sub);
     card.appendChild(pick);
+
+    var helper = document.createElement("div"); helper.className = "bp-sub";
+    helper.textContent = "Drop your name and email and the Meet link lands in your inbox in seconds.";
+    card.appendChild(helper);
+
     var form = document.createElement("div"); form.className = "bp-form";
 
     var nameLbl = document.createElement("div"); nameLbl.className = "bp-label"; nameLbl.textContent = "Your name";
@@ -670,23 +718,15 @@
     emailInp.autocomplete = "email"; emailInp.inputMode = "email"; emailInp.placeholder = "you@example.com";
     form.appendChild(emailLbl); form.appendChild(emailInp);
 
-    var notesLbl = document.createElement("div"); notesLbl.className = "bp-label"; notesLbl.textContent = "Anything we should know? (optional)";
-    var notesInp = document.createElement("textarea"); notesInp.className = "bp-input"; notesInp.rows = 2;
-    notesInp.placeholder = "Your business, what you'd like to set up, anything useful.";
-    form.appendChild(notesLbl); form.appendChild(notesInp);
-
     var err = document.createElement("div"); err.className = "bp-err"; err.style.display = "none"; form.appendChild(err);
 
     var btns = document.createElement("div"); btns.className = "bp-btns";
-    var back = document.createElement("button"); back.type = "button"; back.className = "bp-btn gh"; back.textContent = "Back";
-    var confirm = document.createElement("button"); confirm.type = "button"; confirm.className = "bp-btn pr"; confirm.textContent = "Confirm";
-    btns.appendChild(back); btns.appendChild(confirm);
+    var confirm = document.createElement("button"); confirm.type = "button"; confirm.className = "bp-btn pr"; confirm.textContent = "Send Meet link";
+    btns.appendChild(confirm);
     form.appendChild(btns);
     card.appendChild(form);
 
-    // Pre-fill what the chat already captured, if anything is exposed on the
-    // session object. We store loosely; assistant's update_visitor results
-    // aren't directly visible to the widget, so this is best-effort only.
+    // Pre-fill what the chat already captured for this session, if anything.
     try {
       var saved = sessionStorage.getItem("qwikly_visitor");
       if (saved) {
@@ -698,32 +738,21 @@
 
     setTimeout(function () { (nameInp.value ? emailInp : nameInp).focus(); }, 100);
 
-    back.addEventListener("click", function () {
-      // Reload step 1 from cached slots if available; cheaper than re-fetching.
-      renderBookingPickerReload(card);
-    });
-
     confirm.addEventListener("click", function () {
       err.style.display = "none";
       nameInp.classList.remove("err"); emailInp.classList.remove("err");
       var name = nameInp.value.trim();
       var email = emailInp.value.trim();
-      if (!name) { nameInp.classList.add("err"); err.textContent = "Name is required."; err.style.display = "block"; nameInp.focus(); return; }
+      if (!name) { nameInp.classList.add("err"); err.textContent = "What's your name?"; err.style.display = "block"; nameInp.focus(); return; }
       if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-        emailInp.classList.add("err"); err.textContent = "A valid email is required."; err.style.display = "block"; emailInp.focus(); return;
+        emailInp.classList.add("err"); err.textContent = "A real email so we can send the Meet link."; err.style.display = "block"; emailInp.focus(); return;
       }
-      confirm.disabled = true; back.disabled = true; confirm.textContent = "Booking…";
-      submitBooking(card, slot, name, email, notesInp.value.trim(), function (e) {
-        confirm.disabled = false; back.disabled = false; confirm.textContent = "Confirm";
+      confirm.disabled = true; back.disabled = true; confirm.textContent = "Sending Meet link…";
+      submitBooking(card, slot, name, email, "", function (e) {
+        confirm.disabled = false; back.disabled = false; confirm.textContent = "Send Meet link";
         err.textContent = e || "Couldn't confirm. Try again."; err.style.display = "block";
       });
     });
-  }
-
-  function renderBookingPickerReload(card) {
-    bookingMounted = false; // allow re-mount
-    card.parentNode && card.parentNode.removeChild(card);
-    renderBookingPicker();
   }
 
   function submitBooking(card, slot, name, email, notes, onError) {
