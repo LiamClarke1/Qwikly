@@ -423,18 +423,20 @@ function BillingDaySection({
   async function save() {
     setSaving(true);
     setError(null);
+    const now = new Date().toISOString();
     const res = await fetch(`/api/admin/crm/clients/${clientId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         billing_anchor_day: day,
-        billing_anchor_set_at: savedAt ?? new Date().toISOString(),
+        // Always stamp now: invoice-generator uses set_at as the window-start clip,
+        // so a re-save after a corrected anchor day must reset the window.
+        billing_anchor_set_at: now,
       }),
     });
     setSaving(false);
     if (res.ok) {
-      const now = new Date().toISOString();
-      setSavedAt(prev => prev ?? now);
+      setSavedAt(now);
       onSaved?.();
     } else {
       const j = await res.json().catch(() => ({}));

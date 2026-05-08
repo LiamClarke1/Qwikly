@@ -53,23 +53,31 @@ export default function BillingPipelinePage() {
   const [tab, setTab] = useState<Tab>("upcoming");
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
     const r = await fetch("/api/admin/billing/pipeline");
     if (r.ok) setData(await r.json());
+    else setActionError("Could not load pipeline data, please refresh.");
     setLoading(false);
   }
   useEffect(() => { load(); }, []);
 
   async function patch(id: string, action: "verify" | "revert" | "mark_paid") {
     setActionId(id);
-    await fetch(`/api/admin/qwikly-billing-invoices/${id}`, {
+    setActionError(null);
+    const r = await fetch(`/api/admin/qwikly-billing-invoices/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action }),
     });
     setActionId(null);
+    if (!r.ok) {
+      const j = await r.json().catch(() => ({}));
+      setActionError(j.error ?? `Action "${action}" failed, please refresh and try again.`);
+      return;
+    }
     load();
   }
 
@@ -80,6 +88,15 @@ export default function BillingPipelinePage() {
         <h1 className="text-[28px] font-bold text-slate-900 leading-tight">Billing Pipeline</h1>
         <p className="text-[13px] text-slate-500 mt-1">{data?.today ?? "loading..."}</p>
       </div>
+
+      {actionError && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 flex items-center justify-between gap-3">
+          <p className="text-[13px] text-red-700">{actionError}</p>
+          <button onClick={() => setActionError(null)} className="text-[12px] text-red-600 hover:text-red-800 font-medium cursor-pointer">
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {data && data.summary.drafts_count > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-center gap-3">
