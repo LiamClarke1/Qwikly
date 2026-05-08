@@ -15,6 +15,7 @@ import {
 import { cn } from "@/lib/cn";
 import { timeAgo, formatZAR } from "@/lib/format";
 import type { CrmClientListItem, CrmTag, CrmSavedView } from "@/lib/crm-types";
+import { NextInvoiceBadge } from "./components/NextInvoiceBadge";
 
 // ─── Status config ────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -282,13 +283,14 @@ function StatCard({
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
-type SortCol = "business_name" | "mrr_zar" | "health_score" | "created_at" | "plan" | "crm_status";
+type SortCol = "business_name" | "mrr_zar" | "health_score" | "created_at" | "plan" | "crm_status" | "next_invoice_at";
 type ConfirmAction = { type: "archive" | "delete" | "restore"; id: number; name: string | null } | null;
 
 interface Filters {
   status: string[];
   plan:   string[];
   tag:    string[];
+  billing: string[];
 }
 
 export default function CrmClientsPage() {
@@ -301,7 +303,7 @@ export default function CrmClientsPage() {
   const [debouncedQ,    setDebouncedQ]    = useState("");
   const [sortCol,       setSortCol]       = useState<SortCol>("created_at");
   const [sortDir,       setSortDir]       = useState<"asc" | "desc">("desc");
-  const [filters,       setFilters]       = useState<Filters>({ status: [], plan: [], tag: [] });
+  const [filters,       setFilters]       = useState<Filters>({ status: [], plan: [], tag: [], billing: [] });
   const [viewMode,      setViewMode]      = useState<"table" | "grid">("table");
   const [allTags,       setAllTags]       = useState<CrmTag[]>([]);
   const [savedViews,    setSavedViews]    = useState<CrmSavedView[]>([]);
@@ -323,6 +325,7 @@ export default function CrmClientsPage() {
     if (filters.status.length)  params.set("status", filters.status.join(","));
     if (filters.plan.length)    params.set("plan",   filters.plan.join(","));
     if (filters.tag.length)     params.set("tag",    filters.tag.join(","));
+    if (filters.billing.length)  params.set("billing", filters.billing.join(","));
     params.set("sort", sortCol);
     params.set("dir",  sortDir);
     params.set("page", page.toString());
@@ -398,7 +401,7 @@ export default function CrmClientsPage() {
     setSelected(new Set());
   }
 
-  const activeFilterCount = filters.status.length + filters.plan.length + filters.tag.length;
+  const activeFilterCount = filters.status.length + filters.plan.length + filters.tag.length + filters.billing.length;
 
   function toggleSort(col: SortCol) {
     if (sortCol === col) setSortDir(d => d === "asc" ? "desc" : "asc");
@@ -414,13 +417,13 @@ export default function CrmClientsPage() {
   }
 
   function clearFilters() {
-    setFilters({ status: [], plan: [], tag: [] });
+    setFilters({ status: [], plan: [], tag: [], billing: [] });
     setPage(1);
   }
 
   function applyView(v: CrmSavedView) {
     const f = v.filters as Partial<Filters>;
-    setFilters({ status: f.status ?? [], plan: f.plan ?? [], tag: f.tag ?? [] });
+    setFilters({ status: f.status ?? [], plan: f.plan ?? [], tag: f.tag ?? [], billing: f.billing ?? [] });
     if (v.sort_by) setSortCol(v.sort_by as SortCol);
     if (v.sort_dir) setSortDir(v.sort_dir as "asc" | "desc");
     setPage(1);
@@ -628,6 +631,18 @@ export default function CrmClientsPage() {
                 onToggle={v => toggleFilter("tag", v)}
               />
             )}
+            <FilterGroup
+              label="Billing"
+              options={[
+                { value: "upcoming_week", label: "Upcoming this week" },
+                { value: "draft", label: "Draft to send" },
+                { value: "awaiting_verification", label: "Awaiting verification" },
+                { value: "overdue", label: "Overdue" },
+                { value: "no_anchor", label: "No anchor set" },
+              ]}
+              active={filters.billing}
+              onToggle={v => toggleFilter("billing", v)}
+            />
           </div>
         </div>
       )}
@@ -750,7 +765,7 @@ function TableView({
 }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-      <div className="grid grid-cols-[24px_2fr_100px_90px_80px_100px_80px_90px_110px_36px] gap-3 px-5 py-3 border-b border-slate-100 bg-slate-50/80 items-center">
+      <div className="grid grid-cols-[24px_2fr_100px_90px_80px_100px_80px_90px_110px_130px_36px] gap-3 px-5 py-3 border-b border-slate-100 bg-slate-50/80 items-center">
         <input type="checkbox" checked={allSelected} onChange={onSelectAll} className="rounded cursor-pointer" />
         <ColHeader col="business_name" label="Business" />
         <ColHeader col="crm_status"   label="Status" />
@@ -760,6 +775,7 @@ function TableView({
         <ColHeader col="health_score" label="Health" className="justify-center" />
         <span className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Channels</span>
         <span className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Last active</span>
+        <ColHeader col="next_invoice_at" label="Next invoice" />
         <span />
       </div>
 
@@ -767,7 +783,7 @@ function TableView({
         <div
           key={c.id}
           className={cn(
-            "grid grid-cols-[24px_2fr_100px_90px_80px_100px_80px_90px_110px_36px] gap-3 items-center px-5 py-3.5 group hover:bg-slate-50/60 transition-colors",
+            "grid grid-cols-[24px_2fr_100px_90px_80px_100px_80px_90px_110px_130px_36px] gap-3 items-center px-5 py-3.5 group hover:bg-slate-50/60 transition-colors",
             i > 0 && "border-t border-slate-100",
             selected.has(c.id) && "bg-[#E85A2C]/[0.025]"
           )}
@@ -821,6 +837,8 @@ function TableView({
           <p className="text-[12px] text-slate-400">
             {c.last_activity_at ? timeAgo(c.last_activity_at) : <span className="text-slate-300">—</span>}
           </p>
+
+          <NextInvoiceBadge c={c} />
 
           <RowActions
             clientId={c.id}
