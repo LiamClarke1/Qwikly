@@ -6,18 +6,22 @@
   var TENANT_ID = script && script.getAttribute("data-qwikly-id");
   if (!TENANT_ID) return;
   var API_BASE = (script && script.getAttribute("data-api")) || "https://qwikly.co.za";
-  // Optional compact mode: smaller panel + smaller launcher. Used on Qwikly's
-  // own /contact page so the demo doesn't dominate the screen.
+  // data-compact opts qwikly.co.za into a roomier panel than the customer
+  // default. Customer-embedded widgets (no data-compact flag) keep the
+  // original 375x540 footprint so the widget never dominates a stranger's
+  // page. Qwikly's own demo gets the bigger 440x660 footprint so the
+  // booking picker has room to breathe.
   var COMPACT = script && script.getAttribute("data-compact") === "true";
-  var PANEL_W = COMPACT ? 320 : 375;
-  var PANEL_H = COMPACT ? 440 : 540;
-  // In compact mode the textarea + buttons need to be tighter so a long
-  // input (like an email) doesn't blow out the available height.
-  var INPUT_FONT = COMPACT ? 15 : 16;
-  var INPUT_MAXH = COMPACT ? 60 : 88;
-  var INPUT_PAD  = COMPACT ? "8px 12px" : "10px 13px";
-  var BTN_SIZE   = COMPACT ? 36 : 40;
-  var CIN_PAD    = COMPACT ? "8px 10px 10px" : "10px 12px 12px";
+  var PANEL_W = COMPACT ? 440 : 375;
+  var PANEL_H = COMPACT ? 660 : 540;
+  // Typography + control sizing harmonised across modes now, the bigger
+  // panel doesn't need cramped controls. 16px input font on every device
+  // also sidesteps iOS auto-zoom on focus.
+  var INPUT_FONT = 16;
+  var INPUT_MAXH = 88;
+  var INPUT_PAD  = "10px 13px";
+  var BTN_SIZE   = 40;
+  var CIN_PAD    = "10px 12px 12px";
   // Optional teaser bubble next to the launcher. Used on the home page so first
   // time visitors notice the chat without having it auto-open in their face.
   var SHOW_PEEK = script && script.getAttribute("data-peek") === "true";
