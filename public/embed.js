@@ -863,9 +863,17 @@
     inp.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
     });
+    // Auto-grow the textarea, but only when the visible row count actually
+    // changes. The previous version reset to "auto" then re-measured on every
+    // keystroke, which forced a layout reflow each press. On iOS that reflow
+    // bubbled up into the visualViewport scroll listener and made the whole
+    // panel jump up and down as the visitor typed.
+    var lastInputH = 0;
     inp.addEventListener("input", function () {
-      this.style.height = "auto";
-      this.style.height = Math.min(this.scrollHeight, 88) + "px";
+      var sh = this.scrollHeight;
+      if (sh === lastInputH) return;
+      lastInputH = sh;
+      this.style.height = Math.min(Math.max(sh, 20), 88) + "px";
     });
 
     setupFileInput();
@@ -883,27 +891,39 @@
     streamReply(text);
   }
 
+  function fetchChat(userMsg) {
+    return fetch(API_BASE + "/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tenantId: TENANT_ID,
+        sessionId: sessionId,
+        message: userMsg,
+        context: { pageUrl: location.href },
+      }),
+    });
+  }
+
   async function streamReply(userMsg) {
     var m = msgsEl();
     var botDiv = null;
     var fullText = "";
 
     try {
-      var res = await fetch(API_BASE + "/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tenantId: TENANT_ID,
-          sessionId: sessionId,
-          message: userMsg,
-          context: { pageUrl: location.href },
-        }),
-      });
+      // First-call cold starts on Vercel sometimes return a transient 5xx
+      // before the function instance is warm. Retry once silently with a
+      // short delay before showing any error to the visitor, the visitor
+      // shouldn't have to manually re-type "hi" because of a cold start.
+      var res = await fetchChat(userMsg);
+      if (!res.ok && res.status >= 500) {
+        await new Promise(function (r) { setTimeout(r, 600); });
+        res = await fetchChat(userMsg);
+      }
 
       removeTyping();
 
       if (!res.ok || !res.body) {
-        addMsg("bot", "Something went wrong. Please try again.");
+        addMsg("bot", "One sec, give that another go.");
         sending = false; setInputEnabled(true); return;
       }
 
@@ -954,7 +974,7 @@
       }
     } catch (err) {
       removeTyping();
-      if (!botDiv) addMsg("bot", "Something went wrong. Please try again.");
+      if (!botDiv) addMsg("bot", "One sec, give that another go.");
     }
 
     // After the stream lands, mount the inline booking picker if the
@@ -990,8 +1010,11 @@
     panel.classList.add("open");
     if (isMobile && window.visualViewport) {
       vpListener = adjustForKeyboard;
+      // Only listen to "resize" (keyboard open/close + orientation change).
+      // The "scroll" event fires every time the visual viewport pans inside
+      // the layout viewport, which on iOS happens on every keystroke as the
+      // textarea grows. That was the source of the bouncing panel.
       window.visualViewport.addEventListener("resize", vpListener);
-      window.visualViewport.addEventListener("scroll", vpListener);
     }
     if (!greeted) {
       setInputEnabled(false); showTyping();
@@ -1018,7 +1041,6 @@
     stopPolling();
     if (vpListener && window.visualViewport) {
       window.visualViewport.removeEventListener("resize", vpListener);
-      window.visualViewport.removeEventListener("scroll", vpListener);
       vpListener = null;
     }
     panel.style.bottom = ""; panel.style.maxHeight = "";
