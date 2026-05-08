@@ -39,6 +39,10 @@
     {
       "path": "/api/cron/billing-anchor-tick",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/calc-risk-and-health",
+      "schedule": "0 0 * * *"
     }
   ]
 }
