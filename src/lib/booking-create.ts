@@ -216,6 +216,29 @@ export async function bookMeeting(args: BookMeetingArgs): Promise<BookingResult>
       console.warn("[booking-create] no host recipient resolved; skipping host email");
     }
 
+    // Persist the booking so it shows up in Analytics charts and reports.
+    // Best-effort: if this insert fails the calendar event still stands and
+    // the visitor is still confirmed; we just lose analytics for this booking.
+    try {
+      const { error: bookingInsertErr } = await db.from("bookings").insert({
+        client_id: args.clientId,
+        customer_name: args.visitorName,
+        customer_email: args.visitorEmail,
+        customer_phone: args.visitorPhone ?? null,
+        job_type: args.businessType ?? null,
+        booking_datetime: args.start,
+        status: "booked",
+        external_event_id: event.id ?? null,
+        source: "qwikly_chat",
+        conversation_id: args.conversationId ?? null,
+      });
+      if (bookingInsertErr) {
+        console.error("[booking-create] bookings insert failed", bookingInsertErr.message);
+      }
+    } catch (insertErr) {
+      console.error("[booking-create] bookings insert threw", insertErr);
+    }
+
     return {
       ok: true,
       eventId: event.id ?? "",
