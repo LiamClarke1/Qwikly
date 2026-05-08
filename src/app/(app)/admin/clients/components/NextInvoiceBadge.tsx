@@ -14,7 +14,7 @@ export function NextInvoiceBadge({ c }: { c: CrmClientListItem }) {
   if (!c.billing_anchor_day) {
     return (
       <Link href={`/admin/clients/${c.id}#billing`}
-        className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-[#E85A2C]">
+        className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-[#E85A2C] transition-colors">
         <Settings className="w-3 h-3" />
         Set billing day
       </Link>
@@ -22,7 +22,7 @@ export function NextInvoiceBadge({ c }: { c: CrmClientListItem }) {
   }
 
   if (status === "awaiting_verification") {
-    return <Pill icon={ShieldCheck} text="Verify payment" cls="bg-violet-50 text-violet-700 border-violet-200 animate-pulse" />;
+    return <Pill icon={ShieldCheck} text="Verify payment" cls="bg-violet-50 text-violet-700 border-violet-200 motion-safe:animate-pulse" />;
   }
   if (status === "overdue") {
     return <Pill icon={AlertTriangle} text={`Overdue ${c.days_overdue ?? 0}d`} cls="bg-red-50 text-red-600 border-red-200" />;
