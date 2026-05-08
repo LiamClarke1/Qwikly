@@ -131,11 +131,18 @@ export async function generateDraftInvoice(
 
   // 8b. Back-reference: write the invoice id onto the period so disputes
   // and reporting can hop period -> invoice without joins. The dispute resolve
-  // credit flow looks this up explicitly.
-  await sb
+  // credit flow looks this up explicitly, so a silent failure here would
+  // make dispute credits invisibly fail later. Log loudly on error.
+  const backRefRes = await sb
     .from("qwikly_billing_periods")
     .update({ qwikly_billing_invoice_id: invoiceId })
     .eq("id", periodId);
+  if (backRefRes.error) {
+    console.error(
+      `[invoice-generator] period back-reference update failed for invoice ${invoiceId} period ${periodId}:`,
+      backRefRes.error.message,
+    );
+  }
 
   // 9. Log any aggregator warnings for admin visibility.
   // Note: chat_persist_dlq does not have a 'channel' column so we use console.warn

@@ -135,15 +135,18 @@ export async function GET(req: NextRequest) {
     };
   });
 
-  // Apply billing filter (post-fetch, since computed fields aren't in the DB)
-  if (billing.length > 0) {
+  // Apply billing filter (post-fetch, since computed fields aren't in the DB).
+  // upcoming_week requires days >= 0 too — defends against stale next_invoice_at
+  // values that have slipped into the past (e.g. cron missed a run).
+  const billingFilterActive = billing.length > 0;
+  if (billingFilterActive) {
     enriched = enriched.filter(c => {
       const anchor = c.billing_anchor_day;
       return billing.some(b => {
         if (b === "upcoming_week") {
           if (!c.next_invoice_at) return false;
           const days = (new Date(c.next_invoice_at).getTime() - todayDate.getTime()) / 86_400_000;
-          return days <= 7;
+          return days >= 0 && days <= 7;
         }
         if (b === "awaiting_verification") return c.latest_billing_invoice_status === "awaiting_verification";
         if (b === "overdue") return c.latest_billing_invoice_status === "overdue";
@@ -154,12 +157,19 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const total = count ?? 0;
+  // Pagination accounting: when a billing filter is active we filter post-DB,
+  // so the original DB count is wrong. Force single-page semantics in that case
+  // (everything that matched the filter is in `enriched`). Otherwise use the
+  // real DB count.
+  const total = billingFilterActive ? enriched.length : (count ?? 0);
+  const pages = billingFilterActive ? 1 : Math.ceil((count ?? 0) / limit);
 
-  // Portfolio-wide stats (across ALL clients, not just the current page)
+  // Portfolio-wide stats (across ALL clients except pending_deletion, never
+  // filtered, so the cards always reflect the whole roster).
   const statsRes = await db
     .from("clients")
     .select("crm_status, mrr_zar")
+    .neq("crm_status", "pending_deletion")
     .returns<{ crm_status: string | null; mrr_zar: number | null }[]>();
   const allClients = statsRes.data ?? [];
   const portfolioStats = {
@@ -172,7 +182,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     clients: enriched,
     total,
-    pages: Math.ceil(total / limit),
+    pages,
     portfolio_stats: portfolioStats,
   });
 }
