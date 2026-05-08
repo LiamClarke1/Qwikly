@@ -61,6 +61,10 @@
   var DL_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
   var FILE_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
   var IMG_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+  var SEARCH_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+  var starterPrompts = null;
+  var starterFetched = false;
+  var suggestOpen = false;
 
   var style = document.createElement("style");
   style.textContent = [
@@ -81,6 +85,21 @@
     ".hd-dot{width:6px;height:6px;border-radius:50%;background:#22C55E;flex-shrink:0}",
     ".close{background:none;border:none;color:rgba(255,255,255,.8);cursor:pointer;padding:0;opacity:.8;font-size:22px;line-height:1;flex-shrink:0;touch-action:manipulation;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background .15s;width:44px;height:44px;min-width:44px}",
     ".close:hover{opacity:1;background:rgba(255,255,255,.15)}",
+    ".hd-srch{background:none;border:none;color:rgba(255,255,255,.85);cursor:pointer;padding:0;flex-shrink:0;touch-action:manipulation;display:none;align-items:center;justify-content:center;border-radius:50%;transition:background .15s,opacity .15s;width:36px;height:36px;min-width:36px;margin-right:2px}",
+    ".hd-srch:hover{background:rgba(255,255,255,.18);color:#fff}",
+    ".hd-srch.show{display:flex}",
+    ".hd-srch.on{background:rgba(255,255,255,.22);color:#fff}",
+    ".sg-wrap{background:#FFF7ED;border:1px solid #FED7AA;border-radius:14px;margin:4px 4px 8px;padding:10px 12px 12px;display:none;animation:" + (prefersReduced ? "none" : "fadeUp .2s ease") + "}",
+    ".sg-wrap.show{display:block}",
+    ".sg-hd{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#9A3412;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px}",
+    ".sg-x{background:none;border:none;color:#9A3412;cursor:pointer;font-size:14px;line-height:1;padding:2px 4px;opacity:.7;border-radius:6px}",
+    ".sg-x:hover{opacity:1;background:rgba(154,52,18,.08)}",
+    ".sg-list{display:flex;flex-direction:column;gap:6px}",
+    ".sg-pill{background:#fff;border:1px solid #FED7AA;border-radius:10px;padding:9px 12px;font-size:13px;font-weight:500;color:#1F2937;text-align:left;cursor:pointer;transition:" + MICRO + ";font-family:inherit;line-height:1.35;width:100%}",
+    ".sg-pill:hover{border-color:var(--qc,#E85A2C);background:#FFF7ED;transform:translateX(2px)}",
+    ".sg-pill:active{opacity:.85}",
+    ".sg-skel{height:34px;border-radius:10px;background:linear-gradient(90deg,#FED7AA 0%,#FFEDD5 50%,#FED7AA 100%);background-size:200% 100%;animation:" + (prefersReduced ? "none" : "sgshim 1.2s ease-in-out infinite") + "}",
+    "@keyframes sgshim{0%{background-position:200% 0}100%{background-position:-200% 0}}",
     ".msgs{flex:1;overflow-y:auto;padding:14px 12px 8px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}",
     ".msg{max-width:88%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.55;word-break:break-word;animation:" + (prefersReduced ? "none" : "fadeUp .18s ease") + "}",
     "@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}",
@@ -845,8 +864,14 @@
       '<div class="hd"><div class="hd-av" id="qw-av"></div>' +
       '<div class="hd-info"><div class="hd-name" id="qw-name">' + biz() + "</div>" +
       '<div class="hd-sub"><span class="hd-dot"></span>Replies shortly</div></div>' +
+      '<button class="hd-srch" id="qw-srch" aria-label="Show suggested questions" title="Suggested questions">' + SEARCH_SVG + "</button>" +
       '<button class="close" id="qw-x" aria-label="Close chat">\xd7</button></div>' +
-      '<div class="msgs" id="qw-msgs"></div>' +
+      '<div class="msgs" id="qw-msgs">' +
+      '<div class="sg-wrap" id="qw-sg" role="region" aria-label="Suggested questions">' +
+      '<div class="sg-hd"><span>Try asking</span><button class="sg-x" id="qw-sg-x" aria-label="Hide suggestions">\xd7</button></div>' +
+      '<div class="sg-list" id="qw-sg-list"></div>' +
+      '</div>' +
+      '</div>' +
       '<div class="cin">' + attachHtml +
       '<textarea class="cinp" id="qw-inp" placeholder="Type a message…" rows="1" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="true"></textarea>' +
       '<button class="sndbtn" id="qw-snd" aria-label="Send message">' + SEND_SVG + "</button></div>" +
@@ -858,6 +883,11 @@
 
     var attBtn = shadow.getElementById("qw-att");
     if (attBtn) attBtn.addEventListener("click", handleAttach);
+
+    var srchBtn = shadow.getElementById("qw-srch");
+    if (srchBtn) srchBtn.addEventListener("click", toggleSuggestions);
+    var sgX = shadow.getElementById("qw-sg-x");
+    if (sgX) sgX.addEventListener("click", hideSuggestions);
 
     var inp = shadow.getElementById("qw-inp");
     inp.addEventListener("keydown", function (e) {
@@ -877,6 +907,93 @@
     });
 
     setupFileInput();
+  }
+
+  // ── Suggested questions ────────────────────────────────────────────────────
+
+  function fetchStarterPrompts() {
+    if (starterFetched) return;
+    starterFetched = true;
+    fetch(API_BASE + "/api/web/starter-prompts?tenant_id=" + encodeURIComponent(TENANT_ID), {
+      method: "GET",
+      headers: { "Accept": "application/json" },
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data && data.ok && Array.isArray(data.prompts) && data.prompts.length > 0) {
+          starterPrompts = data.prompts;
+          var btn = shadow.getElementById("qw-srch");
+          if (btn) btn.classList.add("show");
+          if (suggestOpen) renderSuggestions();
+        } else {
+          starterPrompts = null;
+        }
+      })
+      .catch(function (err) {
+        console.warn("[qwikly] starter prompts fetch failed:", err);
+        starterPrompts = null;
+      });
+  }
+
+  function renderSuggestions() {
+    var list = shadow.getElementById("qw-sg-list");
+    if (!list) return;
+    list.innerHTML = "";
+    if (!starterPrompts) {
+      for (var i = 0; i < 4; i++) {
+        var sk = document.createElement("div");
+        sk.className = "sg-skel";
+        list.appendChild(sk);
+      }
+      return;
+    }
+    for (var j = 0; j < starterPrompts.length; j++) {
+      (function (text) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "sg-pill";
+        b.textContent = text;
+        b.addEventListener("click", function () { sendStarterPrompt(text); });
+        list.appendChild(b);
+      })(starterPrompts[j]);
+    }
+  }
+
+  function showSuggestions() {
+    var wrap = shadow.getElementById("qw-sg");
+    var btn = shadow.getElementById("qw-srch");
+    if (!wrap) return;
+    suggestOpen = true;
+    wrap.classList.add("show");
+    if (btn) btn.classList.add("on");
+    renderSuggestions();
+    var m = msgsEl();
+    if (m) m.scrollTop = 0;
+  }
+
+  function hideSuggestions() {
+    var wrap = shadow.getElementById("qw-sg");
+    var btn = shadow.getElementById("qw-srch");
+    suggestOpen = false;
+    if (wrap) wrap.classList.remove("show");
+    if (btn) btn.classList.remove("on");
+  }
+
+  function toggleSuggestions() {
+    if (suggestOpen) { hideSuggestions(); return; }
+    if (!starterPrompts && !starterFetched) fetchStarterPrompts();
+    showSuggestions();
+  }
+
+  function sendStarterPrompt(text) {
+    if (sending) return;
+    hideSuggestions();
+    var inp = shadow.getElementById("qw-inp");
+    if (inp) {
+      inp.value = text;
+      inp.style.height = "";
+    }
+    handleSend();
   }
 
   // ── Send ────────────────────────────────────────────────────────────────────
@@ -1031,6 +1148,7 @@
     } else {
       if (!isMobile) { var inp = shadow.getElementById("qw-inp"); if (inp) inp.focus(); }
     }
+    fetchStarterPrompts();
     if (conversationId) startPolling();
     fireEvent("launcher_opened");
   }
