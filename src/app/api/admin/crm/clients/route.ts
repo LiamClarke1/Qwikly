@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
 
   // Enrich with billing computed fields
   const clientIds = (clients ?? []).map(c => c.id);
-  let latestByClient = new Map<number, { status: string; due_at: string | null }>();
+  const latestByClient = new Map<number, { status: string; due_at: string | null }>();
   if (clientIds.length > 0) {
     const latestInvRes = await db
       .from("qwikly_billing_invoices")
