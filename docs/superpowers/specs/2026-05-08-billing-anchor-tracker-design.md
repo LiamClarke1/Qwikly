@@ -1,9 +1,9 @@
-# Billing Anchor Tracker — Design Spec
+# Billing Anchor Tracker: Design Spec
 
 **Date:** 2026-05-08
 **Status:** Approved (brainstorming complete, awaiting implementation plan)
 **Author:** Claude (with Liam Clarke)
-**Surface:** Admin-only — `/admin/clients`, `/admin/billing/pipeline`, `/admin/invoicing`, `/api/cron/billing-anchor-tick`, client invoice page `/i/[token]`
+**Surface:** Admin-only. Touches `/admin/clients`, `/admin/billing/pipeline`, `/admin/invoicing`, `/api/cron/billing-anchor-tick`, client invoice page `/i/[token]`.
 
 ---
 
@@ -120,7 +120,7 @@ When the cron generates an invoice for a client, it queries the **billing window
 - Stats are **snapshotted**: the line_items_jsonb is the source of truth on the invoice forever. Even if conversations are later deleted, the invoice stays correct.
 - Per the project memory rule, the invoice copy refers to "your Qwikly digital assistant" or "Qwikly digital system", **not** "AI" or "bot".
 
-## 7. CRM list — Next invoice column
+## 7. CRM list: Next invoice column
 
 Replaces unused space between "Last active" and the row actions menu in [admin/clients/page.tsx](../../../src/app/(app)/admin/clients/page.tsx). Sortable. Filterable in the existing filter panel under a new "Billing" group.
 
@@ -171,17 +171,17 @@ New route: `/admin/billing/pipeline` ([admin/billing](../../../src/app/(app)/adm
 
 ### Tabs
 
-1. **Upcoming (next 14 days)** — clients whose next anchor day is within 14 days. Each row: business name, days until invoice, estimated amount (last invoice total, or plan MRR if first), [Preview invoice draft] button.
-2. **Awaiting verification** — invoices with status `awaiting_verification`. Each row: business name, amount, when client clicked "I've paid", optional note, [Mark verified] / [Mark not received] actions.
-3. **Overdue** — invoices with status `overdue`. Each row: business name, amount, days overdue, [Send reminder] / [Mark paid] actions.
-4. **Paid this month** — invoices paid in the calendar month. Read-only celebration view. Sum at top.
+1. **Upcoming (next 14 days)**: clients whose next anchor day is within 14 days. Each row: business name, days until invoice, estimated amount (last invoice total, or plan MRR if first), [Preview invoice draft] button.
+2. **Awaiting verification**: invoices with status `awaiting_verification`. Each row: business name, amount, when client clicked "I've paid", optional note, [Mark verified] / [Mark not received] actions.
+3. **Overdue**: invoices with status `overdue`. Each row: business name, amount, days overdue, [Send reminder] / [Mark paid] actions.
+4. **Paid this month**: invoices paid in the calendar month. Read-only celebration view. Sum at top.
 
 ### Stat cards (top)
 
-- **7-day forecast (R)** — sum of estimated next-invoice amounts for clients due within 7 days
-- **30-day forecast (R)** — same, 30 days
-- **Awaiting verification count** — count of `awaiting_verification` invoices
-- **Overdue count** — count of `overdue` invoices
+- **7-day forecast (R)**: sum of estimated next-invoice amounts for clients due within 7 days
+- **30-day forecast (R)**: same, 30 days
+- **Awaiting verification count**: count of `awaiting_verification` invoices
+- **Overdue count**: count of `overdue` invoices
 
 ## 9. Cron job
 
@@ -189,7 +189,7 @@ New route: `/admin/billing/pipeline` ([admin/billing](../../../src/app/(app)/adm
 **Schedule:** Daily at 06:00 SAST (configured in `vercel.json`)
 **Auth:** `CRON_SECRET` header, same pattern as existing crons.
 
-### Pass 1 — Generate today's invoices
+### Pass 1: Generate today's invoices
 
 ```
 SELECT id, billing_anchor_day, ...
@@ -213,7 +213,7 @@ For each client:
   8. On any send failure: leave status='draft', log to chat_persist_dlq, alert via existing lead-notification channel
 ```
 
-### Pass 2 — Flip overdue
+### Pass 2: Flip overdue
 
 ```
 UPDATE qwikly_billing_invoices
@@ -301,7 +301,7 @@ In Billing Pipeline → Awaiting verification tab. Each row has two actions:
 | Client clicks "I've paid" twice | Idempotent: second click is a no-op (already `awaiting_verification`) |
 | Refund | Out of scope this iteration. Use existing `refunded` status manually if needed |
 | Anchor_day=29/30/31, short month | Bill on last day of month per Section 9 overflow rule |
-| Two invoices accidentally generated same day | Cron query's `NOT EXISTS` clause prevents this at application level. If we want belt-and-braces, implementation can add a partial unique index on `(client_id, (created_at AT TIME ZONE 'Africa/Johannesburg')::date)` — decide during implementation, not required for correctness |
+| Two invoices accidentally generated same day | Cron query's `NOT EXISTS` clause prevents this at application level. If we want belt-and-braces, implementation can add a partial unique index on `(client_id, (created_at AT TIME ZONE 'Africa/Johannesburg')::date)`: decide during implementation, not required for correctness |
 | Client clicks "I've paid" but admin sees no deposit | Admin clicks "Mark not received", status reverts to `sent`, follow-up email sent |
 | Invoice marked paid manually before cron's overdue pass | Pass 2 only flips `sent` → `overdue`. Paid invoices unaffected |
 
@@ -309,24 +309,24 @@ In Billing Pipeline → Awaiting verification tab. Each row has two actions:
 
 ### New files
 
-- `supabase/migrations/20260508_billing_anchor_tracker.sql` — schema migration
-- `src/app/(app)/admin/billing/pipeline/page.tsx` — pipeline tracker page
-- `src/app/api/cron/billing-anchor-tick/route.ts` — daily cron
-- `src/app/api/billing/i/[token]/mark-paid/route.ts` — client self-confirm endpoint
-- `src/app/api/admin/qwikly-billing-invoices/[id]/route.ts` — admin verify/revert endpoint (if not already present)
-- `src/lib/billing/anchor.ts` — pure-function helpers (next-anchor-date, days-until, month-end overflow)
-- `src/lib/billing/stats-aggregator.ts` — usage stats query module
-- `src/lib/billing/invoice-generator.ts` — orchestrates aggregator + insert + send
+- `supabase/migrations/20260508_billing_anchor_tracker.sql`: schema migration
+- `src/app/(app)/admin/billing/pipeline/page.tsx`: pipeline tracker page
+- `src/app/api/cron/billing-anchor-tick/route.ts`: daily cron
+- `src/app/api/billing/i/[token]/mark-paid/route.ts`: client self-confirm endpoint
+- `src/app/api/admin/qwikly-billing-invoices/[id]/route.ts`: admin verify/revert endpoint (if not already present)
+- `src/lib/billing/anchor.ts`: pure-function helpers (next-anchor-date, days-until, month-end overflow)
+- `src/lib/billing/stats-aggregator.ts`: usage stats query module
+- `src/lib/billing/invoice-generator.ts`: orchestrates aggregator + insert + send
 
 ### Modified files
 
-- `src/app/(app)/admin/clients/page.tsx` — new "Next invoice" column, sort, filter
-- `src/lib/crm-types.ts` — extend `CrmClientListItem` with `next_invoice_at`, `latest_billing_invoice_status`, `billing_anchor_day`
-- `src/app/api/admin/crm/clients/route.ts` — return new fields
-- `src/app/(app)/admin/clients/[id]/page.tsx` — add "Set billing day" form
-- `src/app/i/[token]/page.tsx` — add "I've paid" section (verify if path; create if missing)
-- `vercel.json` — add cron entry for `/api/cron/billing-anchor-tick`
-- `src/lib/invoices/types.ts` — introduce a `QwiklyBillingInvoiceStatus` union (`'draft' | 'sent' | 'awaiting_verification' | 'paid' | 'overdue' | 'written_off' | 'disputed'`) and tighten `QwiklyBillingInvoice.status` from `string` to this union. Do **not** modify the existing `InvoiceStatus` union — that's for client→customer invoices and is unaffected.
+- `src/app/(app)/admin/clients/page.tsx`: new "Next invoice" column, sort, filter
+- `src/lib/crm-types.ts`: extend `CrmClientListItem` with `next_invoice_at`, `latest_billing_invoice_status`, `billing_anchor_day`
+- `src/app/api/admin/crm/clients/route.ts`: return new fields
+- `src/app/(app)/admin/clients/[id]/page.tsx`: add "Set billing day" form
+- `src/app/i/[token]/page.tsx`: add "I've paid" section (verify if path; create if missing)
+- `vercel.json`: add cron entry for `/api/cron/billing-anchor-tick`
+- `src/lib/invoices/types.ts`: introduce a `QwiklyBillingInvoiceStatus` union (`'draft' | 'sent' | 'awaiting_verification' | 'paid' | 'overdue' | 'written_off' | 'disputed'`) and tighten `QwiklyBillingInvoice.status` from `string` to this union. Do **not** modify the existing `InvoiceStatus` union, that's for client→customer invoices and is unaffected.
 
 ## 14. Testing
 
