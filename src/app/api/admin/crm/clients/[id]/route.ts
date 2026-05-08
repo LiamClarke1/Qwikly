@@ -25,6 +25,8 @@ const PatchSchema = z.object({
   trial_ends_at:          z.string().nullable().optional(),
   deletion_scheduled_at:  z.string().nullable().optional(),
   web_widget_enabled:     z.boolean().optional(),
+  billing_anchor_day:     z.number().int().min(1).max(31).optional(),
+  billing_anchor_set_at:  z.string().nullable().optional(),
 }).strict();
 
 export async function GET(
