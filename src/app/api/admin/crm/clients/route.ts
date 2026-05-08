@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const validSorts = new Set(["business_name","mrr_zar","health_score","created_at","plan","crm_status","next_invoice_at"]);
+  const validSorts = new Set(["business_name","mrr_zar","health_score","created_at","plan","crm_status"]);
   const col = validSorts.has(sortBy) ? sortBy : "created_at";
   query = query.order(col, { ascending: sortDir }).range(offset, offset + limit - 1);
 

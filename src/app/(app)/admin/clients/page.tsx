@@ -283,7 +283,7 @@ function StatCard({
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
-type SortCol = "business_name" | "mrr_zar" | "health_score" | "created_at" | "plan" | "crm_status" | "next_invoice_at";
+type SortCol = "business_name" | "mrr_zar" | "health_score" | "created_at" | "plan" | "crm_status";
 type ConfirmAction = { type: "archive" | "delete" | "restore"; id: number; name: string | null } | null;
 
 interface Filters {
@@ -775,7 +775,7 @@ function TableView({
         <ColHeader col="health_score" label="Health" className="justify-center" />
         <span className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Channels</span>
         <span className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Last active</span>
-        <ColHeader col="next_invoice_at" label="Next invoice" />
+        <span className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Next invoice</span>
         <span />
       </div>
 
