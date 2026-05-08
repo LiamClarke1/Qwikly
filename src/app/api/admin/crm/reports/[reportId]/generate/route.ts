@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { CrmReportPDF } from "@/lib/crm-report-pdf";
+import { avgFirstResponseSeconds } from "@/lib/analytics/response-time";
 
 export const dynamic  = "force-dynamic";
 export const maxDuration = 60; // Vercel max for hobby — increase in Pro plan
@@ -60,6 +61,15 @@ export async function POST(
     ]);
 
     const convos = convosRes.data ?? [];
+
+    // Real first-response time over the report period.
+    const avg_response_time_s = await avgFirstResponseSeconds(
+      db,
+      clientId,
+      new Date(fromISO),
+      new Date(toISO),
+    );
+
     const metrics = {
       conversations_total:    convos.length,
       conversations_whatsapp: convos.filter(c => c.channel === "whatsapp").length,
@@ -69,7 +79,7 @@ export async function POST(
       leads_converted:        convos.filter(c => c.status === "converted").length,
       bookings_created:       bookingsRes.data?.length ?? 0,
       messages_handled_by_ai: aiMsgsRes.data?.length ?? 0,
-      avg_response_time_s:    0,
+      avg_response_time_s:    avg_response_time_s ?? 0,
     };
 
     // Get daily data (last 30 days of the period)

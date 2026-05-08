@@ -148,7 +148,7 @@ export interface CrmStatsSummary {
   leads_captured: number;
   leads_converted: number;
   bookings_created: number;
-  avg_response_time_s: number;
+  avg_response_time_s: number | null;
   messages_handled_by_ai: number;
 }
 

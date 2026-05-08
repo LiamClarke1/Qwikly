@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { assertAdmin } from "@/lib/admin-auth";
 import { subDays, subMonths, format, eachDayOfInterval, startOfDay } from "date-fns";
+import { avgFirstResponseSeconds } from "@/lib/analytics/response-time";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,11 @@ export async function GET(
   const leads_captured  = convos.filter(c => c.status === "lead" || c.status === "converted").length;
   const leads_converted = convos.filter(c => c.status === "converted").length;
 
+  // Real first-response time computed from messages_log: for each conversation
+  // in the window, time between first user message and first assistant message
+  // after it. Returns null if there is no qualifying data.
+  const avg_response_time_s = await avgFirstResponseSeconds(db, id, from, to);
+
   const summary = {
     conversations_total:    convos.length,
     conversations_whatsapp: convos.filter(c => c.channel === "whatsapp").length,
@@ -97,7 +103,7 @@ export async function GET(
     leads_converted,
     bookings_created:       bookings.length,
     messages_handled_by_ai: aiMsgs.length,
-    avg_response_time_s:    0, // requires message-level timestamps, skip for now
+    avg_response_time_s,
   };
 
   return NextResponse.json({
