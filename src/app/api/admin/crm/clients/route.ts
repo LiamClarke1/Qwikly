@@ -155,9 +155,24 @@ export async function GET(req: NextRequest) {
   }
 
   const total = count ?? 0;
+
+  // Portfolio-wide stats (across ALL clients, not just the current page)
+  const statsRes = await db
+    .from("clients")
+    .select("crm_status, mrr_zar")
+    .returns<{ crm_status: string | null; mrr_zar: number | null }[]>();
+  const allClients = statsRes.data ?? [];
+  const portfolioStats = {
+    active:    allClients.filter(c => c.crm_status === "active").length,
+    at_risk:   allClients.filter(c => c.crm_status === "at_risk").length,
+    onboard:   allClients.filter(c => c.crm_status === "onboarding").length,
+    total_mrr: allClients.reduce((s, c) => s + (c.mrr_zar ?? 0), 0),
+  };
+
   return NextResponse.json({
     clients: enriched,
     total,
     pages: Math.ceil(total / limit),
+    portfolio_stats: portfolioStats,
   });
 }

@@ -19,20 +19,22 @@ interface AdminStats {
 }
 
 const CARDS = [
-  { label: "Total clients",        key: "total_clients" as keyof AdminStats,             icon: Users,       href: "/admin/clients",   money: false },
-  { label: "Active clients",       key: "active_clients" as keyof AdminStats,            icon: Users,       href: "/admin/clients",   money: false },
-  { label: "Total collected",      key: "total_paid_zar" as keyof AdminStats,            icon: TrendingUp,  href: "/admin/invoicing", money: true  },
-  { label: "Total subscription",    key: "total_commission_zar" as keyof AdminStats,      icon: Receipt,     href: "/admin/billing",   money: true  },
-  { label: "This period",          key: "current_period_commission" as keyof AdminStats, icon: Receipt,     href: "/admin/billing",   money: true  },
-  { label: "High risk clients",    key: "high_risk_clients" as keyof AdminStats,         icon: ShieldAlert, href: "/admin/risk",      money: false },
+  { label: "Total clients",        key: "total_clients" as keyof AdminStats,             icon: Users,        href: "/admin/clients",          money: false },
+  { label: "Active clients",       key: "active_clients" as keyof AdminStats,            icon: Users,        href: "/admin/clients",          money: false },
+  { label: "Total collected",      key: "total_paid_zar" as keyof AdminStats,            icon: TrendingUp,   href: "/admin/invoicing",        money: true  },
+  { label: "Total subscription",   key: "total_commission_zar" as keyof AdminStats,      icon: Receipt,      href: "/admin/billing",          money: true  },
+  { label: "This period",          key: "current_period_commission" as keyof AdminStats, icon: Receipt,      href: "/admin/billing/pipeline", money: true  },
+  { label: "Open disputes",        key: "open_disputes" as keyof AdminStats,             icon: MessageSquare,href: "/admin/disputes",         money: false },
+  { label: "High risk clients",    key: "high_risk_clients" as keyof AdminStats,         icon: ShieldAlert,  href: "/admin/risk",             money: false },
 ];
 
 const QUICK_LINKS = [
-  { href: "/admin/clients",   label: "Clients",    desc: "All onboarded businesses",             icon: Users        },
-  { href: "/admin/invoicing", label: "Invoicing",  desc: "All invoices across all clients",      icon: FileText     },
-  { href: "/admin/risk",      label: "Risk flags", desc: "High-risk client accounts",            icon: ShieldAlert  },
-  { href: "/admin/billing",   label: "Billing",    desc: "Subscription periods and collection",  icon: Receipt      },
-  { href: "/admin/disputes",  label: "Disputes",   desc: "Open and resolved billing disputes",  icon: MessageSquare },
+  { href: "/admin/clients",          label: "Clients",         desc: "All onboarded businesses",             icon: Users        },
+  { href: "/admin/billing/pipeline", label: "Pipeline",        desc: "Drafts, upcoming, awaiting verify",    icon: TrendingUp   },
+  { href: "/admin/billing",          label: "Revenue",         desc: "Subscription periods and collection",  icon: Receipt      },
+  { href: "/admin/invoicing",        label: "Client invoices", desc: "All invoices across all clients",      icon: FileText     },
+  { href: "/admin/risk",             label: "Risk flags",      desc: "High-risk client accounts",            icon: ShieldAlert  },
+  { href: "/admin/disputes",         label: "Disputes",        desc: "Open and resolved billing disputes",   icon: MessageSquare },
 ];
 
 export default function AdminOverviewPage() {

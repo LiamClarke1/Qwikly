@@ -297,6 +297,7 @@ export default function CrmClientsPage() {
   const [clients,       setClients]       = useState<CrmClientListItem[]>([]);
   const [total,         setTotal]         = useState(0);
   const [pages,         setPages]         = useState(1);
+  const [portfolioStats, setPortfolioStats] = useState<{ active: number; at_risk: number; onboard: number; total_mrr: number } | null>(null);
   const [page,          setPage]          = useState(1);
   const [loading,       setLoading]       = useState(true);
   const [query,         setQuery]         = useState("");
@@ -336,6 +337,7 @@ export default function CrmClientsPage() {
       setClients(d.clients);
       setTotal(d.total);
       setPages(d.pages);
+      if (d.portfolio_stats) setPortfolioStats(d.portfolio_stats);
     }
     setLoading(false);
   }, [debouncedQ, filters, sortCol, sortDir, page]);
@@ -444,13 +446,24 @@ export default function CrmClientsPage() {
     }
   }
 
+  // Portfolio-wide stats from the API (computed across ALL clients, not just
+  // the current page). Falls back to a page-level computation only on first paint
+  // before the API responds.
   const stats = useMemo(() => {
+    if (portfolioStats) {
+      return {
+        active: portfolioStats.active,
+        at_risk: portfolioStats.at_risk,
+        onboard: portfolioStats.onboard,
+        totalMrr: portfolioStats.total_mrr,
+      };
+    }
     const active  = clients.filter(c => c.crm_status === "active").length;
     const at_risk = clients.filter(c => c.crm_status === "at_risk").length;
     const onboard = clients.filter(c => c.crm_status === "onboarding").length;
     const totalMrr = clients.reduce((s, c) => s + (c.mrr_zar ?? 0), 0);
     return { active, at_risk, onboard, totalMrr };
-  }, [clients]);
+  }, [clients, portfolioStats]);
 
   function SortIcon({ col }: { col: SortCol }) {
     if (sortCol !== col) return <ArrowUpDown className="w-3 h-3 text-slate-300 ml-0.5" />;
