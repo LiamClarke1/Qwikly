@@ -58,25 +58,9 @@ export async function PATCH(
       .eq("id", inv.data.id);
     if (upd.error) return NextResponse.json({ error: upd.error.message }, { status: 500 });
 
-    // Insert payments row marked verified=true.
-    // NOTE: payments.invoice_id references invoices(id), not qwikly_billing_invoices(id).
-    // This insert is best-effort bookkeeping; FK violation is expected and soft-failed.
-    const paymentIns = await sb.from("payments").insert({
-      invoice_id: inv.data.id,
-      client_id: inv.data.client_id,
-      amount_zar: inv.data.total_zar,
-      paid_at: new Date().toISOString(),
-      method: payment_method ?? "eft",
-      external_ref: external_ref ?? null,
-      verified: true,
-      verified_at: new Date().toISOString(),
-      source: "manual_admin",
-    });
-    if (paymentIns.error) {
-      // Don't fail the whole request — invoice is marked paid; payments row is bookkeeping.
-      // FK violation is expected: payments.invoice_id references invoices(id), not qwikly_billing_invoices.
-      console.warn("[admin verify] payments insert failed:", paymentIns.error.message);
-    }
+    // No payments row inserted: payments.invoice_id FKs to invoices(id), not qwikly_billing_invoices.
+    // qwikly_billing_invoices has paid_at, payment_method, external_ref, which are sufficient
+    // bookkeeping. A separate qwikly_billing_payments table can be added later if needed.
 
     return NextResponse.json({ ok: true, status: "paid" });
   }
