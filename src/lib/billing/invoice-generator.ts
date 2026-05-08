@@ -92,12 +92,10 @@ export async function generateDraftInvoice(
   }
   const periodId = periodIns.data.id;
 
-  // 7. Generate invoice number QWK-YYYY-MM-NNNN using the qwikly_billing_number_seq
-  const yyyymm = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`;
-  const seqRes = await sb.rpc("nextval", { seq: "qwikly_billing_number_seq" } as never)
-    .single<{ nextval: number }>();
-  const seqNum = seqRes.data?.nextval ?? Math.floor(Math.random() * 9999);
-  const invoiceNumber = `QWK-${yyyymm}-${String(seqNum).padStart(4, "0")}`;
+  // 7. Generate invoice number QWK-YYYYMMDD-CCCC where CCCC is the 4-digit client_id.
+  // Idempotency check above guarantees one invoice per client per day, so this is unique.
+  const yyyymmdd = today.toISOString().slice(0, 10).replace(/-/g, "");
+  const invoiceNumber = `QWK-${yyyymmdd}-${String(clientId).padStart(4, "0")}`;
 
   // 8. Create the invoice (status='draft' — admin sends manually from /admin/invoicing)
   const invIns = await sb
