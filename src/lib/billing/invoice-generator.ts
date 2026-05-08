@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { aggregateStats } from "./stats-aggregator";
 import { billingWindowEndingAt, todaySast } from "./anchor";
+import { effectiveMrrCents } from "./plan-prices";
 
 interface GenerateResult {
   invoice_id: string | null;
@@ -69,7 +70,11 @@ export async function generateDraftInvoice(
   const { stats, warnings } = await aggregateStats(sb, clientId, windowStart, window.end);
 
   // 5. Compute totals (in ZAR, not cents — qwikly_billing_invoices schema uses numeric(12,2))
-  const subtotalZar = (client.mrr_zar ?? 0) / 100;
+  // Effective MRR uses the plan-price fallback when mrr_zar is null/0,
+  // so we never auto-generate a R0.00 invoice for a paid-plan client just
+  // because someone forgot to set mrr_zar.
+  const effectiveCents = effectiveMrrCents({ mrr_zar: client.mrr_zar, plan: client.plan });
+  const subtotalZar = effectiveCents / 100;
   const vatZar = Math.round(subtotalZar * VAT_RATE * 100) / 100;
   const totalZar = Math.round((subtotalZar + vatZar) * 100) / 100;
 

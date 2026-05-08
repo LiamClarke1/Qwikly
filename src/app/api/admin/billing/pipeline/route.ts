@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { assertAdmin } from "@/lib/admin-auth";
 import { todaySast, nextAnchorDate, daysUntilNextAnchor } from "@/lib/billing/anchor";
+import { effectiveMrrCents } from "@/lib/billing/plan-prices";
 
 export const dynamic = "force-dynamic";
 
@@ -27,13 +28,19 @@ export async function GET(_req: NextRequest) {
     .map(c => {
       const anchor = c.billing_anchor_day as number;
       const days = daysUntilNextAnchor(anchor, today);
+      // Effective MRR: real mrr_zar wins, otherwise fall back to plan_prices.
+      // Trials always resolve to 0 (correct, they don't pay).
+      const effectiveCents = effectiveMrrCents({ mrr_zar: c.mrr_zar, plan: c.plan });
       return {
         client_id: c.id,
         business_name: c.business_name,
         days_until: days,
         next_anchor: nextAnchorDate(anchor, today).toISOString().slice(0, 10),
-        estimated_amount_zar: (c.mrr_zar ?? 0) / 100,
+        estimated_amount_zar: effectiveCents / 100,
         plan: c.plan,
+        // Flag so the UI can mark estimates that came from plan_prices,
+        // not from a real mrr_zar value, as approximate.
+        amount_is_estimated: !c.mrr_zar || c.mrr_zar <= 0,
       };
     })
     .sort((a, b) => a.days_until - b.days_until);
