@@ -23,9 +23,9 @@ interface AdminDispute {
 }
 
 const STATUS_CFG = {
-  open:     { label: "Open",     color: "bg-warning/10 text-warning border border-warning/20",   icon: Clock },
-  resolved: { label: "Resolved", color: "bg-success/10 text-success border border-success/20",   icon: CheckCircle },
-  rejected: { label: "Rejected", color: "bg-danger/10 text-danger border border-danger/20",      icon: AlertTriangle },
+  open:     { label: "Open",     color: "bg-amber-50 text-amber-600 border border-amber-200",    icon: Clock },
+  resolved: { label: "Resolved", color: "bg-emerald-50 text-emerald-600 border border-emerald-200", icon: CheckCircle },
+  rejected: { label: "Rejected", color: "bg-red-50 text-red-600 border border-red-200",          icon: AlertTriangle },
 };
 
 function ResolveModal({ dispute, onClose, onDone }: { dispute: AdminDispute; onClose: () => void; onDone: () => void }) {
@@ -47,20 +47,20 @@ function ResolveModal({ dispute, onClose, onDone }: { dispute: AdminDispute; onC
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-[#1a1f2e] border border-line rounded-2xl p-6 w-full max-w-md">
-        <h3 className="text-h2 text-fg mb-1">Resolve dispute</h3>
-        <p className="text-small text-fg-muted mb-1">{dispute.clients?.business_name}</p>
-        <p className="text-tiny text-fg-subtle mb-5 leading-relaxed">{dispute.reason}</p>
+    <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 w-full max-w-md shadow-xl">
+        <h3 className="text-[15px] font-semibold text-slate-800 mb-1">Resolve dispute</h3>
+        <p className="text-[13px] text-slate-500 mb-1">{dispute.clients?.business_name}</p>
+        <p className="text-[11px] text-slate-400 mb-5 leading-relaxed">{dispute.reason}</p>
         <form onSubmit={submit} className="space-y-4">
           <div className="flex gap-3">
             {(["resolved", "rejected"] as const).map(a => (
               <button key={a} type="button" onClick={() => setAction(a)}
                 className={cn(
-                  "flex-1 py-2 rounded-xl text-small font-medium border transition-all cursor-pointer capitalize",
+                  "flex-1 py-2 rounded-xl text-[13px] font-medium border transition-all cursor-pointer capitalize",
                   action === a
-                    ? a === "resolved" ? "bg-success/10 text-success border-success/30" : "bg-danger/10 text-danger border-danger/30"
-                    : "bg-white/[0.03] text-fg-muted border-line"
+                    ? a === "resolved" ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-red-50 text-red-600 border-red-200"
+                    : "bg-white text-slate-500 border-slate-200"
                 )}>
                 {a}
               </button>
@@ -68,16 +68,16 @@ function ResolveModal({ dispute, onClose, onDone }: { dispute: AdminDispute; onC
           </div>
           {action === "resolved" && (
             <div>
-              <label className="block text-small font-medium text-fg mb-1.5">Credit amount (ZAR, optional)</label>
+              <label className="block text-[13px] font-medium text-slate-800 mb-1.5">Credit amount (ZAR, optional)</label>
               <input type="number" step="0.01" value={creditAmount} onChange={e => setCreditAmount(e.target.value)}
                 placeholder="Amount to credit back"
-                className="w-full bg-white/5 border border-line rounded-xl px-4 py-2.5 text-body text-fg placeholder:text-fg-faint outline-none focus:border-brand/40" />
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-[14px] text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#E85A2C]/40" />
             </div>
           )}
           <div>
-            <label className="block text-small font-medium text-fg mb-1.5">Resolution notes</label>
+            <label className="block text-[13px] font-medium text-slate-800 mb-1.5">Resolution notes</label>
             <textarea value={resolution} onChange={e => setResolution(e.target.value)} required rows={3}
-              className="w-full bg-white/5 border border-line rounded-xl px-4 py-2.5 text-small text-fg placeholder:text-fg-faint outline-none focus:border-brand/40 resize-none"
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-[13px] text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#E85A2C]/40 resize-none"
               placeholder="Explain the decision…" />
           </div>
           <div className="flex gap-3 pt-1">
@@ -109,16 +109,16 @@ export default function AdminDisputesPage() {
   return (
     <div className="animate-fade-in">
       <div className="mb-6">
-        <p className="text-small text-brand font-medium mb-1">Admin</p>
-        <h1 className="text-h1 text-fg">Disputes</h1>
+        <p className="text-[13px] text-[#E85A2C] font-semibold mb-1">Admin</p>
+        <h1 className="text-[28px] font-bold leading-tight text-slate-900">Disputes</h1>
       </div>
 
-      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar border border-line rounded-xl p-1 bg-white/[0.02] mb-4 max-w-sm">
+      <div className="flex items-center gap-1 overflow-x-auto no-scrollbar border border-slate-200 rounded-xl p-1 bg-white mb-4 max-w-sm">
         {(["open", "resolved", "rejected", "all"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={cn(
-              "shrink-0 px-3 py-1.5 rounded-lg text-small font-medium transition-colors cursor-pointer capitalize",
-              tab === t ? "bg-white/[0.08] text-fg" : "text-fg-muted hover:text-fg hover:bg-white/[0.04]"
+              "shrink-0 px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer capitalize",
+              tab === t ? "bg-[#E85A2C]/10 text-[#E85A2C]" : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
             )}>
             {t}
           </button>
@@ -126,11 +126,11 @@ export default function AdminDisputesPage() {
       </div>
 
       {loading ? (
-        <div className="text-small text-fg-muted py-8 text-center">Loading…</div>
+        <div className="text-[13px] text-slate-500 py-8 text-center">Loading…</div>
       ) : disputes.length === 0 ? (
         <div className="flex flex-col items-center py-16 gap-3">
-          <MessageSquare className="w-8 h-8 text-fg-faint" />
-          <p className="text-small text-fg-muted">No disputes in this category</p>
+          <MessageSquare className="w-8 h-8 text-slate-400" />
+          <p className="text-[13px] text-slate-500">No disputes in this category</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -138,25 +138,25 @@ export default function AdminDisputesPage() {
             const cfg = STATUS_CFG[d.status] ?? STATUS_CFG.open;
             const StatusIcon = cfg.icon;
             return (
-              <div key={d.id} className="bg-bg-card border border-line rounded-2xl p-5">
+              <div key={d.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div>
-                    <p className="text-small font-semibold text-fg">{d.clients?.business_name ?? "Unknown client"}</p>
-                    <p className="text-tiny text-fg-muted">{d.entity_type.replace(/_/g, " ")} · {fmtDate(d.created_at)}</p>
+                    <p className="text-[13px] font-semibold text-slate-800">{d.clients?.business_name ?? "Unknown client"}</p>
+                    <p className="text-[11px] text-slate-500">{d.entity_type.replace(/_/g, " ")} · {fmtDate(d.created_at)}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className={cn("inline-flex items-center gap-1 text-tiny font-medium px-2.5 py-1 rounded-full", cfg.color)}>
+                    <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full", cfg.color)}>
                       <StatusIcon className="w-3 h-3" />
                       {cfg.label}
                     </span>
-                    <p className="text-small font-display text-fg">{fmt(d.disputed_amount)}</p>
+                    <p className="text-[13px] font-display text-slate-800">{fmt(d.disputed_amount)}</p>
                   </div>
                 </div>
-                <p className="text-small text-fg-muted leading-relaxed mb-3">{d.reason}</p>
+                <p className="text-[13px] text-slate-500 leading-relaxed mb-3">{d.reason}</p>
                 {d.resolution_notes && (
-                  <div className="bg-white/[0.03] rounded-xl px-4 py-3 mb-3">
-                    <p className="text-tiny text-fg-subtle uppercase tracking-wider mb-1">Resolution</p>
-                    <p className="text-small text-fg-muted">{d.resolution_notes}</p>
+                  <div className="bg-slate-50 rounded-xl px-4 py-3 mb-3">
+                    <p className="text-[11px] text-slate-400 uppercase tracking-wider mb-1">Resolution</p>
+                    <p className="text-[13px] text-slate-500">{d.resolution_notes}</p>
                   </div>
                 )}
                 {d.status === "open" && (
