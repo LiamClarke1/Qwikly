@@ -21,31 +21,31 @@ When a visitor opens the chat widget and doesn't know what to ask, give them a o
 
 ### Discovery (when the widget opens)
 
-The widget renders the existing welcome message ("Hi! How can we help you today?") exactly as today. **Below** the welcome bubble, a small ghost button appears reading **"Not sure what to ask?"** in muted ink-400, the same colour as the message timestamp. No icon. The button is a normal button, not a link.
+The widget renders the existing welcome message ("Hi! How can we help you today?") exactly as today. A new **search icon button** (magnifying glass, 20×20 inside a 32×32 ghost touch target) is added to the widget **header bar**, sitting between the identity block (`Qwikly · Replies shortly`) and the existing close `✕`. The icon is always visible while the widget is open — before, during, and after the visitor sends messages. `aria-label="Show suggested questions"`, tooltip on hover.
 
-### When the visitor taps "Not sure what to ask?"
+### When the visitor taps the search icon
 
-1. The button collapses (height animates to 0).
-2. **Above** the welcome message, a panel slides in (height + opacity transition, 200ms).
-3. The panel contains 4 pill buttons stacked vertically, one per prompt, full-width inside the chat area.
-4. The panel has no header. A small `✕ hide` text link sits in the top-right corner of the panel.
+1. A panel slides in (height + opacity transition, 200ms) **above** the welcome message (or above the most recent message bubble if mid-conversation).
+2. The panel contains up to 4 pill buttons stacked vertically, one per prompt, full-width inside the chat area.
+3. The panel has no header. A small `✕ hide` text link sits in the top-right corner of the panel.
+4. Tapping the search icon a second time also collapses the panel (icon acts as a toggle).
 
-If the prompts haven't loaded yet (cold cache), the panel shows 4 skeleton pills (grey rounded rectangles) for up to 1.5s, then fills in. If the API fails entirely, the panel quietly does not appear and the "Not sure what to ask?" button reverts to its previous state — no error toast, the visitor just types normally.
+If the prompts haven't loaded yet (cold cache), the panel shows 4 skeleton pills (grey rounded rectangles) for up to 1.5s, then fills in. If the API fails entirely, the search icon is hidden — the visitor just types normally.
 
 ### When the visitor taps a prompt pill
 
 1. Prompt panel collapses.
 2. The prompt text is inserted into the input field and **immediately sent** via the existing send-message path (same code path as if the visitor typed and pressed Enter).
-3. The "Not sure what to ask?" button is gone for the rest of the session — the visitor has now started a conversation.
-4. From here on, everything is normal chat. The assistant replies. Lead capture, notifications, conversation persistence — all unchanged.
+3. From here on, everything is normal chat. The assistant replies. Lead capture, notifications, conversation persistence — all unchanged.
+4. The search icon **stays visible** in the header — the visitor can re-open the panel mid-conversation if they get stuck again.
 
-### When the visitor taps "✕ hide" or sends any message manually
+### When the visitor taps "✕ hide"
 
-The panel disappears. The "Not sure what to ask?" button does not return for this session.
+The panel collapses. The search icon stays visible in the header, ready to reopen.
 
-### Re-surface rule (passive)
+### No passive nudge
 
-If the visitor has the widget open, has typed nothing, and has been idle for **60 seconds** since the welcome message rendered, the "Not sure what to ask?" button gets a one-time gentle highlight (ember outline ring, 1.5s pulse, then back to ghost). The button itself was already visible — this is just a quiet nudge. The pulse fires at most once per session.
+The icon does not pulse, animate, or otherwise call attention to itself. It is discoverable purely on intent — the visitor finds it when they look for it.
 
 ## Where the prompts come from
 
@@ -78,16 +78,18 @@ The widget treats any `ok: false` as "do not render the panel" and silently does
 3. If stale or missing, pull the tenant's KB summary + business profile (existing tables: `knowledge_chunks`, `businesses`).
 4. Call Anthropic Claude Haiku 4.5 with a tight prompt:
 
-   > Generate exactly 4 short questions a first-time visitor to {business_name} ({business_type}) would naturally ask. Each question max 6 words. Cover four angles in this order:
+   > Generate exactly 4 very short questions a first-time visitor to {business_name} ({business_type}) would naturally ask. Each question MUST be at most 4 words. Cover four angles in this order:
    >
    > 1. Pricing or cost
    > 2. How the service works
-   > 3. Fit for the visitor's situation
-   > 4. A direct call-to-action (book / start / try)
+   > 3. Fit / availability for the visitor
+   > 4. A direct call-to-action (book / quote / start)
    >
-   > Use the visitor's voice (first person where natural). Avoid jargon. Avoid the words "AI", "bot", "assistant". Output a JSON array of exactly 4 strings, nothing else.
+   > Use the visitor's voice. Plain words only. Avoid jargon. Avoid the words "AI", "bot", "assistant". Output a JSON array of exactly 4 strings, nothing else.
+   >
+   > Examples for a pool-cleaning service: ["What do you charge?", "How often?", "Do you supply chemicals?", "Get a quote"]
 
-5. Validate: must parse to a JSON array of exactly 4 strings, each ≤ 60 chars, none containing the words "AI", "bot", or "assistant" (case-insensitive). If validation fails, retry once. If it fails again, return `{ ok: false, reason: "generation_failed" }` and do not write the cache.
+5. Validate: must parse to a JSON array of exactly 4 strings, each between 2 and 5 words inclusive (≤ 40 chars), none containing the words "AI", "bot", or "assistant" (case-insensitive). If validation fails, retry once with a stricter instruction emphasising the word limit. If it fails again, return `{ ok: false, reason: "generation_failed" }` and do not write the cache.
 6. On success, write `clients.starter_prompts_json` and `clients.starter_prompts_generated_at = now()`.
 
 ### Cache lifetime
@@ -104,19 +106,21 @@ The widget treats any `ok: false` as "do not render the panel" and silently does
 
 ### Changed files
 
-- `public/embed.js` — adds the "Not sure what to ask?" button, the prompt panel, the fetch call, the click-to-send wiring, and the 60s passive-pulse logic.
+- `public/embed.js` — adds the search icon button to the header, the prompt panel, the fetch call, the toggle/dismiss logic, and the click-to-send wiring.
 - Supabase migration: add `starter_prompts_json jsonb` and `starter_prompts_generated_at timestamptz` to `clients`. Both nullable, no default.
 
 ### Data flow
 
 ```
 widget opens
-  └─ render welcome bubble + "Not sure what to ask?" button
+  └─ render welcome bubble + search icon in header
   └─ in background: fetch /api/web/starter-prompts?tenant_id=PK
        └─ cache hit (≤24h) → return prompts
        └─ cache miss → pull KB → Claude Haiku 4.5 → validate → cache → return
-  └─ if button clicked → render panel with prompts (or skeletons if still loading)
+  └─ if API failed or no prompts → hide search icon entirely
+  └─ if icon tapped → toggle prompt panel (skeletons while loading)
   └─ if prompt clicked → insert into input → existing sendMessage() → conversation continues
+  └─ icon remains in header for the entire session
 ```
 
 ## Error handling
@@ -144,15 +148,14 @@ No vitest in this repo, so verification is manual + lint + build.
 - **Lint:** `npm run lint` clean on new files.
 - **Build:** `npm run build` passes typecheck.
 - **Manual smoke (qwikly.co.za):**
-  1. Open the widget. Welcome message renders. "Not sure what to ask?" button is visible below it.
-  2. Wait 5s. Inspect network tab — `/api/web/starter-prompts?tenant_id=…` returns 200 with 4 prompts.
-  3. Tap the button. Panel slides in above the welcome with 4 pills.
+  1. Open the widget. Welcome message renders. The search icon is visible in the header next to the close ✕.
+  2. Inspect network tab — `/api/web/starter-prompts?tenant_id=…` returns 200 with 4 prompts.
+  3. Tap the icon. Panel slides in above the welcome with up to 4 pills, each ≤ 5 words.
   4. Tap a pill (e.g. "What do you charge?"). The input briefly shows the text, the message sends, the assistant replies.
   5. Verify the host notification email arrives in `clarkeagency1@outlook.com`.
   6. Reopen the widget in a fresh session. Confirm the cache hit (<100ms response from the API).
-  7. Tap "Not sure what to ask?", then tap "✕ hide". Panel collapses, button stays visible.
-  8. Tap "Not sure what to ask?" → tap a pill → after the conversation starts, the button does not reappear.
-  9. Open widget, type nothing for 60s. Confirm the button gets a single ember pulse.
+  7. Tap the icon → panel opens → tap the icon again → panel collapses (toggle behaviour).
+  8. Send a message manually → the search icon stays in the header → tap it again → panel still works mid-conversation.
 - **Manual smoke (other tenant):** repeat steps 1–4 on at least one non-Qwikly tenant to confirm the prompts are tenant-specific (different wording, different CTA).
 
 ## Risks / decisions to flag
