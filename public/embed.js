@@ -12,8 +12,8 @@
   // page. Qwikly's own demo gets the bigger 440x660 footprint so the
   // booking picker has room to breathe.
   var COMPACT = script && script.getAttribute("data-compact") === "true";
-  var PANEL_W = COMPACT ? 440 : 375;
-  var PANEL_H = COMPACT ? 660 : 540;
+  var PANEL_W = COMPACT ? 380 : 375;
+  var PANEL_H = COMPACT ? 540 : 540;
   // Typography + control sizing harmonised across modes now, the bigger
   // panel doesn't need cramped controls. 16px input font on every device
   // also sidesteps iOS auto-zoom on focus.
