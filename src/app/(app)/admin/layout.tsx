@@ -3,16 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, FileText, ShieldAlert, Receipt, MessageSquare, Users, ArrowLeft, Menu, X } from "lucide-react";
+import { LayoutDashboard, FileText, ShieldAlert, Receipt, MessageSquare, Users, ArrowLeft, Menu, X, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const NAV = [
-  { href: "/admin",           label: "Overview",  icon: LayoutDashboard },
-  { href: "/admin/clients",   label: "Clients",   icon: Users },
-  { href: "/admin/invoicing", label: "Invoicing", icon: FileText },
-  { href: "/admin/risk",      label: "Risk",      icon: ShieldAlert },
-  { href: "/admin/billing",   label: "Billing",   icon: Receipt },
-  { href: "/admin/disputes",  label: "Disputes",  icon: MessageSquare },
+  { href: "/admin",                  label: "Overview",        icon: LayoutDashboard },
+  { href: "/admin/clients",          label: "Clients",         icon: Users },
+  { href: "/admin/billing/pipeline", label: "Pipeline",        icon: TrendingUp },
+  { href: "/admin/billing",          label: "Revenue",         icon: Receipt },
+  { href: "/admin/invoicing",        label: "Client invoices", icon: FileText },
+  { href: "/admin/risk",             label: "Risk",            icon: ShieldAlert },
+  { href: "/admin/disputes",         label: "Disputes",        icon: MessageSquare },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -44,9 +45,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold px-3 mb-2">Admin</p>
 
-      {NAV.map(item => {
-        const active = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
-        return (
+      {/*
+        Pick the most specific matching nav item so /admin/billing/pipeline
+        highlights "Pipeline", not also "Revenue" (the parent path).
+      */}
+      {(() => {
+        const matchingHrefs = NAV
+          .filter(i => pathname === i.href || (i.href !== "/admin" && pathname.startsWith(i.href + "/")))
+          .map(i => i.href)
+          .sort((a, b) => b.length - a.length);
+        const activeHref = matchingHrefs[0];
+        return NAV.map(item => {
+          const active = item.href === activeHref;
+          return (
           <Link
             key={item.href}
             href={item.href}
@@ -61,7 +72,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {item.label}
           </Link>
         );
-      })}
+        });
+      })()}
     </>
   );
 
