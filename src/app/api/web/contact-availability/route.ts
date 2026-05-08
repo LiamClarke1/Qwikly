@@ -31,8 +31,13 @@ export type ContactAvailabilityResponse =
 export async function GET() {
   const result = await getAvailableSlots(QWIKLY_OWN_CLIENT_ID, {
     lookaheadDays: 30,
-    maxSlots: 200,
-    maxPerDay: 8,
+    maxSlots: 400,
+    maxPerDay: 12,
+    weekendMaxPerDay: 12,
+    workingHoursStart: 8,
+    workingHoursEnd: 19,
+    weekendHoursStart: 8,
+    weekendHoursEnd: 19,
     granularityMin: 60,
   });
 
