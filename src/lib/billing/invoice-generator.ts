@@ -73,7 +73,11 @@ export async function generateDraftInvoice(
   const vatZar = Math.round(subtotalZar * VAT_RATE * 100) / 100;
   const totalZar = Math.round((subtotalZar + vatZar) * 100) / 100;
 
-  // 6. Create billing period
+  // 6. Create billing period.
+  // commission_zar = subtotalZar (pre-VAT subscription amount), so the Revenue
+  // page can sum commissions across periods. The legacy 8% commission_rate column
+  // does not apply to the Qwikly→client subscription model, only to the older
+  // client→customer billing flow.
   const periodIns = await sb
     .from("qwikly_billing_periods")
     .insert({
@@ -81,6 +85,8 @@ export async function generateDraftInvoice(
       period_start: windowStart.toISOString().slice(0, 10),
       period_end: window.end.toISOString().slice(0, 10),
       total_invoiced_zar: totalZar,
+      commission_zar: subtotalZar,
+      vat_zar: vatZar,
       status: "locked",
       due_at: new Date(today.getTime() + 7 * 86_400_000).toISOString().slice(0, 10),
     })
@@ -117,6 +123,14 @@ export async function generateDraftInvoice(
     return { invoice_id: null, status: "skipped", reason: `invoice_insert_error: ${invIns.error?.message}` };
   }
   const invoiceId = invIns.data.id;
+
+  // 8b. Back-reference: write the invoice id onto the period so disputes
+  // and reporting can hop period -> invoice without joins. The dispute resolve
+  // credit flow looks this up explicitly.
+  await sb
+    .from("qwikly_billing_periods")
+    .update({ qwikly_billing_invoice_id: invoiceId })
+    .eq("id", periodId);
 
   // 9. Log any aggregator warnings for admin visibility.
   // Note: chat_persist_dlq does not have a 'channel' column so we use console.warn

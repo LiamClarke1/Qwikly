@@ -27,10 +27,10 @@ export async function PATCH(
 
   const sb = supabaseAdmin();
 
-  // Load invoice
+  // Load invoice (include period_id so we can sync the parent period on payment)
   const inv = await sb
     .from("qwikly_billing_invoices")
-    .select("id, status, client_id, total_zar")
+    .select("id, status, client_id, total_zar, period_id")
     .eq("id", params.id)
     .single();
   if (inv.error || !inv.data) {
@@ -47,20 +47,32 @@ export async function PATCH(
       return NextResponse.json({ error: "invalid_status_transition", from: inv.data.status }, { status: 409 });
     }
 
+    const nowIso = new Date().toISOString();
     const upd = await sb
       .from("qwikly_billing_invoices")
       .update({
         status: "paid",
-        paid_at: new Date().toISOString(),
+        paid_at: nowIso,
         payment_method: payment_method ?? "eft",
         external_ref: external_ref ?? null,
       })
       .eq("id", inv.data.id);
     if (upd.error) return NextResponse.json({ error: upd.error.message }, { status: 500 });
 
-    // No payments row inserted: payments.invoice_id FKs to invoices(id), not qwikly_billing_invoices.
-    // qwikly_billing_invoices has paid_at, payment_method, external_ref, which are sufficient
-    // bookkeeping. A separate qwikly_billing_payments table can be added later if needed.
+    // Sync the parent period so /admin/billing (Revenue) reflects the payment.
+    // Best-effort: if period_id is missing or update fails, the invoice is still
+    // correctly marked paid; revenue summaries will lag until a manual reconcile.
+    if (inv.data.period_id) {
+      const pUpd = await sb
+        .from("qwikly_billing_periods")
+        .update({
+          status: "paid",
+          paid_at: nowIso,
+          total_paid_zar: inv.data.total_zar,
+        })
+        .eq("id", inv.data.period_id);
+      if (pUpd.error) console.warn("[admin verify] period sync failed:", pUpd.error.message);
+    }
 
     return NextResponse.json({ ok: true, status: "paid" });
   }
