@@ -130,6 +130,37 @@
     "#peek-x{background:none;border:none;color:#94A3B8;cursor:pointer;font-size:18px;line-height:1;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;padding:0;transition:" + MICRO + "}",
     "#peek-x:hover{background:#F1F5F9;color:#475569}",
     "#peek::after{content:\"\";position:absolute;bottom:-5px;right:38px;width:12px;height:12px;background:#fff;transform:rotate(45deg);box-shadow:3px 3px 6px rgba(15,23,42,.04)}",
+    // Inline booking picker
+    ".bp{align-self:stretch;background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;animation:" + (prefersReduced ? "none" : "fadeUp .2s ease") + "}",
+    ".bp-h{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#475569}",
+    ".bp-t{font-size:14px;font-weight:600;color:#0F172A;line-height:1.3}",
+    ".bp-sub{font-size:12px;color:#64748B}",
+    ".bp-day{display:flex;flex-direction:column;gap:6px}",
+    ".bp-day-h{font-size:12px;font-weight:600;color:#0F172A}",
+    ".bp-slots{display:flex;flex-wrap:wrap;gap:6px}",
+    ".bp-slot{font-size:13px;font-weight:600;color:#0F172A;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:8px 12px;cursor:pointer;transition:" + MICRO + ";min-height:36px;font-family:inherit}",
+    ".bp-slot:hover{background:#F1F5F9;border-color:var(--qc,#E85A2C);color:var(--qc,#E85A2C)}",
+    ".bp-slot:active{transform:scale(.97)}",
+    ".bp-empty{font-size:13px;color:#64748B;padding:8px 0}",
+    ".bp-form{display:flex;flex-direction:column;gap:10px}",
+    ".bp-pick{font-size:12px;color:#475569;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:8px 10px;line-height:1.4}",
+    ".bp-pick strong{color:#0F172A;font-weight:700}",
+    ".bp-label{font-size:11px;font-weight:600;color:#475569;text-transform:uppercase;letter-spacing:.04em}",
+    ".bp-input{width:100%;padding:9px 11px;border:1.5px solid #E2E8F0;border-radius:10px;font-size:16px;color:#0F172A;font-family:inherit;outline:none;transition:border-color .15s;-webkit-text-size-adjust:100%}",
+    ".bp-input:focus{border-color:var(--qc,#E85A2C);box-shadow:0 0 0 3px rgba(232,90,44,.1)}",
+    ".bp-input.err{border-color:#EF4444}",
+    "textarea.bp-input{resize:vertical;min-height:60px;font-family:inherit}",
+    ".bp-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:2px}",
+    ".bp-btn{font-size:13px;font-weight:600;padding:9px 16px;border:none;border-radius:10px;cursor:pointer;transition:" + MICRO + ";font-family:inherit;min-height:40px}",
+    ".bp-btn.gh{background:#F1F5F9;color:#475569}",
+    ".bp-btn.gh:hover{background:#E2E8F0}",
+    ".bp-btn.pr{background:var(--qc,#E85A2C);color:#fff}",
+    ".bp-btn.pr:hover{opacity:.9}",
+    ".bp-btn:disabled{opacity:.5;cursor:not-allowed}",
+    ".bp-err{font-size:12px;color:#EF4444;line-height:1.4}",
+    ".bp-ok{align-self:stretch;background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;border-radius:14px;padding:12px;font-size:13px;line-height:1.5;animation:" + (prefersReduced ? "none" : "fadeUp .2s ease") + "}",
+    ".bp-ok strong{color:#064E3B}",
+    ".bp-ok a{color:#065F46;text-decoration:underline;word-break:break-all}",
     // Mobile
     "@media(max-width:600px){#launcher{bottom:max(20px,calc(env(safe-area-inset-bottom) + 16px));right:max(20px,calc(env(safe-area-inset-right) + 12px));padding:14px 24px;font-size:15px}#panel{left:8px;right:8px;width:auto;bottom:max(72px,calc(env(safe-area-inset-bottom) + 68px));height:auto;max-height:60vh;border-radius:18px;transition:none}#peek{right:max(20px,calc(env(safe-area-inset-right) + 12px));bottom:max(78px,calc(env(safe-area-inset-bottom) + 74px));max-width:220px;font-size:13px}}",
     // Dark mode
@@ -523,6 +554,227 @@
     return div;
   }
 
+  // ── Inline booking picker ───────────────────────────────────────────────────
+  // The assistant emits the literal token [[booking-picker]] at the end of a
+  // reply when the visitor commits to Path B. The streaming path strips that
+  // token from visible text and calls renderBookingPicker(), which mounts a
+  // two-step picker (slot → details → confirm) inside the chat thread, then
+  // posts to /api/web/bookings. Backend handles Google Calendar + emails.
+  var BOOKING_MARKER = /\[\[booking-picker\]\]/g;
+  var bookingMounted = false;
+
+  function renderBookingPicker() {
+    if (bookingMounted) return; // never mount twice in one conversation
+    var m = msgsEl(); if (!m) return;
+    bookingMounted = true;
+
+    var card = document.createElement("div");
+    card.className = "bp";
+    card.innerHTML =
+      '<div class="bp-h">Book a setup call</div>' +
+      '<div class="bp-t">Loading available times…</div>' +
+      '<div class="bp-sub">30 min · Google Meet · Africa/Johannesburg</div>';
+    m.appendChild(card);
+    requestAnimationFrame(function () { card.scrollIntoView({ behavior: "smooth", block: "end" }); });
+
+    fetch(API_BASE + "/api/web/availability?tenantId=" + encodeURIComponent(TENANT_ID))
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+      .then(function (out) {
+        if (!out.ok || !out.body || !out.body.ok) {
+          renderPickerUnavailable(card, out.body && out.body.reason);
+          return;
+        }
+        renderPickerStep1(card, out.body.slots || []);
+      })
+      .catch(function () { renderPickerUnavailable(card, "network"); });
+  }
+
+  function renderPickerUnavailable(card, reason) {
+    var msg = "Couldn't load times right now. Email hello@qwikly.co.za and we'll book you in.";
+    if (reason === "calendar_not_connected" || reason === "calendar_disconnected") {
+      msg = "Booking calendar isn't connected yet. Email hello@qwikly.co.za and we'll set it up.";
+    } else if (reason === "trial_expired" || reason === "paused") {
+      msg = "Booking is paused right now. Email hello@qwikly.co.za and we'll sort you out.";
+    }
+    card.innerHTML = "";
+    var h = document.createElement("div"); h.className = "bp-h"; h.textContent = "Book a setup call"; card.appendChild(h);
+    var t = document.createElement("div"); t.className = "bp-t"; t.textContent = "We hit a snag."; card.appendChild(t);
+    var s = document.createElement("div"); s.className = "bp-sub"; s.textContent = msg; card.appendChild(s);
+  }
+
+  function renderPickerStep1(card, slots) {
+    card.innerHTML = "";
+    var h = document.createElement("div"); h.className = "bp-h"; h.textContent = "Pick a time"; card.appendChild(h);
+    var t = document.createElement("div"); t.className = "bp-t"; t.textContent = "30 min on Google Meet."; card.appendChild(t);
+    var s = document.createElement("div"); s.className = "bp-sub"; s.textContent = "Africa/Johannesburg"; card.appendChild(s);
+
+    if (!slots || slots.length === 0) {
+      var empty = document.createElement("div"); empty.className = "bp-empty";
+      empty.textContent = "No open slots in the next 7 days. Email hello@qwikly.co.za and we'll find a time.";
+      card.appendChild(empty);
+      return;
+    }
+
+    // Group slots by SAST date label, e.g. "Monday, 12 May"
+    var groups = {};
+    var order = [];
+    for (var i = 0; i < slots.length; i++) {
+      var sl = slots[i];
+      // sl.label is a full sentence "Monday, 12 May, 14:00", parse out the date prefix.
+      var parts = String(sl.label || "").split(",");
+      var dayKey = parts.length >= 2 ? (parts[0] + "," + parts[1]).trim() : sl.label;
+      if (!groups[dayKey]) { groups[dayKey] = []; order.push(dayKey); }
+      groups[dayKey].push(sl);
+    }
+
+    for (var d = 0; d < order.length; d++) {
+      var key = order[d];
+      var dayWrap = document.createElement("div"); dayWrap.className = "bp-day";
+      var dh = document.createElement("div"); dh.className = "bp-day-h"; dh.textContent = key;
+      dayWrap.appendChild(dh);
+      var slotsRow = document.createElement("div"); slotsRow.className = "bp-slots";
+      var dayList = groups[key];
+      for (var k = 0; k < dayList.length; k++) {
+        (function (slot) {
+          var btn = document.createElement("button");
+          btn.type = "button"; btn.className = "bp-slot";
+          btn.textContent = slot.short_label || slot.label;
+          btn.addEventListener("click", function () { renderPickerStep2(card, slot); });
+          slotsRow.appendChild(btn);
+        })(dayList[k]);
+      }
+      dayWrap.appendChild(slotsRow);
+      card.appendChild(dayWrap);
+    }
+  }
+
+  function renderPickerStep2(card, slot) {
+    card.innerHTML = "";
+    var h = document.createElement("div"); h.className = "bp-h"; h.textContent = "Your details"; card.appendChild(h);
+
+    var pick = document.createElement("div"); pick.className = "bp-pick";
+    pick.innerHTML = "<strong></strong>"; pick.querySelector("strong").textContent = slot.label;
+    var sub = document.createElement("span"); sub.style.display = "block"; sub.style.marginTop = "2px";
+    sub.style.fontSize = "11px"; sub.style.color = "#64748B"; sub.textContent = "30 min · Google Meet";
+    pick.appendChild(sub);
+    card.appendChild(pick);
+    var form = document.createElement("div"); form.className = "bp-form";
+
+    var nameLbl = document.createElement("div"); nameLbl.className = "bp-label"; nameLbl.textContent = "Your name";
+    var nameInp = document.createElement("input"); nameInp.type = "text"; nameInp.className = "bp-input";
+    nameInp.autocomplete = "name"; nameInp.placeholder = "Liam";
+    form.appendChild(nameLbl); form.appendChild(nameInp);
+
+    var emailLbl = document.createElement("div"); emailLbl.className = "bp-label"; emailLbl.textContent = "Email";
+    var emailInp = document.createElement("input"); emailInp.type = "email"; emailInp.className = "bp-input";
+    emailInp.autocomplete = "email"; emailInp.inputMode = "email"; emailInp.placeholder = "you@example.com";
+    form.appendChild(emailLbl); form.appendChild(emailInp);
+
+    var notesLbl = document.createElement("div"); notesLbl.className = "bp-label"; notesLbl.textContent = "Anything we should know? (optional)";
+    var notesInp = document.createElement("textarea"); notesInp.className = "bp-input"; notesInp.rows = 2;
+    notesInp.placeholder = "Your business, what you'd like to set up, anything useful.";
+    form.appendChild(notesLbl); form.appendChild(notesInp);
+
+    var err = document.createElement("div"); err.className = "bp-err"; err.style.display = "none"; form.appendChild(err);
+
+    var btns = document.createElement("div"); btns.className = "bp-btns";
+    var back = document.createElement("button"); back.type = "button"; back.className = "bp-btn gh"; back.textContent = "Back";
+    var confirm = document.createElement("button"); confirm.type = "button"; confirm.className = "bp-btn pr"; confirm.textContent = "Confirm";
+    btns.appendChild(back); btns.appendChild(confirm);
+    form.appendChild(btns);
+    card.appendChild(form);
+
+    // Pre-fill what the chat already captured, if anything is exposed on the
+    // session object. We store loosely; assistant's update_visitor results
+    // aren't directly visible to the widget, so this is best-effort only.
+    try {
+      var saved = sessionStorage.getItem("qwikly_visitor");
+      if (saved) {
+        var v = JSON.parse(saved);
+        if (v.name) nameInp.value = v.name;
+        if (v.email) emailInp.value = v.email;
+      }
+    } catch (e) {}
+
+    setTimeout(function () { (nameInp.value ? emailInp : nameInp).focus(); }, 100);
+
+    back.addEventListener("click", function () {
+      // Reload step 1 from cached slots if available; cheaper than re-fetching.
+      renderBookingPickerReload(card);
+    });
+
+    confirm.addEventListener("click", function () {
+      err.style.display = "none";
+      nameInp.classList.remove("err"); emailInp.classList.remove("err");
+      var name = nameInp.value.trim();
+      var email = emailInp.value.trim();
+      if (!name) { nameInp.classList.add("err"); err.textContent = "Name is required."; err.style.display = "block"; nameInp.focus(); return; }
+      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        emailInp.classList.add("err"); err.textContent = "A valid email is required."; err.style.display = "block"; emailInp.focus(); return;
+      }
+      confirm.disabled = true; back.disabled = true; confirm.textContent = "Booking…";
+      submitBooking(card, slot, name, email, notesInp.value.trim(), function (e) {
+        confirm.disabled = false; back.disabled = false; confirm.textContent = "Confirm";
+        err.textContent = e || "Couldn't confirm. Try again."; err.style.display = "block";
+      });
+    });
+  }
+
+  function renderBookingPickerReload(card) {
+    bookingMounted = false; // allow re-mount
+    card.parentNode && card.parentNode.removeChild(card);
+    renderBookingPicker();
+  }
+
+  function submitBooking(card, slot, name, email, notes, onError) {
+    fetch(API_BASE + "/api/web/bookings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tenant_id: TENANT_ID,
+        conversation_id: conversationId || undefined,
+        visitor_name: name,
+        visitor_email: email,
+        start: slot.start,
+        end: slot.end,
+        notes: notes || undefined,
+      }),
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); })
+      .then(function (out) {
+        if (!out.ok || !out.body || !out.body.ok) {
+          var reason = out.body && out.body.reason;
+          if (reason === "slot_taken") return onError("That slot was just taken. Tap Back and pick another.");
+          if (reason === "calendar_not_connected") return onError("Booking calendar isn't connected. Email hello@qwikly.co.za.");
+          return onError("Couldn't confirm. Try again or email hello@qwikly.co.za.");
+        }
+        // Replace the picker card with a confirmation message.
+        try { sessionStorage.setItem("qwikly_visitor", JSON.stringify({ name: name, email: email })); } catch (e) {}
+        var confirmBox = document.createElement("div");
+        confirmBox.className = "bp-ok";
+        var line1 = document.createElement("div");
+        line1.innerHTML = "<strong></strong>";
+        line1.querySelector("strong").textContent = "Booked, " + (slot.label || "your time");
+        confirmBox.appendChild(line1);
+        var line2 = document.createElement("div");
+        line2.style.marginTop = "4px";
+        line2.textContent = "Confirmation sent to " + email + ".";
+        confirmBox.appendChild(line2);
+        if (out.body.meetLink) {
+          var line3 = document.createElement("div");
+          line3.style.marginTop = "6px";
+          var a = document.createElement("a");
+          a.href = out.body.meetLink; a.target = "_blank"; a.rel = "noopener noreferrer";
+          a.textContent = "Join Google Meet";
+          line3.appendChild(a);
+          confirmBox.appendChild(line3);
+        }
+        card.parentNode.replaceChild(confirmBox, card);
+        var m = msgsEl(); if (m) m.scrollTop = m.scrollHeight;
+      })
+      .catch(function () { onError("Network error. Try again."); });
+  }
+
   // Pin the top of a bot bubble near the top of the visible area so long
   // replies are read top-to-bottom, instead of dumping the reader at the end.
   function anchorTop(container, el) {
@@ -644,8 +896,12 @@
             var parsed = JSON.parse(payload);
             if (parsed.delta) {
               fullText += parsed.delta;
+              // Strip the booking-picker marker from visible text so the
+              // user never sees [[booking-picker]] flash mid-stream. We
+              // still detect the original token after the stream finishes.
+              var displayText = fullText.replace(BOOKING_MARKER, "").trim();
               while (botDiv.firstChild) botDiv.removeChild(botDiv.firstChild);
-              var nodes = textToNodes(fullText);
+              var nodes = textToNodes(displayText);
               for (var j = 0; j < nodes.length; j++) botDiv.appendChild(nodes[j]);
               // Re-apply each chunk: as the bubble grows, this pushes the
               // view down as far as it can go while keeping the bot's top
@@ -666,6 +922,14 @@
     } catch (err) {
       removeTyping();
       if (!botDiv) addMsg("bot", "Something went wrong. Please try again.");
+    }
+
+    // After the stream lands, mount the inline booking picker if the
+    // assistant included the [[booking-picker]] marker in its reply.
+    if (BOOKING_MARKER.test(fullText)) {
+      // Reset regex state since we used .test() above.
+      BOOKING_MARKER.lastIndex = 0;
+      renderBookingPicker();
     }
 
     if (!isMobile) {

@@ -531,7 +531,13 @@ const TOOL_BOOK_MEETING: Anthropic.Tool = {
 };
 
 const TOOLS_DEFAULT: Anthropic.Tool[] = [TOOL_UPDATE_VISITOR];
-const TOOLS_QWIKLY: Anthropic.Tool[] = [TOOL_UPDATE_VISITOR, TOOL_GET_AVAILABILITY, TOOL_BOOK_MEETING];
+// Booking on qwikly.co.za is now handled by the inline calendar picker in
+// the widget (assistant emits [[booking-picker]], widget renders the UI,
+// widget calls /api/web/availability + /api/web/bookings directly). The
+// get_availability + book_meeting tool definitions are kept above for
+// reference and possible future surface, but the assistant should not be
+// offered them, the prompt mandates the marker flow instead.
+const TOOLS_QWIKLY: Anthropic.Tool[] = [TOOL_UPDATE_VISITOR];
 
 export async function OPTIONS() {
   return new NextResponse(null, { headers: CORS });
