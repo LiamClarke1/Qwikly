@@ -55,15 +55,15 @@ export const STATUS_LABELS: Record<InvoiceStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<InvoiceStatus, string> = {
-  draft:        "bg-white/5 text-fg-muted border border-white/10",
-  scheduled:    "bg-brand/10 text-brand border border-brand/20",
-  sent:         "bg-blue-500/10 text-blue-400 border border-blue-500/20",
-  viewed:       "bg-purple-500/10 text-purple-400 border border-purple-500/20",
-  partial_paid: "bg-warning/10 text-warning border border-warning/20",
-  paid:         "bg-success/10 text-success border border-success/20",
-  overdue:      "bg-danger/10 text-danger border border-danger/20",
-  cancelled:    "bg-white/5 text-fg-subtle border border-white/10",
-  disputed:     "bg-warning/10 text-warning border border-warning/20",
-  written_off:  "bg-danger/10 text-fg-muted border border-danger/10",
-  refunded:     "bg-purple-500/10 text-purple-400 border border-purple-500/20",
+  draft:        "bg-slate-100 text-slate-600 border border-slate-200",
+  scheduled:    "bg-[#E85A2C]/10 text-[#E85A2C] border border-[#E85A2C]/30",
+  sent:         "bg-blue-50 text-blue-700 border border-blue-200",
+  viewed:       "bg-violet-50 text-violet-700 border border-violet-200",
+  partial_paid: "bg-amber-50 text-amber-700 border border-amber-200",
+  paid:         "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  overdue:      "bg-red-50 text-red-600 border border-red-200",
+  cancelled:    "bg-slate-100 text-slate-500 border border-slate-200",
+  disputed:     "bg-amber-50 text-amber-700 border border-amber-200",
+  written_off:  "bg-red-50 text-red-500 border border-red-100",
+  refunded:     "bg-violet-50 text-violet-700 border border-violet-200",
 };
