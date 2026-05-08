@@ -36,6 +36,11 @@ export interface CrmClientListItem {
   conversation_count: number;
   channels: string[];
   deletion_scheduled_at: string | null;
+  // Billing anchor tracker
+  billing_anchor_day: number | null;
+  next_invoice_at: string | null;
+  latest_billing_invoice_status: import("./invoices/types").QwiklyBillingInvoiceStatus | null;
+  days_overdue: number | null;
 }
 
 export interface CrmClientDetail extends CrmClientListItem {
@@ -48,6 +53,7 @@ export interface CrmClientDetail extends CrmClientListItem {
   // deletion_scheduled_at inherited from CrmClientListItem
   web_widget_domain: string | null;
   web_widget_enabled: boolean | null;
+  billing_anchor_set_at: string | null;
   services_offered: string | null;
   unique_selling_point: string | null;
   system_prompt: string | null;
