@@ -55,7 +55,7 @@ export function nextAnchorDate(anchorDay: number, from?: Date): Date {
   return new Date(Date.UTC(nextY, nextM, nextAnchor));
 }
 
-/** Days from `from` to next anchor, inclusive of today. */
+/** Days remaining until the next anchor, counting from `from` (0 if `from` is the anchor day). */
 export function daysUntilNextAnchor(anchorDay: number, from?: Date): number {
   const today = from ?? todaySast();
   const next = nextAnchorDate(anchorDay, today);
@@ -65,9 +65,12 @@ export function daysUntilNextAnchor(anchorDay: number, from?: Date): number {
 
 /**
  * Whether today is a billing day for this anchor.
- * Includes month-end overflow: anchor=31 in February → bills on Feb 28/29.
+ * Includes month-end overflow: anchor=31 in February will bill on Feb 28/29.
  */
 export function isAnchorDayToday(anchorDay: number, from?: Date): boolean {
+  if (anchorDay < 1 || anchorDay > 31) {
+    throw new Error(`Invalid anchorDay: ${anchorDay}`);
+  }
   const today = from ?? todaySast();
   const y = today.getUTCFullYear();
   const m = today.getUTCMonth();
