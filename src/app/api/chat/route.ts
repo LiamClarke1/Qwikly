@@ -14,10 +14,13 @@ import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
 import { wrapUntrustedConfig, PROMPT_SAFETY_NOTE } from "@/lib/prompt-safety";
 import {
   buildClientSystemPrompt,
+  buildGhostedReengagementNote,
   CLIENT_TOOLS,
   type ClientPromptData,
   type VisitorToolInput,
 } from "@/lib/assistant-prompt";
+
+const GHOSTED_THRESHOLD_MS = 30 * 60 * 1000;
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
 
@@ -215,12 +218,16 @@ export async function POST(req: NextRequest) {
 
   const validSessionId = sessionId && sessionId.trim() ? sessionId.trim() : null;
 
-  // Get or create conversation
+  // Get or create conversation. We pull customer_name/phone/email/updated_at
+  // so we can detect a "ghosted" returning visitor: they gave a name on a
+  // prior visit, never gave contact details, and the conversation has been
+  // dormant for at least 30 minutes.
   let convoId: string | null = null;
+  let ghostedVisitorName: string | null = null;
   if (validSessionId) {
     const { data: existing } = await db
       .from("conversations")
-      .select("id")
+      .select("id, customer_name, customer_phone, customer_email, updated_at")
       .eq("visitor_id", validSessionId)
       .eq("client_id", client.id)
       .eq("channel", "web_chat")
@@ -228,6 +235,27 @@ export async function POST(req: NextRequest) {
       .limit(1)
       .maybeSingle();
     convoId = existing?.id ? String(existing.id) : null;
+
+    if (existing) {
+      const row = existing as {
+        customer_name?: string | null;
+        customer_phone?: string | null;
+        customer_email?: string | null;
+        updated_at?: string | null;
+      };
+      const hasName = !!row.customer_name?.trim();
+      // The conversation insert below seeds customer_phone with the session id
+      // (or the literal "web_visitor"), so anything matching those placeholders
+      // means no real phone number was captured.
+      const phoneStr = row.customer_phone?.trim() ?? "";
+      const noPhone = !phoneStr || phoneStr === (validSessionId ?? "") || phoneStr === "web_visitor";
+      const noEmail = !row.customer_email?.trim();
+      const lastUpdate = row.updated_at ? new Date(row.updated_at).getTime() : 0;
+      const dormantMs = Date.now() - lastUpdate;
+      if (hasName && noPhone && noEmail && dormantMs > GHOSTED_THRESHOLD_MS) {
+        ghostedVisitorName = row.customer_name!.trim();
+      }
+    }
   }
 
   if (!convoId) {
@@ -325,12 +353,22 @@ export async function POST(req: NextRequest) {
       let fullReply = "";
       let visitorInfo: VisitorToolInput | null = null;
 
+      // Build the system blocks. Keep the heavy base prompt in its own cached
+      // block; append the ghosted-reengagement note as a separate, uncached
+      // block so it doesn't bust the prompt cache for normal traffic.
+      const systemBlocks: Anthropic.TextBlockParam[] = [
+        { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
+      ];
+      if (ghostedVisitorName) {
+        systemBlocks.push({ type: "text", text: buildGhostedReengagementNote(ghostedVisitorName) });
+      }
+
       try {
         // Phase 1: stream (may include a tool_use block before or instead of text)
         const stream1 = anthropic.messages.stream({
           model: "claude-sonnet-4-6",
           max_tokens: 600,
-          system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+          system: systemBlocks,
           tools: CLIENT_TOOLS,
           messages: claudeMessages,
         });
@@ -362,7 +400,7 @@ export async function POST(req: NextRequest) {
           const stream2 = anthropic.messages.stream({
             model: "claude-sonnet-4-6",
             max_tokens: 600,
-            system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+            system: systemBlocks,
             tools: CLIENT_TOOLS,
             messages: [
               ...claudeMessages,

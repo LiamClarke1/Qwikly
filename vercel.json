@@ -47,6 +47,10 @@
     {
       "path": "/api/cron/data-retention",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/ghosted-followup",
+      "schedule": "0 */6 * * *"
     }
   ]
 }

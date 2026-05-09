@@ -754,6 +754,19 @@ Already shown to the visitor (do NOT repeat it): "${opener}"
 Respond to what they said first, in their own language, then move into Step 1 of the arc.${faqBlock}`;
 }
 
+/**
+ * Extra system instruction injected when a returning visitor previously gave
+ * their name but bailed before contact details. The chat route appends this
+ * after the cached base system prompt so the model opens the new turn by
+ * acknowledging them and resumes the qualifying flow instead of restarting.
+ */
+export function buildGhostedReengagementNote(visitorName: string): string {
+  const name = (visitorName ?? "").trim() || "the visitor";
+  return `## RETURNING VISITOR, GHOSTED LAST TIME
+
+This visitor ${name} previously chatted but ghosted before giving contact details. Open by acknowledging them by name warmly, reference the topic of their last conversation in one sentence, then naturally pick up the qualifying flow from where it stopped. Do not restart the greeting from scratch and do not ask any question they already answered.`;
+}
+
 export function buildClientSystemPrompt(c: ClientPromptData, customSystemPrompt?: string | null): string {
   // Qwikly's own house tenant on qwikly.co.za uses a hard-coded two-path
   // conversion prompt (sign-up self-serve, or R500 done-for-you setup call).

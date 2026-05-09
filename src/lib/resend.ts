@@ -422,6 +422,59 @@ export function bookingReminderHtml({
 </html>`;
 }
 
+export function ghostedFollowupHtml({
+  visitorName,
+  businessName,
+  replyUrl,
+}: {
+  visitorName: string | null;
+  businessName: string;
+  replyUrl?: string | null;
+}) {
+  const first = (visitorName?.trim().split(/\s+/)[0]) || "there";
+  const cta = replyUrl
+    ? `<table cellpadding="0" cellspacing="0" style="margin:18px 0 0;"><tr><td style="background:#E85A2C;border-radius:10px;">
+         <a href="${replyUrl}" style="display:inline-block;padding:13px 22px;font-size:14px;font-weight:700;color:#fff;text-decoration:none;letter-spacing:-.005em;">Pick up where we left off &rarr;</a>
+       </td></tr></table>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#07080B;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#07080B;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+        <tr><td style="padding-bottom:32px;">
+          <span style="font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.5px;">
+            Qwikly<span style="color:#E85A2C;">.</span>
+          </span>
+        </td></tr>
+
+        <tr><td style="background:#0D111A;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:32px;">
+          <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;">Quick follow-up</p>
+          <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.3px;">Hey ${escHtml(first)},</h1>
+          <p style="margin:0 0 16px;font-size:15px;color:#E5E7EB;line-height:1.65;">
+            Wanted to swing back and see if I can help you get this sorted. Just reply to this email and I'll pick it up from here.
+          </p>
+          ${cta}
+          <p style="margin:24px 0 0;font-size:12px;color:#6B7280;line-height:1.6;">
+            Sent on behalf of ${escHtml(businessName)}.
+          </p>
+        </td></tr>
+
+        <tr><td style="padding-top:24px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#4B5563;">Sent by <a href="https://qwikly.co.za" style="color:#E85A2C;text-decoration:none;">Qwikly</a></p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 // ─── Host-side templates (sent to the Clarke Agency inbox, not customers) ───
 
 function escHtml(s: string) {
