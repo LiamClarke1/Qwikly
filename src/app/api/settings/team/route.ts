@@ -32,7 +32,7 @@ async function getAuth() {
 }
 
 function isPremium(plan: string | null): boolean {
-  return plan === "premium" || plan === "billions";
+  return plan === "premium";
 }
 
 export async function GET() {

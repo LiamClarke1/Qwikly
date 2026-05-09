@@ -47,10 +47,7 @@ export async function GET() {
   }
   if (!data) return NextResponse.json({ error: "not_found" }, { status: 404 });
 
-  return NextResponse.json({
-    ...data,
-    branding_removed: auth.plan === "starter" ? false : data.branding_removed,
-  });
+  return NextResponse.json(data);
 }
 
 export async function PATCH(req: NextRequest) {
@@ -103,7 +100,7 @@ export async function PATCH(req: NextRequest) {
     updates[field] = body[field];
   }
 
-  if ("branding_removed" in body && auth.plan !== "starter") {
+  if ("branding_removed" in body) {
     updates.branding_removed = Boolean(body.branding_removed);
   }
 
@@ -151,8 +148,5 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "update_failed", message: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({
-    ...data,
-    branding_removed: auth.plan === "starter" ? false : data.branding_removed,
-  });
+  return NextResponse.json(data);
 }

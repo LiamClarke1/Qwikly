@@ -306,10 +306,8 @@ function isRealPhone(v: string | null | undefined): boolean {
 // ─── Plan select ──────────────────────────────────────────────────────────────
 const PLAN_UI_CONFIG = {
   trial:    { label: "Trial",    cls: "bg-slate-100 text-slate-500 border-slate-200" },
-  starter:  { label: "Starter",  cls: "bg-slate-100 text-slate-600 border-slate-300" },
   pro:      { label: "Pro",      cls: "bg-violet-50 text-violet-700 border-violet-200" },
   premium:  { label: "Premium",  cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  billions: { label: "Billions", cls: "bg-[#E85A2C]/10 text-[#E85A2C] border-[#E85A2C]/30" },
 } as const;
 
 function PlanBadge({ plan }: { plan: string }) {
@@ -323,7 +321,7 @@ function PlanBadge({ plan }: { plan: string }) {
 
 function InlinePlanSelect({ current, onChange }: { current: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
-  const plans: Array<keyof typeof PLAN_UI_CONFIG> = ["trial", "pro", "premium", "billions"];
+  const plans: Array<keyof typeof PLAN_UI_CONFIG> = ["trial", "pro", "premium"];
   return (
     <div className="relative inline-block">
       <button

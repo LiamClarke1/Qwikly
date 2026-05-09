@@ -1,5 +1,4 @@
-// 'starter' kept as a legacy type only — no longer offered to new users
-export type PlanTier = 'trial' | 'starter' | 'pro' | 'premium' | 'billions';
+export type PlanTier = 'trial' | 'pro' | 'premium';
 
 interface PlanConfig {
   name: string;
@@ -16,17 +15,6 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
   trial: {
     name: 'Trial',
     priceMonthly: 0,
-    leadLimit: 75,
-    removeBranding: false,
-    customGreeting: false,
-    csvExport: false,
-    apiAccess: false,
-    supportTier: 'email',
-  },
-  // Legacy — existing subscribers only, no longer shown in UI
-  starter: {
-    name: 'Starter',
-    priceMonthly: 399,
     leadLimit: 75,
     removeBranding: false,
     customGreeting: false,
@@ -54,26 +42,13 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     apiAccess: false,
     supportTier: 'priority',
   },
-  // Hidden from public pricing & signup; config kept so existing customers
-  // (if any) and admin tooling continue to resolve correctly.
-  billions: {
-    name: 'Billions',
-    priceMonthly: 2999,
-    leadLimit: 1000,
-    removeBranding: true,
-    customGreeting: true,
-    csvExport: true,
-    apiAccess: true,
-    supportTier: 'dedicated',
-  },
 };
 
 export function resolvePlan(raw: string | null | undefined): PlanTier {
   if (raw === 'trial') return 'trial';
   if (raw === 'pro') return 'pro';
   if (raw === 'premium' || raw === 'business') return 'premium';
-  if (raw === 'billions') return 'billions';
-  if (raw === 'starter' || raw === 'lite') return 'starter';
+  if (raw === 'starter' || raw === 'lite') return 'trial';
   return 'trial';
 }
 

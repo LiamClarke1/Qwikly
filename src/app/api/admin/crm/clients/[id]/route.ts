@@ -15,7 +15,7 @@ const PatchSchema = z.object({
   website:                z.string().nullable().optional(),
   address:                z.string().nullable().optional(),
   crm_status:             z.enum(["onboarding","active","at_risk","paused","churned","pending_deletion"]).optional(),
-  plan:                   z.enum(["trial","starter","pro","premium","billions"]).optional(),
+  plan:                   z.enum(["trial","pro","premium"]).optional(),
   billing_cycle:          z.enum(["monthly","annual"]).nullable().optional(),
   mrr_zar:                z.number().int().min(0).optional(),
   health_score:           z.number().int().min(0).max(100).optional(),

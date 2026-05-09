@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Zap, AlertTriangle, ArrowRight, TrendingUp, CheckCircle2,
-  X, Users, Clock, ChevronRight, WifiOff, Rocket, PauseCircle,
+  Users, Clock, ChevronRight, WifiOff, Rocket, PauseCircle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
@@ -241,7 +241,7 @@ function StatusBar({
             <span className="text-ink font-medium">
               You&rsquo;ve hit your cap — top-ups billed at{" "}
               <span className="font-bold">R{PLAN_TOP_UP_PRICE}/lead</span>
-              {tier !== "premium" && tier !== "billions" && (
+              {tier !== "premium" && (
                 <>
                   {", or "}
                   <Link href="/dashboard/billing" className="text-danger font-bold hover:underline cursor-pointer">
@@ -255,68 +255,6 @@ function StatusBar({
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ─── Upgrade prompt ───────────────────────────────────────────────────────────
-
-function UpgradePrompt({
-  tier,
-  leadsMonth,
-  csvExportsUsed,
-}: {
-  tier: PlanTier;
-  leadsMonth: number;
-  csvExportsUsed: boolean;
-}) {
-  const dismissKey = `qwikly-upgrade-${new Date().getFullYear()}-${new Date().getMonth()}-${tier}`;
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    if (localStorage.getItem(dismissKey) === "1") return;
-    if (tier === "starter" && leadsMonth >= 20) setVisible(true);
-    if (tier === "pro" && csvExportsUsed) setVisible(true);
-  }, [tier, leadsMonth, csvExportsUsed, dismissKey]);
-
-  const dismiss = () => {
-    localStorage.setItem(dismissKey, "1");
-    setVisible(false);
-  };
-
-  if (!visible) return null;
-
-  const isProPrompt = tier === "starter";
-  const title = isProPrompt
-    ? "You're approaching your monthly lead limit"
-    : "You're making good use of exports";
-  const body = isProPrompt
-    ? "Pro gives you 75 qualified leads/month and email lead delivery — for R999/month. No per-lead fees."
-    : "Premium gives you 250 qualified leads/month, custom branding, CSV exports, and priority support — for R1,999/month.";
-  const ctaLabel = isProPrompt ? "See Pro plan" : "See Premium plan";
-
-  return (
-    <div className="relative rounded-2xl bg-ember/[0.06] border border-ember/[0.18] p-4 flex items-start gap-3">
-      <div className="w-8 h-8 rounded-xl bg-ember/10 flex items-center justify-center shrink-0">
-        <TrendingUp className="w-4 h-4 text-ember" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-small font-semibold text-ink">{title}</p>
-        <p className="text-tiny text-ink-500 mt-0.5 leading-relaxed">{body}</p>
-        <Link
-          href="/dashboard/billing"
-          className="inline-flex items-center gap-1 text-tiny font-medium text-ember hover:underline mt-2 cursor-pointer"
-        >
-          {ctaLabel} <ArrowRight className="w-3 h-3" />
-        </Link>
-      </div>
-      <button
-        onClick={dismiss}
-        className="shrink-0 p-1 rounded-lg hover:bg-ink/[0.06] text-ink-400 hover:text-ink transition-colors duration-150 cursor-pointer"
-        aria-label="Dismiss"
-      >
-        <X className="w-3.5 h-3.5" />
-      </button>
     </div>
   );
 }
@@ -432,11 +370,6 @@ export default function HomePage() {
         <StatusBar widgetLive={widgetLive} tier={tier} leadsMonth={leadsMonth} />
       )}
       {loading && <SkeletonCard className="h-28" />}
-
-      {/* ── Upgrade prompt ───────────────────────────────────────── */}
-      {!loading && (
-        <UpgradePrompt tier={tier} leadsMonth={leadsMonth} csvExportsUsed={false} />
-      )}
 
       {/* ── KPI strip ────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">

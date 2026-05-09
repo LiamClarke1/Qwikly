@@ -5,11 +5,8 @@ import { Check, Minus, Plus, Shield, MapPin, Clock, Zap, Users, TrendingDown, Me
 import CTAButton from "@/components/CTAButton";
 import ManualPaymentModal, { type ManualPaymentPlan } from "@/components/ManualPaymentModal";
 
-// "billions" tier is intentionally hidden from public pricing for now (kept in
-// types/billing infra so existing accounts still work). Re-include it in the
-// arrays below to surface it again.
-const MONTHLY = { trial: 0, pro: 999, premium: 1999, billions: 2999 } as const;
-const ANNUAL  = { trial: 0, pro: 10188, premium: 20390, billions: 30590 } as const;
+const MONTHLY = { trial: 0, pro: 999, premium: 1999 } as const;
+const ANNUAL  = { trial: 0, pro: 10188, premium: 20390 } as const;
 
 type TierId = keyof typeof MONTHLY;
 

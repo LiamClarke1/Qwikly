@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "./supabase-server";
 
-export type PlanTier = "trial" | "starter" | "pro" | "premium" | "billions";
+export type PlanTier = "trial" | "pro" | "premium";
 
 export type V2AuthContext = {
   userId: string;

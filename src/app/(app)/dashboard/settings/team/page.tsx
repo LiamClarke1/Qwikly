@@ -44,7 +44,7 @@ const STATUS_TONE: Record<Status, "neutral" | "success" | "warning" | "danger"> 
 export default function TeamPage() {
   const { client, loading: clientLoading } = useClient();
   const tier = resolvePlan(client?.plan);
-  const canUseTeam = tier === "premium" || tier === "billions";
+  const canUseTeam = tier === "premium";
 
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);

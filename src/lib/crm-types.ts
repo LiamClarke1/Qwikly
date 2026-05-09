@@ -1,5 +1,5 @@
 export type CrmStatus    = "onboarding" | "active" | "at_risk" | "paused" | "churned" | "pending_deletion";
-export type CrmPlan      = "trial" | "starter" | "pro" | "premium" | "billions";
+export type CrmPlan      = "trial" | "pro" | "premium";
 export type BillingCycle = "monthly" | "annual";
 export type TaskStatus   = "open" | "in_progress" | "done" | "cancelled";
 export type TaskPriority = "low" | "medium" | "high" | "urgent";

@@ -394,8 +394,6 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
 function SignupContent() {
   const searchParams = useSearchParams();
   const rawPlan = searchParams.get("plan");
-  // "billions" deliberately excluded so any old ?plan=billions URL gracefully
-  // falls back to trial selection (the tier itself is hidden site-wide).
   const validPlans: PlanTier[] = ["trial", "pro", "premium"];
   const initialPlan: PlanTier | null = validPlans.includes(rawPlan as PlanTier)
     ? (rawPlan as PlanTier)

@@ -98,7 +98,7 @@ export async function POST(
         business_name: (client.business_name as string) ?? "Client",
         owner_name:    client.owner_name as string | null,
         logo_url:      client.logo_url as string | null,
-        plan:          (client.plan as string) ?? "starter",
+        plan:          (client.plan as string) ?? "trial",
         mrr_zar:       (client.mrr_zar as number) ?? 0,
         client_email:  client.client_email as string | null,
         industry:      client.industry as string | null,

@@ -4,7 +4,7 @@ import { log } from "@/lib/log";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { v2Auth } from "@/lib/v2-auth";
 import { resend, FROM } from "@/lib/resend";
-import { PLAN_CONFIG, resolvePlan } from "@/lib/plan";
+import { PLAN_CONFIG, resolvePlan, type PlanTier } from "@/lib/plan";
 import {
   leadNotificationHtml,
   leadNotificationText,
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
     .eq("user_id", business.user_id)
     .maybeSingle();
 
-  const plan = (sub?.plan ?? "starter") as "starter" | "pro" | "premium";
+  const plan = (sub?.plan ?? "trial") as PlanTier;
   const usagePeriod = await ensureUsagePeriod(db, business.id, sub);
   const planConfig = PLAN_CONFIG[resolvePlan(plan)];
   const leadCap = planConfig.leadLimit; // null = no hard cap (premium)
