@@ -50,7 +50,7 @@
     },
     {
       "path": "/api/cron/ghosted-followup",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 10 * * *"
     }
   ]
 }
