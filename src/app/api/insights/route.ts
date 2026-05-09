@@ -22,6 +22,9 @@ type MsgRow = {
   created_at: string;
 };
 
+// Phrases the assistant tends to use when it doesn't have a confident answer
+// and is deferring to the human team. We use this as a proxy for "this question
+// could have a better KB-backed answer." Not perfect, but catches the obvious cases.
 const HEDGE_PHRASES = [
   "i'd want to confirm with the team",
   "i'd want to check with the team",
@@ -32,10 +35,15 @@ const HEDGE_PHRASES = [
   "let me grab your contact",
   "i'll have someone reach out",
   "i'll get someone to reach out",
-  "i'll get the team to reach out",
+  "i would not want to give",
+  "i wouldn't want to give",
+  "i don't want to commit to",
   "i don't have that info",
   "i don't have that information",
+  "i'm not entirely sure",
   "i'm not 100% sure",
+  "i'm not 100 percent sure",
+  "best to confirm with the team",
 ];
 
 // Convert a UTC timestamp into Africa/Johannesburg (UTC+2, no DST) hour + weekday.
