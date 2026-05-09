@@ -57,7 +57,7 @@ async function handle(req: NextRequest) {
     (r): r is ConvoRow => !!r && typeof r.customer_email === "string" && r.customer_email.trim().length > 0
   );
 
-  if (!candidates.length) return NextResponse.json({ sent: 0, skipped: 0, failed: 0 });
+  if (!candidates.length) return NextResponse.json({ sent: 0, failed: 0 });
 
   if (!process.env.RESEND_API_KEY) {
     return NextResponse.json({ error: "no_resend_key" }, { status: 500 });
@@ -68,7 +68,6 @@ async function handle(req: NextRequest) {
   const businessCache = new Map<number, { businessName: string; replyTo: string | null }>();
 
   let sent = 0;
-  let skipped = 0;
   let failed = 0;
 
   for (const row of candidates) {
@@ -153,7 +152,7 @@ async function handle(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ sent, skipped, failed });
+  return NextResponse.json({ sent, failed });
 }
 
 export async function POST(req: NextRequest) {
