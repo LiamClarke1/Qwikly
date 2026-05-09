@@ -2,8 +2,8 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useState, useCallback } from "react";
-import { Search, ChevronRight } from "lucide-react";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { Search, ChevronRight, Send, X } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 import { fmt, fmtDate } from "@/lib/money";
@@ -23,6 +23,23 @@ interface AdminInvoice {
   clients: { business_name: string };
 }
 
+interface BulkSendOutcome {
+  invoice_id: string;
+  invoice_number: string | null;
+  customer_name: string;
+  status: "sent" | "skipped" | "failed";
+  reason?: string;
+}
+
+interface BulkSendResponse {
+  ok: boolean;
+  total: number;
+  sent: number;
+  failed: number;
+  skipped: number;
+  outcomes: BulkSendOutcome[];
+}
+
 const STATUS_TABS = ["all", "overdue", "disputed", "written_off", "paid", "cancelled"] as const;
 
 export default function AdminInvoicingPage() {
@@ -30,6 +47,10 @@ export default function AdminInvoicingPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
+  const [draftCount, setDraftCount] = useState(0);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [toast, setToast] = useState<{ text: string; tone: "ok" | "error" } | null>(null);
 
   const fetch_ = useCallback(async () => {
     setLoading(true);
@@ -39,9 +60,24 @@ export default function AdminInvoicingPage() {
     setLoading(false);
   }, [tab]);
 
-  useEffect(() => { fetch_(); }, [fetch_]);
+  const fetchDraftCount = useCallback(async () => {
+    const res = await fetch(`/api/admin/invoices?status=draft&limit=200`);
+    if (res.ok) {
+      const data = await res.json();
+      setDraftCount((data.invoices ?? []).length);
+    }
+  }, []);
 
-  const filtered = invoices.filter(i => {
+  useEffect(() => { fetch_(); }, [fetch_]);
+  useEffect(() => { fetchDraftCount(); }, [fetchDraftCount]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 6000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const filtered = useMemo(() => invoices.filter(i => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
@@ -49,13 +85,55 @@ export default function AdminInvoicingPage() {
       (i.invoice_number ?? "").toLowerCase().includes(q) ||
       i.clients?.business_name?.toLowerCase().includes(q)
     );
-  });
+  }), [invoices, search]);
+
+  const handleSendAllDrafts = async () => {
+    setSending(true);
+    try {
+      const res = await fetch(`/api/invoices/send-all-drafts`, { method: "POST" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setToast({ text: err.error ?? "Bulk send failed", tone: "error" });
+        return;
+      }
+      const data = (await res.json()) as BulkSendResponse;
+      const parts = [`Sent ${data.sent} of ${data.total}`];
+      if (data.failed > 0) parts.push(`${data.failed} failed`);
+      if (data.skipped > 0) parts.push(`${data.skipped} skipped`);
+      setToast({
+        text: parts.join(", "),
+        tone: data.failed > 0 ? "error" : "ok",
+      });
+      await Promise.all([fetch_(), fetchDraftCount()]);
+    } catch (e) {
+      setToast({ text: e instanceof Error ? e.message : "Bulk send failed", tone: "error" });
+    } finally {
+      setSending(false);
+      setConfirmOpen(false);
+    }
+  };
 
   return (
     <div className="animate-fade-in">
-      <div className="mb-6">
-        <p className="text-[13px] text-[#E85A2C] font-semibold mb-1">Admin</p>
-        <h1 className="text-[28px] font-bold leading-tight text-slate-900">Invoicing</h1>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <p className="text-[13px] text-[#E85A2C] font-semibold mb-1">Admin</p>
+          <h1 className="text-[28px] font-bold leading-tight text-slate-900">Invoicing</h1>
+        </div>
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          disabled={draftCount === 0 || sending}
+          className={cn(
+            "inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer",
+            draftCount === 0 || sending
+              ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+              : "bg-[#E85A2C] text-white hover:bg-[#cf4e22]"
+          )}
+        >
+          <Send className="w-3.5 h-3.5" />
+          {sending ? "Sending…" : `Send all drafts${draftCount > 0 ? ` (${draftCount})` : ""}`}
+        </button>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
@@ -72,7 +150,7 @@ export default function AdminInvoicingPage() {
         </div>
         <div className="relative max-w-xs flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search invoice number or client…"
             className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-4 py-2 text-[13px] text-slate-800 placeholder:text-slate-400 outline-none focus:border-[#E85A2C]/40 focus:ring-2 focus:ring-[#E85A2C]/20" />
         </div>
       </div>
@@ -109,6 +187,65 @@ export default function AdminInvoicingPage() {
               </Link>
             ))}
           </div>
+        </div>
+      )}
+
+      {confirmOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+          onClick={() => !sending && setConfirmOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <h2 className="text-[16px] font-bold text-slate-900">Send {draftCount} draft invoice{draftCount === 1 ? "" : "s"}?</h2>
+              <button
+                type="button"
+                onClick={() => !sending && setConfirmOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                disabled={sending}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-[13px] text-slate-600 leading-relaxed mb-5">
+              Each draft will be emailed to the customer, and sent on WhatsApp where a number is on file. Successful sends move to the <strong>Sent</strong> status. Failures stay as drafts so you can retry.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(false)}
+                disabled={sending}
+                className="px-3.5 py-2 rounded-xl text-[13px] font-medium text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSendAllDrafts}
+                disabled={sending}
+                className={cn(
+                  "px-3.5 py-2 rounded-xl text-[13px] font-semibold text-white cursor-pointer",
+                  sending ? "bg-[#E85A2C]/60" : "bg-[#E85A2C] hover:bg-[#cf4e22]"
+                )}
+              >
+                {sending ? "Sending…" : `Send ${draftCount}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast && (
+        <div className={cn(
+          "fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl text-[13px] font-medium shadow-lg border",
+          toast.tone === "ok"
+            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+            : "bg-red-50 text-red-700 border-red-200"
+        )}>
+          {toast.text}
         </div>
       )}
     </div>
