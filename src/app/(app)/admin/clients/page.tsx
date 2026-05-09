@@ -36,19 +36,25 @@ const PLAN_CONFIG = {
 
 // ─── Confirm modal ────────────────────────────────────────────────────────────
 function ConfirmModal({
-  title, body, confirmLabel, danger,
+  title, body, confirmLabel, danger, requireText, busy,
   onConfirm, onCancel,
 }: {
   title: string;
   body: string;
   confirmLabel: string;
   danger?: boolean;
+  requireText?: string;
+  busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const [typed, setTyped] = useState("");
+  const matched = !requireText || typed === requireText;
+  const canConfirm = matched && !busy;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onCancel} />
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={busy ? undefined : onCancel} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 border border-slate-200">
         <div className={cn(
           "w-10 h-10 rounded-xl flex items-center justify-center mb-4",
@@ -60,15 +66,30 @@ function ConfirmModal({
           }
         </div>
         <h3 className="text-[16px] font-bold text-slate-900 mb-1">{title}</h3>
-        <p className="text-[13px] text-slate-500 leading-relaxed mb-5">{body}</p>
+        <p className="text-[13px] text-slate-500 leading-relaxed mb-4">{body}</p>
+        {requireText && (
+          <div className="mb-5">
+            <label className="block text-[12px] text-slate-600 mb-1.5">
+              Type <span className="font-mono font-semibold text-slate-900">{requireText}</span> to confirm
+            </label>
+            <input
+              autoFocus
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && canConfirm) onConfirm(); }}
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-[13px] focus:outline-none focus:border-red-400 focus:ring-1 focus:ring-red-200"
+              placeholder={requireText}
+            />
+          </div>
+        )}
         <div className="flex gap-2 justify-end">
-          <button onClick={onCancel}
-            className="px-4 py-2 rounded-xl border border-slate-200 text-[13px] font-medium text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors">
+          <button onClick={onCancel} disabled={busy}
+            className="px-4 py-2 rounded-xl border border-slate-200 text-[13px] font-medium text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
             Cancel
           </button>
-          <button onClick={onConfirm}
+          <button onClick={onConfirm} disabled={!canConfirm}
             className={cn(
-              "px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-colors cursor-pointer",
+              "px-4 py-2 rounded-xl text-[13px] font-semibold text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed",
               danger ? "bg-red-500 hover:bg-red-600" : "bg-amber-500 hover:bg-amber-600"
             )}>
             {confirmLabel}
@@ -98,6 +119,16 @@ function PlanPill({ plan }: { plan: string }) {
       {cfg.label}
     </span>
   );
+}
+
+function TrialDaysLeft({ trialEndsAt }: { trialEndsAt: string | null | undefined }) {
+  if (!trialEndsAt) {
+    return <span className="text-[10px] text-slate-400">No end date</span>;
+  }
+  const days = Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / 86_400_000);
+  if (days < 0) return <span className="text-[10px] font-semibold text-red-600">Trial ended</span>;
+  const cls = days <= 3 ? "text-amber-700" : "text-slate-500";
+  return <span className={cn("text-[10px] font-medium tabular-nums", cls)}>{days}d left</span>;
 }
 
 function ChannelIcons({
@@ -323,7 +354,10 @@ function StatCard({
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 type SortCol = "business_name" | "mrr_zar" | "health_score" | "created_at" | "plan" | "crm_status";
-type ConfirmAction = { type: "archive" | "delete" | "restore"; id: number; name: string | null } | null;
+type ConfirmAction =
+  | { type: "archive" | "delete" | "restore"; id: number; name: string | null }
+  | { type: "bulk-archive" | "bulk-delete"; ids: number[] }
+  | null;
 
 interface Filters {
   status: string[];
@@ -400,46 +434,51 @@ export default function CrmClientsPage() {
         body: JSON.stringify({ crm_status: "churned" }),
       });
       setClients(cs => cs.filter(c => c.id !== confirmAction.id));
+      setSelected(s => { const n = new Set(s); n.delete(confirmAction.id); return n; });
     } else if (confirmAction.type === "restore") {
       await fetch(`/api/admin/crm/clients/${confirmAction.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ crm_status: "paused", deletion_scheduled_at: null }),
       });
-      // Refresh list so restored client shows updated status
       await fetchClients();
-    } else {
+      setSelected(s => { const n = new Set(s); n.delete(confirmAction.id); return n; });
+    } else if (confirmAction.type === "delete") {
       // Schedule for deletion, 30-day grace period
       await fetch(`/api/admin/crm/clients/${confirmAction.id}`, { method: "DELETE" });
-      // Update local state to show pending_deletion (don't remove from list)
       await fetchClients();
+      setSelected(s => { const n = new Set(s); n.delete(confirmAction.id); return n; });
+    } else if (confirmAction.type === "bulk-archive") {
+      await Promise.all(confirmAction.ids.map(id =>
+        fetch(`/api/admin/crm/clients/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ crm_status: "churned" }),
+        })
+      ));
+      const ids = new Set(confirmAction.ids);
+      setClients(cs => cs.filter(c => !ids.has(c.id)));
+      setSelected(new Set());
+    } else if (confirmAction.type === "bulk-delete") {
+      await Promise.all(confirmAction.ids.map(id =>
+        fetch(`/api/admin/crm/clients/${id}`, { method: "DELETE" })
+      ));
+      await fetchClients();
+      setSelected(new Set());
     }
 
-    setSelected(s => { const n = new Set(s); n.delete(confirmAction.id); return n; });
     setConfirmAction(null);
     setActionLoading(false);
   }
 
-  async function bulkArchive() {
-    const ids = Array.from(selected);
-    await Promise.all(ids.map(id =>
-      fetch(`/api/admin/crm/clients/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ crm_status: "churned" }),
-      })
-    ));
-    setClients(cs => cs.filter(c => !selected.has(c.id)));
-    setSelected(new Set());
+  function bulkArchive() {
+    if (selected.size === 0) return;
+    setConfirmAction({ type: "bulk-archive", ids: Array.from(selected) });
   }
 
-  async function bulkDelete() {
-    const ids = Array.from(selected);
-    await Promise.all(ids.map(id =>
-      fetch(`/api/admin/crm/clients/${id}`, { method: "DELETE" })
-    ));
-    setClients(cs => cs.filter(c => !selected.has(c.id)));
-    setSelected(new Set());
+  function bulkDelete() {
+    if (selected.size === 0) return;
+    setConfirmAction({ type: "bulk-delete", ids: Array.from(selected) });
   }
 
   function bulkExportCsv() {
@@ -623,26 +662,47 @@ export default function CrmClientsPage() {
   return (
     <div>
       {/* Confirm modal */}
-      {confirmAction && (
-        <ConfirmModal
-          title={
-            confirmAction.type === "archive"  ? "Archive this client?" :
-            confirmAction.type === "restore"  ? "Restore this client?" :
-            "Remove this client?"
-          }
-          body={
-            confirmAction.type === "archive"
-              ? `"${confirmAction.name ?? "This client"}" will be marked as churned and hidden from active views.`
-              : confirmAction.type === "restore"
-              ? `"${confirmAction.name ?? "This client"}" will be restored to Paused status. Their scheduled deletion will be cancelled. You can re-enable their widget from their profile.`
-              : `"${confirmAction.name ?? "This client"}" will lose access to Qwikly immediately. Their data is preserved for 30 days, then permanently deleted. You can restore them within that window.`
-          }
-          confirmLabel={actionLoading ? "Working…" : confirmAction.type === "archive" ? "Archive" : confirmAction.type === "restore" ? "Restore" : "Remove client"}
-          danger={confirmAction.type === "delete"}
-          onConfirm={executeAction}
-          onCancel={() => !actionLoading && setConfirmAction(null)}
-        />
-      )}
+      {confirmAction && (() => {
+        const isBulk = confirmAction.type === "bulk-archive" || confirmAction.type === "bulk-delete";
+        const isDelete = confirmAction.type === "delete" || confirmAction.type === "bulk-delete";
+        const count = isBulk ? (confirmAction as { ids: number[] }).ids.length : 1;
+        const label = isBulk ? `${count} ${count === 1 ? "client" : "clients"}` : `"${(confirmAction as { name: string | null }).name ?? "This client"}"`;
+
+        const title =
+          confirmAction.type === "archive"      ? "Archive this client?" :
+          confirmAction.type === "restore"      ? "Restore this client?" :
+          confirmAction.type === "delete"       ? "Remove this client?" :
+          confirmAction.type === "bulk-archive" ? `Archive ${count} ${count === 1 ? "client" : "clients"}?` :
+                                                  `Remove ${count} ${count === 1 ? "client" : "clients"}?`;
+
+        const body =
+          confirmAction.type === "archive"      ? `${label} will be marked as churned and hidden from active views.` :
+          confirmAction.type === "restore"      ? `${label} will be restored to Paused status. Their scheduled deletion will be cancelled. You can re-enable their widget from their profile.` :
+          confirmAction.type === "delete"       ? `${label} will lose access to Qwikly immediately. Their data is preserved for 30 days, then permanently deleted. You can restore them within that window.` :
+          confirmAction.type === "bulk-archive" ? `${label} will be marked as churned and hidden from active views.` :
+                                                  `${label} will lose access to Qwikly immediately. Their data is preserved for 30 days, then permanently deleted.`;
+
+        const confirmLabel = actionLoading
+          ? "Working…"
+          : confirmAction.type === "archive"      ? "Archive"
+          : confirmAction.type === "restore"      ? "Restore"
+          : confirmAction.type === "delete"       ? "Remove client"
+          : confirmAction.type === "bulk-archive" ? `Archive ${count}`
+          :                                         `Remove ${count}`;
+
+        return (
+          <ConfirmModal
+            title={title}
+            body={body}
+            confirmLabel={confirmLabel}
+            danger={isDelete}
+            requireText={isDelete ? "DELETE" : undefined}
+            busy={actionLoading}
+            onConfirm={executeAction}
+            onCancel={() => !actionLoading && setConfirmAction(null)}
+          />
+        );
+      })()}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
@@ -1006,7 +1066,10 @@ function TableView({
                   </td>
 
                   <td className="px-4 py-3.5 border-b border-slate-100 align-middle">
-                    <PlanPill plan={c.plan} />
+                    <div className="flex flex-col items-start gap-1">
+                      <PlanPill plan={c.plan} />
+                      {c.plan === "trial" && <TrialDaysLeft trialEndsAt={c.trial_ends_at} />}
+                    </div>
                   </td>
 
                   <td className="px-4 py-3.5 border-b border-slate-100 align-middle text-right">
