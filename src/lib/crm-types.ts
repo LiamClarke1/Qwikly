@@ -41,6 +41,7 @@ export interface CrmClientListItem {
   next_invoice_at: string | null;
   latest_billing_invoice_status: import("./invoices/types").QwiklyBillingInvoiceStatus | null;
   days_overdue: number | null;
+  trial_ends_at: string | null;
 }
 
 export interface CrmClientDetail extends CrmClientListItem {
@@ -48,7 +49,6 @@ export interface CrmClientDetail extends CrmClientListItem {
   billing_cycle: BillingCycle | null;
   risk_score: number | null;
   next_renewal_at: string | null;
-  trial_ends_at: string | null;
   leads_used_mtd: number | null;
   // deletion_scheduled_at inherited from CrmClientListItem
   web_widget_domain: string | null;

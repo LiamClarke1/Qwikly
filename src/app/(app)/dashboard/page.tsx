@@ -146,16 +146,28 @@ function StatusBar({
   widgetLive,
   tier,
   leadsMonth,
+  trialEndsAt,
 }: {
   widgetLive: boolean;
   tier: PlanTier;
   leadsMonth: number;
+  trialEndsAt: Date | null;
 }) {
   const config = PLAN_CONFIG[tier];
   const limit = config.leadLimit;
   const pct = limit ? Math.min(100, Math.round((leadsMonth / limit) * 100)) : 0;
   const nearCap = limit !== null && pct >= 80;
   const atCap = limit !== null && leadsMonth >= limit;
+
+  let trialSuffix: string | null = null;
+  if (tier === "trial" && trialEndsAt) {
+    const daysLeft = Math.ceil((trialEndsAt.getTime() - Date.now()) / 86_400_000);
+    if (daysLeft < 0) {
+      trialSuffix = "Trial expired, upgrade to keep your assistant live.";
+    } else {
+      trialSuffix = `${daysLeft} ${daysLeft === 1 ? "day" : "days"} left`;
+    }
+  }
 
   return (
     <div className="space-y-2">
@@ -205,7 +217,7 @@ function StatusBar({
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-small font-semibold text-ink">
-              {config.name} · {leadsMonth.toLocaleString()}{limit ? ` / ${limit.toLocaleString()}` : ""} leads this month
+              {config.name} · {leadsMonth.toLocaleString()}{limit ? ` / ${limit.toLocaleString()}` : ""} leads this month{trialSuffix ? ` · ${trialSuffix}` : ""}
             </span>
             {!atCap && !nearCap && limit && (
               <span className="text-tiny text-ink-400 num">{pct}%</span>
@@ -279,6 +291,7 @@ export default function HomePage() {
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
   const [newLeadsToday, setNewLeadsToday] = useState(0);
   const [tier, setTier] = useState<PlanTier>("pro");
+  const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
 
   const widgetLive = !!(client?.web_widget_last_seen_at);
 
@@ -320,6 +333,7 @@ export default function HomePage() {
       setRecentLeads((recent.data as Lead[]) ?? []);
       setNewLeadsToday(todayCount.count ?? 0);
       if (subRes?.plan) setTier(resolvePlan(subRes.plan));
+      if (subRes?.trialEndsAt) setTrialEndsAt(new Date(subRes.trialEndsAt));
       setLoading(false);
     })();
   }, [client?.id, clientLoading]);
@@ -367,7 +381,7 @@ export default function HomePage() {
 
       {/* ── Status bar ───────────────────────────────────────────── */}
       {!loading && (client?.onboarding_complete || !!client?.onboarding_completed_at) && (
-        <StatusBar widgetLive={widgetLive} tier={tier} leadsMonth={leadsMonth} />
+        <StatusBar widgetLive={widgetLive} tier={tier} leadsMonth={leadsMonth} trialEndsAt={trialEndsAt} />
       )}
       {loading && <SkeletonCard className="h-28" />}
 

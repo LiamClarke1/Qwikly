@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { trialEndsFromNow } from "@/lib/trial";
 
 export const dynamic = "force-dynamic";
 
@@ -86,7 +87,7 @@ export async function POST(req: NextRequest) {
     }
 
     const trialEndsAt = resolvedPlan === "trial"
-      ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+      ? trialEndsFromNow().toISOString()
       : null;
 
     const { error: subError } = await db.from("subscriptions").upsert({
@@ -101,7 +102,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "account_setup_failed" }, { status: 500 });
     }
 
-    // Create a clients row if one doesn't exist — the onboarding wizard reads from this table
+    // Create a clients row if one doesn't exist, the onboarding wizard reads from this table.
+    // The CRM list page also reads clients.trial_ends_at to render the trial-countdown badge.
     const { data: existingClient } = await db
       .from("clients")
       .select("id")
@@ -114,7 +116,14 @@ export async function POST(req: NextRequest) {
         business_name: businessName ?? "",
         onboarding_step: 1,
         web_widget_enabled: true,
+        plan: resolvedPlan,
+        ...(trialEndsAt ? { trial_ends_at: trialEndsAt } : {}),
       });
+    } else if (trialEndsAt) {
+      await db.from("clients").update({
+        plan: resolvedPlan,
+        trial_ends_at: trialEndsAt,
+      }).eq("id", existingClient.id);
     }
   }
 

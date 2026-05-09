@@ -27,13 +27,10 @@ const STATUS_CONFIG = {
   pending_deletion: { label: "Deleting…",   icon: Trash2,         cls: "bg-red-50 text-red-600 border-red-200" },
 } as const;
 
-// Starter excluded from filters — legacy only, no longer offered
 const PLAN_CONFIG = {
-  trial:    { label: "Trial",    cls: "bg-slate-100 text-slate-500 border-slate-200",          filterShow: true  },
-  starter:  { label: "Starter", cls: "bg-slate-100 text-slate-600 border-slate-300",          filterShow: false },
-  pro:      { label: "Pro",     cls: "bg-violet-50 text-violet-700 border-violet-200",         filterShow: true  },
-  premium:  { label: "Premium", cls: "bg-amber-50 text-amber-700 border-amber-200",            filterShow: true  },
-  billions: { label: "Billions",cls: "bg-[#E85A2C]/10 text-[#E85A2C] border-[#E85A2C]/30",   filterShow: true  },
+  trial:    { label: "Trial",   cls: "bg-slate-100 text-slate-500 border-slate-200",   filterShow: true },
+  pro:      { label: "Pro",     cls: "bg-violet-50 text-violet-700 border-violet-200", filterShow: true },
+  premium:  { label: "Premium", cls: "bg-amber-50 text-amber-700 border-amber-200",    filterShow: true },
 } as const;
 
 // ─── Confirm modal ────────────────────────────────────────────────────────────

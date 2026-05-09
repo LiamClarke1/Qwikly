@@ -1,11 +1,34 @@
 import Link from "next/link";
 import {
   Clock, Loader, Mail, ShieldCheck, AlertTriangle, CheckCircle2, Settings,
+  Hourglass,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { CrmClientListItem } from "@/lib/crm-types";
 
 export function NextInvoiceBadge({ c }: { c: CrmClientListItem }) {
+  // Trial clients aren't billed yet, so show the trial-countdown badge in
+  // place of the "next invoice" pill. Once they upgrade off trial, the rest
+  // of this component takes over.
+  if (c.plan === "trial") {
+    if (!c.trial_ends_at) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border bg-slate-50 text-slate-500 border-slate-200 whitespace-nowrap">
+          <Hourglass className="w-3 h-3" />
+          Trial (no end date)
+        </span>
+      );
+    }
+    const trialDays = Math.ceil((new Date(c.trial_ends_at).getTime() - Date.now()) / 86_400_000);
+    if (trialDays < 0) {
+      return <Pill icon={AlertTriangle} text="Trial ended" cls="bg-red-50 text-red-600 border-red-200" />;
+    }
+    if (trialDays <= 3) {
+      return <Pill icon={Hourglass} text={`Trial: ${trialDays} ${trialDays === 1 ? "day" : "days"} left`} cls="bg-amber-50 text-amber-700 border-amber-200" />;
+    }
+    return <Pill icon={Hourglass} text={`Trial: ${trialDays} days left`} cls="bg-[#E85A2C]/10 text-[#E85A2C] border-[#E85A2C]/30" />;
+  }
+
   const status = c.latest_billing_invoice_status;
   const days = c.next_invoice_at
     ? Math.ceil((new Date(c.next_invoice_at).getTime() - Date.now()) / 86_400_000)

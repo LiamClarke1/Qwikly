@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { resolvePlan } from "@/lib/plan";
+import { trialEndsFromNow } from "@/lib/trial";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -45,6 +46,11 @@ export async function GET(request: NextRequest) {
           user.user_metadata?.full_name ??
           user.user_metadata?.name ??
           "";
+        const resolvedPlan = resolvePlan(plan);
+        const trialEndsAt = resolvedPlan === "trial"
+          ? trialEndsFromNow().toISOString()
+          : null;
+
         await db.from("businesses").insert({
           user_id: user.id,
           name,
@@ -52,9 +58,10 @@ export async function GET(request: NextRequest) {
         });
         await db.from("subscriptions").insert({
           user_id: user.id,
-          plan: resolvePlan(plan),
+          plan: resolvedPlan,
           billing_cycle: "monthly",
           status: "active",
+          ...(trialEndsAt ? { trial_ends_at: trialEndsAt } : {}),
         });
 
         // Create clients row so the onboarding wizard can find the user
@@ -70,6 +77,8 @@ export async function GET(request: NextRequest) {
             business_name: name,
             onboarding_step: 1,
             web_widget_enabled: true,
+            plan: resolvedPlan,
+            ...(trialEndsAt ? { trial_ends_at: trialEndsAt } : {}),
           });
         }
       }

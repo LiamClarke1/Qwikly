@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
       onboarding_step, onboarding_complete, onboarding_completed_at,
       web_widget_status, web_widget_enabled,
       account_manager_id, created_at, deletion_scheduled_at,
-      billing_anchor_day, billing_anchor_set_at
+      billing_anchor_day, billing_anchor_set_at, trial_ends_at
     `, { count: "exact" });
 
   if (status.length)          query = query.in("crm_status", status);
