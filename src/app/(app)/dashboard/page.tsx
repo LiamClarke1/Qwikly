@@ -69,7 +69,7 @@ function TrialBanner() {
           <div>
             <p className="text-sm font-semibold text-amber-900">Your digital assistant is paused</p>
             <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-              Your 14-day trial has ended. Visitors can no longer reach your assistant. Your data and leads are safe — pick a plan to reactivate instantly.
+              Your 14-day trial has ended. Visitors can no longer reach your assistant. Your data and leads are safe, pick a plan to reactivate instantly.
             </p>
           </div>
         </div>
@@ -95,7 +95,7 @@ function TrialBanner() {
       <div className="flex items-center gap-3">
         <Clock className={cn("w-4 h-4 shrink-0", urgent ? "text-amber-600" : warning ? "text-sky-600" : "text-green-600")} />
         <p className={cn("text-sm", urgent ? "text-amber-800" : warning ? "text-sky-800" : "text-green-800")}>
-          <span className="font-semibold">Free trial — {dayLabel} remaining.</span>{" "}
+          <span className="font-semibold">Free trial, {dayLabel} remaining.</span>{" "}
           {urgent
             ? "Add a plan now to keep your digital assistant running without interruption."
             : "Your assistant is live and fully active on Pro features."}
@@ -251,7 +251,7 @@ function StatusBar({
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
             <span className="text-ink font-medium">
-              You&rsquo;ve hit your cap — top-ups billed at{" "}
+              You&rsquo;ve hit your cap, top-ups billed at{" "}
               <span className="font-bold">R{PLAN_TOP_UP_PRICE}/lead</span>
               {tier !== "premium" && (
                 <>
