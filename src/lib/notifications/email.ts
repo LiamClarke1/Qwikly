@@ -1,8 +1,12 @@
 import { resend, FROM } from "@/lib/resend";
 import { fmt, fmtDate } from "@/lib/money";
+import { signInvoicePayToken } from "@/lib/invoiceLinks";
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.qwikly.co.za";
 
 export interface SendInvoiceEmailInput {
   to: string;
+  invoiceId: string;
   clientName: string;
   invoiceNumber: string;
   amountZAR: number;
@@ -17,7 +21,7 @@ export interface SendResult {
   error?: string;
 }
 
-function buildHtml(d: SendInvoiceEmailInput): string {
+function buildHtml(d: SendInvoiceEmailInput, payUrl: string): string {
   const accent = "#E85A2C";
   const due = fmtDate(d.dueDate);
   const amount = fmt(d.amountZAR);
@@ -48,6 +52,14 @@ function buildHtml(d: SendInvoiceEmailInput): string {
               </a>
             </td></tr>
           </table>
+          <p style="margin:24px 0 12px;font-size:13px;color:#9CA3AF;line-height:1.6;">Already settled? Click below to let us know and we'll confirm.</p>
+          <table cellpadding="0" cellspacing="0">
+            <tr><td>
+              <a href="${payUrl}" style="display:inline-block;background:transparent;color:#F4F4F5;font-size:14px;font-weight:600;padding:11px 26px;border-radius:10px;text-decoration:none;border:1px solid rgba(255,255,255,0.18);">
+                I've paid
+              </a>
+            </td></tr>
+          </table>
           <p style="margin:20px 0 0;font-size:12px;color:#6B7280;line-height:1.6;">If you have any questions, simply reply to this email.</p>
         </td></tr>
         <tr><td style="padding-top:24px;text-align:center;">
@@ -60,11 +72,11 @@ function buildHtml(d: SendInvoiceEmailInput): string {
 </html>`;
 }
 
-function buildPlainText(d: SendInvoiceEmailInput): string {
+function buildPlainText(d: SendInvoiceEmailInput, payUrl: string): string {
   const due = fmtDate(d.dueDate);
   const amount = fmt(d.amountZAR);
   const summary = d.plainTextSummary ? `\n\n${d.plainTextSummary}` : "";
-  return `Hi ${d.clientName},\n\nYour invoice ${d.invoiceNumber} is ready. Amount due ${amount}, due ${due}.${summary}\n\nView invoice: ${d.pdfUrl}\n\nIf you have any questions, reply to this email.\n\nQwikly`;
+  return `Hi ${d.clientName},\n\nYour invoice ${d.invoiceNumber} is ready. Amount due ${amount}, due ${due}.${summary}\n\nView invoice: ${d.pdfUrl}\n\nAlready paid? Mark this invoice as paid: ${payUrl}\n\nIf you have any questions, reply to this email.\n\nQwikly`;
 }
 
 function escapeHtml(s: string): string {
@@ -85,13 +97,15 @@ export async function sendInvoiceEmail(input: SendInvoiceEmailInput): Promise<Se
 
   const subject = `Invoice ${input.invoiceNumber} from Qwikly, ${fmt(input.amountZAR)}`;
 
+  const payUrl = `${BASE_URL}/pay/${signInvoicePayToken(input.invoiceId)}`;
+
   try {
     const res = await resend.emails.send({
       from: FROM,
       to: [input.to],
       subject,
-      html: buildHtml(input),
-      text: buildPlainText(input),
+      html: buildHtml(input, payUrl),
+      text: buildPlainText(input, payUrl),
     });
     if (res.error) {
       return { ok: false, error: String(res.error.message ?? res.error) };

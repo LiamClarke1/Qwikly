@@ -111,6 +111,7 @@ export async function POST() {
     if (channels.includes("email") && inv.customer_email) {
       const r = await sendInvoiceEmail({
         to: inv.customer_email,
+        invoiceId: inv.id,
         clientName: inv.customer_name,
         invoiceNumber: invoiceNumber ?? "Draft",
         amountZAR: inv.total_zar,

@@ -4,17 +4,12 @@ import { resend, FROM } from "@/lib/resend";
 import { sendWhatsAppMessage } from "@/lib/twilio-whatsapp";
 import { qwiklyBillingInvoiceHtml } from "@/lib/invoices/email";
 import { clientBillingReadyWa } from "@/lib/invoices/whatsapp";
+import { getPlanPricesZarCents } from "@/lib/billing/plan-prices";
 import { toZar, fmt, fmtDate } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.qwikly.co.za";
-
-const PLAN_PRICES: Record<string, number> = {
-  pro: 999,
-  premium: 1999,
-  billions: 2999,
-};
 
 const TOP_UP_RATE_ZAR = 20;
 
@@ -36,6 +31,7 @@ export async function POST(req: NextRequest) {
 
   const db = supabaseAdmin();
   const now = new Date();
+  const planPricesCents = await getPlanPricesZarCents();
 
   // Billing period = prior calendar month in Africa/Johannesburg (UTC+2)
   const joburg = new Date(now.getTime() + 2 * 60 * 60 * 1000);
@@ -57,7 +53,8 @@ export async function POST(req: NextRequest) {
     try {
       // Resolve flat subscription fee from client plan
       const plan: string = client.plan ?? "pro";
-      const subscriptionZar: number = toZar(PLAN_PRICES[plan] ?? PLAN_PRICES.pro);
+      const planRands: number = (planPricesCents[plan] ?? planPricesCents.pro ?? 0) / 100;
+      const subscriptionZar: number = toZar(planRands);
 
       // Aggregate top-up leads for the period (Pro tier over-cap conversations)
       const { count: topUpLeadCount } = await db
