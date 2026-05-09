@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { assertAdmin } from "@/lib/admin-auth";
 import { todaySast, nextAnchorDate, daysUntilNextAnchor } from "@/lib/billing/anchor";
-import { effectiveMrrCents } from "@/lib/billing/plan-prices";
+import { getPlanPricesZarCents } from "@/lib/billing/plan-prices";
 
 export const dynamic = "force-dynamic";
 
@@ -24,13 +24,19 @@ export async function GET(_req: NextRequest) {
     return NextResponse.json({ error: clientsRes.error.message }, { status: 500 });
   }
 
+  // Fetch the plan-price map once, the rest of the loop is sync.
+  const planPriceMap = await getPlanPricesZarCents();
+
   const allUpcoming = (clientsRes.data ?? [])
     .map(c => {
       const anchor = c.billing_anchor_day as number;
       const days = daysUntilNextAnchor(anchor, today);
       // Effective MRR: real mrr_zar wins, otherwise fall back to plan_prices.
       // Trials always resolve to 0 (correct, they don't pay).
-      const effectiveCents = effectiveMrrCents({ mrr_zar: c.mrr_zar, plan: c.plan });
+      const effectiveCents =
+        c.mrr_zar && c.mrr_zar > 0
+          ? c.mrr_zar
+          : (c.plan ? (planPriceMap[c.plan] ?? 0) : 0);
       return {
         client_id: c.id,
         business_name: c.business_name,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, FileText, ShieldAlert, Receipt, MessageSquare, Users, ArrowLeft, Menu, X, TrendingUp } from "lucide-react";
+import { LayoutDashboard, FileText, ShieldAlert, Receipt, MessageSquare, Users, ArrowLeft, Menu, X, TrendingUp, Settings } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 const NAV = [
@@ -14,6 +14,7 @@ const NAV = [
   { href: "/admin/invoicing",        label: "Client invoices", icon: FileText },
   { href: "/admin/risk",             label: "Risk",            icon: ShieldAlert },
   { href: "/admin/disputes",         label: "Disputes",        icon: MessageSquare },
+  { href: "/admin/settings/plans",   label: "Settings",        icon: Settings },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

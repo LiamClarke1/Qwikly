@@ -73,7 +73,7 @@ export async function generateDraftInvoice(
   // Effective MRR uses the plan-price fallback when mrr_zar is null/0,
   // so we never auto-generate a R0.00 invoice for a paid-plan client just
   // because someone forgot to set mrr_zar.
-  const effectiveCents = effectiveMrrCents({ mrr_zar: client.mrr_zar, plan: client.plan });
+  const effectiveCents = await effectiveMrrCents({ mrr_zar: client.mrr_zar, plan: client.plan });
   const subtotalZar = effectiveCents / 100;
   const vatZar = Math.round(subtotalZar * VAT_RATE * 100) / 100;
   const totalZar = Math.round((subtotalZar + vatZar) * 100) / 100;
