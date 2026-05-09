@@ -11,7 +11,7 @@ const CORS_HEADERS = {
 
 const SUCCESS_HEADERS = {
   ...CORS_HEADERS,
-  "Cache-Control": "public, max-age=60",
+  "Cache-Control": "no-store",
 };
 
 const ERROR_HEADERS = {

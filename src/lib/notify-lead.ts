@@ -106,18 +106,34 @@ export async function notifyLeadCaptured(input: NotifyLeadInput): Promise<Notify
   // Override also lets us send even when no business row exists for client_id=1.
   const ownOverride = resolveQwiklyOwnRecipientOverride(input.clientId ?? null);
 
-  if (!business && !ownOverride) {
-    return { ok: false, reason: "no_recipient", message: "No matching business row" };
-  }
-
   // ── 2. Resolve recipient + on/off toggle
-  const recipient = ownOverride
+  const emailsEnabled = business?.lead_emails_enabled !== false; // null/undefined = on by default
+  if (!emailsEnabled) return { ok: false, reason: "disabled" };
+
+  let recipient: string | null = ownOverride
     || (business?.notification_email && business.notification_email.trim())
     || (business?.contact_email && business.contact_email.trim())
     || null;
-  const emailsEnabled = business?.lead_emails_enabled !== false; // null/undefined = on by default
 
-  if (!emailsEnabled) return { ok: false, reason: "disabled" };
+  // Fallback: use the Supabase Auth account email. Every Qwikly account has one
+  // (it's the email they signed up with), so this guarantees notifications reach
+  // the client even when no businesses row exists or has no email set yet.
+  if (!recipient && !ownOverride) {
+    let authUserId: string | null = null;
+    if (input.clientId != null) {
+      const { data: clientRow } = await db
+        .from("clients")
+        .select("auth_user_id")
+        .eq("id", input.clientId)
+        .maybeSingle();
+      authUserId = (clientRow as { auth_user_id?: string | null } | null)?.auth_user_id ?? null;
+    }
+    if (authUserId) {
+      const { data: authData } = await db.auth.admin.getUserById(authUserId);
+      recipient = authData?.user?.email ?? null;
+    }
+  }
+
   if (!recipient) return { ok: false, reason: "no_recipient" };
   if (!process.env.RESEND_API_KEY) return { ok: false, reason: "no_resend_key" };
 
@@ -140,7 +156,7 @@ export async function notifyLeadCaptured(input: NotifyLeadInput): Promise<Notify
         .limit(40),
       db
         .from("conversation_documents")
-        .select("id, file_name, file_type, file_size, uploaded_by")
+        .select("id, file_name, file_type, file_size, uploaded_by, storage_path")
         .eq("conversation_id", convId)
         .eq("status", "active")
         .order("created_at", { ascending: true }),
@@ -159,30 +175,56 @@ export async function notifyLeadCaptured(input: NotifyLeadInput): Promise<Notify
         }));
     }
     if (Array.isArray(docs)) {
-      documents = docs
-        .filter((d): d is { id: string; file_name: string; file_type: string; file_size: number; uploaded_by: string } =>
-          !!d && (d as { uploaded_by?: string }).uploaded_by === "visitor"
-        )
-        .map((d) => ({
-          id: d.id,
-          fileName: d.file_name,
-          fileType: d.file_type,
-          fileSizeBytes: d.file_size,
-          // Link straight to the lead detail in the dashboard so the user can
-          // open the file with one tap. Conversation id == lead id in the
-          // legacy dashboard convention.
-          viewUrl: `${BASE_URL}/dashboard/leads`,
-        }));
+      type DocRow = {
+        id: string;
+        file_name: string;
+        file_type: string;
+        file_size: number;
+        uploaded_by: string;
+        storage_path: string;
+      };
+      const visitorDocs = docs.filter(
+        (d): d is DocRow => !!d && (d as { uploaded_by?: string }).uploaded_by === "visitor"
+      );
+
+      // Generate signed URLs for each document with a 7-day TTL. This lets the
+      // business owner click straight from the email and open the file in
+      // their browser without needing to log into the dashboard.
+      const SIGNED_URL_TTL = 60 * 60 * 24 * 7; // 7 days
+      const docsWithUrls = await Promise.all(
+        visitorDocs.map(async (d) => {
+          let viewUrl = `${BASE_URL}/dashboard/leads?lead=${convId}`;
+          try {
+            const { data: signed } = await db.storage
+              .from("conversation-documents")
+              .createSignedUrl(d.storage_path, SIGNED_URL_TTL);
+            if (signed?.signedUrl) viewUrl = signed.signedUrl;
+          } catch (err) {
+            console.warn("[notify-lead] failed to sign doc URL:", d.id, err);
+          }
+          return {
+            id: d.id,
+            fileName: d.file_name,
+            fileType: d.file_type,
+            fileSizeBytes: d.file_size,
+            viewUrl,
+          };
+        })
+      );
+      documents = docsWithUrls;
     }
   }
 
   // ── 4. Build confirm/suggest URLs (best-effort — only if we have a token)
+  const leadDeepLink = input.conversationId
+    ? `${BASE_URL}/dashboard/leads?lead=${input.conversationId}`
+    : `${BASE_URL}/dashboard/leads`;
   const confirmUrl = input.lead.confirmToken
     ? `${BASE_URL}/api/leads/confirm/${input.lead.confirmToken}?action=confirm`
-    : `${BASE_URL}/dashboard/leads`;
+    : leadDeepLink;
   const suggestUrl = input.lead.confirmToken
     ? `${BASE_URL}/api/leads/confirm/${input.lead.confirmToken}?action=suggest`
-    : `${BASE_URL}/dashboard/leads`;
+    : leadDeepLink;
 
   const templateArgs = {
     businessName: business?.name || "Qwikly",

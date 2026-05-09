@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { trialEndsFromNow } from "@/lib/trial";
+import { resend, FROM, newSignupAdminNotificationHtml } from "@/lib/resend";
 
 export const dynamic = "force-dynamic";
 
@@ -124,6 +125,37 @@ export async function POST(req: NextRequest) {
         plan: resolvedPlan,
         trial_ends_at: trialEndsAt,
       }).eq("id", existingClient.id);
+    }
+  }
+
+  // Notify Qwikly admin (Liam) that a new client just signed up. Awaited so
+  // Vercel doesn't recycle the function before the email is sent, but wrapped
+  // in try/catch so a Resend hiccup never blocks the user's signup flow.
+  const adminEmail = (process.env.QWIKLY_OWN_NOTIFICATION_EMAIL ?? "").trim();
+  if (adminEmail && process.env.RESEND_API_KEY) {
+    try {
+      const signupTime = new Date().toLocaleString("en-ZA", {
+        timeZone: "Africa/Johannesburg",
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+      });
+      await resend.emails.send({
+        from: FROM,
+        to: [adminEmail],
+        subject: `New Qwikly signup: ${businessName?.trim() || email}`,
+        html: newSignupAdminNotificationHtml({
+          email,
+          businessName: businessName ?? null,
+          plan: resolvedPlan,
+          signupTime,
+        }),
+      });
+    } catch (err) {
+      console.error("[signup] admin notification failed:", err);
     }
   }
 

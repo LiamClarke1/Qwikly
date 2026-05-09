@@ -571,6 +571,48 @@ export function rescheduleHostNotificationHtml({
 </html>`;
 }
 
+export function newSignupAdminNotificationHtml({
+  email,
+  businessName,
+  plan,
+  signupTime,
+}: {
+  email: string;
+  businessName?: string | null;
+  plan: string;
+  signupTime: string;
+}) {
+  const safeBiz = businessName?.trim() ? escHtml(businessName) : "<em style=\"color:#6B7280;font-style:italic;\">not provided</em>";
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#07080B;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#07080B;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="padding-bottom:32px;"><span style="font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.5px;">Qwikly<span style="color:#E85A2C;">.</span></span></td></tr>
+        <tr><td style="background:#0D111A;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:32px;">
+          <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;">New signup</p>
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.3px;">A new client just signed up.</h1>
+          <p style="margin:0 0 24px;font-size:14px;color:#9CA3AF;line-height:1.6;">${signupTime} SAST</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid rgba(255,255,255,0.06);margin-bottom:18px;">
+            <tr><td style="padding:12px 0 6px;color:#9CA3AF;font-size:13px;">Email</td><td style="padding:12px 0 6px;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;"><a href="mailto:${escHtml(email)}" style="color:#F4F4F5;text-decoration:none;">${escHtml(email)}</a></td></tr>
+            <tr><td style="padding:6px 0;color:#9CA3AF;font-size:13px;">Business</td><td style="padding:6px 0;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;">${safeBiz}</td></tr>
+            <tr><td style="padding:6px 0 12px;color:#9CA3AF;font-size:13px;">Plan</td><td style="padding:6px 0 12px;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;text-transform:capitalize;">${escHtml(plan)}</td></tr>
+          </table>
+          <p style="margin:0 0 16px;font-size:13px;color:#9CA3AF;line-height:1.6;">They've landed in the dashboard and started the 7-step setup wizard. Lead notifications will route to this email by default.</p>
+          <table cellpadding="0" cellspacing="0" style="margin:0;"><tr><td style="background:#E85A2C;border-radius:10px;">
+            <a href="https://www.qwikly.co.za/dashboard/admin/clients" style="display:inline-block;padding:13px 22px;font-size:14px;font-weight:700;color:#fff;text-decoration:none;letter-spacing:-.005em;">View in admin →</a>
+          </td></tr></table>
+        </td></tr>
+        <tr><td style="padding-top:24px;text-align:center;"><p style="margin:0;font-size:11px;color:#4B5563;">Sent by Qwikly</p></td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export function rescheduleAcknowledgmentHtml({
   visitorName,
 }: {

@@ -115,6 +115,403 @@ export function getTradeQuestion(trade: string): string {
   return "Tell me a bit more about what you need so I can point you in the right direction.";
 }
 
+export type ConversionStrategy = {
+  /** Short label for the trade — used in the prompt */
+  label: string;
+  /** What success looks like for this trade — confirmed booking, on-site visit, callback, etc. */
+  primaryGoal: string;
+  /** The 2-4 questions that must be answered before closing, in priority order. */
+  qualifyingQuestions: string[];
+  /** How to handle "how much?" before enough info is gathered. */
+  priceHandling: string;
+  /** Phrases / words that signal urgency for THIS trade. */
+  urgencySignals: string[];
+  /** What "next step" looks like at the close. */
+  nextStep: string;
+};
+
+export function getConversionStrategy(trade: string): ConversionStrategy {
+  const t = (trade ?? "").toLowerCase();
+
+  if (t.includes("pool")) {
+    return {
+      label: "pool service",
+      primaryGoal: "Book an on-site visit or first cleaning. Pool work needs eyes on the pool to quote accurately.",
+      qualifyingQuestions: [
+        "Is it a maintenance issue, a repair, or a new install?",
+        "How big is the pool roughly (small/medium/large)?",
+        "How long has the issue been going on?",
+      ],
+      priceHandling: "Pools vary too much to quote in chat (size, condition, equipment). Be upfront: 'Hard to give an accurate number without eyes on it. The team can do a free site visit and give you an exact quote.'",
+      urgencySignals: ["green water", "leaking", "no pump", "broken pump", "party this weekend", "kids", "swimming this week"],
+      nextStep: "On-site visit booked, or callback within 24 hours to schedule one.",
+    };
+  }
+
+  if (t.includes("plumb")) {
+    return {
+      label: "plumbing",
+      primaryGoal: "Book a callout. Most plumbing issues need physical inspection.",
+      qualifyingQuestions: [
+        "What's the issue — leak, blockage, geyser, or something else?",
+        "How urgent is it — actively leaking now, or can it wait?",
+        "Is it indoor or outdoor?",
+      ],
+      priceHandling: "Plumbing is hourly + materials, so quoting in chat is impossible. Mention the call-out fee if known and explain the team needs to see the issue first.",
+      urgencySignals: ["burst pipe", "water everywhere", "no water", "no hot water", "flooding", "now", "today", "asap"],
+      nextStep: "Same-day or next-day callout booked.",
+    };
+  }
+
+  if (t.includes("electr")) {
+    return {
+      label: "electrical",
+      primaryGoal: "Book a callout, especially urgent for safety issues.",
+      qualifyingQuestions: [
+        "What's happening — a trip, no power somewhere, sparking, or installation?",
+        "Is it affecting one circuit or the whole property?",
+        "Is anything visibly damaged or burning?",
+      ],
+      priceHandling: "Quoting in chat isn't possible without diagnosing the fault. Mention the call-out fee and explain the team will diagnose on-site.",
+      urgencySignals: ["no power", "sparking", "burning smell", "fire", "shock", "tripping constantly"],
+      nextStep: "Same-day callout booked, urgent jobs prioritised.",
+    };
+  }
+
+  if (t.includes("dental") || t.includes("dentist")) {
+    return {
+      label: "dental",
+      primaryGoal: "Book an appointment in the practice's calendar.",
+      qualifyingQuestions: [
+        "Is this a routine check-up or do you have a specific concern (pain, broken tooth, etc.)?",
+        "Have you been to this practice before?",
+        "Are you on a medical aid?",
+      ],
+      priceHandling: "Quote standard consultation fee if known. For specific work (filling, extraction, crown), say it depends on the assessment but give a typical range if available.",
+      urgencySignals: ["severe pain", "broken tooth", "abscess", "swelling", "can't eat", "today"],
+      nextStep: "Appointment booked, with date and time confirmed.",
+    };
+  }
+
+  if (t.includes("doctor") || t.includes("medical") || t.includes("gp")) {
+    return {
+      label: "medical practice",
+      primaryGoal: "Book a consultation in the practice's calendar.",
+      qualifyingQuestions: [
+        "Is this a new appointment or a follow-up?",
+        "What's the main concern, briefly?",
+        "Are you registered as a patient at this practice?",
+      ],
+      priceHandling: "Quote consultation fee. For specifics, defer to an in-person assessment.",
+      urgencySignals: ["chest pain", "can't breathe", "severe", "emergency", "now", "today"],
+      nextStep: "Consultation booked. Anything urgent → tell them to call directly or go to ER.",
+    };
+  }
+
+  if (t.includes("real estate") || t.includes("property") || t.includes("agent")) {
+    return {
+      label: "real estate",
+      primaryGoal: "Book a property viewing or qualify the buyer/seller for a follow-up call.",
+      qualifyingQuestions: [
+        "Are you looking to buy, sell, or rent?",
+        "What area or property type interests you?",
+        "What's your timeline — this month, this quarter, or later?",
+        "What's your budget range (for buyers/renters)?",
+      ],
+      priceHandling: "For listed properties, quote the listed price. For valuations, defer to a free assessment by the team.",
+      urgencySignals: ["urgent sale", "must sell", "by end of month", "relocating", "lease ending"],
+      nextStep: "Viewing booked, or property valuation scheduled.",
+    };
+  }
+
+  if (t.includes("legal") || t.includes("law") || t.includes("attorney")) {
+    return {
+      label: "legal practice",
+      primaryGoal: "Book a consultation. Most legal matters need a paid consult before advice.",
+      qualifyingQuestions: [
+        "What type of matter — contract, dispute, family, property, or something else?",
+        "Is this for a personal matter or for a business?",
+        "Is there a deadline or court date involved?",
+      ],
+      priceHandling: "Quote consultation fee. Never give legal advice in chat — defer to the consult.",
+      urgencySignals: ["court date", "summons", "deadline", "this week", "served", "arrested"],
+      nextStep: "Consultation booked, urgency flagged if a deadline exists.",
+    };
+  }
+
+  if (t.includes("account") || t.includes("tax") || t.includes("bookkeep")) {
+    return {
+      label: "accounting / tax",
+      primaryGoal: "Book an intro call or quote a monthly retainer.",
+      qualifyingQuestions: [
+        "Is this for personal tax, a small business, or a company?",
+        "What do you need — tax return, monthly books, payroll, or all of it?",
+        "Do you currently have an accountant?",
+      ],
+      priceHandling: "Quote ranges if known (e.g. 'tax returns from R650, monthly bookkeeping from R1,500'). Final price after seeing the books.",
+      urgencySignals: ["sars deadline", "submit", "audit", "by end of month", "filing"],
+      nextStep: "Intro call booked, or quote sent within 24 hours.",
+    };
+  }
+
+  if (t.includes("roof")) {
+    return {
+      label: "roofing",
+      primaryGoal: "Book a free on-site inspection. Roof work cannot be quoted blind.",
+      qualifyingQuestions: [
+        "Is this a repair, full replacement, or a new install?",
+        "What type of roof — tile, IBR, thatch, flat?",
+        "Are there visible leaks or damage right now?",
+        "Is this insurance-related?",
+      ],
+      priceHandling: "Roof jobs need on-site inspection. Free quote after inspection. Never quote a number from chat.",
+      urgencySignals: ["leaking", "rain", "storm damage", "tiles missing", "ceiling water"],
+      nextStep: "Free on-site inspection booked.",
+    };
+  }
+
+  if (t.includes("pest")) {
+    return {
+      label: "pest control",
+      primaryGoal: "Book a callout for inspection + treatment.",
+      qualifyingQuestions: [
+        "What pest are you dealing with — rats, cockroaches, ants, fleas, bees, or something else?",
+        "Is it inside the house, outside, or both?",
+        "How long has it been going on?",
+      ],
+      priceHandling: "Quote standard treatment ranges per pest if known. Final price after inspection.",
+      urgencySignals: ["bees", "wasps", "snake", "infestation", "everywhere", "kids", "allergic"],
+      nextStep: "Callout booked, urgent for stinging insects or infestation.",
+    };
+  }
+
+  if (t.includes("garden") || t.includes("landscap")) {
+    return {
+      label: "garden / landscaping",
+      primaryGoal: "Book a site visit for ongoing maintenance OR a project quote.",
+      qualifyingQuestions: [
+        "Is this regular maintenance (weekly/monthly) or a once-off project?",
+        "Roughly how big is the garden — small, medium, large?",
+        "Any specific work needed — lawn, trees, irrigation, design?",
+      ],
+      priceHandling: "Maintenance: quote per visit if listed. Projects: site visit needed.",
+      urgencySignals: ["overgrown", "selling soon", "event coming up"],
+      nextStep: "Site visit booked, or first maintenance day scheduled.",
+    };
+  }
+
+  if (t.includes("clean")) {
+    return {
+      label: "cleaning",
+      primaryGoal: "Book the first clean — once-off or recurring.",
+      qualifyingQuestions: [
+        "Is this a regular weekly clean, a once-off, or a deep clean / move-out?",
+        "How big is the space — number of bedrooms or square metres?",
+        "Any specific areas needing extra attention?",
+      ],
+      priceHandling: "Quote per-clean rates by size if available. Move-out / deep cleans need a quote after viewing.",
+      urgencySignals: ["moving out", "tomorrow", "this weekend", "guests coming"],
+      nextStep: "First clean booked with date and time.",
+    };
+  }
+
+  if (t.includes("salon") || t.includes("hair") || t.includes("beauty") || t.includes("nail")) {
+    return {
+      label: "salon / beauty",
+      primaryGoal: "Book a specific treatment slot.",
+      qualifyingQuestions: [
+        "What treatment are you after?",
+        "Have you been to this salon before?",
+        "When suits you — today, this week, weekend?",
+      ],
+      priceHandling: "Quote standard treatment prices from the price list.",
+      urgencySignals: ["wedding", "event", "tonight", "tomorrow"],
+      nextStep: "Appointment booked with treatment, date, and time.",
+    };
+  }
+
+  if (t.includes("gym") || t.includes("fitness") || t.includes("personal train")) {
+    return {
+      label: "gym / fitness",
+      primaryGoal: "Book a free trial session OR sign-up tour.",
+      qualifyingQuestions: [
+        "Are you after a membership, personal training, or a specific class?",
+        "What's your main goal — weight loss, strength, fitness, sport-specific?",
+        "Any current injuries or conditions to be aware of?",
+      ],
+      priceHandling: "Quote membership prices and PT rates. Free trial first if offered.",
+      urgencySignals: ["new year", "wedding", "event", "summer"],
+      nextStep: "Trial session or tour booked.",
+    };
+  }
+
+  // Default for any other trade — generic but human
+  return {
+    label: trade || "service",
+    primaryGoal: "Capture a qualified lead with name, contact, and clear next step.",
+    qualifyingQuestions: [
+      "What exactly do you need?",
+      "How urgent is it?",
+      "Where are you based (if relevant)?",
+    ],
+    priceHandling: "If pricing isn't documented, defer honestly: 'I'd rather have the team give you a proper quote than guess. Can I grab your details?'",
+    urgencySignals: ["today", "asap", "urgent", "now", "this week"],
+    nextStep: "Callback or appointment booked with a clear time.",
+  };
+}
+
+export type ContactPriority = {
+  primary: "phone" | "email";
+  secondary: "phone" | "email" | null;
+  primaryLabel: string;
+  askText: string;
+  bothText: string;
+};
+
+export function getContactPriority(trade: string): ContactPriority {
+  const t = (trade ?? "").toLowerCase();
+
+  // Physical trades that travel to the client — WhatsApp/phone is critical.
+  // They need to confirm the job, share a location pin, send arrival updates.
+  if (
+    t.includes("pool") || t.includes("plumb") || t.includes("electr") ||
+    t.includes("pest") || t.includes("garden") || t.includes("landscap") ||
+    t.includes("paint") || t.includes("tile") || t.includes("floor") ||
+    t.includes("roof") || t.includes("solar") || t.includes("air") ||
+    t.includes("hvac") || t.includes("condition") || t.includes("build") ||
+    t.includes("construct") || t.includes("renovat") || t.includes("security") ||
+    t.includes("alarm") || t.includes("clean") || t.includes("move") ||
+    t.includes("removal") || t.includes("glass") || t.includes("window") ||
+    t.includes("waterproof") || t.includes("brick") || t.includes("pave") ||
+    t.includes("plas") || t.includes("garage") || t.includes("car") ||
+    t.includes("auto") || t.includes("panel")
+  ) {
+    return {
+      primary: "phone",
+      secondary: "email",
+      primaryLabel: "WhatsApp number",
+      askText: "**What's the best WhatsApp number to reach you on?**",
+      bothText: "WhatsApp number first, then email if they offer it",
+    };
+  }
+
+  // Real estate and property — need both, phone leads
+  if (t.includes("real estate") || t.includes("property") || t.includes("agent")) {
+    return {
+      primary: "phone",
+      secondary: "email",
+      primaryLabel: "WhatsApp number",
+      askText: "**What's the best WhatsApp number to reach you on?**",
+      bothText: "WhatsApp first, then email — both matter for property follow-ups",
+    };
+  }
+
+  // Photography, catering — both useful, lean phone for logistics
+  if (t.includes("photog") || t.includes("cater")) {
+    return {
+      primary: "phone",
+      secondary: "email",
+      primaryLabel: "WhatsApp number",
+      askText: "**What's the best WhatsApp number to reach you on?**",
+      bothText: "Phone for logistics, email for quotes and contracts",
+    };
+  }
+
+  // Professional/office services — email is primary, phone is good to have
+  if (
+    t.includes("legal") || t.includes("law") || t.includes("attorney") ||
+    t.includes("account") || t.includes("tax") || t.includes("bookkeep") ||
+    t.includes("financial") || t.includes("insur")
+  ) {
+    return {
+      primary: "email",
+      secondary: "phone",
+      primaryLabel: "email address",
+      askText: "**What's the best email address to send this to?**",
+      bothText: "Email is primary for professional correspondence, phone is a bonus",
+    };
+  }
+
+  // Healthcare/medical — email first, POPIA-sensitive
+  if (
+    t.includes("dental") || t.includes("dentist") || t.includes("doctor") ||
+    t.includes("medical") || t.includes("gp") || t.includes("psychol") ||
+    t.includes("physio") || t.includes("therap")
+  ) {
+    return {
+      primary: "email",
+      secondary: "phone",
+      primaryLabel: "email address",
+      askText: "**What's the best email address to send your appointment details to?**",
+      bothText: "Email for records and confirmations, phone to confirm the booking",
+    };
+  }
+
+  // Salons, gyms, restaurants — phone/WhatsApp for quick confirmations
+  if (
+    t.includes("salon") || t.includes("hair") || t.includes("beauty") ||
+    t.includes("nail") || t.includes("gym") || t.includes("fitness") ||
+    t.includes("restaurant") || t.includes("cafe")
+  ) {
+    return {
+      primary: "phone",
+      secondary: null,
+      primaryLabel: "WhatsApp number",
+      askText: "**What's the best WhatsApp number to confirm your booking?**",
+      bothText: "Phone/WhatsApp only — email rarely needed for these bookings",
+    };
+  }
+
+  // Default: ask for both, phone first
+  return {
+    primary: "phone",
+    secondary: "email",
+    primaryLabel: "WhatsApp number",
+    askText: "**What's the best WhatsApp number or email to reach you on?**",
+    bothText: "Phone first, email second",
+  };
+}
+
+export function getLocationPrompt(trade: string): string | null {
+  const t = (trade ?? "").toLowerCase();
+  // Trades where the business travels to the client — location is mandatory to qualify the lead
+  if (t.includes("pool"))                                                return "Which suburb or area is the pool in?";
+  if (t.includes("plumb"))                                               return "What area or suburb is the property in?";
+  if (t.includes("electr"))                                              return "What area or suburb are you based in?";
+  if (t.includes("pest"))                                                return "Which suburb or area is the property?";
+  if (t.includes("garden") || t.includes("landscap"))                   return "Which area or suburb is the garden in?";
+  if (t.includes("paint"))                                               return "What area or suburb is the property?";
+  if (t.includes("tile") || t.includes("floor"))                        return "Which suburb or area is the property?";
+  if (t.includes("roof"))                                                return "What area or suburb is the property in?";
+  if (t.includes("solar"))                                               return "Which area or suburb is the property?";
+  if (t.includes("air") || t.includes("hvac") || t.includes("condition")) return "Which suburb or area is the unit located?";
+  if (t.includes("build") || t.includes("construct") || t.includes("renovat")) return "Which area or suburb is the project?";
+  if (t.includes("security") || t.includes("alarm"))                    return "Which suburb or area is the property?";
+  if (t.includes("clean"))                                               return "Which suburb or area is the property?";
+  if (t.includes("move") || t.includes("removal"))                      return "Where are you moving from, and which area are you moving to?";
+  if (t.includes("glass") || t.includes("window"))                      return "Which suburb or area is the property?";
+  if (t.includes("waterproof"))                                          return "Which suburb or area is the property?";
+  if (t.includes("brick") || t.includes("pave") || t.includes("plas"))  return "Which area or suburb is the property?";
+  if (t.includes("garage"))                                              return "Which suburb or area are you in?";
+  if (t.includes("interior") || t.includes("design") || t.includes("decor")) return "Which area or suburb is the property?";
+  if (t.includes("car") || t.includes("auto") || t.includes("panel"))   return "Which area or suburb are you based in?";
+  if (t.includes("real estate") || t.includes("property") || t.includes("agent")) return "Which area or suburb is the property you're enquiring about?";
+  if (t.includes("photog"))                                              return "Where is the shoot happening, which area or suburb?";
+  // Businesses where the client comes to them — location not required
+  if (
+    t.includes("legal") || t.includes("law") || t.includes("attorney") ||
+    t.includes("account") || t.includes("tax") || t.includes("bookkeep") ||
+    t.includes("dental") || t.includes("dentist") ||
+    t.includes("doctor") || t.includes("medical") || t.includes("gp") ||
+    t.includes("salon") || t.includes("hair") || t.includes("beauty") || t.includes("nail") ||
+    t.includes("gym") || t.includes("fitness") || t.includes("personal train") ||
+    t.includes("restaurant") || t.includes("cafe") || t.includes("cater") ||
+    t.includes("tutor") || t.includes("coach")
+  ) return null;
+  // Default: most physical service businesses need location
+  return "Which area or suburb are you based in?";
+}
+
 export function getPhotoPrompt(trade: string): string | null {
   const t = (trade ?? "").toLowerCase();
   if (t.includes("plumb"))                                                return "a photo of the leak, blockage, or affected area";
@@ -534,6 +931,9 @@ How to use it:
     ? `Opening message (already shown to the visitor — do NOT repeat it): "${c.ai_greeting}"\n\nRespond directly to what they say first. The opener was already displayed.`
     : `Start with: "Hi, welcome to ${biz}. What's your name and how can I help you today?"`;
   const tradeQ = getTradeQuestion(trade);
+  const locationQ = getLocationPrompt(trade);
+  const contactPriority = getContactPriority(trade);
+  const strategy = getConversionStrategy(trade);
 
   const minJobRule = c.minimum_job
     ? `\nIf a visitor's job is clearly below the minimum job value (${c.minimum_job}), politely let them know and offer to refer them or suggest alternatives. Do not book jobs below the minimum.`
@@ -566,11 +966,55 @@ Every conversation must end with:
 
 Never go back and forth without progress. If a conversation reaches 4 exchanges with no progress toward a booking, pivot and ask for their contact details directly.
 
+## CRITICAL — NEVER HALLUCINATE OR FABRICATE
+
+You must NEVER invent or assume facts about the visitor that they did not explicitly state in THIS conversation. This includes:
+- Their name, email, phone, or any contact detail
+- The type of job, problem, or service they need (e.g. don't say "pump repair" if they only said "I want a quote")
+- Their budget, timeline, urgency, or property details
+- Any prior interaction or relationship with the business
+
+If you don't have a fact, ASK for it. Saying "the team will reach out at someone@example.com" when they didn't give you that email is a critical failure that destroys trust.
+
+If a piece of information appears to exist from earlier in the conversation but the visitor hasn't confirmed it in this session, ask them to confirm before using it. Better to ask twice than to be wrong once.
+
+## CRITICAL — TRACK WHAT THE VISITOR HAS ALREADY TOLD YOU
+
+Before asking ANY question, check the conversation history above. If the visitor has already given you the answer (their name, area, job type, urgency, etc.), do NOT ask again. Use what they said and move forward.
+
+Specifically:
+- If they've named a suburb/city/area, the location field is COMPLETE. Do not ask for area again, even if a "mandatory location" rule is mentioned below.
+- If they've described their problem ("leaking pipe", "broken pump", "I want a quote"), the job type is captured. Acknowledge it specifically and move on.
+- If they've given a name, never ask for it again.
+
+Asking the same thing twice makes you sound like a broken script. Read the history, work with what you have, and only ask for what is genuinely missing.
+
+## CRITICAL — FORMATTING
+
+Always put a single space after a full stop, comma, question mark, or colon. "Got it.One last thing" is wrong. "Got it. One last thing." is right. Never produce two sentences crammed together with no space.
+
 ## CONTACT DETAILS
 
-Do NOT ask for email or phone immediately after getting the visitor's name. Warm them up through discovery first. Contact is collected in Stage 5 before the close. This is the rule.
+Do NOT ask for contact details immediately after getting the visitor's name. Warm them up through discovery first. Contact is collected in Stage 5 before the close. This is the rule.
 
-You must still collect contact details before the conversation ends. If you reach Stage 5 without contact details, ask before giving any booking or sending the visitor anywhere.
+For this trade, the priority contact is: **${contactPriority.primaryLabel}**. ${contactPriority.secondary ? `A ${contactPriority.secondary === "phone" ? "phone number" : "email address"} is also valuable — capture it if offered.` : ""} Always call update_visitor the moment you receive any contact detail.
+
+You must still collect contact details before the conversation ends. If you reach Stage 5 without them, ask before giving any booking confirmation or sending the visitor anywhere.
+
+## CONVERSION STRATEGY FOR THIS TRADE (${strategy.label})
+
+**The win for this conversation:** ${strategy.primaryGoal}
+
+**Qualifying questions you should work through naturally — in this order, ONE per message:**
+${strategy.qualifyingQuestions.map((q, i) => `${i + 1}. ${q}`).join("\n")}
+
+**Handling "how much?":** ${strategy.priceHandling}
+
+**Urgency signals to watch for in their words:** ${strategy.urgencySignals.join(", ")}. The moment you spot one, set is_urgent: true via update_visitor and acknowledge it directly.
+
+**The close:** ${strategy.nextStep}
+
+This strategy is the playbook. The conversation arc below is the structure. They work together — the playbook tells you WHAT to ask, the arc tells you WHEN.
 
 ## CONVERSION ARC
 
@@ -602,6 +1046,11 @@ ${speed === "fast"
 
 Think about urgency, scale, history, the specific nature of the problem, and location. Draw on your understanding of how people in this trade experience problems. Generate the question from the context of this conversation, not from a fixed list. The question should feel like it came from someone who has dealt with this kind of job many times before.
 
+${locationQ
+  ? `LOCATION IS NEEDED FOR THIS TRADE — but ONLY if the visitor has not already mentioned a location. Before asking, scan the conversation history above. If they've named ANY suburb, city, town, or area, the location is captured — call update_visitor with that area immediately and DO NOT ask again. Only ask if no location has been given anywhere in the conversation. Default question if needed: "${locationQ}"`
+  : `LOCATION IS NOT REQUIRED FOR THIS TRADE: Do not ask for area or suburb. This business does not travel to clients.`
+}
+
 After they answer, acknowledge in ONE sentence that validates what they said. Then move to Stage 2b if uploads are enabled, otherwise move directly to Stage 3.
 
 ### Stage 2b — Photo Request (only when uploads are enabled)
@@ -632,9 +1081,14 @@ Vary the framing every conversation. Sometimes lead with speed, sometimes expert
 
 ### Stage 5 — Close (MANDATORY)
 
-CONTACT GATE: If you do not yet have the visitor's phone number or email, ask for it before anything else. Make it feel like the natural next step, not a form. Generate the ask from context.
+CONTACT GATE: If you do not yet have the visitor's contact details, ask for them before anything else. Make it feel like the natural next step, not a form.
 
-Call update_visitor immediately once they give it. If they decline a second time, proceed without it.
+CONTACT PRIORITY FOR THIS TRADE: ${contactPriority.primary === "phone"
+  ? `Phone/WhatsApp is the primary contact for this type of business. Ask for their WhatsApp number first — it's how the team will confirm the booking, send arrival updates, and share a location pin. ${contactPriority.secondary === "email" ? "If they offer an email too, capture it, but WhatsApp is what matters most." : "You do not need their email."} Use exactly this CTA (in bold): ${contactPriority.askText}`
+  : `Email is the primary contact for this type of business — it's needed for professional correspondence, quotes, and documentation. ${contactPriority.secondary === "phone" ? "A phone number is useful too but email comes first." : ""} Use exactly this CTA (in bold): ${contactPriority.askText}`
+}
+
+Call update_visitor immediately once they give it — phone goes in the phone field, email goes in the email field. If they decline a second time, proceed without it.
 
 Once you have contact details (or they've declined twice), close the booking. Read how they're responding and adapt:
 
@@ -673,6 +1127,17 @@ Never repeat a question already answered. Move forward.
 You are not a customer service script. You are a person who knows ${biz} inside out, talking to another person who needs help. Read what the visitor actually said and react to it before moving on, don't just push the next question. Use their own words back at them. Vary the shape of every reply, never two messages with the same opening or closing structure. Skip the filler ("Let me explain", "What I can do is", "I can help you with that", "Here are some options") and just answer. Match the visitor's energy: short and casual when they are, sharper and direct when they are. It is okay to give a real opinion or recommendation when it helps them decide. If a reply could have been written by a chatbot from a template, rewrite it.
 
 ${quotingSection}
+
+## REQUESTING DOCUMENTS THE BUSINESS NEEDS
+
+Some businesses need specific documents from the visitor before work can start (e.g. ID copy, proof of address, building plans, insurance docs, body corporate approval, medical aid card, signed quote acceptance). If the business has specified what they need (in the docs section, common questions, or quote playbook), ASK FOR THESE PROACTIVELY when the conversation reaches Stage 5.
+
+How to ask:
+- One document at a time, never list 5 things
+- Frame it as helpful, not a barrier: "To get the team out faster, can you send a quick photo of [doc] using the + button?"
+- The visitor uploads via the + button in the chat — those uploads land in the business's lead inbox and can be opened straight from the email notification
+
+If you don't know what documents the business needs, don't invent any. Only ask for documents that are explicitly mentioned in the business's setup or KB.
 
 ## USING UPLOADS — READ EVERYTHING THE VISITOR SHARES
 
@@ -736,7 +1201,7 @@ export const CLIENT_TOOLS: Anthropic.Tool[] = [
         email:          { type: "string",  description: "Email address — only include if provided" },
         booking_intent: { type: "boolean", description: "Set to true when the visitor confirms a callback, agrees on a booking time, or asks to be contacted by the team. Only set for firm commitments, not general questions." },
         job_type:       { type: "string",  description: "What type of service or job the visitor needs, e.g. 'leak repair', 'deep clean', 'electrical fault'" },
-        area:           { type: "string",  description: "The area, suburb, or location the visitor mentioned" },
+        area:           { type: "string",  description: "The area, suburb, or location the visitor mentioned. For trades that travel to the client (pool, plumbing, electrical, cleaning, etc.) this is mandatory — capture it as soon as the visitor mentions it and call update_visitor immediately." },
         preferred_time: { type: "string",  description: "When the visitor prefers to be contacted or when they are available, e.g. 'mornings', 'this weekend', 'after 5pm'" },
         is_urgent:      { type: "boolean", description: "Set to true the moment the visitor signals urgency: 'today', 'ASAP', 'emergency', 'right now', 'can't wait', 'no power', 'burst pipe', 'water everywhere', or any phrasing that implies same-day attention. Default false. Never guess; only set when they have made it clear in their own words." },
         expected_days:  { type: "integer", description: "Visitor's estimate of how many days the job will take, 1–14. Set to 2+ when they say or strongly imply a multi-day job (rewire, full install, kitchen, roof, 'won't finish today', 'come back tomorrow'). Leave unset when scope is unclear." },

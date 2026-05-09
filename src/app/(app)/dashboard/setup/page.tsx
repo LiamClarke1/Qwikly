@@ -1387,7 +1387,7 @@ function Step7InstallTest({
             </span>
           )}
         </div>
-        <pre className="bg-ink-900 rounded-xl p-4 font-mono text-tiny text-fg overflow-x-auto whitespace-pre">{snippet}</pre>
+        <pre className="bg-ink-900 rounded-xl p-4 font-mono text-tiny text-white/90 overflow-x-auto whitespace-pre">{snippet}</pre>
         <button
           type="button"
           onClick={copySnippet}
@@ -1412,7 +1412,7 @@ function Step7InstallTest({
 
         <div className="bg-ink-900 rounded-xl p-4 min-h-[200px] max-h-[400px] overflow-y-auto space-y-3">
           {conversation.length === 0 && (
-            <p className="text-fg-faint text-small italic">
+            <p className="text-white/40 text-small italic">
               Try something like &ldquo;Hi, do you do emergency callouts?&rdquo; or &ldquo;How much for a basic service?&rdquo;
             </p>
           )}
@@ -1423,7 +1423,7 @@ function Step7InstallTest({
                   "px-4 py-2.5 rounded-2xl text-small max-w-[80%] leading-relaxed",
                   m.role === "user"
                     ? "bg-brand text-white"
-                    : "bg-white/[0.06] text-fg border border-line whitespace-pre-wrap"
+                    : "bg-white/[0.10] text-white/90 border border-white/10 whitespace-pre-wrap"
                 )}
               >
                 {m.text}

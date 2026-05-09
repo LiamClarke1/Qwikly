@@ -5,7 +5,7 @@
   var script = document.currentScript || document.querySelector("script[data-qwikly-id]");
   var TENANT_ID = script && script.getAttribute("data-qwikly-id");
   if (!TENANT_ID) return;
-  var API_BASE = (script && script.getAttribute("data-api")) || "https://qwikly.co.za";
+  var API_BASE = (script && script.getAttribute("data-api")) || "https://www.qwikly.co.za";
   // data-compact opts qwikly.co.za into a roomier panel than the customer
   // default. Customer-embedded widgets (no data-compact flag) keep the
   // original 375x540 footprint so the widget never dominates a stranger's

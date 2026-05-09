@@ -182,14 +182,21 @@ function extractJsonLd(html: string): StructuredData {
 function extractRegex(html: string): Partial<StructuredData> {
   const result: Partial<StructuredData> = {};
 
-  // SA phone: +27 or 0XX patterns
-  const phoneMatch = html.match(/(?:href=["']tel:|[">(\s,])(\+27|0[678][0-9])[0-9\s\-]{7,10}/);
-  if (phoneMatch) {
-    result.phone = phoneMatch[0]
-      .replace(/^(?:href=["']tel:|[">(\s,])/, "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 20);
+  // SA phone: prefer tel: href links (most reliable, already clean), then fall
+  // back to inline text patterns. Extended trailing char limit to 14 to capture
+  // fully-formatted numbers like "+27 79 922 1107" (12 chars after prefix).
+  const telHref = html.match(/href=["']tel:([+0-9\s\-()]{7,20})["']/);
+  if (telHref) {
+    result.phone = telHref[1].replace(/[^\d+]/g, "").slice(0, 15);
+  } else {
+    const phoneMatch = html.match(/(?:[">(\s,])(\+27|0[678][0-9])[0-9\s\-]{7,14}/);
+    if (phoneMatch) {
+      result.phone = phoneMatch[0]
+        .replace(/^[">(\s,]/, "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 20);
+    }
   }
 
   // Email: filter noise

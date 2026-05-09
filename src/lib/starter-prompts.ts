@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin } from "@/lib/supabase-server";
 
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const CACHE_TTL_MS = 5 * 60 * 1000;
 const MAX_WORDS = 5;
 const MIN_WORDS = 2;
 const MAX_CHARS = 40;
@@ -118,6 +118,25 @@ async function loadKbDigest(clientId: number, authUserId: string | null): Promis
     }
   }
 
+  // Fall back to setup-scraped fields from the clients table so that
+  // accounts that went through the 7-step wizard (but haven't uploaded
+  // files) still get meaningful starter prompts.
+  if (parts.length === 0) {
+    const { data: clientRow } = await db
+      .from("clients")
+      .select("services_offered, common_questions, unique_selling_point")
+      .eq("id", clientId)
+      .maybeSingle();
+    const c = clientRow as {
+      services_offered?: string | null;
+      common_questions?: string | null;
+      unique_selling_point?: string | null;
+    } | null;
+    if (c?.services_offered?.trim()) parts.push("Services: " + c.services_offered.trim().slice(0, 500));
+    if (c?.common_questions?.trim()) parts.push("Common questions: " + c.common_questions.trim().slice(0, 800));
+    if (c?.unique_selling_point?.trim()) parts.push("What makes them different: " + c.unique_selling_point.trim().slice(0, 300));
+  }
+
   return parts.join("\n\n").slice(0, 4000);
 }
 
@@ -166,6 +185,17 @@ export async function getOrGenerateStarterPrompts(
     const b = business as { name?: string | null; business_type?: string | null } | null;
     if (b?.name && b.name.trim()) businessName = b.name.trim();
     if (b?.business_type && b.business_type.trim()) businessType = b.business_type.trim();
+  }
+  // Fall back to clients table (populated during 7-step setup wizard)
+  if (businessName === "this business") {
+    const { data: clientMeta } = await db
+      .from("clients")
+      .select("business_name, trade")
+      .eq("id", clientId)
+      .maybeSingle();
+    const cm = clientMeta as { business_name?: string | null; trade?: string | null } | null;
+    if (cm?.business_name?.trim()) businessName = cm.business_name.trim();
+    if (cm?.trade?.trim()) businessType = cm.trade.trim();
   }
 
   const kbDigest = await loadKbDigest(clientId, authUserId);

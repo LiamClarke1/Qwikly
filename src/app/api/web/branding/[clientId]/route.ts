@@ -7,7 +7,7 @@ import { assertTenantActive } from "@/lib/billing/tenant-gate";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Cache-Control": "public, max-age=30",
+  "Cache-Control": "no-store",
 };
 
 export async function GET(

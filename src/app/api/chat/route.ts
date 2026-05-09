@@ -185,15 +185,24 @@ export async function POST(req: NextRequest) {
 
   if (client.auth_user_id) {
     try {
-      const queryEmbedding = await embedText(message);
-      const { data: chunks } = await db.rpc("match_chunks", {
-        query_embedding: queryEmbedding,
-        match_tenant_id: client.auth_user_id,
-        match_count: 5,
-        similarity_threshold: 0.3,
-      });
-      if (chunks && chunks.length > 0) {
-        kbParts.push((chunks as { content: string }[]).map((c) => c.content).join("\n\n"));
+      const stopWords = new Set(["the", "and", "for", "with", "that", "this", "are", "you", "have", "what", "how", "can", "our", "your"]);
+      const keywords = message
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((w: string) => w.length >= 3 && !stopWords.has(w))
+        .slice(0, 6);
+
+      if (keywords.length > 0) {
+        const { data: chunks } = await db
+          .from("knowledge_chunks")
+          .select("content")
+          .eq("tenant_id", client.auth_user_id)
+          .or(keywords.map((k: string) => `content.ilike.%${k}%`).join(","))
+          .limit(5);
+        if (chunks && chunks.length > 0) {
+          kbParts.push((chunks as { content: string }[]).map((c) => c.content).join("\n\n"));
+        }
       }
     } catch (err) {
       console.error("knowledge_chunks search error:", err);

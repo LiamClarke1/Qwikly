@@ -51,9 +51,15 @@ async function resolveBookingNotificationRecipient(clientId: string): Promise<st
     .eq("user_id", authUserId)
     .maybeSingle();
   const b = (business as { notification_email?: string | null; contact_email?: string | null } | null) ?? null;
-  return (b?.notification_email && b.notification_email.trim())
+  const businessEmail = (b?.notification_email && b.notification_email.trim())
     || (b?.contact_email && b.contact_email.trim())
     || null;
+  if (businessEmail) return businessEmail;
+
+  // Fallback: use the Supabase Auth account email so booking notifications always
+  // reach the client even when no businesses row or email is configured yet.
+  const { data: authData } = await db.auth.admin.getUserById(authUserId);
+  return authData?.user?.email ?? null;
 }
 
 function formatLabel(iso: string): string {
