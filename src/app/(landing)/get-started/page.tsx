@@ -91,8 +91,8 @@ const ESCALATION_OPTS = [
   "Customer is unhappy or complaining",
   "Job is over R10,000",
   "Customer mentions legal or insurance",
+  "Other",
   "Any of the above",
-  "Custom (I'll describe below)",
 ];
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -483,6 +483,8 @@ ${f.ai_never_say || "Not specified"}
       whatsapp_number: form.whatsapp_number,
       google_calendar_id: form.google_calendar_email,
       system_prompt: buildSystemPrompt(),
+      ai_escalation_triggers: form.ai_escalation_triggers || null,
+      ai_escalation_custom: form.ai_escalation_custom || null,
       status: "pending_setup",
       ...(user?.id ? { auth_user_id: user.id } : {}),
     }]);
@@ -1034,13 +1036,12 @@ ${f.ai_never_say || "Not specified"}
                 </div>
               </div>
 
-              {form.ai_escalation_triggers.includes("Custom") && (
+              {form.ai_escalation_triggers.split("\n").filter(Boolean).includes("Other") && (
                 <Field label="Describe your custom escalation rule">
-                  <Textarea
+                  <Input
                     value={form.ai_escalation_custom}
                     onChange={set("ai_escalation_custom")}
-                    placeholder="e.g. Always escalate if the customer mentions a body corporate or strata management"
-                    rows={2}
+                    placeholder="e.g. Customer mentions a specific competitor"
                   />
                 </Field>
               )}

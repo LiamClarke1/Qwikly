@@ -463,6 +463,7 @@ export async function POST(req: NextRequest) {
                     visitorEmail: visitorInfo.email ?? null,
                     isUrgent: !!visitorInfo.is_urgent,
                     expectedDays: typeof visitorInfo.expected_days === "number" ? visitorInfo.expected_days : null,
+                    isEscalation: !!visitorInfo.is_escalation,
                   },
                 });
                 if (!r.ok) console.warn("[chat] lead notify skipped:", { clientId: client.id, convoId, ...r });

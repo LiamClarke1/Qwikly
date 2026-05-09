@@ -13,6 +13,9 @@ export type VisitorToolInput = {
   /** Visitor's estimate of how many days the job will take. 1 means a single
    *  visit; 2+ means the tradesman should hold follow-up slots when booking. */
   expected_days?: number;
+  /** True when the assistant is handing off to a human because an escalation
+   *  rule fired. False or omitted for normal lead capture. */
+  is_escalation?: boolean;
 };
 
 export type ClientPromptData = {
@@ -427,20 +430,37 @@ export function buildClientSystemPrompt(c: ClientPromptData, customSystemPrompt?
   ].filter(Boolean);
 
   let escalation: string;
-  const trig = c.ai_escalation_triggers;
-  if (trig === "custom" && c.ai_escalation_custom) {
-    // Client wrote their own escalation rules — use them exclusively.
-    escalation = c.ai_escalation_custom;
+  const trig = (c.ai_escalation_triggers ?? "").trim();
+  const customNote = (c.ai_escalation_custom ?? "").trim();
+  const LEGACY_KEYWORDS = new Set(["angry", "complex", "price", "all", "custom"]);
+  const defaultEscalation = "Escalate when you cannot answer accurately. Offer to have a team member call the visitor back.";
+
+  if (trig && LEGACY_KEYWORDS.has(trig)) {
+    if (trig === "custom" && customNote) {
+      escalation = customNote;
+    } else {
+      const parts: string[] = [];
+      if (trig === "angry"   || trig === "all") parts.push("visitor is clearly angry or distressed");
+      if (trig === "complex" || trig === "all") parts.push("question is outside your knowledge");
+      if (trig === "price"   || trig === "all") parts.push("visitor wants detailed pricing negotiation");
+      escalation = parts.length
+        ? `Escalate when the ${parts.join(", or ")}.`
+        : defaultEscalation;
+      if (customNote) escalation += ` ${customNote}`;
+    }
   } else {
-    const parts: string[] = [];
-    if (trig === "angry"   || trig === "all") parts.push("visitor is clearly angry or distressed");
-    if (trig === "complex" || trig === "all") parts.push("question is outside your knowledge");
-    if (trig === "price"   || trig === "all") parts.push("visitor wants detailed pricing negotiation");
-    escalation = parts.length
-      ? `Escalate when the ${parts.join(", or ")}.`
-      : "Escalate when you cannot answer accurately. Offer to have a team member call the visitor back.";
-    // Append any extra custom instructions alongside the preset trigger.
-    if (c.ai_escalation_custom) escalation += ` ${c.ai_escalation_custom}`;
+    const bullets = trig
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (bullets.length > 0) {
+      escalation = `Escalate when any of the following are true:\n${bullets.map((b) => `- ${b}`).join("\n")}`;
+      if (customNote) escalation += `\n${customNote}`;
+    } else if (customNote) {
+      escalation = customNote;
+    } else {
+      escalation = defaultEscalation;
+    }
   }
 
   const unhappy = c.ai_unhappy_customer
@@ -682,7 +702,7 @@ Never ask both urgency and scope back-to-back. One question, one reply, one piec
 
 ${escalation}
 
-When escalating: "Let me get${ownerRef} someone from the ${biz} team to reach out directly. What's the best number or email?" Then call update_visitor.
+When escalating: "Let me get${ownerRef} someone from the ${biz} team to reach out directly. What's the best number or email?" Then call update_visitor with is_escalation: true so the team knows it's a handoff and not a normal lead.
 
 ## UNHAPPY CUSTOMERS
 
@@ -720,6 +740,7 @@ export const CLIENT_TOOLS: Anthropic.Tool[] = [
         preferred_time: { type: "string",  description: "When the visitor prefers to be contacted or when they are available, e.g. 'mornings', 'this weekend', 'after 5pm'" },
         is_urgent:      { type: "boolean", description: "Set to true the moment the visitor signals urgency: 'today', 'ASAP', 'emergency', 'right now', 'can't wait', 'no power', 'burst pipe', 'water everywhere', or any phrasing that implies same-day attention. Default false. Never guess; only set when they have made it clear in their own words." },
         expected_days:  { type: "integer", description: "Visitor's estimate of how many days the job will take, 1–14. Set to 2+ when they say or strongly imply a multi-day job (rewire, full install, kitchen, roof, 'won't finish today', 'come back tomorrow'). Leave unset when scope is unclear." },
+        is_escalation:  { type: "boolean", description: "Set true ONLY when the assistant is handing off to a human because one of the escalation rules fired. Set false (or omit) for normal lead capture." },
       },
       required: [],
     },

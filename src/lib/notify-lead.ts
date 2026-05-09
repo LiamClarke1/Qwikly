@@ -56,6 +56,9 @@ type NotifyLeadInput = {
     /** Visitor's estimate of how many days the job will take. Surfaced in
      *  the email so the tradesman knows to hold a follow-up slot. */
     expectedDays?: number | null;
+    /** Assistant flagged this as a handoff because an escalation rule fired,
+     *  not a normal lead capture. Switches subject + email body styling. */
+    isEscalation?: boolean | null;
   };
 };
 
@@ -195,11 +198,15 @@ export async function notifyLeadCaptured(input: NotifyLeadInput): Promise<Notify
     documents,
     isUrgent: input.lead.isUrgent ?? false,
     expectedDays: input.lead.expectedDays ?? null,
+    isEscalation: input.lead.isEscalation ?? false,
   };
 
-  const subject = input.lead.isUrgent
-    ? `URGENT lead — ${input.lead.name ?? input.lead.contact}`
-    : `New lead — ${input.lead.name ?? input.lead.contact}`;
+  const baseSubject = input.lead.isUrgent
+    ? `URGENT lead, ${input.lead.name ?? input.lead.contact}`
+    : `New lead, ${input.lead.name ?? input.lead.contact}`;
+  const subject = input.lead.isEscalation
+    ? `[ESCALATION] ${baseSubject}`
+    : baseSubject;
 
   const { data, error } = await resend.emails.send({
     from: FROM,

@@ -22,12 +22,15 @@ export type LeadEmailArgs = {
   suggestUrl: string;
   conversation?: ConversationMessage[] | null;
   documents?: SharedDocument[] | null;
-  /** First name of the business owner — used to personalise the auto-filled reply. */
+  /** First name of the business owner , used to personalise the auto-filled reply. */
   ownerFirstName?: string | null;
   /** Visitor said the job is urgent (today/ASAP). Renders a red URGENT banner. */
   isUrgent?: boolean | null;
   /** Visitor said the job will likely span multiple days. Surfaces in the summary. */
   expectedDays?: number | null;
+  /** Assistant escalated this conversation rather than capturing a normal lead.
+   *  Renders a red banner so the owner can see the difference at a glance. */
+  isEscalation?: boolean | null;
 };
 
 export function leadNotificationHtml(args: LeadEmailArgs) {
@@ -45,6 +48,7 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
     ownerFirstName,
     isUrgent,
     expectedDays,
+    isEscalation,
   } = args;
   // Detect whether the visitor gave us a phone number or an email so the
   // "tap to call / email / WhatsApp" buttons can deep-link appropriately.
@@ -58,7 +62,7 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
 
   // Build a context-aware first-reply message. Pre-filled into the WhatsApp /
   // email / SMS deep-links so when you tap the button, the message is already
-  // typed in the destination app — just review and hit send.
+  // typed in the destination app , just review and hit send.
   const firstName = (leadName?.trim() || "").split(/\s+/)[0] || "there";
   const owner = ownerFirstName?.trim() || "";
   const ownerSignoff = owner ? `\n\n– ${owner}` : "";
@@ -67,7 +71,7 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
     `Hi ${firstName}, this is ${owner ? owner + " from " : ""}${businessName}. ` +
     `Thanks for getting in touch via our website${needFragment}. ` +
     `What's the best time to give you a quick call?${ownerSignoff}`;
-  const followUpSubject = `${businessName} — re: your enquiry${needFragment}`;
+  const followUpSubject = `${businessName} , re: your enquiry${needFragment}`;
 
   const enc = (s: string) => encodeURIComponent(s);
 
@@ -120,7 +124,7 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
   addBtn("Text", smsHref);
   addBtn("Email back", emailHref);
 
-  // ── Documents shared — Gmail-style "attachment chips" pinned to the very top
+  // ── Documents shared , Gmail-style "attachment chips" pinned to the very top
   const docsTopBlock = (() => {
     const docs = Array.isArray(documents) ? documents : [];
     if (docs.length === 0) return "";
@@ -165,7 +169,7 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
       </table>`;
   })();
 
-  // ── Conversation summary — formatted like an email transcript, plain text
+  // ── Conversation summary , formatted like an email transcript, plain text
   //     style with the speaker's name in bold, not chat bubbles.
   const conversationBlock = (() => {
     const turns = Array.isArray(conversation) ? conversation : [];
@@ -204,7 +208,7 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
       </table>`;
   })();
 
-  // ── Detail rows (only render rows that have content) — like a normal email
+  // ── Detail rows (only render rows that have content) , like a normal email
   //     "summary" with key-values aligned left
   const detailRow = (label: string, value: string | null | undefined) =>
     value && value.trim()
@@ -228,13 +232,24 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
   const greetingName = ownerFirstName?.trim() || "";
   const greeting = greetingName ? `Hi ${esc(greetingName)},` : "Hi,";
 
-  // ── URGENT banner — visitor flagged the job as needing attention today.
+  // ── URGENT banner , visitor flagged the job as needing attention today.
   //     Sits above the subject line so it's the first thing the tradesman
   //     sees in the inbox preview AND in the open email.
   const urgentBanner = isUrgent
     ? `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 18px;background:#E85A2C;border-radius:6px;">
         <tr><td style="padding:12px 16px;font-size:13px;color:#FFFFFF;line-height:1.5;">
           <strong style="letter-spacing:0.12em;text-transform:uppercase;">Urgent</strong> &nbsp;·&nbsp; Visitor said this needs sorting today. Reply or call now.
+        </td></tr>
+      </table>`
+    : "";
+
+  // ── ESCALATION banner. Assistant handed the visitor off because one of
+  //     the configured escalation rules fired. Owner needs to know this is
+  //     a handoff, not a normal lead.
+  const escalationBanner = isEscalation
+    ? `<table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 18px;background:#B91C1C;border-radius:6px;">
+        <tr><td style="padding:12px 16px;font-size:13px;color:#FFFFFF;line-height:1.5;">
+          <strong style="letter-spacing:0.12em;text-transform:uppercase;">Escalated</strong> &nbsp;·&nbsp; Escalated by your digital assistant. The visitor was handed off because an escalation rule fired.
         </td></tr>
       </table>`
     : "";
@@ -252,7 +267,7 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
-  <title>New lead — ${esc(displayName)}</title>
+  <title>New lead , ${esc(displayName)}</title>
   <!--[if mso]>
   <style>td,a,h1,h2,p { font-family: Arial, sans-serif !important; } .qw-display { font-family: Georgia, 'Times New Roman', serif !important; }</style>
   <![endif]-->
@@ -269,13 +284,13 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
 
   <!-- Hidden preheader (preview text in inbox lists) -->
   <div style="display:none;max-height:0;overflow:hidden;font-size:1px;line-height:1px;color:#F4EEE4;opacity:0;">
-    ${isUrgent ? "URGENT — " : ""}${esc(displayName)} reached out${need ? " about " + esc(need.slice(0, 80)) : ""}. ${(documents?.length ?? 0) > 0 ? `${documents!.length} file${documents!.length === 1 ? "" : "s"} attached.` : "Tap a button to reply."}
+    ${isUrgent ? "URGENT , " : ""}${esc(displayName)} reached out${need ? " about " + esc(need.slice(0, 80)) : ""}. ${(documents?.length ?? 0) > 0 ? `${documents!.length} file${documents!.length === 1 ? "" : "s"} attached.` : "Tap a button to reply."}
   </div>
 
   <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#F4EEE4;padding:36px 16px;">
     <tr><td align="center">
 
-      <!-- Brand wordmark — uses the customer's business name so the email is
+      <!-- Brand wordmark , uses the customer's business name so the email is
            branded as their business, not Qwikly. The accent dot stays for
            editorial polish. Qwikly's own house tenant naturally renders as
            "Qwikly." here since its business_name is "Qwikly". -->
@@ -299,6 +314,9 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
 
           <!-- Attachments at top -->
           ${docsTopBlock}
+
+          <!-- Escalation banner -->
+          ${escalationBanner}
 
           <!-- Urgency banner -->
           ${urgentBanner}
@@ -357,7 +375,7 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
 
         </td></tr>
 
-        <!-- Footer — phrased as the customer's own assistant, with a small
+        <!-- Footer , phrased as the customer's own assistant, with a small
              "Powered by Qwikly" attribution so credit stays without the email
              reading like a Qwikly broadcast. -->
         <tr><td class="qw-pad" style="padding:20px 36px 26px;border-top:1px solid #F0EAE0;">
@@ -401,9 +419,14 @@ export function leadNotificationText(args: LeadEmailArgs) {
     documents,
     isUrgent,
     expectedDays,
+    isEscalation,
   } = args;
-  const lines: string[] = [
-    `${isUrgent ? "URGENT lead" : "New lead"} — ${businessName}`,
+  const lines: string[] = [];
+  if (isEscalation) {
+    lines.push("ESCALATED, handed off by your digital assistant.", "");
+  }
+  lines.push(
+    `${isUrgent ? "URGENT lead" : "New lead"} , ${businessName}`,
     "",
     `${leadName ?? "A new visitor"} would like to hear back from you.`,
     isUrgent ? "** Visitor said this needs sorting today. **" : "",
@@ -413,7 +436,7 @@ export function leadNotificationText(args: LeadEmailArgs) {
     need ? `Need:    ${need}` : "",
     preferredTime ? `Time:    ${preferredTime}` : "",
     expectedDays && expectedDays > 1 ? `Job span: ~${expectedDays} days (hold a follow-up slot)` : "",
-  ];
+  );
 
   const turns = Array.isArray(conversation) ? conversation : [];
   if (turns.length > 0) {
@@ -440,7 +463,7 @@ export function leadNotificationText(args: LeadEmailArgs) {
     `  Confirm slot:         ${confirmUrl}`,
     `  Suggest another time: ${suggestUrl}`,
     "",
-    `— Captured by your ${businessName} assistant`,
+    `, Captured by your ${businessName} assistant`,
     "  Manage alerts: https://www.qwikly.co.za/dashboard/settings/profile",
     "",
     "  Powered by Qwikly · https://www.qwikly.co.za",
@@ -501,9 +524,9 @@ export function capReachedNotificationHtml({ businessName }: { businessName: str
           <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#F59E0B;">Lead cap reached</p>
           <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.3px;">You've hit your 25-lead limit, ${esc(businessName)}.</h1>
           <p style="margin:0 0 24px;font-size:14px;color:#9CA3AF;line-height:1.6;">
-            Your Starter plan captures up to 25 leads per month. You've reached that limit for this billing cycle. Upgrade to Pro to keep capturing leads — up to 200/month.
+            Your Starter plan captures up to 25 leads per month. You've reached that limit for this billing cycle. Upgrade to Pro to keep capturing leads , up to 200/month.
           </p>
-          <a href="https://www.qwikly.co.za/dashboard/billing" style="display:inline-block;padding:12px 24px;background:#E85A2C;color:#fff;text-decoration:none;border-radius:10px;font-size:14px;font-weight:700;">Upgrade to Pro — R599/mo</a>
+          <a href="https://www.qwikly.co.za/dashboard/billing" style="display:inline-block;padding:12px 24px;background:#E85A2C;color:#fff;text-decoration:none;border-radius:10px;font-size:14px;font-weight:700;">Upgrade to Pro , R599/mo</a>
         </td></tr>
         <tr><td style="padding-top:24px;text-align:center;">
           <p style="margin:0;font-size:11px;color:#4B5563;">Powered by <a href="https://qwikly.co.za" style="color:#E85A2C;text-decoration:none;">Qwikly</a></p>

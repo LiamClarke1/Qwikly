@@ -493,6 +493,7 @@ const TOOL_UPDATE_VISITOR: Anthropic.Tool = {
       preferred_time: { type: "string",  description: "When the visitor prefers to be contacted or have the job done (e.g. 'mornings', 'this week', 'ASAP')" },
       is_urgent:      { type: "boolean", description: "Set to true when the visitor signals urgency: 'today', 'ASAP', 'emergency', 'right now', 'can't wait', 'no power', 'burst pipe', 'water everywhere', 'no hot water and family arriving', or any phrasing that implies same-day attention is needed. Default false. NEVER guess; only set true when the visitor's own words make it clear." },
       expected_days:  { type: "integer", description: "Visitor's estimate of how many days the job will take, 1–14. Set to 2+ when they say or strongly imply a multi-day job (e.g. 'rewire whole house', 'install kitchen', 'won't finish today', 'come back tomorrow'). Leave unset when scope is unclear." },
+      is_escalation:  { type: "boolean", description: "Set true ONLY when the assistant is handing off to a human because one of the escalation rules fired. Set false (or omit) for normal lead capture." },
     },
     required: [],
   },
@@ -976,6 +977,7 @@ export async function POST(req: NextRequest) {
             visitorEmail: visitorInfo.email ?? null,
             isUrgent: !!visitorInfo.is_urgent,
             expectedDays: typeof visitorInfo.expected_days === "number" ? visitorInfo.expected_days : null,
+            isEscalation: !!visitorInfo.is_escalation,
           },
         })
           .then((r) => {

@@ -45,7 +45,7 @@ const RESPONSE_STYLE_OPTS = [
 ];
 const ESCALATION_OPTS = [
   "Customer asks to speak to a human", "Customer is unhappy or complaining",
-  "Job is over R10,000", "Customer mentions legal or insurance", "Any of the above",
+  "Job is over R10,000", "Customer mentions legal or insurance", "Other", "Any of the above",
 ];
 const STEPS = [
   { title: "Your Business", subtitle: "Who you are and where you operate", icon: Building2 },
@@ -2088,12 +2088,12 @@ export default function SetupPage() {
                 <p className="text-tiny text-fg-muted mb-2">Select all that apply.</p>
                 <div className="space-y-2">
                   {ESCALATION_OPTS.map((o) => {
-                    const selected = form.ai_escalation_triggers.includes(o);
+                    const triggerLines = form.ai_escalation_triggers ? form.ai_escalation_triggers.split("\n").filter(Boolean) : [];
+                    const selected = triggerLines.includes(o);
                     return (
                       <button key={o} type="button"
                         onClick={() => {
-                          const current = form.ai_escalation_triggers ? form.ai_escalation_triggers.split("\n").filter(Boolean) : [];
-                          const next = selected ? current.filter((x) => x !== o) : [...current, o];
+                          const next = selected ? triggerLines.filter((x) => x !== o) : [...triggerLines, o];
                           set("ai_escalation_triggers")(next.join("\n"));
                         }}
                         className={cn("w-full text-left px-4 py-3 rounded-xl border text-small transition-all duration-200 cursor-pointer",
@@ -2103,6 +2103,15 @@ export default function SetupPage() {
                     );
                   })}
                 </div>
+                {form.ai_escalation_triggers.split("\n").filter(Boolean).includes("Other") && (
+                  <div className="mt-3">
+                    <WInput
+                      value={form.ai_escalation_custom}
+                      onChange={set("ai_escalation_custom")}
+                      placeholder="e.g. Customer mentions a specific competitor"
+                    />
+                  </div>
+                )}
               </div>
               <Field label="Handle unhappy customers" optional>
                 <WTextarea value={form.ai_unhappy_customer} onChange={set("ai_unhappy_customer")} placeholder="e.g. Acknowledge frustration, apologise, offer to have owner call back within 1 hour." rows={3} />

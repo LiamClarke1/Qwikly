@@ -17,6 +17,15 @@ import { cn } from "@/lib/cn";
 
 const DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
 
+const ESCALATION_OPTS = [
+  "Customer asks to speak to a human",
+  "Customer is unhappy or complaining",
+  "Job is over R10,000",
+  "Customer mentions legal or insurance",
+  "Other",
+  "Any of the above",
+];
+
 type Hours = Record<string, [string, string] | null>;
 type Toast = { msg: string; tone: "success" | "danger" };
 type Client = NonNullable<ReturnType<typeof useClient>["client"]>;
@@ -225,17 +234,46 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
       <Card>
         <CardHeader title="Escalation rules" description="When should your assistant hand off to you?" />
         <div className="space-y-4">
-          <Field label="Auto-escalation triggers">
-            <Select value={personality.ai_escalation_triggers} onChange={setp("ai_escalation_triggers")}>
-              <option value="">Select triggers</option>
-              <option value="angry">Angry or frustrated customer</option>
-              <option value="complex">Complex technical question</option>
-              <option value="price">Pricing negotiation</option>
-              <option value="all">All of the above</option>
-              <option value="custom">Custom (specify below)</option>
-            </Select>
-          </Field>
-          <Field label="Custom escalation rules">
+          <div>
+            <p className="text-small font-semibold text-fg mb-1.5">When should your assistant hand off to you?</p>
+            <p className="text-tiny text-fg-muted mb-2">Select all that apply.</p>
+            <div className="space-y-2">
+              {ESCALATION_OPTS.map((o) => {
+                const triggerLines = personality.ai_escalation_triggers
+                  ? personality.ai_escalation_triggers.split("\n").filter(Boolean)
+                  : [];
+                const selected = triggerLines.includes(o);
+                return (
+                  <button
+                    key={o}
+                    type="button"
+                    onClick={() => {
+                      const next = selected ? triggerLines.filter((x) => x !== o) : [...triggerLines, o];
+                      setPersonality({ ...personality, ai_escalation_triggers: next.join("\n") });
+                    }}
+                    className={cn(
+                      "w-full text-left px-4 py-3 rounded-xl border text-small transition-all duration-200 cursor-pointer",
+                      selected
+                        ? "border-ember bg-ember/5 text-fg font-medium"
+                        : "border-[var(--border)] bg-surface-input text-fg-muted hover:text-fg"
+                    )}
+                  >
+                    {o}
+                  </button>
+                );
+              })}
+            </div>
+            {personality.ai_escalation_triggers.split("\n").filter(Boolean).includes("Other") && (
+              <div className="mt-3">
+                <Input
+                  value={personality.ai_escalation_custom}
+                  onChange={setp("ai_escalation_custom")}
+                  placeholder="e.g. Customer mentions a specific competitor"
+                />
+              </div>
+            )}
+          </div>
+          <Field label="Custom escalation note" hint="Extra context for any handoff. Always applied alongside the triggers above.">
             <Textarea value={personality.ai_escalation_custom} onChange={setp("ai_escalation_custom")} rows={3} placeholder="e.g. Always escalate if customer mentions insurance claims" />
           </Field>
           <Field label="How to handle an unhappy customer">
