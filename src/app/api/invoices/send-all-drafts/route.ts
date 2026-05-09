@@ -4,8 +4,7 @@ import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { sendInvoiceEmail } from "@/lib/notifications/email";
 import { sendInvoiceWhatsApp } from "@/lib/notifications/whatsapp";
-import { canTransition } from "@/lib/invoices/stateMachine";
-import type { InvoiceStatus } from "@/lib/invoices/types";
+import { signInvoicePayToken } from "@/lib/invoiceLinks";
 
 export const dynamic = "force-dynamic";
 
@@ -30,18 +29,18 @@ async function assertAdmin(): Promise<boolean> {
   return !!data;
 }
 
-interface DraftInvoice {
+interface QwiklyDraft {
   id: string;
   client_id: number;
   invoice_number: string | null;
-  status: InvoiceStatus;
-  customer_name: string;
-  customer_email: string | null;
-  customer_mobile: string | null;
-  customer_view_token: string;
+  status: string;
   total_zar: number;
   due_at: string | null;
-  delivery_channels: string[] | null;
+  clients: {
+    business_name: string | null;
+    client_email: string | null;
+    whatsapp_number: string | null;
+  } | null;
 }
 
 interface SendOutcome {
@@ -61,9 +60,12 @@ export async function POST() {
 
   const db = supabaseAdmin();
 
+  // Read drafts from the Qwikly subscription billing table, joining clients for
+  // contact info. The legacy `invoices` table is for client-to-customer billing
+  // and is intentionally not part of this route.
   const { data: drafts, error: draftsErr } = await db
-    .from("invoices")
-    .select("id, client_id, invoice_number, status, customer_name, customer_email, customer_mobile, customer_view_token, total_zar, due_at, delivery_channels")
+    .from("qwikly_billing_invoices")
+    .select("id, client_id, invoice_number, status, total_zar, due_at, clients(business_name, client_email, whatsapp_number)")
     .eq("status", "draft")
     .order("created_at", { ascending: true });
 
@@ -71,7 +73,7 @@ export async function POST() {
     return NextResponse.json({ error: draftsErr.message }, { status: 500 });
   }
 
-  const list = (drafts ?? []) as DraftInvoice[];
+  const list = (drafts ?? []) as unknown as QwiklyDraft[];
   const total = list.length;
   let sentCount = 0;
   let failedCount = 0;
@@ -79,117 +81,84 @@ export async function POST() {
   const outcomes: SendOutcome[] = [];
 
   for (const inv of list) {
-    if (!canTransition(inv.status, "sent")) {
+    const businessName = inv.clients?.business_name ?? "Customer";
+    const email = inv.clients?.client_email ?? null;
+    const whatsapp = inv.clients?.whatsapp_number ?? null;
+
+    if (!email && !whatsapp) {
       skippedCount += 1;
       outcomes.push({
         invoice_id: inv.id,
         invoice_number: inv.invoice_number,
-        customer_name: inv.customer_name,
+        customer_name: businessName,
         email: null,
         whatsapp: null,
         status: "skipped",
-        reason: `Cannot transition from ${inv.status}`,
+        reason: "No email or whatsapp on file for this client",
       });
       continue;
     }
 
-    let invoiceNumber = inv.invoice_number;
-    if (!invoiceNumber) {
-      const { data: numData } = await db.rpc("next_invoice_number", { p_client_id: inv.client_id });
-      invoiceNumber = (numData as string | null) ?? null;
-    }
-
-    const publicUrl = `${BASE_URL}/i/${inv.customer_view_token}`;
+    const invoiceNumber = inv.invoice_number;
     const now = new Date().toISOString();
     const dueDate = inv.due_at ?? now;
-    const channels = inv.delivery_channels ?? ["whatsapp", "email"];
+
+    // Generate the signed pay link once. Both email and WhatsApp templates use
+    // it so the customer has a single click-to-confirm path either way.
+    const payUrl = `${BASE_URL}/pay/${signInvoicePayToken(inv.id)}`;
 
     let emailResult: { ok: boolean; error?: string } | null = null;
     let waResult: { ok: boolean; error?: string } | null = null;
-    const sentLog: Array<{ channel: string; ts: string; status: string; error?: string }> = [];
 
-    if (channels.includes("email") && inv.customer_email) {
+    if (email) {
       const r = await sendInvoiceEmail({
-        to: inv.customer_email,
+        to: email,
         invoiceId: inv.id,
-        clientName: inv.customer_name,
+        clientName: businessName,
         invoiceNumber: invoiceNumber ?? "Draft",
         amountZAR: inv.total_zar,
         dueDate,
-        pdfUrl: publicUrl,
+        pdfUrl: payUrl,
       });
       emailResult = { ok: r.ok, error: r.error };
-      sentLog.push({ channel: "email", ts: now, status: r.ok ? "sent" : "failed", error: r.error });
     }
 
-    if (channels.includes("whatsapp") && inv.customer_mobile) {
+    if (whatsapp) {
       const r = await sendInvoiceWhatsApp({
-        toPhone: inv.customer_mobile,
-        clientName: inv.customer_name,
+        toPhone: whatsapp,
+        invoiceId: inv.id,
+        clientName: businessName,
         invoiceNumber: invoiceNumber ?? "Draft",
         amountZAR: inv.total_zar,
         dueDate,
-        pdfUrl: publicUrl,
+        pdfUrl: payUrl,
       });
       waResult = { ok: r.ok, error: r.error };
-      sentLog.push({ channel: "whatsapp", ts: now, status: r.ok ? "sent" : "failed", error: r.error });
     }
 
     const anySuccess = (emailResult?.ok ?? false) || (waResult?.ok ?? false);
-    const attempted = !!emailResult || !!waResult;
-
-    if (!attempted) {
-      skippedCount += 1;
-      outcomes.push({
-        invoice_id: inv.id,
-        invoice_number: invoiceNumber,
-        customer_name: inv.customer_name,
-        email: emailResult,
-        whatsapp: waResult,
-        status: "skipped",
-        reason: "No email or phone on file",
-      });
-      continue;
-    }
 
     if (anySuccess) {
-      await db.from("invoices").update({
-        status: "sent",
-        invoice_number: invoiceNumber,
-        issued_at: now,
-        sent_at: now,
-        delivery_sent_log: sentLog,
-        delivery_channels: channels,
-      }).eq("id", inv.id);
-
-      await db.from("audit_events").insert({
-        actor_type: "user",
-        event_type: "invoice.sent",
-        entity_type: "invoice",
-        entity_id: inv.id,
-        payload: { source: "bulk_send_all_drafts", invoice_number: invoiceNumber, sent_log: sentLog },
-      });
+      await db.from("qwikly_billing_invoices")
+        .update({ status: "sent", sent_at: now })
+        .eq("id", inv.id);
 
       sentCount += 1;
       outcomes.push({
         invoice_id: inv.id,
         invoice_number: invoiceNumber,
-        customer_name: inv.customer_name,
+        customer_name: businessName,
         email: emailResult,
         whatsapp: waResult,
         status: "sent",
       });
     } else {
-      // Why: every attempted channel failed, leave status untouched so the admin can retry.
-      await db.from("invoices").update({
-        delivery_sent_log: sentLog,
-      }).eq("id", inv.id);
-
+      // Every attempted channel failed; leave status as draft so admin can retry.
       failedCount += 1;
       outcomes.push({
         invoice_id: inv.id,
         invoice_number: invoiceNumber,
-        customer_name: inv.customer_name,
+        customer_name: businessName,
         email: emailResult,
         whatsapp: waResult,
         status: "failed",

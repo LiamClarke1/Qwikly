@@ -1,8 +1,12 @@
 import twilio from "twilio";
 import { fmt, fmtDate } from "@/lib/money";
+import { signInvoicePayToken } from "@/lib/invoiceLinks";
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.qwikly.co.za";
 
 export interface SendInvoiceWhatsAppInput {
   toPhone: string;
+  invoiceId: string;
   clientName: string;
   invoiceNumber: string;
   amountZAR: number;
@@ -23,8 +27,18 @@ function normalisePhone(raw: string): string {
   return `whatsapp:+${trimmed.replace(/\D/g, "")}`;
 }
 
-function buildBody(d: SendInvoiceWhatsAppInput): string {
-  return `Hi ${d.clientName}, your invoice *${d.invoiceNumber}* from Qwikly is ready.\n\nAmount due *${fmt(d.amountZAR)}*, due ${fmtDate(d.dueDate)}.\n\nView invoice: ${d.pdfUrl}\n\nReply HELP if you have any questions.`;
+function buildBody(d: SendInvoiceWhatsAppInput, payUrl: string): string {
+  return [
+    `Hi ${d.clientName}, your invoice *${d.invoiceNumber}* from Qwikly is ready.`,
+    "",
+    `Amount due *${fmt(d.amountZAR)}*, due ${fmtDate(d.dueDate)}.`,
+    "",
+    `View invoice: ${d.pdfUrl}`,
+    "",
+    `Already paid? Mark as paid here: ${payUrl}`,
+    "",
+    "Reply HELP if you have any questions.",
+  ].join("\n");
 }
 
 export async function sendInvoiceWhatsApp(input: SendInvoiceWhatsAppInput): Promise<SendResult> {
@@ -36,13 +50,14 @@ export async function sendInvoiceWhatsApp(input: SendInvoiceWhatsAppInput): Prom
   }
 
   const from = process.env.TWILIO_WHATSAPP_NUMBER ?? "whatsapp:+14155238886";
+  const payUrl = `${BASE_URL}/pay/${signInvoicePayToken(input.invoiceId)}`;
 
   try {
     const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
     const msg = await client.messages.create({
       from,
       to: normalisePhone(input.toPhone),
-      body: buildBody(input),
+      body: buildBody(input, payUrl),
     });
     return { ok: true, id: msg.sid };
   } catch (err) {
