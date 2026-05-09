@@ -85,10 +85,16 @@ export default function BillingPipelinePage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <p className="text-[13px] text-[#E85A2C] font-semibold mb-1">Admin</p>
-        <h1 className="text-[28px] font-bold text-slate-900 leading-tight">Billing Pipeline</h1>
-        <p className="text-[13px] text-slate-500 mt-1">{data?.today ?? "loading..."}</p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[13px] text-[#E85A2C] font-semibold mb-1">Admin</p>
+          <h1 className="text-[28px] font-bold text-slate-900 leading-tight">Billing Pipeline</h1>
+          <p className="text-[13px] text-slate-500 mt-1">{data?.today ?? "loading..."}</p>
+        </div>
+        <Link href="/admin/billing/reconcile" className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 text-slate-600 text-[13px] font-medium hover:bg-slate-50 shrink-0">
+          <Upload className="w-3.5 h-3.5" />
+          Reconcile bank statement
+        </Link>
       </div>
 
       {actionError && (
