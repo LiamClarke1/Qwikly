@@ -10,7 +10,7 @@ import {
   CheckCircle2, Clock, AlertTriangle, PauseCircle, XCircle,
   LayoutList, LayoutGrid, Filter, X, Bookmark, ChevronDown,
   MoreVertical, Archive, Trash2, Users, TrendingUp, DollarSign,
-  ShieldAlert,
+  ShieldAlert, Download,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { timeAgo, formatZAR } from "@/lib/format";
@@ -403,6 +403,95 @@ export default function CrmClientsPage() {
     setSelected(new Set());
   }
 
+  function bulkExportCsv() {
+    if (selected.size === 0) return;
+    const rows = clients.filter(c => selected.has(c.id));
+    if (rows.length === 0) return;
+
+    const headers = [
+      "id",
+      "business_name",
+      "owner_name",
+      "client_email",
+      "whatsapp_number",
+      "trade",
+      "industry",
+      "website",
+      "crm_status",
+      "plan",
+      "mrr_zar",
+      "ltv_zar",
+      "health_score",
+      "onboarding_step",
+      "onboarding_complete",
+      "channels",
+      "tags",
+      "conversation_count",
+      "last_activity_at",
+      "next_invoice_at",
+      "billing_anchor_day",
+      "latest_billing_invoice_status",
+      "days_overdue",
+      "created_at",
+    ] as const;
+
+    const escape = (val: unknown): string => {
+      if (val === null || val === undefined) return "";
+      const s = String(val);
+      if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+      return s;
+    };
+
+    const lines: string[] = [];
+    lines.push(headers.join(","));
+    for (const c of rows) {
+      const record: Record<(typeof headers)[number], unknown> = {
+        id: c.id,
+        business_name: c.business_name,
+        owner_name: c.owner_name,
+        client_email: c.client_email,
+        whatsapp_number: c.whatsapp_number,
+        trade: c.trade,
+        industry: c.industry,
+        website: c.website,
+        crm_status: c.crm_status,
+        plan: c.plan,
+        mrr_zar: c.mrr_zar,
+        ltv_zar: c.ltv_zar,
+        health_score: c.health_score,
+        onboarding_step: c.onboarding_step,
+        onboarding_complete: c.onboarding_complete,
+        channels: (c.channels ?? []).join("; "),
+        tags: (c.tags ?? []).map(t => t.name).join("; "),
+        conversation_count: c.conversation_count,
+        last_activity_at: c.last_activity_at,
+        next_invoice_at: c.next_invoice_at,
+        billing_anchor_day: c.billing_anchor_day,
+        latest_billing_invoice_status: c.latest_billing_invoice_status,
+        days_overdue: c.days_overdue,
+        created_at: c.created_at,
+      };
+      lines.push(headers.map(h => escape(record[h])).join(","));
+    }
+
+    const csv = lines.join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const filename = `crm-export-${yyyy}-${mm}-${dd}.csv`;
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   const activeFilterCount = filters.status.length + filters.plan.length + filters.tag.length + filters.billing.length;
 
   function toggleSort(col: SortCol) {
@@ -676,6 +765,13 @@ export default function CrmClientsPage() {
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-red-200 text-[12px] font-medium text-red-600 hover:bg-red-50 cursor-pointer transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" /> Remove
+            </button>
+            <button
+              onClick={bulkExportCsv}
+              disabled={selected.size === 0}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white border border-slate-200 text-[12px] font-medium text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Download className="w-3.5 h-3.5" /> Export CSV
             </button>
           </div>
           <button onClick={() => setSelected(new Set())} className="ml-auto text-slate-400 hover:text-slate-600 cursor-pointer">

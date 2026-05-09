@@ -46,6 +46,16 @@ export async function DELETE(req: NextRequest) {
     const cal = calendarClient(client.google_access_token, client.google_refresh_token ?? "", client.google_token_expiry, clientId);
     const calendarId = (calId?.trim() || client.google_calendar_id?.trim()) || "primary";
     await cal.events.delete({ calendarId, eventId });
+
+    const { error: bookingUpdateErr } = await db
+      .from("bookings")
+      .update({ status: "cancelled" })
+      .eq("client_id", clientId)
+      .eq("external_event_id", eventId);
+    if (bookingUpdateErr) {
+      console.error("[calendar/delete] bookings status update failed", { clientId, eventId, error: bookingUpdateErr.message });
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
     const wasAuthError = await handleCalendarAuthError(err, clientId);

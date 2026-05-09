@@ -79,7 +79,7 @@ export async function POST(
       leads_converted:        convos.filter(c => c.status === "converted").length,
       bookings_created:       bookingsRes.data?.length ?? 0,
       messages_handled_by_ai: aiMsgsRes.data?.length ?? 0,
-      avg_response_time_s:    avg_response_time_s ?? 0,
+      avg_response_time_s,
     };
 
     // Get daily data (last 30 days of the period)

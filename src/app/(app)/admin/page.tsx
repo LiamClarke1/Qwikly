@@ -22,7 +22,7 @@ const CARDS = [
   { label: "Total clients",        key: "total_clients" as keyof AdminStats,             icon: Users,        href: "/admin/clients",          money: false },
   { label: "Active clients",       key: "active_clients" as keyof AdminStats,            icon: Users,        href: "/admin/clients",          money: false },
   { label: "Total collected",      key: "total_paid_zar" as keyof AdminStats,            icon: TrendingUp,   href: "/admin/invoicing",        money: true  },
-  { label: "Total subscription",   key: "total_commission_zar" as keyof AdminStats,      icon: Receipt,      href: "/admin/billing",          money: true  },
+  { label: "Legacy agent commission", key: "total_commission_zar" as keyof AdminStats,    icon: Receipt,      href: "/admin/billing",          money: true  },
   { label: "This period",          key: "current_period_commission" as keyof AdminStats, icon: Receipt,      href: "/admin/billing/pipeline", money: true  },
   { label: "Open disputes",        key: "open_disputes" as keyof AdminStats,             icon: MessageSquare,href: "/admin/disputes",         money: false },
   { label: "High risk clients",    key: "high_risk_clients" as keyof AdminStats,         icon: ShieldAlert,  href: "/admin/risk",             money: false },

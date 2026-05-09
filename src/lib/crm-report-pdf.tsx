@@ -25,7 +25,7 @@ interface ReportData {
     leads_converted: number;
     bookings_created: number;
     messages_handled_by_ai: number;
-    avg_response_time_s: number;
+    avg_response_time_s: number | null;
   };
   daily: { date: string; conversations_total: number; leads_captured: number; bookings_created: number }[];
   accountManager?: string;
@@ -120,6 +120,15 @@ function miniBar(data: { conversations_total: number }[], maxW: number): string 
 
 function fmtZAR(n: number) { return `R${n.toLocaleString("en-ZA")}`; }
 function fmtHours(seconds: number) { return `${(seconds / 3600).toFixed(1)}h`; }
+// Renders avg first-response time. Null means no qualifying data in the period;
+// in that case show the placeholder rather than fabricating "0 seconds".
+function fmtResponseTime(seconds: number | null): string {
+  if (seconds === null) return "—";
+  if (seconds < 60) return `${seconds}s avg`;
+  const minutes = seconds / 60;
+  if (minutes < 60) return `${minutes.toFixed(1)} min avg`;
+  return `${(seconds / 3600).toFixed(1)}h avg`;
+}
 
 function executiveSummary(m: ReportData["metrics"], period: string, client: string): string {
   const convs  = m.conversations_total;
@@ -219,6 +228,7 @@ export function CrmReportPDF({ data }: { data: ReportData }) {
               { n: `${staffSaving}h`,                             l: "Team hours saved" },
               { n: metrics.leads_converted.toString(),            l: "Leads converted" },
               { n: metrics.messages_handled_by_ai.toString(),     l: "AI-handled messages" },
+              { n: fmtResponseTime(metrics.avg_response_time_s),  l: "Avg first response" },
             ].map(m => (
               <View key={m.l} style={s.metricBox}>
                 <Text style={s.metricNum}>{m.n}</Text>

@@ -76,6 +76,7 @@ export function computeScores(inputs: ScoreInputs, now: Date = new Date()): Scor
 
   const isPaidPlan = inputs.plan !== null && inputs.plan !== "trial";
   const hasMrr = inputs.mrr_zar !== null && inputs.mrr_zar > 0;
+  // Asymmetric on purpose: missing MRR is a stronger risk signal than it is a health signal. Tune here if needed.
   if (isPaidPlan && !hasMrr) {
     risk += 20;
     health -= 10;
