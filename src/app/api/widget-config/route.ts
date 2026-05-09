@@ -32,12 +32,30 @@ export async function GET(req: NextRequest) {
 
   const { data: business, error } = await db
     .from("businesses")
-    .select("id, name, accent_colour, greeting, qualifying_questions, branding_removed")
+    .select("id, name, accent_colour, greeting, qualifying_questions, branding_removed, user_id")
     .eq("api_key", key)
     .maybeSingle();
 
   if (error || !business) {
     return NextResponse.json({ error: "not_found" }, { status: 404, headers: ERROR_HEADERS });
+  }
+
+  // Same trial gate the chat route uses, so a paused or trial-expired tenant
+  // does not hand a v2 widget back its branding/greeting and cannot re-open
+  // the chat after the assistant has been shut off.
+  if (business.user_id) {
+    const { data: sub } = await db
+      .from("subscriptions")
+      .select("plan, trial_ends_at")
+      .eq("user_id", business.user_id)
+      .maybeSingle();
+    const trialExpired =
+      (sub?.plan === "trial" || !sub) &&
+      sub?.trial_ends_at &&
+      new Date(sub.trial_ends_at) < new Date();
+    if (trialExpired) {
+      return NextResponse.json({ error: "paused" }, { status: 403, headers: ERROR_HEADERS });
+    }
   }
 
   return NextResponse.json(

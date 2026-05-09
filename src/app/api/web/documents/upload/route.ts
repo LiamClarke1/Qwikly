@@ -78,13 +78,34 @@ export async function POST(req: NextRequest) {
     // Resolve client from public_key
     const { data: client } = await db
       .from("clients")
-      .select("id, doc_visitor_upload, doc_allowed_types, doc_max_size_mb")
+      .select("id, doc_visitor_upload, doc_allowed_types, doc_max_size_mb, auth_user_id, ai_paused")
       .eq("public_key", tenantId)
       .maybeSingle();
 
     if (!client) return NextResponse.json({ error: "not_found" }, { status: 404, headers: CORS });
     // Default to enabled — clients can opt out via Settings > Files
     if (client.doc_visitor_upload === false) return NextResponse.json({ error: "uploads_disabled" }, { status: 403, headers: CORS });
+
+    // Same pause/trial gates the chat route uses, so a visitor cannot push
+    // attachments into a tenant whose assistant is paused or whose trial has
+    // expired (which would otherwise leave orphan files in storage).
+    if (client.ai_paused) {
+      return NextResponse.json({ error: "paused" }, { status: 403, headers: CORS });
+    }
+    if (client.auth_user_id) {
+      const { data: sub } = await db
+        .from("subscriptions")
+        .select("plan, trial_ends_at")
+        .eq("user_id", client.auth_user_id)
+        .maybeSingle();
+      const trialExpired =
+        (sub?.plan === "trial" || !sub) &&
+        sub?.trial_ends_at &&
+        new Date(sub.trial_ends_at) < new Date();
+      if (trialExpired) {
+        return NextResponse.json({ error: "trial_expired" }, { status: 403, headers: CORS });
+      }
+    }
 
     // Verify the sessionId owns this conversation
     const { data: convo } = await db

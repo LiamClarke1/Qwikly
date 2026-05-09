@@ -107,9 +107,20 @@ export async function POST(req: NextRequest) {
 
   const { data: sub } = await db
     .from("subscriptions")
-    .select("plan, current_period_start, current_period_end")
+    .select("plan, current_period_start, current_period_end, trial_ends_at")
     .eq("user_id", business.user_id)
     .maybeSingle();
+
+  // Same trial gate the chat route uses. When the 14-day trial has lapsed
+  // and the owner hasn't picked a paid plan, public lead capture must stop
+  // so the v2 widget mirrors the assistant-paused behaviour.
+  const trialExpired =
+    (sub?.plan === "trial" || !sub) &&
+    sub?.trial_ends_at &&
+    new Date(sub.trial_ends_at) < new Date();
+  if (trialExpired) {
+    return NextResponse.json({ error: "trial_expired" }, { status: 403, headers: CORS });
+  }
 
   const plan = (sub?.plan ?? "trial") as PlanTier;
   const usagePeriod = await ensureUsagePeriod(db, business.id, sub);

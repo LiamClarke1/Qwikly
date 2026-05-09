@@ -37,6 +37,32 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 403, headers: CORS });
   }
 
+  // Same pause/trial gates the chat route uses, so a visitor on a tenant
+  // whose assistant is paused or whose trial has expired stops receiving
+  // owner-side replies through this poll endpoint.
+  const { data: client } = await db
+    .from("clients")
+    .select("auth_user_id, ai_paused")
+    .eq("id", convo.client_id)
+    .maybeSingle();
+  if (client?.ai_paused) {
+    return NextResponse.json({ error: "paused" }, { status: 403, headers: CORS });
+  }
+  if (client?.auth_user_id) {
+    const { data: sub } = await db
+      .from("subscriptions")
+      .select("plan, trial_ends_at")
+      .eq("user_id", client.auth_user_id)
+      .maybeSingle();
+    const trialExpired =
+      (sub?.plan === "trial" || !sub) &&
+      sub?.trial_ends_at &&
+      new Date(sub.trial_ends_at) < new Date();
+    if (trialExpired) {
+      return NextResponse.json({ error: "trial_expired" }, { status: 403, headers: CORS });
+    }
+  }
+
   // Fetch new owner messages since `after`
   let query = db
     .from("messages_log")
