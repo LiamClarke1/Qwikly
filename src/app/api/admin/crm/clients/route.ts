@@ -48,7 +48,12 @@ export async function GET(req: NextRequest) {
       billing_anchor_day, billing_anchor_set_at, trial_ends_at
     `, { count: "exact" });
 
-  if (status.length)          query = query.in("crm_status", status);
+  // Soft-deleted clients (pending_deletion) are hidden from the default list,
+  // they only appear when the admin explicitly filters for that status. The
+  // 30-day grace window keeps them in the DB for restore, but they should
+  // disappear from the CRM the moment delete is pressed.
+  if (status.length) query = query.in("crm_status", status);
+  else               query = query.neq("crm_status", "pending_deletion");
   if (plan.length)            query = query.in("plan", plan);
   if (allowedByTag)           query = query.in("id", allowedByTag);
   if (q) {

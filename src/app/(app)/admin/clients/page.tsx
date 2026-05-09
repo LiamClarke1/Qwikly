@@ -444,10 +444,13 @@ export default function CrmClientsPage() {
       await fetchClients();
       setSelected(s => { const n = new Set(s); n.delete(confirmAction.id); return n; });
     } else if (confirmAction.type === "delete") {
-      // Schedule for deletion, 30-day grace period
-      await fetch(`/api/admin/crm/clients/${confirmAction.id}`, { method: "DELETE" });
-      await fetchClients();
-      setSelected(s => { const n = new Set(s); n.delete(confirmAction.id); return n; });
+      // Schedule for deletion, 30-day grace period. Drop from the list
+      // immediately so the admin sees it disappear, the API soft-deletes
+      // it server-side and the next refetch will keep it hidden.
+      const id = confirmAction.id;
+      setClients(cs => cs.filter(c => c.id !== id));
+      setSelected(s => { const n = new Set(s); n.delete(id); return n; });
+      await fetch(`/api/admin/crm/clients/${id}`, { method: "DELETE" });
     } else if (confirmAction.type === "bulk-archive") {
       await Promise.all(confirmAction.ids.map(id =>
         fetch(`/api/admin/crm/clients/${id}`, {
@@ -460,11 +463,12 @@ export default function CrmClientsPage() {
       setClients(cs => cs.filter(c => !ids.has(c.id)));
       setSelected(new Set());
     } else if (confirmAction.type === "bulk-delete") {
+      const ids = new Set(confirmAction.ids);
+      setClients(cs => cs.filter(c => !ids.has(c.id)));
+      setSelected(new Set());
       await Promise.all(confirmAction.ids.map(id =>
         fetch(`/api/admin/crm/clients/${id}`, { method: "DELETE" })
       ));
-      await fetchClients();
-      setSelected(new Set());
     }
 
     setConfirmAction(null);
