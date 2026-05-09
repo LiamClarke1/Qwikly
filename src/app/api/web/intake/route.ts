@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { enrollLeadInSequences } from "@/lib/email/sequences";
+import { assertTenantActive } from "@/lib/billing/tenant-gate";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -91,30 +92,12 @@ export async function POST(req: NextRequest) {
   if (clientCheck.crm_status === "pending_deletion") {
     return NextResponse.json({ error: "service_suspended" }, { status: 403, headers: CORS });
   }
-  // Manual pause by owner. Separate select so this route is safe to ship
-  // before the ai_paused migration is applied — failure here is treated
-  // as not-paused rather than blocking lead capture.
-  const { data: pauseRow } = await supabaseAdmin
-    .from("clients")
-    .select("ai_paused")
-    .eq("id", clientIdNum)
-    .maybeSingle();
-  if (pauseRow?.ai_paused) {
-    return NextResponse.json({ error: "paused" }, { status: 403, headers: CORS });
-  }
-  if (clientCheck.auth_user_id) {
-    const { data: sub } = await supabaseAdmin
-      .from("subscriptions")
-      .select("plan, trial_ends_at")
-      .eq("user_id", clientCheck.auth_user_id)
-      .maybeSingle();
-    const trialExpired =
-      (sub?.plan === "trial" || !sub) &&
-      sub?.trial_ends_at &&
-      new Date(sub.trial_ends_at) < new Date();
-    if (trialExpired) {
-      return NextResponse.json({ error: "trial_expired" }, { status: 403, headers: CORS });
-    }
+  const gate = await assertTenantActive(supabaseAdmin, { kind: "client_id", id: clientIdNum });
+  if (!gate.ok) {
+    return NextResponse.json(
+      { error: gate.reason ?? "paused" },
+      { status: 403, headers: CORS }
+    );
   }
 
   // Create the conversation

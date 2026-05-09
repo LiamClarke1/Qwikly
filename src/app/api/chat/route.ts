@@ -4,6 +4,7 @@ export const maxDuration = 30;
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { supabaseAdmin as createSupabaseAdmin } from "@/lib/supabase-server";
+import { assertTenantActive } from "@/lib/billing/tenant-gate";
 import { ensureKbEmbeddings, searchKb, embedText } from "@/lib/embeddings";
 import { enrollLeadInSequences } from "@/lib/email/sequences";
 import { notifyLeadCaptured } from "@/lib/notify-lead";
@@ -108,30 +109,18 @@ export async function POST(req: NextRequest) {
     return new Response(err, { status: 403, headers: { "Content-Type": "text/event-stream", ...CORS } });
   }
 
-  // Trial expiry check
-  if (client.auth_user_id) {
-    const { data: sub } = await db
-      .from("subscriptions")
-      .select("plan, trial_ends_at")
-      .eq("user_id", client.auth_user_id)
-      .maybeSingle();
-
-    const trialExpired =
-      (sub?.plan === "trial" || !sub) &&
-      sub?.trial_ends_at &&
-      new Date(sub.trial_ends_at) < new Date();
-
-    if (trialExpired) {
-      const enc = new TextEncoder();
-      const err = new ReadableStream({
-        start(c) {
-          c.enqueue(enc.encode(`data: ${JSON.stringify({ error: "trial_expired" })}\n\n`));
-          c.enqueue(enc.encode("data: [DONE]\n\n"));
-          c.close();
-        },
-      });
-      return new Response(err, { status: 403, headers: { "Content-Type": "text/event-stream", ...CORS } });
-    }
+  const gate = await assertTenantActive(db, { kind: "tenant_id", id: tenantId });
+  if (!gate.ok) {
+    const reason = gate.reason ?? "trial_expired";
+    const enc = new TextEncoder();
+    const err = new ReadableStream({
+      start(c) {
+        c.enqueue(enc.encode(`data: ${JSON.stringify({ error: reason })}\n\n`));
+        c.enqueue(enc.encode("data: [DONE]\n\n"));
+        c.close();
+      },
+    });
+    return new Response(err, { status: 403, headers: { "Content-Type": "text/event-stream", ...CORS } });
   }
 
   // Monthly lead cap check

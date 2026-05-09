@@ -3,6 +3,7 @@ import { z } from "zod";
 import { bookMeeting } from "@/lib/booking-create";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
+import { assertTenantActive } from "@/lib/billing/tenant-gate";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
   const db = supabaseAdmin();
   const { data: client } = await db
     .from("clients")
-    .select("id, crm_status, auth_user_id")
+    .select("id, crm_status")
     .eq("public_key", tenant_id)
     .maybeSingle();
   if (!client) {
@@ -74,30 +75,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, reason: "service_suspended" }, { status: 403, headers: CORS });
   }
 
-  // Manual pause, separate select so the route is safe before the
-  // ai_paused migration has been applied (mirrors chat/intake routes).
-  const { data: pauseRow } = await db
-    .from("clients")
-    .select("ai_paused")
-    .eq("id", clientIdStr)
-    .maybeSingle();
-  if (pauseRow?.ai_paused) {
-    return NextResponse.json({ ok: false, reason: "paused" }, { status: 403, headers: CORS });
-  }
-
-  if (client.auth_user_id) {
-    const { data: sub } = await db
-      .from("subscriptions")
-      .select("plan, trial_ends_at")
-      .eq("user_id", client.auth_user_id)
-      .maybeSingle();
-    const trialExpired =
-      (sub?.plan === "trial" || !sub) &&
-      sub?.trial_ends_at &&
-      new Date(sub.trial_ends_at) < new Date();
-    if (trialExpired) {
-      return NextResponse.json({ ok: false, reason: "trial_expired" }, { status: 403, headers: CORS });
-    }
+  const gate = await assertTenantActive(db, { kind: "client_id", id: clientIdStr });
+  if (!gate.ok) {
+    return NextResponse.json(
+      { ok: false, reason: gate.reason ?? "paused" },
+      { status: 403, headers: CORS }
+    );
   }
 
   const result = await bookMeeting({

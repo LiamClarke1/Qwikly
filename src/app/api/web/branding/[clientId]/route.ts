@@ -3,6 +3,7 @@
 // Do not add new features here — consolidate into the tenantId endpoint when widget.js is retired.
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { assertTenantActive } from "@/lib/billing/tenant-gate";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -26,32 +27,13 @@ export async function GET(
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
-  // T3.9 — Skip trial-expiry check for the Qwikly owner tenant.
+  // T3.9 — Skip the gate for the Qwikly owner tenant.
   // Sourced from QWIKLY_OWNER_CLIENT_ID env var (see .env.example).
   const ownerClientId = process.env.QWIKLY_OWNER_CLIENT_ID ?? "1";
-  // Check trial expiry for every client EXCEPT the Qwikly-owned tenant
   if (clientId !== ownerClientId) {
-    const { data: client } = await supabaseAdmin
-      .from("clients")
-      .select("auth_user_id")
-      .eq("id", clientId)
-      .maybeSingle();
-
-    if (client?.auth_user_id) {
-      const { data: sub } = await supabaseAdmin
-        .from("subscriptions")
-        .select("plan, trial_ends_at")
-        .eq("user_id", client.auth_user_id)
-        .maybeSingle();
-
-      const trialExpired =
-        (sub?.plan === "trial" || !sub) &&
-        sub?.trial_ends_at &&
-        new Date(sub.trial_ends_at) < new Date();
-
-      if (trialExpired) {
-        return NextResponse.json({ error: "paused" }, { status: 403 });
-      }
+    const gate = await assertTenantActive(supabaseAdmin, { kind: "client_id", id: clientId });
+    if (!gate.ok) {
+      return NextResponse.json({ error: "paused" }, { status: 403 });
     }
   }
 

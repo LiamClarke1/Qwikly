@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { assertTenantActive } from "@/lib/billing/tenant-gate";
 
 export const dynamic = "force-dynamic";
 
@@ -44,16 +45,8 @@ export async function GET(req: NextRequest) {
   // does not hand a v2 widget back its branding/greeting and cannot re-open
   // the chat after the assistant has been shut off.
   if (business.user_id) {
-    const { data: sub } = await db
-      .from("subscriptions")
-      .select("plan, trial_ends_at")
-      .eq("user_id", business.user_id)
-      .maybeSingle();
-    const trialExpired =
-      (sub?.plan === "trial" || !sub) &&
-      sub?.trial_ends_at &&
-      new Date(sub.trial_ends_at) < new Date();
-    if (trialExpired) {
+    const gate = await assertTenantActive(db, { kind: "auth_user_id", userId: business.user_id });
+    if (!gate.ok) {
       return NextResponse.json({ error: "paused" }, { status: 403, headers: ERROR_HEADERS });
     }
   }

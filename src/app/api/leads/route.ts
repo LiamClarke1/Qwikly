@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { v2Auth } from "@/lib/v2-auth";
 import { resend, FROM } from "@/lib/resend";
 import { PLAN_CONFIG, resolvePlan, type PlanTier } from "@/lib/plan";
+import { assertTenantActive } from "@/lib/billing/tenant-gate";
 import {
   leadNotificationHtml,
   leadNotificationText,
@@ -105,22 +106,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_api_key" }, { status: 401, headers: CORS });
   }
 
+  const gate = await assertTenantActive(db, { kind: "auth_user_id", userId: business.user_id });
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.reason ?? "trial_expired" }, { status: 403, headers: CORS });
+  }
+
   const { data: sub } = await db
     .from("subscriptions")
-    .select("plan, current_period_start, current_period_end, trial_ends_at")
+    .select("plan, current_period_start, current_period_end")
     .eq("user_id", business.user_id)
     .maybeSingle();
-
-  // Same trial gate the chat route uses. When the 14-day trial has lapsed
-  // and the owner hasn't picked a paid plan, public lead capture must stop
-  // so the v2 widget mirrors the assistant-paused behaviour.
-  const trialExpired =
-    (sub?.plan === "trial" || !sub) &&
-    sub?.trial_ends_at &&
-    new Date(sub.trial_ends_at) < new Date();
-  if (trialExpired) {
-    return NextResponse.json({ error: "trial_expired" }, { status: 403, headers: CORS });
-  }
 
   const plan = (sub?.plan ?? "trial") as PlanTier;
   const usagePeriod = await ensureUsagePeriod(db, business.id, sub);

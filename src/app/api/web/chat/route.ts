@@ -15,6 +15,7 @@ import { getAvailableSlots } from "@/lib/booking-availability";
 import { bookMeeting } from "@/lib/booking-create";
 import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
 import { wrapUntrustedConfig, PROMPT_SAFETY_NOTE } from "@/lib/prompt-safety";
+import { assertTenantActive } from "@/lib/billing/tenant-gate";
 
 const QWIKLY_OWN_CLIENT_ID = "1";
 
@@ -609,36 +610,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "service_suspended" }, { status: 403, headers: CORS });
     }
 
-    // ── Manual pause by owner ─────────────────────────────────
-    // Reads ai_paused from a separate select so this route stays safe
-    // if the migration hasn't been applied yet, the second select fails
-    // soft and we treat it as "not paused" rather than 500ing the chat.
-    const { data: pauseRow } = await supabaseAdmin
-      .from("clients")
-      .select("ai_paused")
-      .eq("id", client_id)
-      .maybeSingle();
-    if (pauseRow?.ai_paused) {
-      return NextResponse.json({ error: "paused" }, { status: 403, headers: CORS });
+    const gate = await assertTenantActive(supabaseAdmin, { kind: "client_id", id: client_id });
+    if (!gate.ok) {
+      return NextResponse.json(
+        { error: gate.reason ?? "paused" },
+        { status: 403, headers: CORS }
+      );
     }
 
     clientAuthUserId = clientRow?.auth_user_id ?? null;
-
-    // ── Trial expiry check ─────────────────────────────────────
-    if (clientAuthUserId) {
-      const { data: sub } = await supabaseAdmin
-        .from("subscriptions")
-        .select("plan, trial_ends_at")
-        .eq("user_id", clientAuthUserId)
-        .maybeSingle();
-      const trialExpired =
-        (sub?.plan === "trial" || !sub) &&
-        sub?.trial_ends_at &&
-        new Date(sub.trial_ends_at) < new Date();
-      if (trialExpired) {
-        return NextResponse.json({ error: "trial_expired" }, { status: 403, headers: CORS });
-      }
-    }
 
     // Configuration gate: require at minimum a business identity + some content before running Claude.
     const hasBusiness = !!(clientRow?.business_name?.trim() || clientRow?.trade?.trim());

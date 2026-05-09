@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { assertTenantActive } from "@/lib/billing/tenant-gate";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -34,34 +35,9 @@ export async function GET(
     return NextResponse.json({ error: "disabled" }, { status: 403, headers: CORS });
   }
 
-  // Manual pause by owner. Read in a second select so this route is
-  // safe to deploy before the ai_paused migration is applied, the
-  // second select fails soft and we treat it as not-paused.
-  const { data: pauseRow } = await db
-    .from("clients")
-    .select("ai_paused")
-    .eq("public_key", tenantId)
-    .maybeSingle();
-  if (pauseRow?.ai_paused) {
+  const gate = await assertTenantActive(db, { kind: "tenant_id", id: tenantId });
+  if (!gate.ok) {
     return NextResponse.json({ error: "paused" }, { status: 403, headers: CORS });
-  }
-
-  // Block if trial has expired and no paid plan is active
-  if (data.auth_user_id) {
-    const { data: sub } = await db
-      .from("subscriptions")
-      .select("plan, trial_ends_at")
-      .eq("user_id", data.auth_user_id)
-      .maybeSingle();
-
-    const trialExpired =
-      (sub?.plan === "trial" || !sub) &&
-      sub?.trial_ends_at &&
-      new Date(sub.trial_ends_at) < new Date();
-
-    if (trialExpired) {
-      return NextResponse.json({ error: "paused" }, { status: 403, headers: CORS });
-    }
   }
 
   // ai_greeting is set via the assistant settings page ("Opening greeting").
