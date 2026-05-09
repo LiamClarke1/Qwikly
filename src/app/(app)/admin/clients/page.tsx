@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Search, Plus, ChevronRight, MessageSquare, Mail, Globe,
   ArrowUpDown, ArrowUp, ArrowDown, SlidersHorizontal,
@@ -99,24 +100,42 @@ function PlanPill({ plan }: { plan: string }) {
   );
 }
 
-function ChannelIcons({ channels }: { channels: string[] }) {
+function ChannelIcons({
+  configured, active,
+}: {
+  configured: string[];
+  active?: string[];
+}) {
+  const activeSet = new Set(active ?? []);
+  const items: { key: string; label: string; Icon: React.ElementType }[] = [
+    { key: "web_chat", label: "Web widget", Icon: Globe },
+    { key: "whatsapp", label: "WhatsApp",   Icon: MessageSquare },
+    { key: "email",    label: "Email",      Icon: Mail },
+  ].filter(it => configured.includes(it.key));
+
+  if (items.length === 0) {
+    return <span className="text-[11px] text-slate-300">Not set up</span>;
+  }
+
   return (
     <div className="flex items-center gap-1">
-      {channels.includes("whatsapp") && (
-        <span title="WhatsApp" className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
-          <MessageSquare className="w-2.5 h-2.5 text-emerald-600" />
-        </span>
-      )}
-      {channels.includes("email") && (
-        <span title="Email" className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
-          <Mail className="w-2.5 h-2.5 text-blue-600" />
-        </span>
-      )}
-      {channels.includes("web_chat") && (
-        <span title="Web Chat" className="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center">
-          <Globe className="w-2.5 h-2.5 text-violet-600" />
-        </span>
-      )}
+      {items.map(({ key, label, Icon }) => {
+        const isActive = activeSet.has(key);
+        return (
+          <span
+            key={key}
+            title={isActive ? `${label} (active this week)` : `${label} (configured)`}
+            className={cn(
+              "w-5 h-5 rounded-full flex items-center justify-center border",
+              isActive
+                ? "bg-emerald-50 border-emerald-200"
+                : "bg-slate-50 border-slate-200"
+            )}
+          >
+            <Icon className={cn("w-2.5 h-2.5", isActive ? "text-emerald-600" : "text-slate-400")} />
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -137,15 +156,16 @@ function HealthRing({ score }: { score: number }) {
   );
 }
 
-function OnboardingBar({ step, complete }: { step: number | null; complete: boolean | null }) {
-  const pct = complete ? 100 : Math.min(100, Math.round(((step ?? 0) / 5) * 100));
+function OnboardingBar({ done, total }: { done: number; total: number }) {
+  const safeTotal = total > 0 ? total : 1;
+  const pct = Math.min(100, Math.round((done / safeTotal) * 100));
   const color = pct === 100 ? "#10b981" : "#E85A2C";
   return (
     <div className="flex items-center gap-1.5">
       <div className="w-14 h-1.5 rounded-full bg-slate-100 overflow-hidden">
         <div className="h-full rounded-full transition-all duration-300" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      <span className="text-[10px] text-slate-400 tabular-nums w-7">{pct}%</span>
+      <span className="text-[10px] text-slate-500 tabular-nums whitespace-nowrap">{done}/{safeTotal}</span>
     </div>
   );
 }
@@ -195,8 +215,11 @@ function RowActions({
   onDelete: (id: number) => void;
   onRestore: (id: number) => void;
 }) {
+  void clientName;
   const [open, setOpen] = useState(false);
+  const [direction, setDirection] = useState<"down" | "up">("down");
   const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -206,17 +229,36 @@ function RowActions({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
+  function toggle(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // Menu is roughly 150px tall. Flip up if not enough room below.
+      const spaceBelow = vh - rect.bottom;
+      setDirection(spaceBelow < 180 ? "up" : "down");
+    }
+    setOpen(o => !o);
+  }
+
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={e => { e.preventDefault(); e.stopPropagation(); setOpen(o => !o); }}
-        className="flex items-center justify-center w-7 h-7 rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+        ref={btnRef}
+        onClick={toggle}
+        className="flex items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
         aria-label="Client actions"
       >
         <MoreVertical className="w-4 h-4" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-30 py-1 overflow-hidden">
+        <div
+          className={cn(
+            "absolute right-0 w-48 bg-white border border-slate-200 rounded-xl shadow-lg z-40 py-1 overflow-hidden",
+            direction === "down" ? "top-full mt-1" : "bottom-full mb-1"
+          )}
+        >
           <Link
             href={`/admin/clients/${clientId}`}
             className="flex items-center gap-2 px-3 py-2 text-[13px] text-slate-700 hover:bg-slate-50 cursor-pointer"
@@ -367,7 +409,7 @@ export default function CrmClientsPage() {
       // Refresh list so restored client shows updated status
       await fetchClients();
     } else {
-      // Schedule for deletion — 30-day grace period
+      // Schedule for deletion, 30-day grace period
       await fetch(`/api/admin/crm/clients/${confirmAction.id}`, { method: "DELETE" });
       // Update local state to show pending_deletion (don't remove from list)
       await fetchClients();
@@ -799,7 +841,7 @@ export default function CrmClientsPage() {
                   <p className="text-[13px] font-semibold text-slate-800 truncate">{c.business_name ?? "Unnamed"}</p>
                   <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                     <StatusPill status={c.crm_status} />
-                    <span className="text-[11px] text-slate-400">{c.mrr_zar ? formatZAR(c.mrr_zar / 100) + " /mo" : "—"}</span>
+                    <span className="text-[11px] text-slate-400">{c.mrr_zar ? formatZAR(c.mrr_zar / 100) + " /mo" : "Trial"}</span>
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
@@ -869,93 +911,152 @@ function TableView({
   onDelete: (id: number) => void;
   onRestore: (id: number) => void;
 }) {
+  const router = useRouter();
   return (
     <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-      <div className="grid grid-cols-[24px_2fr_100px_90px_80px_100px_80px_90px_110px_130px_36px] gap-3 px-5 py-3 border-b border-slate-100 bg-slate-50/80 items-center">
-        <input type="checkbox" checked={allSelected} onChange={onSelectAll} className="rounded cursor-pointer" />
-        <ColHeader col="business_name" label="Business" />
-        <ColHeader col="crm_status"   label="Status" />
-        <ColHeader col="plan"         label="Plan" />
-        <ColHeader col="mrr_zar"      label="MRR" className="justify-end" />
-        <span className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Onboarding</span>
-        <ColHeader col="health_score" label="Health" className="justify-center" />
-        <span className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Channels</span>
-        <span className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Last active</span>
-        <span className="text-[11px] uppercase tracking-widest text-slate-400 font-semibold">Next invoice</span>
-        <span />
-      </div>
-
-      {clients.map((c, i) => (
-        <div
-          key={c.id}
-          className={cn(
-            "grid grid-cols-[24px_2fr_100px_90px_80px_100px_80px_90px_110px_130px_36px] gap-3 items-center px-5 py-3.5 group hover:bg-slate-50/60 transition-colors",
-            i > 0 && "border-t border-slate-100",
-            selected.has(c.id) && "bg-[#E85A2C]/[0.025]"
-          )}
-        >
-          <input type="checkbox" checked={selected.has(c.id)} onChange={() => onSelect(c.id)} className="rounded cursor-pointer" />
-
-          {/* Business */}
-          <div className="min-w-0">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-[#E85A2C]/10 flex items-center justify-center shrink-0 overflow-hidden border border-slate-100">
-                {c.logo_url
-                  ? <img src={c.logo_url} alt="" className="w-full h-full object-cover" />
-                  : <span className="text-[10px] font-bold text-[#E85A2C]">{(c.business_name ?? "?")[0]?.toUpperCase()}</span>
-                }
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <Link href={`/admin/clients/${c.id}`}
-                    className="text-[13px] font-semibold text-slate-800 hover:text-[#E85A2C] truncate transition-colors cursor-pointer leading-tight">
-                    {c.business_name ?? "Unnamed"}
-                  </Link>
-                  {c.crm_status === "pending_deletion" && (
-                    <DeletionCountdown scheduledAt={c.deletion_scheduled_at} />
-                  )}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-separate border-spacing-0">
+          <thead className="bg-slate-50/80 sticky top-0 z-10">
+            <tr>
+              <th className="px-4 py-3 border-b border-slate-100 w-[36px]">
+                <input type="checkbox" checked={allSelected} onChange={onSelectAll} className="rounded cursor-pointer align-middle" />
+              </th>
+              <th className="px-4 py-3 border-b border-slate-100 min-w-[220px]">
+                <ColHeader col="business_name" label="Business" />
+              </th>
+              <th className="px-4 py-3 border-b border-slate-100 min-w-[110px]">
+                <ColHeader col="crm_status" label="Status" />
+              </th>
+              <th className="px-4 py-3 border-b border-slate-100 min-w-[90px]">
+                <ColHeader col="plan" label="Plan" />
+              </th>
+              <th className="px-4 py-3 border-b border-slate-100 min-w-[90px]">
+                <div className="flex justify-end">
+                  <ColHeader col="mrr_zar" label="MRR" />
                 </div>
-                {c.client_email && (
-                  <p className="text-[11px] text-slate-400 truncate leading-tight">{c.client_email}</p>
-                )}
-              </div>
-            </div>
-            {c.tags.length > 0 && <div className="mt-1 ml-9"><TagPills tags={c.tags} /></div>}
-          </div>
+              </th>
+              <th className="px-4 py-3 border-b border-slate-100 min-w-[120px]">
+                <span className="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Onboarding</span>
+              </th>
+              <th className="px-4 py-3 border-b border-slate-100 min-w-[80px]">
+                <div className="flex justify-center">
+                  <ColHeader col="health_score" label="Health" />
+                </div>
+              </th>
+              <th className="px-4 py-3 border-b border-slate-100 min-w-[110px]">
+                <span className="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Channels</span>
+              </th>
+              <th className="px-4 py-3 border-b border-slate-100 min-w-[120px]">
+                <span className="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Last active</span>
+              </th>
+              <th className="px-4 py-3 border-b border-slate-100 min-w-[140px]">
+                <span className="text-[11px] uppercase tracking-widest text-slate-500 font-semibold">Next invoice</span>
+              </th>
+              <th className="px-4 py-3 border-b border-slate-100 w-[44px]" />
+            </tr>
+          </thead>
+          <tbody>
+            {clients.map(c => {
+              const isSelected = selected.has(c.id);
+              return (
+                <tr
+                  key={c.id}
+                  onClick={() => router.push(`/admin/clients/${c.id}`)}
+                  className={cn(
+                    "group cursor-pointer transition-colors",
+                    isSelected ? "bg-[#E85A2C]/[0.04]" : "hover:bg-slate-50"
+                  )}
+                >
+                  <td className="px-4 py-3.5 border-b border-slate-100 align-middle" onClick={e => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => onSelect(c.id)}
+                      className="rounded cursor-pointer align-middle"
+                    />
+                  </td>
 
-          <StatusPill status={c.crm_status} />
-          <PlanPill plan={c.plan} />
+                  <td className="px-4 py-3.5 border-b border-slate-100 align-middle">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 overflow-hidden bg-slate-100 border border-slate-200">
+                        {c.logo_url
+                          ? <img src={c.logo_url} alt="" className="w-full h-full object-cover" />
+                          : <span className="text-[11px] font-semibold text-slate-700">{(c.business_name ?? "?")[0]?.toUpperCase()}</span>
+                        }
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[13px] font-semibold text-slate-900 group-hover:text-[#E85A2C] transition-colors leading-tight truncate">
+                            {c.business_name ?? "Unnamed"}
+                          </span>
+                          {c.crm_status === "pending_deletion" && (
+                            <DeletionCountdown scheduledAt={c.deletion_scheduled_at} />
+                          )}
+                        </div>
+                        {c.client_email && (
+                          <p className="text-[11px] text-slate-400 truncate leading-tight mt-0.5">{c.client_email}</p>
+                        )}
+                        {c.tags.length > 0 && <div className="mt-1"><TagPills tags={c.tags} /></div>}
+                      </div>
+                    </div>
+                  </td>
 
-          <div className="text-right">
-            <p className="text-[13px] font-semibold text-slate-800 tabular-nums">
-              {c.mrr_zar ? formatZAR(c.mrr_zar / 100) : <span className="text-slate-300">—</span>}
-            </p>
-          </div>
+                  <td className="px-4 py-3.5 border-b border-slate-100 align-middle">
+                    <StatusPill status={c.crm_status} />
+                  </td>
 
-          <OnboardingBar step={c.onboarding_step} complete={c.onboarding_complete} />
+                  <td className="px-4 py-3.5 border-b border-slate-100 align-middle">
+                    <PlanPill plan={c.plan} />
+                  </td>
 
-          <div className="flex justify-center">
-            <HealthRing score={c.health_score ?? 100} />
-          </div>
+                  <td className="px-4 py-3.5 border-b border-slate-100 align-middle text-right">
+                    <span className="text-[13px] font-semibold text-slate-900 tabular-nums">
+                      {formatZAR((c.mrr_zar ?? 0) / 100)}
+                    </span>
+                  </td>
 
-          <ChannelIcons channels={c.channels} />
+                  <td className="px-4 py-3.5 border-b border-slate-100 align-middle">
+                    <OnboardingBar done={c.onboarding_done ?? 0} total={c.onboarding_total ?? 5} />
+                  </td>
 
-          <p className="text-[12px] text-slate-400">
-            {c.last_activity_at ? timeAgo(c.last_activity_at) : <span className="text-slate-300">—</span>}
-          </p>
+                  <td className="px-4 py-3.5 border-b border-slate-100 align-middle">
+                    <div className="flex justify-center">
+                      <HealthRing score={c.health_score ?? 100} />
+                    </div>
+                  </td>
 
-          <NextInvoiceBadge c={c} />
+                  <td className="px-4 py-3.5 border-b border-slate-100 align-middle">
+                    <ChannelIcons configured={c.configured_channels ?? []} active={c.active_channels ?? []} />
+                  </td>
 
-          <RowActions
-            clientId={c.id}
-            clientName={c.business_name}
-            isPendingDeletion={c.crm_status === "pending_deletion"}
-            onArchive={onArchive}
-            onDelete={onDelete}
-            onRestore={onRestore}
-          />
-        </div>
-      ))}
+                  <td className="px-4 py-3.5 border-b border-slate-100 align-middle">
+                    {c.last_activity_at ? (
+                      <span className="text-[12px] text-slate-600">{timeAgo(c.last_activity_at)}</span>
+                    ) : (
+                      <span className="text-[12px] text-slate-400">No activity yet</span>
+                    )}
+                  </td>
+
+                  <td className="px-4 py-3.5 border-b border-slate-100 align-middle">
+                    <NextInvoiceBadge c={c} />
+                  </td>
+
+                  <td className="px-4 py-3.5 border-b border-slate-100 align-middle text-right" onClick={e => e.stopPropagation()}>
+                    <RowActions
+                      clientId={c.id}
+                      clientName={c.business_name}
+                      isPendingDeletion={c.crm_status === "pending_deletion"}
+                      onArchive={onArchive}
+                      onDelete={onDelete}
+                      onRestore={onRestore}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -986,7 +1087,7 @@ function GridView({
                 <p className="text-[13px] font-semibold text-slate-800 truncate group-hover:text-[#E85A2C] transition-colors leading-tight">
                   {c.business_name ?? "Unnamed"}
                 </p>
-                <p className="text-[11px] text-slate-400 truncate">{c.trade ?? c.industry ?? "—"}</p>
+                <p className="text-[11px] text-slate-400 truncate">{c.trade ?? c.industry ?? "No trade set"}</p>
               </div>
             </Link>
             <div className="flex items-center gap-1.5 shrink-0">
@@ -1000,7 +1101,7 @@ function GridView({
             <PlanPill plan={c.plan} />
             <div className="flex items-center gap-1.5">
               <HealthRing score={c.health_score ?? 100} />
-              <ChannelIcons channels={c.channels} />
+              <ChannelIcons configured={c.configured_channels ?? []} active={c.active_channels ?? []} />
             </div>
           </div>
 
@@ -1008,7 +1109,7 @@ function GridView({
           <div className="grid grid-cols-3 gap-2 text-[12px] mb-3">
             <div className="bg-slate-50 rounded-xl px-2.5 py-2">
               <p className="text-slate-400 text-[10px] uppercase tracking-wide font-semibold">MRR</p>
-              <p className="font-semibold text-slate-800 mt-0.5">{c.mrr_zar ? formatZAR(c.mrr_zar / 100) : "—"}</p>
+              <p className="font-semibold text-slate-800 mt-0.5">{formatZAR((c.mrr_zar ?? 0) / 100)}</p>
             </div>
             <div className="bg-slate-50 rounded-xl px-2.5 py-2">
               <p className="text-slate-400 text-[10px] uppercase tracking-wide font-semibold">Convos</p>
@@ -1017,7 +1118,7 @@ function GridView({
             <div className="bg-slate-50 rounded-xl px-2.5 py-2">
               <p className="text-slate-400 text-[10px] uppercase tracking-wide font-semibold">Setup</p>
               <p className="font-semibold text-slate-800 mt-0.5">
-                {c.onboarding_complete ? "Done" : `${Math.round(((c.onboarding_step ?? 0) / 5) * 100)}%`}
+                {(c.onboarding_done ?? 0) === (c.onboarding_total ?? 5) ? "Done" : `${c.onboarding_done ?? 0}/${c.onboarding_total ?? 5}`}
               </p>
             </div>
           </div>

@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
       logo_url, trade, industry, website,
       crm_status, plan, mrr_zar, health_score, ltv_zar,
       onboarding_step, onboarding_complete, onboarding_completed_at,
-      web_widget_status, web_widget_enabled,
+      web_widget_status, web_widget_enabled, system_prompt,
       account_manager_id, created_at, deletion_scheduled_at,
       billing_anchor_day, billing_anchor_set_at, trial_ends_at
     `, { count: "exact" });
@@ -86,11 +86,18 @@ export async function GET(req: NextRequest) {
   }
 
   const channelsByClient: Record<number, Set<string>> = {};
+  const recentChannelsByClient: Record<number, Set<string>> = {};
   const lastActivityByClient: Record<number, string> = {};
   const convoCountByClient: Record<number, number> = {};
+  const sevenDaysAgo = Date.now() - 7 * 86_400_000;
   for (const c of (convosRes.data ?? [])) {
+    const ch = c.channel ?? "whatsapp";
     if (!channelsByClient[c.client_id]) channelsByClient[c.client_id] = new Set();
-    channelsByClient[c.client_id].add(c.channel ?? "whatsapp");
+    channelsByClient[c.client_id].add(ch);
+    if (new Date(c.created_at).getTime() >= sevenDaysAgo) {
+      if (!recentChannelsByClient[c.client_id]) recentChannelsByClient[c.client_id] = new Set();
+      recentChannelsByClient[c.client_id].add(ch);
+    }
     if (!lastActivityByClient[c.client_id]) lastActivityByClient[c.client_id] = c.created_at;
     convoCountByClient[c.client_id] = (convoCountByClient[c.client_id] ?? 0) + 1;
   }
@@ -112,6 +119,11 @@ export async function GET(req: NextRequest) {
   }
 
   const todayDate = todaySast();
+  const isRealPhone = (v: string | null | undefined) => {
+    if (!v) return false;
+    const stripped = v.replace(/^whatsapp:/, "");
+    return /^(\+|0)\d{7,}/.test(stripped);
+  };
   let enriched = (clients ?? []).map(c => {
     const anchor = (c as { billing_anchor_day?: number | null }).billing_anchor_day ?? null;
     let next_invoice_at: string | null = null;
@@ -123,12 +135,42 @@ export async function GET(req: NextRequest) {
     if (latest?.status === "overdue" && latest.due_at) {
       days_overdue = Math.max(0, Math.floor((todayDate.getTime() - new Date(latest.due_at).getTime()) / 86_400_000));
     }
+
+    const cx = c as Record<string, unknown>;
+    const sysPrompt    = (cx.system_prompt as string | null | undefined) ?? null;
+    const widgetStatus = (cx.web_widget_status as string | null | undefined) ?? null;
+    const widgetOn     = (cx.web_widget_enabled as boolean | null | undefined) ?? false;
+    const email        = (cx.client_email as string | null | undefined) ?? null;
+    const wa           = (cx.whatsapp_number as string | null | undefined) ?? null;
+    const convoCount   = convoCountByClient[c.id] ?? 0;
+
+    const configuredChannels: string[] = [];
+    if (widgetOn) configuredChannels.push("web_chat");
+    if (isRealPhone(wa)) configuredChannels.push("whatsapp");
+    if (email && email.trim()) configuredChannels.push("email");
+
+    const recent = recentChannelsByClient[c.id] ?? new Set<string>();
+
+    const onboardingChecks = [
+      true,
+      !!(sysPrompt && sysPrompt.trim()),
+      isRealPhone(wa),
+      widgetStatus === "verified",
+      convoCount > 0,
+    ];
+    const onboardingDone  = onboardingChecks.filter(Boolean).length;
+    const onboardingTotal = onboardingChecks.length;
+
     return {
       ...c,
       tags: tagsByClient[c.id] ?? [],
       channels: Array.from(channelsByClient[c.id] ?? new Set<string>()),
+      configured_channels: configuredChannels,
+      active_channels: Array.from(recent),
       last_activity_at: lastActivityByClient[c.id] ?? null,
-      conversation_count: convoCountByClient[c.id] ?? 0,
+      conversation_count: convoCount,
+      onboarding_done: onboardingDone,
+      onboarding_total: onboardingTotal,
       next_invoice_at,
       latest_billing_invoice_status: latest?.status ?? null,
       days_overdue,

@@ -35,6 +35,10 @@ export interface CrmClientListItem {
   tags: CrmTag[];
   conversation_count: number;
   channels: string[];
+  configured_channels?: string[];
+  active_channels?: string[];
+  onboarding_done?: number;
+  onboarding_total?: number;
   deletion_scheduled_at: string | null;
   // Billing anchor tracker
   billing_anchor_day: number | null;
