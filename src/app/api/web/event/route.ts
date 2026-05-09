@@ -30,6 +30,14 @@ export async function POST(req: NextRequest) {
   const { client_id, visitor_id, event_type, page_url, conversation_id } = body;
   if (!client_id || !event_type) return NextResponse.json({}, { headers: CORS });
 
+  const { data: clientRow } = await supabaseAdmin
+    .from("clients")
+    .select("id")
+    .eq("id", client_id)
+    .limit(1)
+    .maybeSingle();
+  if (!clientRow) return NextResponse.json({}, { status: 404, headers: CORS });
+
   await supabaseAdmin.from("web_widget_events").insert({
     client_id: Number(client_id),
     visitor_id,
