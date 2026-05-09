@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Calendar, ShieldCheck, AlertTriangle, CheckCircle2, ArrowRight, FileText, Upload } from "lucide-react";
+import { Calendar, ShieldCheck, AlertTriangle, CheckCircle2, ArrowRight, FileText, Upload, XCircle, HelpCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatZAR } from "@/lib/format";
 
@@ -21,6 +21,15 @@ interface AwaitingRow {
   client_id: number; clients: { business_name: string };
   proof_signed_url: string | null;
   proof_mime_type: string | null;
+  proof_validation_status: "pending" | "verified" | "mismatch" | "invalid" | "error" | null;
+  proof_validation_extracted: {
+    amount_zar: number | null;
+    date: string | null;
+    reference: string | null;
+    recipient: string | null;
+    bank_name: string | null;
+  } | null;
+  proof_validation_notes: string | null;
 }
 interface OverdueRow {
   id: string; invoice_number: string | null; total_zar: number;
@@ -195,6 +204,7 @@ export default function BillingPipelinePage() {
                 ) : (
                   <span className="shrink-0 text-[11px] text-slate-500">No proof attached</span>
                 )}
+                <ValidationBadge row={a} />
                 <button onClick={() => patch(a.id, "verify")} disabled={actionId === a.id}
                   className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[12px] font-semibold hover:bg-emerald-700 disabled:opacity-50 cursor-pointer">
                   Mark verified
@@ -247,6 +257,58 @@ export default function BillingPipelinePage() {
             )
         )}
       </div>
+    </div>
+  );
+}
+
+function ValidationBadge({ row }: { row: AwaitingRow }) {
+  const status = row.proof_validation_status;
+  const notes = row.proof_validation_notes;
+  const extracted = row.proof_validation_extracted;
+
+  let pill: string;
+  let Icon: React.ElementType;
+  let label: string;
+
+  if (status === "verified") {
+    pill = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+    Icon = CheckCircle2;
+    label = "Auto-verified";
+  } else if (status === "mismatch") {
+    pill = "bg-amber-50 text-amber-700 border border-amber-200";
+    Icon = AlertTriangle;
+    label = "Amount mismatch";
+  } else if (status === "invalid") {
+    pill = "bg-red-50 text-red-700 border border-red-200";
+    Icon = XCircle;
+    label = "Not a payment proof";
+  } else if (status === "error") {
+    pill = "bg-slate-100 text-slate-600 border border-slate-200";
+    Icon = HelpCircle;
+    label = "Validation failed";
+  } else {
+    // null or "pending"
+    pill = "bg-slate-100 text-slate-500 border border-slate-200";
+    Icon = Clock;
+    label = "Pending validation";
+  }
+
+  return (
+    <div className="flex flex-col gap-1 min-w-0 max-w-[200px]">
+      <span className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold w-fit", pill)}>
+        <Icon className="w-3 h-3 shrink-0" />
+        {label}
+      </span>
+      {notes && (
+        <p className="text-[11px] text-slate-400 leading-tight">{notes}</p>
+      )}
+      {extracted && (extracted.bank_name || extracted.reference || extracted.recipient) && (
+        <div className="text-[10px] text-slate-400 space-y-0.5">
+          {extracted.bank_name && <p><span className="font-medium text-slate-500">Bank:</span> {extracted.bank_name}</p>}
+          {extracted.recipient && <p><span className="font-medium text-slate-500">To:</span> {extracted.recipient}</p>}
+          {extracted.reference && <p><span className="font-medium text-slate-500">Ref:</span> {extracted.reference}</p>}
+        </div>
+      )}
     </div>
   );
 }

@@ -56,7 +56,7 @@ export async function GET(_req: NextRequest) {
   // Awaiting verification
   const awaitingRes = await sb
     .from("qwikly_billing_invoices")
-    .select("id, invoice_number, total_zar, client_marked_paid_at, client_payment_note, client_id, clients(business_name), proof_storage_path, proof_uploaded_at, proof_mime_type")
+    .select("id, invoice_number, total_zar, client_marked_paid_at, client_payment_note, client_id, clients(business_name), proof_storage_path, proof_uploaded_at, proof_mime_type, proof_validation_status, proof_validation_extracted, proof_validation_notes, proof_validated_at")
     .eq("status", "awaiting_verification")
     .order("client_marked_paid_at", { ascending: true });
 

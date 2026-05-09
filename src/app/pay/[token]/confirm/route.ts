@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { verifyInvoicePayToken } from "@/lib/invoiceLinks";
+import { validateProofOfPayment } from "@/lib/billing/proof-validator";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
 
   const inv = await sb
     .from("qwikly_billing_invoices")
-    .select("id, status")
+    .select("id, status, total_zar, invoice_number")
     .eq("id", verified.invoiceId)
     .maybeSingle();
 
@@ -119,5 +120,33 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     return NextResponse.json({ error: "update_failed" }, { status: 500 });
   }
 
-  return NextResponse.json({ ok: true, status: "awaiting_verification" });
+  // Validate the uploaded proof against the invoice amount.
+  // Best-effort: validation status defaults to 'pending' and admin can fall
+  // back to manual verification if the validator returns 'error'.
+  let validation: Awaited<ReturnType<typeof validateProofOfPayment>> | null = null;
+  try {
+    validation = await validateProofOfPayment({
+      fileBytes: new Uint8Array(fileBuffer),
+      mimeType: file.type,
+      expectedAmountZar: Number(inv.data.total_zar),
+      expectedReference: inv.data.invoice_number ?? null,
+    });
+  } catch (err) {
+    validation = null;
+    console.error("[confirm] proof validation threw:", err);
+  }
+
+  if (validation) {
+    await sb
+      .from("qwikly_billing_invoices")
+      .update({
+        proof_validation_status: validation.status,
+        proof_validation_extracted: validation.extracted,
+        proof_validation_notes: validation.notes,
+        proof_validated_at: new Date().toISOString(),
+      })
+      .eq("id", inv.data.id);
+  }
+
+  return NextResponse.json({ ok: true, status: "awaiting_verification", validation });
 }
