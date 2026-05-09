@@ -82,9 +82,11 @@ function formatBytes(n: number) {
 
 function isVisitorPlaceholder(phone: string | null | undefined): boolean {
   if (!phone) return true;
+  // Real phone numbers never contain an underscore. This catches every
+  // session/visitor placeholder format we generate (vid_, s_, web_visitor, etc.)
+  // in one shot, even ones we add in the future.
+  if (phone.includes("_")) return true;
   return (
-    phone.startsWith("vid_") ||
-    phone === "web_visitor" ||
     phone === "visitor" ||
     phone === "unknown" ||
     phone.length > 25
@@ -433,19 +435,34 @@ const LOST_REASONS = [
 
 function SkeletonCard() {
   return (
-    <div className="flex items-start gap-3 px-4 py-3.5 border-b border-ink/[0.05] border-l-4 border-l-ink/10">
-      <div className="w-9 h-9 rounded-full bg-ink/[0.07] animate-pulse shrink-0 mt-0.5" />
+    <div className="flex items-center gap-3 px-4 py-3.5 border-b border-ink/[0.05] border-l-[3px] border-l-ink/10">
+      <div className="w-10 h-10 rounded-full bg-ink/[0.07] animate-pulse shrink-0" />
       <div className="flex-1 space-y-1.5 min-w-0">
         <div className="h-3.5 w-28 bg-ink/[0.07] rounded animate-pulse" />
         <div className="h-2.5 w-40 bg-ink/[0.05] rounded animate-pulse" />
         <div className="h-2.5 w-24 bg-ink/[0.04] rounded animate-pulse" />
       </div>
-      <div className="h-5 w-14 rounded-lg bg-ink/[0.05] animate-pulse shrink-0" />
+      <div className="h-5 w-14 rounded-md bg-ink/[0.05] animate-pulse shrink-0" />
     </div>
   );
 }
 
 // ─── Lead card ────────────────────────────────────────────────────────────────
+
+// For unhandled leads (status new/lead) we surface AGE rather than the
+// static "New" label, so a 2-day-old lead reads "2d ago" in red instead
+// of "New" in blue. For finalized statuses we show the status label.
+function leadCapsule(lead: Lead): { label: string; cls: string } {
+  if (lead.status !== "new" && lead.status !== "lead") {
+    const s = STATUS_CONFIG[lead.status] ?? STATUS_CONFIG.new;
+    return { label: s.label, cls: s.cls };
+  }
+  const mins = getLeadAgeMinutes(lead);
+  const label = timeAgo(lead.created_at);
+  if (mins < 60)   return { label, cls: "bg-blue-500/10 text-blue-700 border-blue-500/20" };
+  if (mins < 1440) return { label, cls: "bg-amber-500/10 text-amber-700 border-amber-500/20" };
+  return { label, cls: "bg-red-500/10 text-red-700 border-red-500/20" };
+}
 
 function LeadCard({
   lead,
@@ -460,20 +477,18 @@ function LeadCard({
   onSelect: () => void;
   onBulkToggle: () => void;
 }) {
-  const s = STATUS_CONFIG[lead.status] ?? STATUS_CONFIG.new;
   const displayName = getDisplayName(lead);
   const displayPhone = getDisplayPhone(lead);
   const initial = displayName.charAt(0).toUpperCase();
   const avatarCls = avatarColor(displayName);
-  const overdue = isLeadOverdue(lead);
-  const ageColor = getAgeColor(lead);
   const borderColor = getStatusBorderColor(lead.status);
   const followUpDue = !!lead.follow_up_at && new Date(lead.follow_up_at) < new Date() && lead.status !== "closed";
+  const cap = leadCapsule(lead);
 
   return (
     <div
       className={cn(
-        "group relative flex items-start gap-3 px-4 py-3.5 border-b border-ink/[0.05] border-l-[3px] transition-all duration-150 cursor-pointer",
+        "group relative flex items-center gap-3 px-4 py-3.5 border-b border-ink/[0.05] border-l-[3px] transition-all duration-150 cursor-pointer",
         borderColor,
         isSelected ? "bg-brand/[0.05]" : "hover:bg-ink/[0.02]"
       )}
@@ -494,56 +509,56 @@ function LeadCard({
       </div>
 
       {/* Avatar */}
-      <div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-small font-bold text-white mt-0.5", avatarCls)}>
+      <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-small font-bold text-white", avatarCls)}>
         {initial}
       </div>
 
       {/* Main content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <p className="text-small font-semibold text-ink leading-tight">{displayName}</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-small font-semibold text-ink leading-tight truncate">{displayName}</p>
           {lead.booking_intent && (
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-ember/10 text-ember border border-ember/20">
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-ember/10 text-ember border border-ember/20 shrink-0">
               <Flame className="w-2.5 h-2.5" /> Hot
             </span>
           )}
-          {overdue && <AlertCircle className="w-3 h-3 text-red-400 shrink-0" />}
           {followUpDue && <Bell className="w-3 h-3 text-amber-500 shrink-0" />}
         </div>
 
-        {/* Job need — the most important info */}
+        {/* Job need + area */}
         {(lead.job_type || lead.area) && (
-          <p className="text-tiny text-ink-600 font-medium mt-0.5 truncate">
-            {[lead.job_type, lead.area && `· ${lead.area}`].filter(Boolean).join(" ")}
+          <p className="text-tiny text-ink-600 mt-0.5 truncate">
+            {[lead.job_type, lead.area].filter(Boolean).join(" · ")}
           </p>
         )}
 
-        {/* Phone — visible directly */}
+        {/* Real phone only — placeholders are suppressed in getDisplayPhone */}
         {displayPhone && (
-          <p className="text-[11px] text-ink-400 mt-0.5 font-mono">{displayPhone}</p>
+          <p className="text-[11px] text-ink-400 mt-0.5 font-mono truncate">{displayPhone}</p>
         )}
 
-        {/* Bottom row */}
-        <div className="flex items-center gap-2 mt-1">
-          <span className={cn("text-[10px] font-medium", ageColor)}>{timeAgo(lead.created_at)}</span>
-          {lead.preferred_time && (
-            <span className="text-[10px] text-ink-300 flex items-center gap-0.5">
-              <Clock className="w-2.5 h-2.5" /> {lead.preferred_time}
-            </span>
-          )}
-          {lead.assigned_to && (
-            <span className="text-[10px] text-ink-400 truncate max-w-[70px]">→ {lead.assigned_to}</span>
-          )}
-        </div>
+        {/* Compact meta line — only render if there's actually something */}
+        {(lead.preferred_time || lead.assigned_to) && (
+          <div className="flex items-center gap-2 mt-1">
+            {lead.preferred_time && (
+              <span className="text-[10px] text-ink-400 flex items-center gap-0.5">
+                <Clock className="w-2.5 h-2.5" /> {lead.preferred_time}
+              </span>
+            )}
+            {lead.assigned_to && (
+              <span className="text-[10px] text-ink-400 truncate max-w-[90px]">→ {lead.assigned_to}</span>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Status + value */}
+      {/* Single capsule: age for pending leads, status for everything else */}
       <div className="flex flex-col items-end gap-1 shrink-0">
-        <span className={cn("px-2 py-0.5 rounded-md text-[10px] font-bold border", s.cls)}>
-          {s.label}
+        <span className={cn("px-2 py-0.5 rounded-md text-[10px] font-bold border whitespace-nowrap", cap.cls)}>
+          {cap.label}
         </span>
         {lead.job_value ? (
-          <span className="text-[10px] text-green-700 font-bold">R{lead.job_value.toLocaleString()}</span>
+          <span className="text-[10px] text-green-700 font-bold tabular-nums">R{lead.job_value.toLocaleString()}</span>
         ) : null}
       </div>
     </div>
