@@ -61,6 +61,9 @@ const nextConfig = {
       // signup so it lands somewhere useful, and keep search engines
       // out of the misleading URL.
       { source: "/booking", destination: "/signup", permanent: true },
+      // Privacy policy moved from /legal/privacy to /privacy as the
+      // canonical URL when the POPIA polish pass landed.
+      { source: "/legal/privacy", destination: "/privacy", permanent: true },
     ];
   },
 };

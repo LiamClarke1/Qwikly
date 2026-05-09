@@ -16,7 +16,8 @@ const companyLinks = [
 const legalLinks = [
   { label: "Trust", href: "/trust" },
   { label: "Terms of Service", href: "/legal/terms" },
-  { label: "Privacy Policy", href: "/legal/privacy" },
+  { label: "Privacy Policy", href: "/privacy" },
+  { label: "Delete my data", href: "/privacy/delete-my-data" },
 ];
 
 export default function Footer() {

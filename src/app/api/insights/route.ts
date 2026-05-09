@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
   }
 
   // Funnel
-  let visitorsStarted = periodConvs.length;
+  const visitorsStarted = periodConvs.length;
   let engaged = 0;
   let nameCaptured = 0;
   let contactCaptured = 0;

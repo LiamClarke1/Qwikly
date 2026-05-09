@@ -196,6 +196,7 @@ export default function ConversationsPage() {
           .from("conversations")
           .select("*")
           .eq("client_id", client.id)
+          .is("deleted_at", null)
           .order("updated_at", { ascending: false });
         enriched = ((fallback as Convo[]) ?? []).map((c) => ({
           ...c,

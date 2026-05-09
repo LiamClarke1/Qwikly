@@ -45,10 +45,10 @@ export default function CookieBanner() {
       className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-sm z-50 bg-ink text-paper rounded-2xl shadow-pop p-5 border border-paper/10 animate-slide-up"
     >
       <p className="text-sm text-paper/90 leading-relaxed mb-4">
-        We use cookies to keep you signed in and improve the platform. We don&rsquo;t use advertising
-        cookies.{" "}
-        <Link href="/legal/privacy" className="text-ember underline transition-colors">
-          Privacy Policy
+        We use a small number of cookies to keep you signed in and to remember your choices, in line
+        with the Protection of Personal Information Act (POPIA, 2013). No advertising cookies, ever.{" "}
+        <Link href="/privacy" className="text-ember underline transition-colors">
+          See our Privacy Policy
         </Link>
         .
       </p>

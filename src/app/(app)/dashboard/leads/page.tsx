@@ -558,6 +558,7 @@ function DetailPanel({
   onClose,
   onStatusChange,
   onLeadUpdate,
+  onLeadDelete,
   isMobile,
 }: {
   lead: Lead;
@@ -565,6 +566,7 @@ function DetailPanel({
   onClose: () => void;
   onStatusChange: (id: string, status: string) => void;
   onLeadUpdate: (id: string, updates: Partial<Lead>) => void;
+  onLeadDelete: (id: string) => void;
   isMobile: boolean;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -593,6 +595,28 @@ function DetailPanel({
   const [closingOutcome, setClosingOutcome] = useState<"won" | "lost">("won");
   const [closingReason, setClosingReason] = useState(LOST_REASONS[0]);
   const [closingValue, setClosingValue] = useState(lead.job_value?.toString() ?? "");
+
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function handleDeleteLead() {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/conversations/${lead.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setDeleteError(j.error ?? `Delete failed (${res.status})`);
+        setDeleting(false);
+        return;
+      }
+      onLeadDelete(lead.id);
+    } catch {
+      setDeleteError("Could not reach the server. Please try again.");
+      setDeleting(false);
+    }
+  }
 
   const displayName = getDisplayName(lead);
   const displayPhone = getDisplayPhone(lead);
@@ -1301,6 +1325,57 @@ function DetailPanel({
           </div>
         )}
 
+        {/* Danger zone — POPIA permanent delete */}
+        <div className="px-4 py-4 border-t border-ink/[0.06] bg-red-50/30">
+          <p className="text-[10px] font-semibold text-red-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <AlertCircle className="w-3 h-3" /> Danger zone
+          </p>
+          {!confirmingDelete ? (
+            <>
+              <p className="text-tiny text-ink-600 leading-relaxed mb-2">
+                Permanently delete this lead and the entire conversation. We do this if a visitor asks
+                you to remove their data, in line with the Protection of Personal Information Act (POPIA, 2013).
+              </p>
+              <button
+                type="button"
+                onClick={() => setConfirmingDelete(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 bg-white text-red-700 text-tiny font-semibold hover:bg-red-50 transition-colors cursor-pointer"
+              >
+                <Trash2 className="w-3 h-3" /> Delete this lead permanently
+              </button>
+            </>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-tiny text-ink-700 leading-relaxed">
+                This deletes the conversation, all messages, and any documents. It cannot be undone.
+                Are you sure?
+              </p>
+              {deleteError && (
+                <p className="text-tiny text-red-700">{deleteError}</p>
+              )}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleDeleteLead}
+                  disabled={deleting}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white text-tiny font-semibold hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {deleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                  {deleting ? "Deleting…" : "Yes, delete permanently"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setConfirmingDelete(false); setDeleteError(null); }}
+                  disabled={deleting}
+                  className="px-3 py-1.5 rounded-lg border border-ink/[0.12] bg-white text-ink text-tiny font-semibold hover:bg-ink/[0.04] transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   );
@@ -1382,6 +1457,7 @@ function LeadsContent() {
       .select("id,customer_name,customer_phone,customer_email,job_type,status,created_at,updated_at,preferred_time,area,booking_intent,job_value,closed_reason,appointment_at,follow_up_at,assigned_to")
       .eq("client_id", client.id)
       .eq("is_lead", true)
+      .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(200);
 
@@ -1402,6 +1478,14 @@ function LeadsContent() {
 
   function handleLeadUpdate(id: string, updates: Partial<Lead>) {
     setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, ...updates } : l)));
+  }
+
+  function handleLeadDelete(id: string) {
+    setLeads((prev) => prev.filter((l) => l.id !== id));
+    if (selectedId === id) {
+      setSelectedId(null);
+      router.replace("/dashboard/leads", { scroll: false });
+    }
   }
 
   function toggleBulkSelect(id: string) {
@@ -1588,6 +1672,7 @@ function LeadsContent() {
             onClose={() => { setSelectedId(null); router.replace("/dashboard/leads", { scroll: false }); }}
             onStatusChange={handleStatusChange}
             onLeadUpdate={handleLeadUpdate}
+            onLeadDelete={handleLeadDelete}
             isMobile={isMobile}
           />
         )}

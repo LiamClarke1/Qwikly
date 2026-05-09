@@ -42,7 +42,7 @@ export async function DELETE(
 
   const db = supabaseAdmin();
 
-  // Verify this conversation belongs to the authenticated client before deleting
+  // Verify this conversation belongs to the authenticated client.
   const { data: convo } = await db
     .from("conversations")
     .select("id")
@@ -52,11 +52,28 @@ export async function DELETE(
 
   if (!convo) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // messages_log has ON DELETE CASCADE — delete explicitly for safety
-  await db.from("messages_log").delete().eq("conversation_id", id);
+  // POPIA soft-delete: set deleted_at on conversation, messages, and documents.
+  // Audit trail is preserved; the daily /api/cron/data-retention pass hard-
+  // deletes everything (and removes the storage objects) within 24 hours.
+  const now = new Date().toISOString();
 
-  const { error } = await db.from("conversations").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const { error: convErr } = await db
+    .from("conversations")
+    .update({ deleted_at: now })
+    .eq("id", id);
+  if (convErr) return NextResponse.json({ error: convErr.message }, { status: 500 });
 
-  return NextResponse.json({ ok: true });
+  await db
+    .from("messages_log")
+    .update({ deleted_at: now })
+    .eq("conversation_id", id)
+    .is("deleted_at", null);
+
+  await db
+    .from("conversation_documents")
+    .update({ deleted_at: now, status: "deleted" })
+    .eq("conversation_id", id)
+    .is("deleted_at", null);
+
+  return NextResponse.json({ ok: true, soft_deleted: true });
 }

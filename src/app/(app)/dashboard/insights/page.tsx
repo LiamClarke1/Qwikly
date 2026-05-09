@@ -195,7 +195,7 @@ export default function InsightsPage() {
 
       {error && (
         <Card className="!p-5 mb-6 border-red-500/40">
-          <p className="text-small text-red-500">We couldn't load insights, {error}</p>
+          <p className="text-small text-red-500">We couldn&apos;t load insights, {error}</p>
         </Card>
       )}
 

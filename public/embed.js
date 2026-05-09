@@ -122,6 +122,13 @@
     ".sndbtn:disabled{opacity:.35;cursor:not-allowed}",
     ".sndbtn svg{pointer-events:none}",
     ".ft{text-align:center;padding:6px;font-size:10px;color:#CBD5E1;border-top:1px solid #F8FAFC;background:#fff;flex-shrink:0}",
+    // Consent disclosure shown beneath the first greeting message. Tiny,
+    // dismissible, persisted via localStorage so returning visitors don't see
+    // it again. POPIA: visitors are told their conversation may be stored.
+    ".cn{align-self:flex-start;max-width:88%;display:flex;align-items:flex-start;gap:6px;padding:6px 10px;background:#FFF;border:1px solid #E2E8F0;border-radius:10px;font-size:11px;line-height:1.4;color:#64748B;animation:" + (prefersReduced ? "none" : "fadeUp .18s ease") + "}",
+    ".cn a{color:#E85A2C;text-decoration:underline;cursor:pointer}",
+    ".cn-x{flex:0 0 auto;background:none;border:none;color:#94A3B8;font-size:13px;line-height:1;padding:0 2px;cursor:pointer;font-family:inherit}",
+    ".cn-x:hover{color:#475569}",
     // Attach button
     ".attbtn{width:" + BTN_SIZE + "px;height:" + BTN_SIZE + "px;border:none;border-radius:" + (COMPACT ? 10 : 12) + "px;background:#F1F5F9;color:#64748B;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:" + MICRO + ";touch-action:manipulation}",
     ".attbtn:hover{background:#E2E8F0;color:#1F2937}",
@@ -582,6 +589,37 @@
     }
     // Empty bot placeholder (streaming) is anchored on the first chunk.
     return div;
+  }
+
+  // Renders a tiny POPIA disclosure beneath the first greeting message.
+  // Visitors can dismiss it; we persist the choice in localStorage so returning
+  // visitors don't see it again. The link points to qwikly.co.za/privacy
+  // (always the Qwikly canonical URL, even when the widget is embedded on a
+  // tenant's domain) so the visitor reaches the policy of the operator that
+  // actually holds their data.
+  var CONSENT_LS_KEY = "qwikly_consent_dismissed_v1";
+  function showConsentNotice() {
+    try {
+      if (localStorage.getItem(CONSENT_LS_KEY) === "1") return;
+    } catch (_e) { /* localStorage may be blocked, fall through and show */ }
+    var m = msgsEl(); if (!m) return;
+    var note = document.createElement("div");
+    note.className = "cn";
+    var span = document.createElement("span");
+    span.style.flex = "1";
+    span.innerHTML = "Your conversation may be stored for service improvement, see our " +
+      "<a href=\"https://qwikly.co.za/privacy\" target=\"_blank\" rel=\"noopener noreferrer\">privacy policy</a>.";
+    var x = document.createElement("button");
+    x.className = "cn-x";
+    x.setAttribute("aria-label", "Dismiss privacy notice");
+    x.textContent = "×";
+    x.addEventListener("click", function () {
+      try { localStorage.setItem(CONSENT_LS_KEY, "1"); } catch (_e) { /* ignore */ }
+      if (note.parentNode) note.parentNode.removeChild(note);
+    });
+    note.appendChild(span);
+    note.appendChild(x);
+    m.appendChild(note);
   }
 
   // ── Inline booking picker ───────────────────────────────────────────────────
@@ -1141,6 +1179,7 @@
           ? branding.greeting.replace(/\{name\}/g, "").replace(/\{business\}/g, biz()).trim()
           : "Hi! How can we help you today?";
         addMsg("bot", greeting);
+        showConsentNotice();
         greeted = true;
         setInputEnabled(true);
         if (!isMobile) { var inp = shadow.getElementById("qw-inp"); if (inp) inp.focus(); }
