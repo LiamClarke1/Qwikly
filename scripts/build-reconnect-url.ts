@@ -10,7 +10,7 @@ const SCOPES = [
 ];
 
 const CLIENT_ID = "1";
-const TARGET_GOOGLE = "liamc7250@gmail.com";
+const TARGET_GOOGLE = "liamclarke21@outlook.com";
 
 const cronSecret = process.env.CRON_SECRET!;
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").trim();
