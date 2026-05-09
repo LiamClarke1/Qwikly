@@ -148,8 +148,10 @@ function NativeIntegrationsCard({
             <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-ember/[0.06] border border-ember/20">
               <Calendar className="w-4 h-4 text-ember shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-small font-medium text-fg">Calendar connected</p>
-                <p className="text-tiny text-fg-muted truncate">{client.google_calendar_id ?? "Google Calendar"}</p>
+                <p className="text-small font-medium text-fg">
+                  {client.google_calendar_id ? `Connected as ${client.google_calendar_id}` : "Connected"}
+                </p>
+                <p className="text-tiny text-fg-muted truncate">Bookings sync to this Google Calendar automatically.</p>
               </div>
               <a href="https://calendar.google.com" target="_blank" rel="noreferrer" className="text-tiny text-ember hover:underline flex items-center gap-1 cursor-pointer">
                 Open <ExternalLink className="w-3 h-3" />
