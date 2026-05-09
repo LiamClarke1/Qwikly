@@ -111,14 +111,16 @@ export async function recomputeAllClientScores(
 ): Promise<{ updated: number; skipped: number; errors: number }> {
   const clientsRes = await sb
     .from("clients")
-    .select("id, last_activity_at, created_at, onboarding_complete, mrr_zar, plan, crm_status")
+    .select("id, created_at, onboarding_complete, mrr_zar, plan, crm_status")
     .neq("crm_status", "pending_deletion");
 
-  if (clientsRes.error || !clientsRes.data) return { updated: 0, skipped: 0, errors: 1 };
+  if (clientsRes.error || !clientsRes.data) {
+    console.error("[risk-health] clients query failed:", clientsRes.error);
+    return { updated: 0, skipped: 0, errors: 1 };
+  }
 
   const clients = clientsRes.data as Array<{
     id: number;
-    last_activity_at: string | null;
     created_at: string;
     onboarding_complete: boolean | null;
     mrr_zar: number | null;
@@ -148,16 +150,21 @@ export async function recomputeAllClientScores(
     disputeCount.set(d.client_id, (disputeCount.get(d.client_id) ?? 0) + 1);
   }
 
-  // Batch signal 3: count recent conversations per client (last 30 days).
+  // Batch signal 3: count recent conversations per client (last 30 days),
+  // and track the most recent created_at per client to derive last_activity_at
+  // (clients table has no such column, the CRM list page also computes it this way).
   const thirtyDaysAgo = new Date(now.getTime() - 30 * DAY_MS).toISOString();
   const convosRes = await sb
     .from("conversations")
-    .select("client_id")
+    .select("client_id, created_at")
     .in("client_id", clientIds)
     .gte("created_at", thirtyDaysAgo);
   const convoCount = new Map<number, number>();
-  for (const c of (convosRes.data ?? []) as Array<{ client_id: number }>) {
+  const lastActivityAt = new Map<number, string>();
+  for (const c of (convosRes.data ?? []) as Array<{ client_id: number; created_at: string }>) {
     convoCount.set(c.client_id, (convoCount.get(c.client_id) ?? 0) + 1);
+    const existing = lastActivityAt.get(c.client_id);
+    if (!existing || c.created_at > existing) lastActivityAt.set(c.client_id, c.created_at);
   }
 
   let updated = 0;
@@ -166,7 +173,7 @@ export async function recomputeAllClientScores(
   for (const client of clients) {
     const inputs: ScoreInputs = {
       has_overdue_invoice: overdueSet.has(client.id),
-      last_activity_at: client.last_activity_at,
+      last_activity_at: lastActivityAt.get(client.id) ?? null,
       account_created_at: client.created_at,
       recent_dispute_count: disputeCount.get(client.id) ?? 0,
       onboarding_complete: !!client.onboarding_complete,
