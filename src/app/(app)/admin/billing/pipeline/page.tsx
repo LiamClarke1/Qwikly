@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Calendar, ShieldCheck, AlertTriangle, CheckCircle2, ArrowRight, FileText } from "lucide-react";
+import { Calendar, ShieldCheck, AlertTriangle, CheckCircle2, ArrowRight, FileText, Upload } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatZAR } from "@/lib/format";
 
@@ -19,6 +19,8 @@ interface AwaitingRow {
   id: string; invoice_number: string | null; total_zar: number;
   client_marked_paid_at: string; client_payment_note: string | null;
   client_id: number; clients: { business_name: string };
+  proof_signed_url: string | null;
+  proof_mime_type: string | null;
 }
 interface OverdueRow {
   id: string; invoice_number: string | null; total_zar: number;
@@ -166,6 +168,27 @@ export default function BillingPipelinePage() {
                   <p className="text-[12px] text-slate-500">{a.invoice_number}, {formatZAR(a.total_zar)}, client confirmed {new Date(a.client_marked_paid_at).toLocaleDateString()}</p>
                   {a.client_payment_note && <p className="text-[11px] text-slate-400 mt-0.5">&ldquo;{a.client_payment_note}&rdquo;</p>}
                 </div>
+                {/* Proof of payment */}
+                {a.proof_signed_url && a.proof_mime_type?.startsWith("image/") ? (
+                  <a href={a.proof_signed_url} target="_blank" rel="noopener noreferrer" title="View proof of payment" className="shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={a.proof_signed_url}
+                      alt="Proof of payment"
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 rounded-lg object-cover border border-slate-200 hover:opacity-80 transition-opacity"
+                    />
+                  </a>
+                ) : a.proof_signed_url && a.proof_mime_type === "application/pdf" ? (
+                  <a href={a.proof_signed_url} target="_blank" rel="noopener noreferrer"
+                    className="shrink-0 flex items-center gap-1 text-[12px] text-violet-600 font-medium hover:text-violet-800 transition-colors">
+                    <FileText className="w-4 h-4" />
+                    View PDF
+                  </a>
+                ) : (
+                  <span className="shrink-0 text-[11px] text-slate-500">No proof attached</span>
+                )}
                 <button onClick={() => patch(a.id, "verify")} disabled={actionId === a.id}
                   className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[12px] font-semibold hover:bg-emerald-700 disabled:opacity-50 cursor-pointer">
                   Mark verified

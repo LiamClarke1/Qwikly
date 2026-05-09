@@ -56,7 +56,7 @@ export async function GET(_req: NextRequest) {
   // Awaiting verification
   const awaitingRes = await sb
     .from("qwikly_billing_invoices")
-    .select("id, invoice_number, total_zar, client_marked_paid_at, client_payment_note, client_id, clients(business_name)")
+    .select("id, invoice_number, total_zar, client_marked_paid_at, client_payment_note, client_id, clients(business_name), proof_storage_path, proof_uploaded_at, proof_mime_type")
     .eq("status", "awaiting_verification")
     .order("client_marked_paid_at", { ascending: true });
 
@@ -83,6 +83,20 @@ export async function GET(_req: NextRequest) {
     .eq("status", "draft")
     .order("created_at", { ascending: false });
 
+  // Generate 1-hour signed URLs for proof attachments on awaiting rows
+  const awaitingRows = awaitingRes.data ?? [];
+  const awaitingWithProof = await Promise.all(
+    awaitingRows.map(async (row) => {
+      if (!row.proof_storage_path) {
+        return { ...row, proof_signed_url: null };
+      }
+      const { data: signed } = await sb.storage
+        .from("payment-proofs")
+        .createSignedUrl(row.proof_storage_path, 3600);
+      return { ...row, proof_signed_url: signed?.signedUrl ?? null };
+    })
+  );
+
   const forecast7 = allUpcoming.filter(u => u.days_until <= 7).reduce((s, u) => s + u.estimated_amount_zar, 0);
   const forecast30 = allUpcoming.filter(u => u.days_until <= 30).reduce((s, u) => s + u.estimated_amount_zar, 0);
 
@@ -96,7 +110,7 @@ export async function GET(_req: NextRequest) {
       drafts_count: (draftsRes.data ?? []).length,
     },
     upcoming,
-    awaiting_verification: awaitingRes.data ?? [],
+    awaiting_verification: awaitingWithProof,
     overdue: overdueRes.data ?? [],
     paid_this_month: paidRes.data ?? [],
     drafts: draftsRes.data ?? [],
