@@ -14,6 +14,7 @@ const PUBLIC_PREFIXES = [
   "/how-it-works",
   "/pricing",
   "/legal",
+  "/privacy",
   "/about",
   "/contact",
   "/status",
@@ -37,6 +38,7 @@ const PUBLIC_PREFIXES = [
   "/api/signup",
   "/api/login",
   "/api/auth/forgot-password",
+  "/api/privacy",
   "/auth/verify",
   // Public widget endpoints — must be accessible from any external site
   "/api/chat",
