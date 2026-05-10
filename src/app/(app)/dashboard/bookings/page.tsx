@@ -234,13 +234,45 @@ export default function BookingsPage() {
     return m;
   }, [bookings, gCalEvents]);
 
+  // Stats include Google Calendar synced events alongside internal bookings,
+  // so the numbers match what the owner sees on the calendar grid. Without
+  // this, manually-added gCal events render on the grid but get counted as 0,
+  // which reads like a bug to the owner.
+  const now = new Date();
+  const upcomingGcalCount = gCalEvents.filter(
+    (e) => e.start && new Date(e.start) > now
+  ).length;
+  const gcalCount = gCalEvents.length;
+
+  // Find the next upcoming appointment from either source for the
+  // "Next up" strip.
+  const upcomingItems: Array<{ when: Date; title: string; source: "booking" | "gcal" }> = [
+    ...bookings
+      .filter((b) => b.booking_datetime && new Date(b.booking_datetime) > now && b.status === "booked")
+      .map((b) => ({
+        when: new Date(b.booking_datetime as string),
+        title: (b.customer_name || "Booking") + (b.job_type ? `, ${b.job_type}` : ""),
+        source: "booking" as const,
+      })),
+    ...gCalEvents
+      .filter((e) => e.start && new Date(e.start) > now)
+      .map((e) => ({
+        when: new Date(e.start as string),
+        title: e.title || "Calendar event",
+        source: "gcal" as const,
+      })),
+  ].sort((a, b) => a.when.getTime() - b.when.getTime());
+  const nextUp = upcomingItems[0] ?? null;
+
   const stats = {
-    total: bookings.length,
-    upcoming: bookings.filter((b) => b.booking_datetime && new Date(b.booking_datetime) > new Date() && b.status === "booked").length,
+    total: bookings.length + gcalCount,
+    upcoming: bookings.filter((b) => b.booking_datetime && new Date(b.booking_datetime) > now && b.status === "booked").length + upcomingGcalCount,
     completed: bookings.filter((b) => b.status === "completed").length,
     revenue: bookings.filter((b) => b.status === "completed").reduce((sum, b) => sum + (b.service_price ?? 0), 0),
     emergency: bookings.filter((b) => b.is_emergency && b.status !== "completed" && b.status !== "cancelled" && b.status !== "no-show").length,
     tentative: bookings.filter((b) => b.status === "tentative").length,
+    // Counted separately so the stat cards can show "incl. N from Google Calendar"
+    fromGcal: gcalCount,
   };
 
   const updateStatus = async (id: string, status: string) => {
@@ -597,24 +629,65 @@ export default function BookingsPage() {
         </Card>
       )}
 
+      {/* Next-up strip — shows the soonest upcoming appointment so the owner
+          gets a glanceable "what's next?" without having to scan the calendar. */}
+      {nextUp && (
+        <Card className="!p-4 mb-3 flex items-center gap-3 flex-wrap">
+          <span className="text-tiny font-semibold text-fg-subtle uppercase tracking-wider">Next up</span>
+          <span className="text-small font-medium text-fg">
+            {nextUp.when.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" })}
+            {" at "}
+            {nextUp.when.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit", hour12: false })}
+          </span>
+          <span className="text-small text-fg-muted">{nextUp.title}</span>
+          {nextUp.source === "gcal" && (
+            <span className="text-tiny px-2 py-0.5 rounded-md bg-[#6366f1]/10 border border-[#6366f1]/25 text-[#818cf8] font-medium">
+              From Google Calendar
+            </span>
+          )}
+        </Card>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
         {[
           stats.emergency > 0
-            ? { label: "Emergency open", value: stats.emergency, color: "#DC2626" }
-            : { label: "Total bookings", value: stats.total, color: "#38BDF8" },
+            ? { label: "Emergency open", value: stats.emergency, color: "#DC2626", hint: null }
+            : {
+                label: "Total bookings",
+                value: stats.total,
+                color: "#38BDF8",
+                hint: stats.fromGcal > 0
+                  ? `incl. ${stats.fromGcal} from Google Calendar`
+                  : null,
+              },
           stats.tentative > 0
-            ? { label: "Awaiting decision", value: stats.tentative, color: "#F59E0B" }
-            : { label: "Upcoming", value: stats.upcoming, color: "#60A5FA" },
-          { label: "Completed", value: stats.completed, color: "#22C55E" },
-          { label: "Est. revenue", value: `R${stats.revenue.toLocaleString("en-ZA")}`, color: "#8B5CF6" },
+            ? { label: "Awaiting decision", value: stats.tentative, color: "#F59E0B", hint: null }
+            : { label: "Upcoming", value: stats.upcoming, color: "#60A5FA", hint: null },
+          { label: "Completed", value: stats.completed, color: "#22C55E", hint: null },
+          { label: "Est. revenue", value: `R${stats.revenue.toLocaleString("en-ZA")}`, color: "#8B5CF6", hint: null },
         ].map((s, i) => (
           <Card key={i} className="!p-4">
             <p className="text-tiny text-fg-subtle font-medium mb-1">{s.label}</p>
             <p className="text-h1 text-fg num leading-none" style={{ color: s.color }}>{s.value}</p>
+            {s.hint && (
+              <p className="text-tiny text-fg-muted mt-1.5">{s.hint}</p>
+            )}
           </Card>
         ))}
       </div>
+
+      {/* Empty-state hint — when there's truly nothing yet, the four zeros above
+          read as broken rather than "you're new". This banner explains. */}
+      {stats.total === 0 && (
+        <Card className="!p-5 mb-4 bg-surface-input/50 border-dashed">
+          <p className="text-small text-fg font-semibold mb-1">No bookings yet</p>
+          <p className="text-tiny text-fg-muted leading-relaxed">
+            When a visitor books a slot through your assistant, or a calendar event lands in your synced Google Calendar,
+            it&apos;ll appear here. You can also click any empty slot on the calendar below to add a booking manually.
+          </p>
+        </Card>
+      )}
 
       {view === "calendar" ? (
         <Card className="!p-0 overflow-hidden">
