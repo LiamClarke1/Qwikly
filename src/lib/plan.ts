@@ -21,6 +21,12 @@ interface PlanConfig {
    *  out. Charged in cents. Lower tiers pay more per overage; higher tiers
    *  get volume rates. */
   overageCentsPerConversation: number;
+  /** Per-extra-lead top-up rate in ZAR. Sized at (or just above) each
+   *  tier's effective in-plan per-lead rate so a customer who goes over
+   *  their cap pays roughly what they were already paying — not a flat
+   *  punitive overage that would penalise higher tiers (whose in-plan
+   *  rate is much lower than R20/lead). */
+  topUpPricePerLeadZar: number;
 }
 
 // Tier structure (2026-05-10, refined):
@@ -50,9 +56,12 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     name: 'Trial',
     priceMonthly: 0,
     leadLimit: 30,
-    // Trial mirrors Starter on branding/users/greeting. 50 conversations
-    // is a generous evaluation taste, ~7/day across the 7-day window.
-    // Worst-case API spend per trial signup: 50 × R1.00 wholesale = R50.
+    // Trial mirrors Starter on branding/users/greeting. Conversation cap
+    // is set at 10× the lead cap (300 = 30 leads × 10×) — enough for
+    // typical honest trial use (7-8× × 30 leads + headroom) without the
+    // unbounded R600 worst-case wholesale that would hit if we mirrored
+    // Starter's full 20× cap. A 7-day trial is a taste, not a full
+    // month. Worst-case wholesale per trial: 300 × R1 = R300.
     removeBranding: false,
     customGreeting: false,
     csvExport: false,
@@ -60,25 +69,30 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 1,
     responseSlaHours: 24,
-    conversationsIncluded: 50,
+    conversationsIncluded: 300,
     overageCentsPerConversation: 750,
+    // Trial mirrors Starter top-up rate so a converted trial signup
+    // doesn't see a price change in their first month past cap.
+    topUpPricePerLeadZar: 23,
   },
-  // Conversation caps below are sized to MATCH realistic conversation-to-
-  // lead conversion rates so the cap stays invisible to honest customers.
-  // The pricing page promises "curiosity is free, only paid leads count
-  // against your limit", and the cap must be high enough that a normal
-  // customer hitting their LEAD cap never trips the conversation gate.
-  // Industry benchmarks: ~10× convs per lead average (3-5× pharmacy/trade,
-  // 6-10× dental, 10-15× solar, 15-20× real estate).
+  // Conversation caps are sized at the WORST-HONEST-CASE conv:lead ratio
+  // (~20× for explore-heavy industries like real-estate) so an honest
+  // customer never trips the conversation gate before their LEAD cap.
+  // The public pricing page promises "curiosity is free, only paid leads
+  // count" — that promise has to actually hold for every honest customer,
+  // including the ones with high tire-kicker traffic.
   //
-  // Higher tiers get tighter ratios (6× business, 4× enterprise) because
-  // those customers have proven volume and the cap protects margin from
-  // genuine outliers without hurting normal users.
+  // Caps stay internal: never displayed on the pricing page, dashboard,
+  // or invoices. They exist purely as an abuse floor — a single tenant
+  // running at >25× conv:lead is either bot traffic or a misconfigured
+  // embed, both of which warrant a manual review rather than silent
+  // billing.
   //
-  // Wholesale planning constant: R1.00 (measured R0.74 + 33% safety buffer).
-  // Margin profile: ~70-85% at typical 30-50% utilisation, dipping to
-  // 25-50% only when a customer fully consumes the cap (rare). Overage
-  // billed at R7.50/conv = 80% margin on the extras anyway.
+  // Wholesale planning constant: R1.00 (measured R0.74 + 33% buffer).
+  // Realistic utilisation (~30% of leads, ~7-8× ratio) puts us at 10-15%
+  // of the conversation cap → margin profile of 80-90% in the typical
+  // case. Worst-case (full cap consumption) compresses margin sharply
+  // and is treated as a billing-review trigger, not an expected state.
   starter: {
     name: 'Starter',
     priceMonthly: 699,
@@ -90,11 +104,17 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 1,
     responseSlaHours: 24,
-    // 30 leads × 10× ratio = 300 conversations. Comfortable headroom for
-    // every trade, including real-estate solos who have heavy tire-kicker
-    // traffic and would otherwise hit a tight cap before their lead cap.
-    conversationsIncluded: 300,
+    // 30 leads × 20× ratio = 600 conversations. Sized for the worst-
+    // honest-case conversion rate (real-estate-style explore traffic) so
+    // the customer NEVER hits the conversation cap before their lead
+    // cap. Realistic utilisation (~7-8× × 30% of leads) sits at 10-15%
+    // of cap → 90% margin in the typical month.
+    conversationsIncluded: 600,
     overageCentsPerConversation: 750,
+    // R23/lead matches the Starter in-plan effective rate (R699/30 =
+    // R23.30), so a customer who goes one lead over pays the same per-
+    // lead rate they were already paying — not a punitive flat overage.
+    topUpPricePerLeadZar: 23,
   },
   pro: {
     name: 'Pro',
@@ -107,10 +127,15 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 3,
     responseSlaHours: 12,
-    // 100 leads × 10× = 1,000 conversations. Same ratio as Starter; the
-    // cap scales linearly with leads at this tier.
-    conversationsIncluded: 1000,
+    // 100 leads × 20× = 2,000 conversations. Same explore-headroom as
+    // Starter — Pro customers have similar conv:lead profiles, just
+    // more volume.
+    conversationsIncluded: 2000,
     overageCentsPerConversation: 750,
+    // R20/lead vs R17.99 in-plan = ~11% nudge to upgrade rather than top
+    // up indefinitely, but still close enough to the in-plan rate to not
+    // feel punitive.
+    topUpPricePerLeadZar: 20,
   },
   business: {
     name: 'Business',
@@ -123,12 +148,18 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'priority',
     teamSeats: null,
     responseSlaHours: 4,
-    // 400 leads × 6× = 2,400 conversations. Tighter ratio because
-    // Business customers have proven traffic and the conversation cap
-    // mostly protects against genuinely abusive volume (scrapers,
-    // misconfigured chat embeds spamming the API).
-    conversationsIncluded: 2400,
+    // 400 leads × 15× = 6,000 conversations. Slightly tighter ratio
+    // than Starter/Pro because Business customers have proven volume
+    // (the 15× still covers real-estate-style explore traffic). At
+    // realistic utilisation (~30% × 7×) we sit at ~14% of cap, leaving
+    // a comfortable margin profile.
+    conversationsIncluded: 6000,
     overageCentsPerConversation: 750,
+    // R12/lead vs R9.99 in-plan = ~20% nudge. Business customers tend
+    // to top up rather than upgrade to Enterprise (which is custom-
+    // priced), so the nudge keeps them honest about which tier they
+    // actually need.
+    topUpPricePerLeadZar: 12,
   },
   enterprise: {
     name: 'Enterprise',
@@ -141,11 +172,16 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'dedicated',
     teamSeats: null,
     responseSlaHours: 1,
-    // 1,500 leads × 4× = 6,000 conversations as the published starting
+    // 1,500 leads × 15× = 22,500 conversations as the published starting
     // point. Enterprise is "from R7,999" with negotiated caps — actual
-    // contracts get tuned per customer based on observed traffic.
-    conversationsIncluded: 6000,
+    // contracts get tuned per customer based on observed traffic. Cap is
+    // generous enough that no honest Enterprise customer will trip it.
+    conversationsIncluded: 22500,
     overageCentsPerConversation: 750,
+    // R8/lead vs R5.33 in-plan = ~50% premium, but Enterprise is
+    // negotiated anyway and overages above the published cap are
+    // treated as a contract-renegotiation trigger.
+    topUpPricePerLeadZar: 8,
   },
   // ── Legacy tier ───────────────────────────────────────────
   // Pre-2026-05-10 customers signed up at R1,999 with 250 leads + custom
@@ -163,10 +199,14 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     apiAccess: false,
     supportTier: 'priority',
     teamSeats: null,
-    // 400 × R1.50 = R600 wholesale at cap → R1,399 profit on R1,999 = 70.0% margin.
+    // Legacy cap kept for grandfathered customers — not adjusted under
+    // the lead-ratio sizing because Premium is closed to new signups.
     conversationsIncluded: 400,
     overageCentsPerConversation: 750,
     responseSlaHours: 4,
+    // Legacy Premium aligns with Business top-up rate (closest equivalent
+    // tier in the new structure).
+    topUpPricePerLeadZar: 12,
   },
 };
 
@@ -187,8 +227,16 @@ export function nextRenewalDate(): Date {
   return new Date(now.getFullYear(), now.getMonth() + 1, 1);
 }
 
-// R20 per extra lead above plan cap
-export const PLAN_TOP_UP_PRICE = 20;
+/**
+ * Resolve the top-up price (ZAR per extra lead) for a given plan tier.
+ * Replaces the old flat PLAN_TOP_UP_PRICE = 20 — the flat rate punished
+ * higher-tier customers (Business in-plan = R10/lead, so R20/lead overage
+ * felt like a 100% surcharge). Tier-aware top-ups keep the per-lead rate
+ * close to what the customer is already paying inside their plan.
+ */
+export function topUpPricePerLeadZar(tier: PlanTier): number {
+  return PLAN_CONFIG[tier].topUpPricePerLeadZar;
+}
 
 // 15% discount for annual billing
 export const PLAN_ANNUAL_DISCOUNT_PCT = 0.15;

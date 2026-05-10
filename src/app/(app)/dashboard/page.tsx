@@ -13,7 +13,7 @@ import { useClient } from "@/lib/use-client";
 import { useUser } from "@/lib/use-user";
 import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/cn";
-import { resolvePlan, PLAN_CONFIG, PLAN_TOP_UP_PRICE, type PlanTier } from "@/lib/plan";
+import { resolvePlan, PLAN_CONFIG, topUpPricePerLeadZar, type PlanTier } from "@/lib/plan";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -283,7 +283,7 @@ function StatusBar({
             <AlertTriangle className="w-4 h-4 text-danger shrink-0" />
             <span className="text-ink font-medium">
               You&rsquo;ve hit your cap, top-ups billed at{" "}
-              <span className="font-bold">R{PLAN_TOP_UP_PRICE}/lead</span>
+              <span className="font-bold">R{topUpPricePerLeadZar(tier)}/lead</span>
               {tier !== "premium" && (
                 <>
                   {", or "}

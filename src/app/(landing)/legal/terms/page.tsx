@@ -155,7 +155,7 @@ export default function TermsPage() {
                     "Annual billing is available at a 15% discount off the monthly rate",
                     "Subscription fees are billed monthly in advance on the anniversary of your sign-up date",
                     "Payment is due on the billing date; failure to pay may result in suspension of the Service",
-                    "Top-up leads over your monthly cap are billed at R20 per qualified lead",
+                    "Top-up leads over your monthly cap are billed at your plan's per-lead rate: R23 on Starter, R20 on Pro, R12 on Business, custom on Enterprise",
                   ].map((item) => (
                     <li key={item} className="flex gap-3 text-sm leading-relaxed">
                       <span className="text-ember mt-0.5 shrink-0">·</span>

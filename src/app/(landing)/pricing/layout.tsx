@@ -91,7 +91,7 @@ const faqSchema = {
       name: "Do I pay per lead or per booking?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "No. Qwikly charges a flat monthly rate only. No commissions, no per-job fees. Top-ups are available at R20 per extra lead if you exceed your monthly cap.",
+        text: "No. Qwikly charges a flat monthly rate only. No commissions, no per-job fees. If you exceed your monthly lead cap, top-ups are billed at your plan's per-lead rate (R23 on Starter, R20 on Pro, R12 on Business, custom on Enterprise) — close to what you're already paying inside the plan, never a flat overage.",
       },
     },
     {

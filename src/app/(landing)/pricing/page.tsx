@@ -88,7 +88,7 @@ const featureRows: { label: string; starter: FeatureCell; pro: FeatureCell; busi
   { label: "Email lead delivery",              starter: true,    pro: true,    business: true,     enterprise: true     },
   { label: "POPIA compliant",                  starter: true,    pro: true,    business: true,     enterprise: true     },
   { label: "Qualified leads / month",          starter: "30",    pro: "100",   business: "400",    enterprise: "1,500+" },
-  { label: "Extra leads beyond plan",          starter: "R20 / lead", pro: "R20 / lead", business: "R20 / lead", enterprise: "Volume" },
+  { label: "Top-up rate beyond plan",          starter: "R23 / lead", pro: "R20 / lead", business: "R12 / lead", enterprise: "Volume" },
   { label: "Dashboard users",                  starter: "1",     pro: "3",     business: "Unlimited", enterprise: "Unlimited" },
   { label: "Custom greeting & questions",      starter: false,   pro: true,    business: true,     enterprise: true     },
   { label: '"Powered by Qwikly" branding',    starter: true,    pro: false,   business: false,    enterprise: false    },
@@ -107,7 +107,7 @@ const pricingFAQs = [
   {
     question: "What happens when I hit my monthly limit?",
     answer:
-      "We'll notify you before you hit the cap. You can upgrade your plan, or add extra leads at R20 each. No automatic billing, no surprise charges, and your digital assistant keeps working until you decide.",
+      "We'll notify you before you hit the cap. You can upgrade your plan, or top up extra leads at your plan's per-lead rate (R23 on Starter, R20 on Pro, R12 on Business — close to what you're already paying inside your plan, never a flat overage). No automatic billing, no surprise charges, and your digital assistant keeps working until you decide.",
   },
   {
     question: "What happens after my 7-day trial?",
@@ -355,7 +355,7 @@ export default function PricingPage() {
           </div>
 
           <p className="text-center eyebrow text-ink-500 mt-10">
-            Top-ups at R20/extra lead · Cancel anytime · All prices excl. VAT
+            Top-ups at your plan&rsquo;s per-lead rate · Cancel anytime · All prices excl. VAT
           </p>
         </div>
       </section>
@@ -556,9 +556,10 @@ export default function PricingPage() {
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="max-w-lg">
               <p className="eyebrow text-ember mb-3">Need more leads?</p>
-              <h3 className="font-display text-2xl text-ink mb-2">Top-ups at R20 per extra qualified lead.</h3>
+              <h3 className="font-display text-2xl text-ink mb-2">Top-ups at your plan&rsquo;s per-lead rate.</h3>
               <p className="text-ink-700 text-sm leading-relaxed">
-                Hit your monthly cap? Add extra leads one by one at R20 each. No plan change required.
+                Hit your monthly cap? Top up at the same per-lead rate you&rsquo;re already paying inside your
+                plan, R23 on Starter, R20 on Pro, R12 on Business. No flat overage, no plan change required.
                 No surprises, no automatic billing. You approve every top-up.
               </p>
             </div>

@@ -437,7 +437,7 @@ Pricing & billing:
 - Enterprise plan: from R7,999/month, 1,500+ leads, full white-label, API access, dedicated support with 1h SLA. Custom volume pricing. For multi-location or mission-critical accounts, redirect to qwikly.co.za/contact.
 - Free trial: 7 days of the Starter tier (30 qualified leads, "Powered by Qwikly" footer, 1 user). No card needed. After 7 days the account pauses unless they pick a paid plan. Trial does not include Pro, Business, or Enterprise features, those require an upgrade.
 - Annual billing: 15% off any plan.
-- If they exceed the monthly lead cap on a paid plan: extra leads are R20 each, never auto-billed, owner approves every top-up.
+- If they exceed the monthly lead cap on a paid plan: top-ups are billed at the plan's per-lead rate (R23 on Starter, R20 on Pro, R12 on Business — close to what they're already paying inside the plan, never a flat overage). Never auto-billed, owner approves every top-up.
 - Setup help service: R500 one-time, the team plugs everything in for you live on a call.
 - Cancel anytime, no lock-in, no cancellation fee. Plan stays active until end of billing period.
 - Payment is by monthly EFT invoice only (no card payments). For annual billing arrangements or refund policy: redirect to qwikly.co.za/contact.

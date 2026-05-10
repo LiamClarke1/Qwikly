@@ -6,12 +6,11 @@ import { qwiklyBillingInvoiceHtml } from "@/lib/invoices/email";
 import { clientBillingReadyWa } from "@/lib/invoices/whatsapp";
 import { getPlanPricesZarCents } from "@/lib/billing/plan-prices";
 import { toZar, fmt, fmtDate } from "@/lib/money";
+import { resolvePlan, topUpPricePerLeadZar } from "@/lib/plan";
 
 export const dynamic = "force-dynamic";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.qwikly.co.za";
-
-const TOP_UP_RATE_ZAR = 20;
 
 /**
  * Monthly billing run, generates Qwikly subscription invoices.
@@ -56,7 +55,9 @@ export async function POST(req: NextRequest) {
       const planRands: number = (planPricesCents[plan] ?? planPricesCents.pro ?? 0) / 100;
       const subscriptionZar: number = toZar(planRands);
 
-      // Aggregate top-up leads for the period (Pro tier over-cap conversations)
+      // Aggregate top-up leads for the period (over-cap conversations).
+      // Top-up rate is tier-aware so a Business customer at R10/lead in-
+      // plan doesn't get billed the old flat R20/lead overage.
       const { count: topUpLeadCount } = await db
         .from("conversations")
         .select("id", { count: "exact", head: true })
@@ -65,7 +66,8 @@ export async function POST(req: NextRequest) {
         .eq("is_lead", true)
         .gte("created_at", `${periodStart}T00:00:00.000Z`)
         .lte("created_at", `${periodEnd}T23:59:59.999Z`);
-      const topUpZar: number = toZar((topUpLeadCount ?? 0) * TOP_UP_RATE_ZAR);
+      const tierTopUpRate: number = topUpPricePerLeadZar(resolvePlan(plan));
+      const topUpZar: number = toZar((topUpLeadCount ?? 0) * tierTopUpRate);
       const totalZar: number = subscriptionZar + topUpZar;
 
       // Check if period already exists for this month
@@ -106,7 +108,7 @@ export async function POST(req: NextRequest) {
       }];
       if ((topUpLeadCount ?? 0) > 0) {
         lineItemsSnapshot.push({
-          description: `Top-up leads (${topUpLeadCount} × R${TOP_UP_RATE_ZAR})`,
+          description: `Top-up leads (${topUpLeadCount} × R${tierTopUpRate})`,
           amount_zar: topUpZar,
         });
       }

@@ -803,7 +803,7 @@ const faqTeaser = [
   },
   {
     q: "What happens when I hit my monthly limit?",
-    a: "You'll get a heads-up before you hit the cap. You can upgrade, or add extra leads at R20 each. No surprise charges, no automatic billing.",
+    a: "You'll get a heads-up before you hit the cap. You can upgrade, or top up at your plan's per-lead rate (R23 Starter, R20 Pro, R12 Business — close to what you're already paying inside your plan, not a flat overage). No surprise charges, no automatic billing.",
   },
   {
     q: "Can I use my own logo and colours?",
@@ -1274,7 +1274,7 @@ export default function Home() {
 
           <div className="mt-10 flex flex-col items-center gap-4 reveal-up">
             <p className="text-sm text-ink-500">
-              Save 15% with annual billing · Top-ups at R20/extra lead · All prices excl. VAT
+              Save 15% with annual billing · Top-ups at your plan&rsquo;s per-lead rate · All prices excl. VAT
             </p>
             <CTAButton variant="outline" size="md" href="/pricing">
               See full pricing and comparison table
