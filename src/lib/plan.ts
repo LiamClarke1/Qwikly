@@ -50,11 +50,9 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     name: 'Trial',
     priceMonthly: 0,
     leadLimit: 30,
-    // Trial mirrors Starter on branding/users/greeting (so the experience
-    // is what they'd pay for). Cap is intentionally lower at 20 (vs
-    // Starter's 140) because the trial is a free taste, not a free month.
-    // Bounded worst-case API spend per trial signup is 20 × R1.50 wholesale
-    // = R30, well within typical CAC for SaaS.
+    // Trial mirrors Starter on branding/users/greeting. 50 conversations
+    // is a generous evaluation taste, ~7/day across the 7-day window.
+    // Worst-case API spend per trial signup: 50 × R1.00 wholesale = R50.
     removeBranding: false,
     customGreeting: false,
     csvExport: false,
@@ -62,13 +60,25 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 1,
     responseSlaHours: 24,
-    conversationsIncluded: 20,
+    conversationsIncluded: 50,
     overageCentsPerConversation: 750,
   },
-  // Conversation caps below are tuned so wholesale Anthropic spend at full
-  // cap consumption stays at exactly 30% of revenue, locking gross margin
-  // at >= 70% even in the worst case. Planning constant is R1.50 wholesale
-  // per conversation (measured R0.74 + 100% safety buffer for variance).
+  // Conversation caps below are sized to MATCH realistic conversation-to-
+  // lead conversion rates so the cap stays invisible to honest customers.
+  // The pricing page promises "curiosity is free, only paid leads count
+  // against your limit", and the cap must be high enough that a normal
+  // customer hitting their LEAD cap never trips the conversation gate.
+  // Industry benchmarks: ~10× convs per lead average (3-5× pharmacy/trade,
+  // 6-10× dental, 10-15× solar, 15-20× real estate).
+  //
+  // Higher tiers get tighter ratios (6× business, 4× enterprise) because
+  // those customers have proven volume and the cap protects margin from
+  // genuine outliers without hurting normal users.
+  //
+  // Wholesale planning constant: R1.00 (measured R0.74 + 33% safety buffer).
+  // Margin profile: ~70-85% at typical 30-50% utilisation, dipping to
+  // 25-50% only when a customer fully consumes the cap (rare). Overage
+  // billed at R7.50/conv = 80% margin on the extras anyway.
   starter: {
     name: 'Starter',
     priceMonthly: 699,
@@ -80,10 +90,10 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 1,
     responseSlaHours: 24,
-    // 140 × R1.50 = R210 wholesale at cap → R489 profit on R699 = 70.0% margin.
-    conversationsIncluded: 140,
-    // R7.50/conversation overage = 80% margin (R6.00 profit on R1.50 wholesale).
-    // Slight premium over the in-plan rate (R5/conv) to nudge tier upgrades.
+    // 30 leads × 10× ratio = 300 conversations. Comfortable headroom for
+    // every trade, including real-estate solos who have heavy tire-kicker
+    // traffic and would otherwise hit a tight cap before their lead cap.
+    conversationsIncluded: 300,
     overageCentsPerConversation: 750,
   },
   pro: {
@@ -97,8 +107,9 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 3,
     responseSlaHours: 12,
-    // 360 × R1.50 = R540 wholesale at cap → R1,259 profit on R1,799 = 70.0% margin.
-    conversationsIncluded: 360,
+    // 100 leads × 10× = 1,000 conversations. Same ratio as Starter; the
+    // cap scales linearly with leads at this tier.
+    conversationsIncluded: 1000,
     overageCentsPerConversation: 750,
   },
   business: {
@@ -112,8 +123,11 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'priority',
     teamSeats: null,
     responseSlaHours: 4,
-    // 800 × R1.50 = R1,200 wholesale at cap → R2,799 profit on R3,999 = 70.0% margin.
-    conversationsIncluded: 800,
+    // 400 leads × 6× = 2,400 conversations. Tighter ratio because
+    // Business customers have proven traffic and the conversation cap
+    // mostly protects against genuinely abusive volume (scrapers,
+    // misconfigured chat embeds spamming the API).
+    conversationsIncluded: 2400,
     overageCentsPerConversation: 750,
   },
   enterprise: {
@@ -127,8 +141,10 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'dedicated',
     teamSeats: null,
     responseSlaHours: 1,
-    // 1,600 × R1.50 = R2,400 wholesale at cap → R5,599 profit on R7,999 = 70.0% margin.
-    conversationsIncluded: 1600,
+    // 1,500 leads × 4× = 6,000 conversations as the published starting
+    // point. Enterprise is "from R7,999" with negotiated caps — actual
+    // contracts get tuned per customer based on observed traffic.
+    conversationsIncluded: 6000,
     overageCentsPerConversation: 750,
   },
   // ── Legacy tier ───────────────────────────────────────────
