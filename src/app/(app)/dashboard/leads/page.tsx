@@ -3,6 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState, Suspense, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -790,19 +791,21 @@ function DetailPanel({
     setTimeout(() => setMsgCopied(false), 2500);
   }
 
-  return (
+  const panel = (
     <div
       className={cn(
         isMobile
-          ? "fixed inset-0 z-[60] bg-white overflow-y-auto overflow-x-hidden overscroll-contain pb-20"
+          ? "fixed inset-0 z-[100] bg-white overflow-y-auto overflow-x-hidden overscroll-contain pb-20"
           : "flex flex-col h-full bg-white border-l border-ink/[0.08] overflow-y-auto overflow-x-hidden"
       )}
       style={isMobile ? { paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" } : undefined}
     >
 
-      {/* Mobile back bar, sits above topbar (z-30) and bottom nav (z-30); pads for iOS notch */}
+      {/* Mobile back bar — sits above the topbar because the entire panel is
+          portaled to document.body, escaping the <main> containing block that
+          the animate-fade-in transform would otherwise create. */}
       {isMobile && (
-        <div className="sticky top-0 z-[5] flex items-center gap-2 px-2 h-14 bg-white/95 backdrop-blur border-b border-ink/[0.08]">
+        <div className="sticky top-0 z-[101] flex items-center gap-2 px-2 h-14 bg-white/95 backdrop-blur border-b border-ink/[0.08]">
           <button
             type="button"
             onClick={onClose}
@@ -1394,6 +1397,15 @@ function DetailPanel({
       </div>
     </div>
   );
+
+  // Mobile detail must escape the dashboard <main> element (which has
+  // animate-fade-in / transform creating a containing block that traps
+  // position:fixed). Portaling to document.body ensures the panel covers
+  // the topbar properly and the back button is never hidden behind it.
+  if (isMobile && typeof window !== "undefined") {
+    return createPortal(panel, document.body);
+  }
+  return panel;
 }
 
 // ─── Stats bar ────────────────────────────────────────────────────────────────
@@ -1413,7 +1425,7 @@ function StatsBar({ leads }: { leads: Lead[] }) {
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-3 mb-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-3">
       {stats.map((s) => (
         <div key={s.label} className="bg-white rounded-xl border border-ink/[0.08] px-3.5 py-3">
           <div className={cn("flex items-center gap-1.5 mb-1", s.color)}>

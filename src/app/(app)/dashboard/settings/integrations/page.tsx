@@ -349,7 +349,7 @@ function WebhooksSection({ show }: { show: (msg: string, tone?: "success" | "dan
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <code className="text-small font-mono text-fg truncate max-w-[300px]">{w.url}</code>
+                      <code className="text-small font-mono text-fg truncate max-w-[140px] sm:max-w-[300px]">{w.url}</code>
                       <Badge tone={w.is_active ? "success" : "neutral"}>{w.is_active ? "Active" : "Paused"}</Badge>
                       {w.last_status !== null && (
                         <Badge tone={w.last_status >= 200 && w.last_status < 300 ? "success" : "danger"}>
@@ -404,7 +404,7 @@ function WebhooksSection({ show }: { show: (msg: string, tone?: "success" | "dan
         <>
           <div className="fixed inset-0 z-40 bg-black/60 animate-fade-in" />
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <Card className="w-full max-w-lg pointer-events-auto animate-slide-up">
+            <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto pointer-events-auto animate-slide-up">
               <div className="flex items-center gap-3 mb-4">
                 <Shield className="w-5 h-5 text-ember" />
                 <h2 className="text-h2 text-fg">Webhook signing secret</h2>
@@ -470,7 +470,7 @@ function CreateWebhookModal({ onClose, onCreated, onError }: {
     <>
       <div onClick={onClose} className="fixed inset-0 z-40 bg-black/60 animate-fade-in" />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <Card className="w-full max-w-md pointer-events-auto animate-slide-up">
+        <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto pointer-events-auto animate-slide-up">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-h2 text-fg">Add webhook</h2>
             <button onClick={onClose} aria-label="Close" className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-surface-hover cursor-pointer">

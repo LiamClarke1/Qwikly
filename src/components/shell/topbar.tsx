@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, Sun, Moon } from "lucide-react";
+import { Sparkles, Sun, Moon, Settings as SettingsIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
 import { cn } from "@/lib/cn";
@@ -43,6 +44,15 @@ export function Topbar({ onMenu, isDark, onToggleTheme }: { onMenu?: () => void;
       </div>
 
       <div className="flex-1" />
+
+      {/* Mobile-only Settings access (since bottom nav now uses Insights slot) */}
+      <Link
+        href="/dashboard/settings"
+        aria-label="Settings"
+        className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-fg-subtle hover:text-fg hover:bg-surface-hover cursor-pointer transition-colors duration-150"
+      >
+        <SettingsIcon className="w-4 h-4" />
+      </Link>
 
       {/* Dark/light mode toggle */}
       {onToggleTheme && (
