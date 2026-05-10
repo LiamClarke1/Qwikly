@@ -66,7 +66,7 @@ export default function AboutPage() {
                 </p>
                 <p>
                   Flat monthly pricing, no per-job fees, no commissions, and no surprises. Plans
-                  start with a 14-day free trial, then Pro at R999/month.{" "}
+                  start with a 14-day free trial, then Starter from R699/month.{" "}
                   <Link href="/pricing" className="text-ember underline transition-colors">
                     See pricing
                   </Link>
@@ -158,7 +158,7 @@ export default function AboutPage() {
                 <p>
                   Qwikly currently operates as a digital assistant platform with email lead delivery.
                   WhatsApp routing and calendar integration are on the roadmap for Q3 2026.
-                  Premium plan subscribers will get early access.
+                  Business and Enterprise subscribers will get early access.
                 </p>
               </div>
             </div>

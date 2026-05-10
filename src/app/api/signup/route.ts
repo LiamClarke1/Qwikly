@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "email and password are required" }, { status: 400 });
   }
 
-  const validPlans = ["trial", "pro", "premium"];
+  const validPlans = ["trial", "starter", "pro", "business", "enterprise", "premium"];
   const resolvedPlan = validPlans.includes(planParam ?? "") ? planParam! : "trial";
 
   const cookieStore = cookies();

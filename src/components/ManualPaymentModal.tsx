@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, FileText, CalendarDays, Mail, Check, ArrowRight, Building2 } from "lucide-react";
 
-export type ManualPaymentPlan = "pro" | "premium";
+export type ManualPaymentPlan = "starter" | "pro" | "business" | "enterprise";
 
 interface ManualPaymentModalProps {
   open: boolean;
@@ -12,9 +12,13 @@ interface ManualPaymentModalProps {
   onClose: () => void;
 }
 
+// Annual = 12x monthly with the standard 15% discount applied.
+// Enterprise has a contact-us flow rather than a self-serve price.
 const PLAN_PRICE: Record<ManualPaymentPlan, { monthly: number; annual: number; name: string }> = {
-  pro:     { monthly: 999,  annual: 10188, name: "Pro" },
-  premium: { monthly: 1999, annual: 20390, name: "Premium" },
+  starter:    { monthly: 699,  annual: 7128,  name: "Starter" },
+  pro:        { monthly: 1799, annual: 18350, name: "Pro" },
+  business:   { monthly: 3999, annual: 40790, name: "Business" },
+  enterprise: { monthly: 7999, annual: 81590, name: "Enterprise" },
 };
 
 const SUPPORT_EMAIL = "hello@qwikly.co.za";

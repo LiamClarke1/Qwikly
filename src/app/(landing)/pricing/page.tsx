@@ -5,8 +5,9 @@ import { Check, Minus, Plus, Shield, MapPin, Clock, Zap, Users, TrendingDown, Me
 import CTAButton from "@/components/CTAButton";
 import ManualPaymentModal, { type ManualPaymentPlan } from "@/components/ManualPaymentModal";
 
-const MONTHLY = { trial: 0, pro: 999, premium: 1999 } as const;
-const ANNUAL  = { trial: 0, pro: 10188, premium: 20390 } as const;
+// Tier pricing. Annual = monthly × 12 × 0.85 (15% off, rounded).
+const MONTHLY = { starter: 699, pro: 1799, business: 3999, enterprise: 7999 } as const;
+const ANNUAL  = { starter: 7128, pro: 18350, business: 40790, enterprise: 81590 } as const;
 
 type TierId = keyof typeof MONTHLY;
 
@@ -19,66 +20,82 @@ const tiers: {
   cta: string;
 }[] = [
   {
-    id: "trial",
-    name: "Trial",
-    tagline: "14 days free. Identical to Pro.",
+    id: "starter",
+    name: "Starter",
+    tagline: "Solo trades, individual agents, sole practitioners",
     highlight: false,
-    cta: "Start 14-day trial",
+    cta: "Start with Starter",
     features: [
-      "75 qualified leads/month",
-      "Full Pro features, identical",
-      "Digital assistant + embed snippet",
-      "Custom branding + questions",
-      "No card required",
-      "Upgrade anytime",
+      "50 qualified leads/month",
+      "1 dashboard user",
+      "Digital assistant platform",
+      "Email lead delivery",
+      '"Powered by Qwikly" branding',
+      "Email support, 24h response",
     ],
   },
   {
     id: "pro",
     name: "Pro",
-    tagline: "For businesses getting started",
-    highlight: false,
+    tagline: "Small multi-person practices and teams",
+    highlight: true,
     cta: "Start with Pro",
     features: [
-      "75 qualified leads/month",
-      "Digital assistant platform",
-      "Email lead delivery",
-      '"Powered by Qwikly" branding',
-      "Email support",
-      "POPIA compliant",
+      "200 qualified leads/month",
+      "3 dashboard users",
+      "Custom greeting + qualifying questions",
+      "Everything in Starter",
+      "Email support, 12h response",
+      "Annual billing saves 15%",
     ],
   },
   {
-    id: "premium",
-    name: "Premium",
-    tagline: "For businesses ready to grow",
-    highlight: true,
-    cta: "Start with Premium",
+    id: "business",
+    name: "Business",
+    tagline: "Multi-doctor, multi-agent, busy practices",
+    highlight: false,
+    cta: "Start with Business",
     features: [
-      "250 qualified leads/month",
-      "Everything in Pro, plus:",
-      "Custom branding (your logo, no Qwikly)",
-      "Custom greeting + qualifying questions",
+      "600 qualified leads/month",
+      "Unlimited dashboard users",
+      "Custom branding (your logo, no Qwikly footer)",
       "Lead exports (CSV)",
-      "Priority email support",
+      "Priority email support, 4h response",
+      "Everything in Pro",
+    ],
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    tagline: "Multi-location, white-label, mission-critical",
+    highlight: false,
+    cta: "Talk to us",
+    features: [
+      "1,500+ qualified leads/month",
+      "Full white-label, your domain",
+      "API access for custom integrations",
+      "Dedicated support, 1h SLA",
+      "Custom onboarding",
+      "Volume pricing on request",
     ],
   },
 ];
 
 type FeatureCell = boolean | string;
 
-const featureRows: { label: string; pro: FeatureCell; premium: FeatureCell }[] = [
-  { label: "Digital assistant platform",       pro: true,    premium: true     },
-  { label: "Email lead delivery",              pro: true,    premium: true     },
-  { label: "POPIA compliant",                  pro: true,    premium: true     },
-  { label: "Email support",                    pro: true,    premium: true     },
-  { label: "Qualified leads / month",          pro: "75",    premium: "250"    },
-  { label: "Extra leads beyond plan",          pro: "R20 / lead", premium: "R20 / lead" },
-  { label: '"Powered by Qwikly" branding',    pro: true,    premium: false    },
-  { label: "Custom branding (your logo)",      pro: false,   premium: true     },
-  { label: "Custom greeting & questions",      pro: false,   premium: true     },
-  { label: "Lead exports (CSV)",               pro: false,   premium: true     },
-  { label: "Priority email support",           pro: false,   premium: true     },
+const featureRows: { label: string; starter: FeatureCell; pro: FeatureCell; business: FeatureCell; enterprise: FeatureCell }[] = [
+  { label: "Digital assistant platform",       starter: true,    pro: true,    business: true,     enterprise: true     },
+  { label: "Email lead delivery",              starter: true,    pro: true,    business: true,     enterprise: true     },
+  { label: "POPIA compliant",                  starter: true,    pro: true,    business: true,     enterprise: true     },
+  { label: "Qualified leads / month",          starter: "50",    pro: "200",   business: "600",    enterprise: "1,500+" },
+  { label: "Extra leads beyond plan",          starter: "R20 / lead", pro: "R20 / lead", business: "R20 / lead", enterprise: "Volume" },
+  { label: "Dashboard users",                  starter: "1",     pro: "3",     business: "Unlimited", enterprise: "Unlimited" },
+  { label: "Custom greeting & questions",      starter: false,   pro: true,    business: true,     enterprise: true     },
+  { label: '"Powered by Qwikly" branding',    starter: true,    pro: true,    business: false,    enterprise: false    },
+  { label: "Custom branding (your logo)",      starter: false,   pro: false,   business: true,     enterprise: true     },
+  { label: "Lead exports (CSV)",               starter: false,   pro: false,   business: true,     enterprise: true     },
+  { label: "API access",                       starter: false,   pro: false,   business: false,    enterprise: true     },
+  { label: "Support response SLA",             starter: "24h",   pro: "12h",   business: "4h",     enterprise: "1h"     },
 ];
 
 const pricingFAQs = [
@@ -110,7 +127,7 @@ const pricingFAQs = [
   {
     question: "When will calendar integration launch?",
     answer:
-      "Calendar integration is on the roadmap for Q3 2026. Premium plan subscribers will get early access when it launches. You'll be notified by email.",
+      "Calendar integration is on the roadmap for Q3 2026. Business and Enterprise subscribers will get early access when it launches. You'll be notified by email.",
   },
 ];
 
@@ -138,16 +155,15 @@ function TableCell({ value, isPremiumCol }: { value: FeatureCell; isPremiumCol?:
   );
 }
 
-type CompareTab = "pro" | "premium";
+type CompareTab = TierId;
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
-  const [compareTab, setCompareTab] = useState<CompareTab>("premium");
+  const [compareTab, setCompareTab] = useState<CompareTab>("pro");
   const [paymentPlan, setPaymentPlan] = useState<ManualPaymentPlan | null>(null);
 
   function displayPrice(id: TierId) {
-    if (id === "trial") return 0;
     return annual ? Math.round(ANNUAL[id] / 12) : MONTHLY[id];
   }
 
@@ -208,10 +224,24 @@ export default function PricingPage() {
             </span>
           </div>
 
+          {/* Free trial banner — applies to all plans, replaces the old "Trial card" */}
+          <div className="mb-10 flex justify-center">
+            <a
+              href="/signup?plan=trial"
+              className="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-ember/10 border border-ember/20 hover:bg-ember/15 transition-colors"
+            >
+              <span className="w-2 h-2 rounded-full bg-ember" />
+              <span className="text-sm text-ink-700">
+                <strong className="text-ink">14-day free trial</strong> on every plan, no card required
+              </span>
+            </a>
+          </div>
+
           {/* Tier cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch max-w-7xl mx-auto">
             {tiers.map((tier) => {
               const price = displayPrice(tier.id);
+              const isContact = tier.id === "enterprise";
 
               return (
                 <div
@@ -242,26 +272,19 @@ export default function PricingPage() {
                     <div className="flex items-baseline gap-1">
                       <span
                         className={`font-display font-medium leading-none ${tier.highlight ? "text-paper" : "text-ink"}`}
-                        style={{ fontSize: "clamp(2.4rem, 4vw, 3rem)" }}
+                        style={{ fontSize: "clamp(2rem, 3.5vw, 2.6rem)" }}
                       >
-                        {tier.id === "trial" ? "Free" : `R${price.toLocaleString()}`}
+                        {isContact ? `R${price.toLocaleString()}+` : `R${price.toLocaleString()}`}
                       </span>
-                      {tier.id !== "trial" && (
-                        <span className={`text-sm ${tier.highlight ? "text-paper/50" : "text-ink-500"}`}>/mo</span>
-                      )}
+                      <span className={`text-sm ${tier.highlight ? "text-paper/50" : "text-ink-500"}`}>/mo</span>
                     </div>
-                    {tier.id !== "trial" && (
-                      <p className={`text-xs mt-2 ${tier.highlight ? "text-paper/45" : "text-ink-400"}`}>
-                        {annual
+                    <p className={`text-xs mt-2 ${tier.highlight ? "text-paper/45" : "text-ink-400"}`}>
+                      {isContact
+                        ? "Custom volume pricing"
+                        : annual
                           ? `Billed R${ANNUAL[tier.id].toLocaleString()}/year`
                           : "Billed monthly"}
-                      </p>
-                    )}
-                    {tier.id === "trial" && (
-                      <p className={`text-xs mt-2 ${tier.highlight ? "text-paper/45" : "text-ink-400"}`}>
-                        14 days · No card required
-                      </p>
-                    )}
+                    </p>
                   </div>
 
                   {/* Feature list */}
@@ -293,10 +316,10 @@ export default function PricingPage() {
                     })}
                   </ul>
 
-                  {tier.id === "trial" ? (
+                  {isContact ? (
                     <CTAButton
-                      href={`/signup?plan=${tier.id}`}
-                      variant={tier.highlight ? "solid" : "primary"}
+                      href="/contact?subject=enterprise"
+                      variant="primary"
                       size="md"
                       className="w-full justify-center"
                     >
@@ -348,7 +371,7 @@ export default function PricingPage() {
             </h2>
             <p className="mt-6 text-lg text-ink-700 leading-relaxed max-w-xl">
               Every enquiry that goes unanswered is a job you didn&apos;t book.
-              The question isn&apos;t whether R999 a month is worth it, it&apos;s how much losing leads is costing you right now.
+              The question isn&apos;t whether R699 a month is worth it, it&apos;s how much losing leads is costing you right now.
             </p>
           </div>
 
@@ -375,7 +398,7 @@ export default function PricingPage() {
 
             {/* With Qwikly */}
             <div className="ed-card-ink space-y-5">
-              <p className="eyebrow text-ember mb-6">With Qwikly Pro, R999/month</p>
+              <p className="eyebrow text-ember mb-6">With Qwikly Pro, R1,799/month</p>
               {[
                 "Qualified leads land in your inbox, no staff required",
                 "Responds instantly, 24/7, including weekends and public holidays",
@@ -447,7 +470,7 @@ export default function PricingPage() {
           <div className="sm:hidden">
             {/* Plan tabs */}
             <div className="flex rounded-xl border border-ink/10 overflow-hidden mb-8">
-              {(["pro", "premium"] as CompareTab[]).map((tab) => (
+              {(["starter", "pro", "business", "enterprise"] as CompareTab[]).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setCompareTab(tab)}
@@ -457,7 +480,7 @@ export default function PricingPage() {
                       : "text-ink-500 hover:text-ink"
                   }`}
                 >
-                  <span className={`eyebrow text-[10px] ${compareTab === tab && tab === "premium" ? "text-ember" : tab === "premium" ? "text-ember/70" : ""}`}>
+                  <span className={`eyebrow text-[9px] ${compareTab === tab && tab === "pro" ? "text-ember" : tab === "pro" ? "text-ember/70" : ""}`}>
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </span>
                 </button>
@@ -470,7 +493,7 @@ export default function PricingPage() {
                 <div key={row.label} className="flex items-center justify-between py-4 gap-4">
                   <span className="text-sm text-ink-700 leading-snug">{row.label}</span>
                   <div className="flex-shrink-0">
-                    <TableCell value={row[compareTab]} isPremiumCol={compareTab === "premium"} />
+                    <TableCell value={row[compareTab]} isPremiumCol={compareTab === "pro"} />
                   </div>
                 </div>
               ))}
@@ -479,17 +502,23 @@ export default function PricingPage() {
 
           {/* ── Desktop: full side-by-side table ── */}
           <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full border-collapse min-w-[560px]">
+            <table className="w-full border-collapse min-w-[720px]">
               <thead>
                 <tr className="border-b border-ink/10">
-                  <th className="text-left pb-5 pr-6 font-normal eyebrow text-ink-500 w-[40%]">
+                  <th className="text-left pb-5 pr-6 font-normal eyebrow text-ink-500 w-[36%]">
                     Feature
                   </th>
-                  <th className="pb-5 px-4 text-center font-normal eyebrow text-ink-500">
-                    Pro
+                  <th className="pb-5 px-3 text-center font-normal eyebrow text-ink-500">
+                    Starter
                   </th>
-                  <th className="pb-5 px-4 text-center font-normal">
-                    <span className="eyebrow text-ember">Premium</span>
+                  <th className="pb-5 px-3 text-center font-normal">
+                    <span className="eyebrow text-ember">Pro</span>
+                  </th>
+                  <th className="pb-5 px-3 text-center font-normal eyebrow text-ink-500">
+                    Business
+                  </th>
+                  <th className="pb-5 px-3 text-center font-normal eyebrow text-ink-500">
+                    Enterprise
                   </th>
                 </tr>
               </thead>
@@ -499,11 +528,17 @@ export default function PricingPage() {
                     <td className="py-4 pr-6 text-sm text-ink-700 leading-snug">
                       {row.label}
                     </td>
-                    <td className="py-4 px-4 text-center">
-                      <TableCell value={row.pro} />
+                    <td className="py-4 px-3 text-center">
+                      <TableCell value={row.starter} />
                     </td>
-                    <td className="py-4 px-4 text-center">
-                      <TableCell value={row.premium} isPremiumCol />
+                    <td className="py-4 px-3 text-center">
+                      <TableCell value={row.pro} isPremiumCol />
+                    </td>
+                    <td className="py-4 px-3 text-center">
+                      <TableCell value={row.business} />
+                    </td>
+                    <td className="py-4 px-3 text-center">
+                      <TableCell value={row.enterprise} />
                     </td>
                   </tr>
                 ))}
@@ -770,10 +805,10 @@ export default function PricingPage() {
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
             <button
               type="button"
-              onClick={() => setPaymentPlan("premium")}
+              onClick={() => setPaymentPlan("pro")}
               className="btn-ember btn-ember-solid px-8 py-[1.05rem] text-[1rem] cursor-pointer"
             >
-              <span className="relative z-10">Start with Premium</span>
+              <span className="relative z-10">Start with Pro</span>
               <svg
                 className="btn-arrow w-4 h-4 relative z-10"
                 viewBox="0 0 24 24"

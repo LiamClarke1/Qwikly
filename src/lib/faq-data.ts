@@ -7,7 +7,7 @@ export const FAQ_DATA = [
   {
     question: "How much does it cost?",
     answer:
-      "Qwikly has two paid plans. Pro is R999/month for 75 qualified leads. Premium is R1,999/month for 250 qualified leads, with custom branding, custom questions, CSV exports, and priority support. All plans start with a free 14-day trial (full Pro features, 75 leads). Pay annually and save 15%. Extra leads are R20 each. No per-job fees, no commissions ever.",
+      "Qwikly has four plans. Starter is R699/month for 50 leads, ideal for solos. Pro is R1,799/month for 200 leads with custom greeting and qualifying questions, ideal for small multi-person practices. Business is R3,999/month for 600 leads with custom branding (your logo, no Qwikly footer), CSV exports, and priority support, ideal for multi-doctor or multi-agent practices. Enterprise is from R7,999/month with white-label, API access, and a 1-hour support SLA, custom volume pricing on request. All plans start with a free 14-day trial. Annual billing saves 15%. Extra leads are R20 each. No per-job fees, no commissions ever.",
   },
   {
     question: "What counts as a qualified lead?",
@@ -37,7 +37,7 @@ export const FAQ_DATA = [
   {
     question: "Can I use my own branding?",
     answer:
-      "Yes. On the Premium plan, your digital assistant uses your logo and colour scheme with no Qwikly branding. Pro plans show 'Powered by Qwikly' in the footer.",
+      "Yes. On the Business and Enterprise plans, your digital assistant uses your logo and colour scheme with no Qwikly branding. Starter and Pro plans show 'Powered by Qwikly' in the footer.",
   },
   {
     question: "Can I see what the assistant is saying to visitors?",
@@ -67,7 +67,7 @@ export const FAQ_DATA = [
   {
     question: "When will calendar integration launch?",
     answer:
-      "Calendar integration is on the roadmap for Q3 2026. Premium plan subscribers will get early access. You'll be notified by email when it's available.",
+      "Calendar integration is on the roadmap for Q3 2026. Business and Enterprise subscribers will get early access. You'll be notified by email when it's available.",
   },
 ];
 

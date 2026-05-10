@@ -54,42 +54,57 @@ const PLANS: {
     cta: "Start Free Trial",
     noCard: true,
     features: [
-      "75 qualified leads/month",
-      "Full Pro features — identical",
+      "50 qualified leads/month",
+      "Full feature access",
       "Digital assistant + embed snippet",
-      "Custom branding + questions",
+      "Upgrade anytime to any paid tier",
       "No bank account needed",
+    ],
+  },
+  {
+    id: "starter",
+    name: "Starter",
+    price: "R699",
+    sub: "/month",
+    cta: "Start with Starter",
+    noCard: false,
+    features: [
+      "50 qualified leads/month",
+      "1 dashboard user",
+      '"Powered by Qwikly" branding',
+      "Email support, 24h response",
+      "Solo trades and sole practitioners",
     ],
   },
   {
     id: "pro",
     name: "Pro",
-    price: "R999",
+    price: "R1,799",
     sub: "/month",
-    cta: "Start with Pro",
+    badge: "Most Popular",
+    cta: "Choose Pro",
     noCard: false,
     features: [
-      "75 qualified leads/month",
-      "Digital assistant",
-      "Email lead delivery",
-      '"Powered by Qwikly" branding',
-      "Email support",
+      "200 qualified leads/month",
+      "3 dashboard users",
+      "Custom greeting + qualifying questions",
+      "Email support, 12h response",
+      "Small multi-person practices",
     ],
   },
   {
-    id: "premium",
-    name: "Premium",
-    price: "R1,999",
+    id: "business",
+    name: "Business",
+    price: "R3,999",
     sub: "/month",
-    badge: "Most Popular",
-    cta: "Choose Premium",
+    cta: "Choose Business",
     noCard: false,
     features: [
-      "250 qualified leads/month",
+      "600 qualified leads/month",
+      "Unlimited dashboard users",
       "Custom branding (your logo)",
-      "Custom greeting + qualifying questions",
-      "Lead exports (CSV)",
-      "Priority email support",
+      "Lead exports (CSV) + priority support",
+      "Multi-doctor or multi-agent practices",
     ],
   },
 ];
@@ -259,8 +274,11 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
 
   const planLabel =
     plan === "trial" ? "Free Trial — 14 days, no card required" :
-    plan === "pro" ? "Pro — R999/mo" :
-    plan === "premium" ? "Premium — R1,999/mo" :
+    plan === "starter" ? "Starter — R699/mo" :
+    plan === "pro" ? "Pro — R1,799/mo" :
+    plan === "business" ? "Business — R3,999/mo" :
+    plan === "enterprise" ? "Enterprise — from R7,999/mo" :
+    plan === "premium" ? "Premium — R1,999/mo (legacy)" :
     "Free Trial — 14 days, no card required";
 
   return (
@@ -394,7 +412,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
 function SignupContent() {
   const searchParams = useSearchParams();
   const rawPlan = searchParams.get("plan");
-  const validPlans: PlanTier[] = ["trial", "pro", "premium"];
+  const validPlans: PlanTier[] = ["trial", "starter", "pro", "business", "enterprise", "premium"];
   const initialPlan: PlanTier | null = validPlans.includes(rawPlan as PlanTier)
     ? (rawPlan as PlanTier)
     : null;
