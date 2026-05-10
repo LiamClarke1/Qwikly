@@ -3,15 +3,12 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, Plus, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { ProspectRow, type ProspectRowData } from "@/components/pipeline-dash/ProspectRow";
-import {
-  ProspectDetailDrawer,
-  type ProspectDetail,
-} from "@/components/pipeline-dash/ProspectDetailDrawer";
+import { type ProspectDetail } from "@/components/pipeline-dash/ProspectDetailDrawer";
 
 const DEMO_PROSPECTS: ProspectDetail[] = [
   {
@@ -133,11 +130,11 @@ async function safeQuery<T>(
 
 export default function ProspectsPage() {
   const sp = useSearchParams();
+  const router = useRouter();
   const demoFlag = sp.get("demo") === "1";
   const [rows, setRows] = useState<ProspectDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
-  const [active, setActive] = useState<ProspectDetail | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -244,7 +241,9 @@ export default function ProspectsPage() {
                     <ProspectRow
                       key={p.id}
                       prospect={p as ProspectRowData}
-                      onClick={() => setActive(p)}
+                      onClick={() =>
+                        router.push(`/dashboard/pipeline/prospects/${p.id}`)
+                      }
                     />
                   ))}
                 </tbody>
@@ -254,7 +253,6 @@ export default function ProspectsPage() {
         </div>
       </div>
 
-      <ProspectDetailDrawer prospect={active} onClose={() => setActive(null)} />
     </div>
   );
 }

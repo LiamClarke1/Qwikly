@@ -4,7 +4,10 @@ import {
   GenerateProspectInput,
   MockProspect,
   SaIndustry,
+  SiteRecon,
 } from "./types";
+import { scoreProspect } from "../scoring";
+import { generateHook } from "../hook-generator";
 
 const SA_FIRST_NAMES = [
   "Thandi",
@@ -191,14 +194,94 @@ export function buildSeedFromInput(input: GenerateProspectInput): number {
   return hashSeed(stable);
 }
 
+// Mock site recon, gives the scoring function and downstream UI realistic
+// fields to work with. Production wiring will scrape live URLs.
+const HERO_FRAGMENTS: Record<string, string[]> = {
+  Construction: [
+    "Building South Africa, one project at a time. Tender ready, BBBEE level 2.",
+    "Civil and structural specialists working across Gauteng. 20 plus years on site.",
+  ],
+  Healthcare: [
+    "Compassionate care for the whole family. Book online or call our reception.",
+    "Modern clinic with same week appointments. Medical aids welcome.",
+  ],
+  Education: [
+    "Independent school with a track record of distinction passes. Open days monthly.",
+    "Online and in-class learning paths for working professionals.",
+  ],
+  "Financial Services": [
+    "Independent advice for South African business owners. Wealth, tax, succession.",
+    "Boutique brokerage with personal service. Risk, retirement, investments.",
+  ],
+  Marketing: [
+    "Creative studio for ambitious SA brands. Strategy, content, paid media.",
+    "Performance marketing for retailers. Real revenue, not vanity metrics.",
+  ],
+  Manufacturing: [
+    "Engineered products for industry, made in South Africa. ISO certified.",
+    "Custom fabrication with fast turnaround. Local sales, national delivery.",
+  ],
+  Retail: [
+    "Independent retailer, locally loved. New collections every season.",
+    "Curated homeware for South African homes. Cape Town and online.",
+  ],
+  Hospitality: [
+    "Award winning hospitality in the heart of the Cape. Stay, eat, gather.",
+    "Boutique guesthouse with a strong returning guest base.",
+  ],
+  "Professional Services": [
+    "Trusted advisors for SA businesses. Corporate, commercial, compliance.",
+    "Specialist practice serving owner managed businesses.",
+  ],
+  SaaS: [
+    "Software for South African operators. Built local, priced fair.",
+    "Workflow tools for service businesses. Free trial, no card required.",
+  ],
+};
+
+function buildSiteRecon(
+  rnd: () => number,
+  company: string,
+  industry: SaIndustry,
+  domainBase: string,
+  tld: string
+): SiteRecon {
+  const heroPool =
+    HERO_FRAGMENTS[industry] || HERO_FRAGMENTS["Professional Services"];
+  const hero = heroPool[Math.floor(rnd() * heroPool.length)];
+  return {
+    title: `${company}, ${industry} in South Africa`,
+    h1: `Welcome to ${company}`,
+    meta_description: `${company} is a ${industry.toLowerCase()} business serving South African customers.`,
+    hero_text: hero,
+    scraped_url: `https://${domainBase}.${tld}`,
+    last_scraped_at: new Date().toISOString(),
+  };
+}
+
+/**
+ * Generates prospects scored 7 or above only.
+ *
+ * To return the requested quantity at a 7+ floor, we internally generate
+ * roughly 3x the asked-for count, score them all, and return the top n.
+ * If we still cannot fill the requested count at the floor, we cap at what
+ * we have so we never lie about quality.
+ */
 export async function runGenerator(
   input: GenerateProspectInput,
 ): Promise<MockProspect[]> {
   const seed = buildSeedFromInput(input);
   const rnd = mulberry32(seed);
 
-  const out: MockProspect[] = [];
-  for (let i = 0; i < input.quantity; i++) {
+  const SCORE_FLOOR = 7;
+  const OVERSAMPLE_FACTOR = 3;
+  const oversampleTarget = Math.max(
+    input.quantity,
+    input.quantity * OVERSAMPLE_FACTOR
+  );
+
+  const candidates: MockProspect[] = [];
+  for (let i = 0; i < oversampleTarget; i++) {
     const firstName = pick(SA_FIRST_NAMES, rnd);
     const lastName = pick(SA_LAST_NAMES, rnd);
     const company = makeCompany(rnd);
@@ -217,9 +300,18 @@ export async function runGenerator(
     const intent = input.intentSignals.length
       ? pickSubset(input.intentSignals, rnd)
       : [];
-    const score = 60 + Math.floor(rnd() * 40); // 60 to 99
+    const enrichmentScore = 60 + Math.floor(rnd() * 40); // 60 to 99
 
-    out.push({
+    const siteRecon = buildSiteRecon(
+      rnd,
+      company,
+      industry,
+      domainBase,
+      domainTld
+    );
+
+    // Build a partial prospect to feed the scorer and hook generator.
+    const partial: MockProspect = {
       first_name: firstName,
       last_name: lastName,
       full_name: `${firstName} ${lastName}`,
@@ -232,11 +324,39 @@ export async function runGenerator(
       email_verified: true,
       linkedin_url: linkedin,
       intent_signals: intent,
-      enrichment_score: score,
+      enrichment_score: enrichmentScore,
+      site_recon: siteRecon,
+      score: 0,
+      score_breakdown: {
+        icp_match: 0,
+        contact_completeness: 0,
+        business_signals: 0,
+        site_quality: 0,
+      },
+      unique_hook: "",
+    };
+
+    const scored = scoreProspect(partial, {
+      industries: input.industries,
+      jobTitles: input.jobTitles,
+      intentSignals: input.intentSignals,
+      locations: input.locations,
     });
+    partial.score = scored.total;
+    partial.score_breakdown = scored.breakdown;
+    partial.unique_hook = await generateHook(partial);
+
+    candidates.push(partial);
   }
 
-  return out;
+  // Keep only score 7+, sort descending so the strongest land first, then
+  // truncate to the requested quantity.
+  const filtered = candidates
+    .filter((p) => p.score >= SCORE_FLOOR)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, input.quantity);
+
+  return filtered;
 }
 
 // Deterministic estimator for the live preview, given the same input as the

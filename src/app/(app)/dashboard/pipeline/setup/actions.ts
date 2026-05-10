@@ -5,20 +5,30 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import {
-  getSetupState,
   updateSetupState,
-  type PipelineSetupState,
-  type IcpProfile,
-  type SeedListSummary,
-  type DomainsConfig,
-  type CopyApproval,
+  type IcpDefinition,
 } from "@/lib/pipeline/setup-state";
+import { persistProspects } from "@/app/(app)/dashboard/pipeline/generate/actions";
+import {
+  SA_INDUSTRIES,
+  SA_LOCATIONS,
+  JOB_TITLES,
+  INTENT_SIGNALS,
+  type GenerateProspectInput,
+  type SaIndustry,
+  type SaLocation,
+  type JobTitle,
+  type IntentSignal,
+} from "@/lib/pipeline/generator/types";
 
-export type ActionResult<T = PipelineSetupState> =
-  | { ok: true; state: T }
-  | { ok: false; error: string };
+export type SaveResult = { ok: true } | { ok: false; reason: string };
+export type GenerateResult =
+  | { ok: true; count: number }
+  | { ok: false; reason: string };
 
-async function resolveTenantId(): Promise<{ ok: true; tenantId: number | string } | { ok: false; error: string }> {
+async function resolveTenantId(): Promise<
+  { ok: true; tenantId: number | string } | { ok: false; reason: string }
+> {
   const cookieStore = cookies();
   const auth = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,7 +50,7 @@ async function resolveTenantId(): Promise<{ ok: true; tenantId: number | string 
   const {
     data: { user },
   } = await auth.auth.getUser();
-  if (!user) return { ok: false, error: "Not signed in" };
+  if (!user) return { ok: false, reason: "Not signed in" };
 
   const db = supabaseAdmin();
   const { data: client } = await db
@@ -50,7 +60,7 @@ async function resolveTenantId(): Promise<{ ok: true; tenantId: number | string 
     .maybeSingle();
 
   const tenantId = (client as { id?: number | string } | null)?.id;
-  if (!tenantId) return { ok: false, error: "No tenant found for this account" };
+  if (!tenantId) return { ok: false, reason: "No tenant found for this account" };
   return { ok: true, tenantId };
 }
 
@@ -59,97 +69,89 @@ function revalidate() {
   revalidatePath("/dashboard/pipeline");
 }
 
-export async function setStep(step: 1 | 2 | 3 | 4 | 5): Promise<ActionResult> {
+// Map the form's free-form ICP onto the generator's enum-bound input. Anything
+// not on the generator's enum list is dropped silently so the generator does
+// not blow up. The form's full ICP is still persisted to setup-state.
+function toGeneratorInput(icp: IcpDefinition): GenerateProspectInput {
+  const industries = icp.industries
+    .filter((x): x is SaIndustry =>
+      (SA_INDUSTRIES as readonly string[]).includes(x),
+    );
+  const titles = icp.titles
+    .filter((x): x is JobTitle =>
+      (JOB_TITLES as readonly string[]).includes(x),
+    );
+  let locations = icp.locations
+    .filter((x): x is SaLocation =>
+      (SA_LOCATIONS as readonly string[]).includes(x),
+    );
+  const intentSignals = icp.intentSignals
+    .filter((x): x is IntentSignal =>
+      (INTENT_SIGNALS as readonly string[]).includes(x),
+    );
+
+  // Generator needs at least one location, fall back to Anywhere in SA.
+  if (locations.length === 0) {
+    locations = ["Anywhere in SA"];
+  }
+  // Generator size bounds, 5 to 500.
+  const sizeMin = Math.max(5, Math.min(500, Math.round(icp.sizeMin)));
+  const sizeMax = Math.max(sizeMin, Math.min(500, Math.round(icp.sizeMax)));
+
+  return {
+    industries: industries.length ? industries : [...SA_INDUSTRIES],
+    jobTitles: titles.length ? titles : [...JOB_TITLES],
+    companySize: { min: sizeMin, max: sizeMax },
+    locations,
+    intentSignals,
+    quantity: 100,
+  };
+}
+
+export async function saveIcp(icp: IcpDefinition): Promise<SaveResult> {
   const t = await resolveTenantId();
   if (!t.ok) return t;
-  if (![1, 2, 3, 4, 5].includes(step)) return { ok: false, error: "Invalid step" };
   try {
-    const next = await updateSetupState(t.tenantId, { current_step: step });
+    await updateSetupState(t.tenantId, { icp });
     revalidate();
-    return { ok: true, state: next };
+    return { ok: true };
   } catch (err) {
-    console.error("[pipeline-setup/setStep] failed:", err);
-    return { ok: false, error: "Could not save, try again." };
+    console.error("[pipeline-setup/saveIcp] failed:", err);
+    return { ok: false, reason: "Could not save your ICP, try again." };
   }
 }
 
-export async function saveStep1(input: IcpProfile): Promise<ActionResult> {
+export async function generateAndRedirect(
+  icp: IcpDefinition,
+): Promise<GenerateResult> {
   const t = await resolveTenantId();
   if (!t.ok) return t;
-  try {
-    const next = await updateSetupState(t.tenantId, {
-      icp: input,
-      current_step: 2,
-    });
-    revalidate();
-    return { ok: true, state: next };
-  } catch (err) {
-    console.error("[pipeline-setup/saveStep1] failed:", err);
-    return { ok: false, error: "Could not save, try again." };
-  }
-}
 
-export async function saveStep2(input: SeedListSummary): Promise<ActionResult> {
-  const t = await resolveTenantId();
-  if (!t.ok) return t;
   try {
-    const next = await updateSetupState(t.tenantId, {
-      seed_list: input,
-      current_step: 3,
-    });
-    revalidate();
-    return { ok: true, state: next };
-  } catch (err) {
-    console.error("[pipeline-setup/saveStep2] failed:", err);
-    return { ok: false, error: "Could not save, try again." };
-  }
-}
-
-export async function saveStep3(input: DomainsConfig): Promise<ActionResult> {
-  const t = await resolveTenantId();
-  if (!t.ok) return t;
-  try {
-    const safeCount = Math.max(2, Math.min(5, Math.round(input.count)));
-    const next = await updateSetupState(t.tenantId, {
-      domains: { ...input, count: safeCount },
-      current_step: 4,
-    });
-    revalidate();
-    return { ok: true, state: next };
-  } catch (err) {
-    console.error("[pipeline-setup/saveStep3] failed:", err);
-    return { ok: false, error: "Could not save, try again." };
-  }
-}
-
-export async function saveStep4(input: CopyApproval): Promise<ActionResult> {
-  const t = await resolveTenantId();
-  if (!t.ok) return t;
-  try {
-    const next = await updateSetupState(t.tenantId, {
-      copy: input,
-      current_step: 5,
-    });
-    revalidate();
-    return { ok: true, state: next };
-  } catch (err) {
-    console.error("[pipeline-setup/saveStep4] failed:", err);
-    return { ok: false, error: "Could not save, try again." };
-  }
-}
-
-export async function markReady(): Promise<ActionResult> {
-  const t = await resolveTenantId();
-  if (!t.ok) return t;
-  try {
-    const current = await getSetupState(t.tenantId);
-    const next = await updateSetupState(t.tenantId, {
-      status: "ready",
-      ready_at: new Date().toISOString(),
-      current_step: 5,
+    // 1. Persist the ICP and flag the run as in-progress.
+    await updateSetupState(t.tenantId, {
+      icp,
+      status: "refreshing",
     });
 
-    // Fire the notification to Liam. Best-effort, non-blocking on failure.
+    // 2. Generate matching prospects.
+    const result = await persistProspects({
+      input: toGeneratorInput(icp),
+      tenantId: t.tenantId,
+    });
+
+    if (!result.ok) {
+      return { ok: false, reason: result.reason };
+    }
+
+    // 3. Mark generation complete.
+    await updateSetupState(t.tenantId, {
+      status: "generated",
+      last_generated_at: new Date().toISOString(),
+    });
+
+    // 4. Fire the internal notification so Liam knows a new ICP came in.
+    //    Best-effort, non-blocking.
     try {
       const baseUrl =
         process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
@@ -164,14 +166,13 @@ export async function markReady(): Promise<ActionResult> {
         body: JSON.stringify({ tenantId: t.tenantId }),
       });
     } catch (notifyErr) {
-      console.error("[pipeline-setup/markReady] notify failed:", notifyErr);
+      console.error("[pipeline-setup/generateAndRedirect] notify failed:", notifyErr);
     }
 
-    void current;
     revalidate();
-    return { ok: true, state: next };
+    return { ok: true, count: result.count };
   } catch (err) {
-    console.error("[pipeline-setup/markReady] failed:", err);
-    return { ok: false, error: "Could not mark ready, try again." };
+    console.error("[pipeline-setup/generateAndRedirect] failed:", err);
+    return { ok: false, reason: "Could not generate your prospect list, try again." };
   }
 }

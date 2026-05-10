@@ -78,6 +78,22 @@ export const generateProspectInputSchema = z.object({
 
 export type GenerateProspectInput = z.infer<typeof generateProspectInputSchema>;
 
+export interface SiteRecon {
+  title: string;
+  h1: string;
+  meta_description: string;
+  hero_text: string;
+  scraped_url: string;
+  last_scraped_at: string; // ISO timestamp
+}
+
+export interface ProspectScoreBreakdown {
+  icp_match: number; // 0 to 10
+  contact_completeness: number; // 0 to 10
+  business_signals: number; // 0 to 10
+  site_quality: number; // 0 to 10
+}
+
 export interface MockProspect {
   first_name: string;
   last_name: string;
@@ -92,6 +108,12 @@ export interface MockProspect {
   linkedin_url: string;
   intent_signals: string[];
   enrichment_score: number;
+
+  // Upgrade: site recon, scored signal, generated hook.
+  site_recon: SiteRecon;
+  score: number; // 1 to 10
+  score_breakdown: ProspectScoreBreakdown;
+  unique_hook: string;
 }
 
 export type GeneratorResult =

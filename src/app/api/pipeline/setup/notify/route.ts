@@ -15,7 +15,7 @@ function escHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   // Session-auth gated. Resolve the tenant from the user cookie.
   const cookieStore = cookies();
   const auth = createServerClient(
@@ -65,21 +65,12 @@ export async function POST(req: NextRequest) {
   const state = await getSetupState(tenant.id);
   const tenantName = tenant.business_name || "a Pipeline tenant";
 
+  const sizeLabel = `${state.icp.sizeMin} to ${state.icp.sizeMax}`;
+  const dealLabel = `R${state.icp.dealValueZar.toLocaleString("en-ZA")}`;
+
   const ownerEmail = process.env.QWIKLY_OWNER_EMAIL || "hello@qwikly.co.za";
 
-  const sizeLabel =
-    state.icp.company_size_min || state.icp.company_size_max
-      ? `${state.icp.company_size_min ?? "?"} to ${state.icp.company_size_max ?? "?"}`
-      : "not set";
-
-  const seedSourceLabel =
-    state.seed_list.source === "qwikly_generator"
-      ? "Generated with Qwikly"
-      : state.seed_list.source === "csv_upload"
-        ? `CSV upload, ${state.seed_list.valid_rows} valid of ${state.seed_list.total_rows} total`
-        : "not set";
-
-  const subject = `New Pipeline campaign ready, ${tenantName}`;
+  const subject = `New Pipeline ICP submitted, ${tenantName}`;
 
   const html = `<!DOCTYPE html>
 <html>
@@ -92,44 +83,23 @@ export async function POST(req: NextRequest) {
           <span style="font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.5px;">Qwikly<span style="color:#E85A2C;">.</span></span>
         </td></tr>
         <tr><td style="background:#0D111A;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:28px;">
-          <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;">Pipeline, ready for launch</p>
-          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;">${escHtml(tenantName)} marked their campaign ready.</h1>
-          <p style="margin:0 0 18px;font-size:13px;color:#9CA3AF;">Tenant ID, ${escHtml(String(tenant.id))} · Status, ${escHtml(state.status)} · Marked ready, ${escHtml(state.ready_at ?? new Date().toISOString())}</p>
+          <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;">Pipeline, new ICP submitted</p>
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;">${escHtml(tenantName)} submitted their ICP.</h1>
+          <p style="margin:0 0 18px;font-size:13px;color:#9CA3AF;">Tenant ID, ${escHtml(String(tenant.id))} · Status, ${escHtml(state.status)} · Last generated, ${escHtml(state.last_generated_at ?? "never")}</p>
 
           <h2 style="margin:18px 0 8px;font-size:14px;color:#F4F4F5;">ICP</h2>
           <ul style="margin:0;padding:0 0 0 18px;color:#9CA3AF;font-size:13px;line-height:1.7;">
-            <li>Name, ${escHtml(state.icp.name || "not set")}</li>
+            <li>Offer, ${escHtml(state.icp.offer || "not set")}</li>
             <li>Industries, ${escHtml(state.icp.industries.join(", ") || "not set")}</li>
-            <li>Job titles, ${escHtml(state.icp.job_titles.join(", ") || "not set")}</li>
+            <li>Job titles, ${escHtml(state.icp.titles.join(", ") || "not set")}</li>
             <li>Company size, ${escHtml(sizeLabel)}</li>
             <li>Locations, ${escHtml(state.icp.locations.join(", ") || "not set")}</li>
-            <li>Pain point, ${escHtml(state.icp.pain_point || "not set")}</li>
-            <li>Value prop, ${escHtml(state.icp.value_prop || "not set")}</li>
-          </ul>
-
-          <h2 style="margin:18px 0 8px;font-size:14px;color:#F4F4F5;">Seed list</h2>
-          <ul style="margin:0;padding:0 0 0 18px;color:#9CA3AF;font-size:13px;line-height:1.7;">
-            <li>Source, ${escHtml(seedSourceLabel)}</li>
-            ${state.seed_list.warnings.length ? `<li>Warnings, ${escHtml(state.seed_list.warnings.join(" · "))}</li>` : ""}
-          </ul>
-
-          <h2 style="margin:18px 0 8px;font-size:14px;color:#F4F4F5;">Sending domains</h2>
-          <ul style="margin:0;padding:0 0 0 18px;color:#9CA3AF;font-size:13px;line-height:1.7;">
-            <li>Number of domains, ${escHtml(String(state.domains.count))}</li>
-            <li>Pattern, ${escHtml(state.domains.pattern || "not set")}</li>
-            ${state.domains.notes ? `<li>Notes, ${escHtml(state.domains.notes)}</li>` : ""}
-          </ul>
-
-          <h2 style="margin:18px 0 8px;font-size:14px;color:#F4F4F5;">Copy approval</h2>
-          <ul style="margin:0;padding:0 0 0 18px;color:#9CA3AF;font-size:13px;line-height:1.7;">
-            <li>Email 1 icebreaker, ${state.copy.approve_email_1 ? "approved" : "pending"}</li>
-            <li>Email 2 TL;DR, ${state.copy.approve_email_2 ? "approved" : "pending"}</li>
-            <li>Email 3 breakup, ${state.copy.approve_email_3 ? "approved" : "pending"}</li>
-            ${state.copy.customisations ? `<li>Customisations, ${escHtml(state.copy.customisations)}</li>` : ""}
+            <li>Intent signals, ${escHtml(state.icp.intentSignals.join(", ") || "none")}</li>
+            <li>Average deal value, ${escHtml(dealLabel)}</li>
           </ul>
 
           <p style="margin:24px 0 0;font-size:13px;color:#6B7280;line-height:1.6;">
-            Manual gate, this campaign will not send until you approve and trigger it.
+            Prospects have been generated for this tenant. Sending domains, copy, and launch sequencing remain on the internal side.
           </p>
         </td></tr>
       </table>
@@ -139,34 +109,19 @@ export async function POST(req: NextRequest) {
 </html>`;
 
   const text = [
-    `New Pipeline campaign ready, ${tenantName}`,
+    `New Pipeline ICP submitted, ${tenantName}`,
     `Tenant ID: ${tenant.id}`,
     `Status: ${state.status}`,
-    `Marked ready: ${state.ready_at ?? new Date().toISOString()}`,
+    `Last generated: ${state.last_generated_at ?? "never"}`,
     "",
     "ICP",
-    `  Name: ${state.icp.name || "not set"}`,
+    `  Offer: ${state.icp.offer || "not set"}`,
     `  Industries: ${state.icp.industries.join(", ") || "not set"}`,
-    `  Job titles: ${state.icp.job_titles.join(", ") || "not set"}`,
+    `  Job titles: ${state.icp.titles.join(", ") || "not set"}`,
     `  Company size: ${sizeLabel}`,
     `  Locations: ${state.icp.locations.join(", ") || "not set"}`,
-    `  Pain point: ${state.icp.pain_point || "not set"}`,
-    `  Value prop: ${state.icp.value_prop || "not set"}`,
-    "",
-    "Seed list",
-    `  Source: ${seedSourceLabel}`,
-    state.seed_list.warnings.length ? `  Warnings: ${state.seed_list.warnings.join(" · ")}` : "",
-    "",
-    "Sending domains",
-    `  Count: ${state.domains.count}`,
-    `  Pattern: ${state.domains.pattern || "not set"}`,
-    state.domains.notes ? `  Notes: ${state.domains.notes}` : "",
-    "",
-    "Copy approval",
-    `  Email 1 icebreaker: ${state.copy.approve_email_1 ? "approved" : "pending"}`,
-    `  Email 2 TL;DR: ${state.copy.approve_email_2 ? "approved" : "pending"}`,
-    `  Email 3 breakup: ${state.copy.approve_email_3 ? "approved" : "pending"}`,
-    state.copy.customisations ? `  Customisations: ${state.copy.customisations}` : "",
+    `  Intent signals: ${state.icp.intentSignals.join(", ") || "none"}`,
+    `  Average deal value: ${dealLabel}`,
   ]
     .filter(Boolean)
     .join("\n");
