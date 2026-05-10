@@ -14,6 +14,13 @@ interface PlanConfig {
   teamSeats: number | null;
   /** First-response SLA in business hours, used to render the support copy. */
   responseSlaHours: number;
+  /** Conversations bundled into the monthly subscription. Beyond this, the
+   *  client either depletes top-up credits or hits the overage rate. */
+  conversationsIncluded: number;
+  /** Per-extra-conversation rate after the included quota AND credits run
+   *  out. Charged in cents. Lower tiers pay more per overage; higher tiers
+   *  get volume rates. */
+  overageCentsPerConversation: number;
 }
 
 // Tier structure (2026-05-10, refined):
@@ -53,6 +60,8 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 1,
     responseSlaHours: 24,
+    conversationsIncluded: 200,
+    overageCentsPerConversation: 300,
   },
   starter: {
     name: 'Starter',
@@ -65,6 +74,8 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 1,
     responseSlaHours: 24,
+    conversationsIncluded: 200,
+    overageCentsPerConversation: 300,
   },
   pro: {
     name: 'Pro',
@@ -77,6 +88,8 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 3,
     responseSlaHours: 12,
+    conversationsIncluded: 700,
+    overageCentsPerConversation: 250,
   },
   business: {
     name: 'Business',
@@ -89,6 +102,8 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'priority',
     teamSeats: null,
     responseSlaHours: 4,
+    conversationsIncluded: 2500,
+    overageCentsPerConversation: 200,
   },
   enterprise: {
     name: 'Enterprise',
@@ -101,6 +116,8 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'dedicated',
     teamSeats: null,
     responseSlaHours: 1,
+    conversationsIncluded: 10000,
+    overageCentsPerConversation: 150,
   },
   // ── Legacy tier ───────────────────────────────────────────
   // Pre-2026-05-10 customers signed up at R1,999 with 250 leads + custom
@@ -118,6 +135,8 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     apiAccess: false,
     supportTier: 'priority',
     teamSeats: null,
+    conversationsIncluded: 1500,
+    overageCentsPerConversation: 250,
     responseSlaHours: 4,
   },
 };

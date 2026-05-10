@@ -16,6 +16,7 @@ import { bookMeeting } from "@/lib/booking-create";
 import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
 import { wrapUntrustedConfig, PROMPT_SAFETY_NOTE } from "@/lib/prompt-safety";
 import { assertTenantActive } from "@/lib/billing/tenant-gate";
+import { recordApiUsage } from "@/lib/billing/api-usage";
 
 const QWIKLY_OWN_CLIENT_ID = "1";
 
@@ -795,6 +796,17 @@ export async function POST(req: NextRequest) {
       tools,
       messages: conversationMessages,
     });
+    // Track this tenant's API usage. Fire-and-forget, never blocks the
+    // chat reply. Failures are logged inside recordApiUsage. Test mode
+    // skips tracking too, since previewing should not bill the owner.
+    if (!isTestMode && response.usage) {
+      void recordApiUsage({
+        clientId: client_id,
+        conversationId: convoId,
+        usage: response.usage,
+        source: "web_chat",
+      });
+    }
   } catch (err) {
     console.error("[web/chat] Claude call 1 failed:", err);
     return NextResponse.json({ error: "assistant_unavailable" }, { status: 503, headers: CORS });
@@ -876,6 +888,18 @@ export async function POST(req: NextRequest) {
         tools,
         messages: conversationMessages,
       });
+      // Track tool-loop iterations too. Each follow-up call costs us tokens
+      // (cached system prompt + growing message history), so the tenant's
+      // usage row count needs to reflect that or end-of-month billing
+      // under-counts.
+      if (!isTestMode && response.usage) {
+        void recordApiUsage({
+          clientId: client_id,
+          conversationId: convoId,
+          usage: response.usage,
+          source: "web_chat",
+        });
+      }
     } catch (err) {
       console.error("[web/chat] Claude tool follow-up failed:", err);
       if (!reply) reply = "Got it, noted. Anything else you'd like to know?";
