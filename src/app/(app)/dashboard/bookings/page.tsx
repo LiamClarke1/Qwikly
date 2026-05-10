@@ -102,6 +102,13 @@ interface GCalEvent {
 
 type ActiveItem = (Booking & { _isGcal?: false }) | (GCalEvent & { _isGcal: true });
 
+// Strip the long-dash characters out of any title we render, so external
+// text (Google Calendar event titles, manual entries) never violates the
+// "no em-dash" brand rule on the dashboard. Underlying data is untouched.
+function cleanDisplayTitle(s: string | null | undefined): string {
+  return (s ?? "").replace(/—/g, ",").replace(/–/g, ",");
+}
+
 export default function BookingsPage() {
   const { client } = useClient();
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -122,6 +129,11 @@ export default function BookingsPage() {
   const [editingGcal, setEditingGcal] = useState(false);
   const [gcalEditForm, setGcalEditForm] = useState({ title: "", date: "", startTime: "", endTime: "" });
   const [gcalActionLoading, setGcalActionLoading] = useState(false);
+  // Inline reschedule state for internal bookings (not gCal events, which
+  // already have their own edit form via the existing gcalEditForm flow).
+  const [reschedulingBookingId, setReschedulingBookingId] = useState<string | null>(null);
+  const [rescheduleForm, setRescheduleForm] = useState({ date: "", time: "" });
+  const [rescheduleLoading, setRescheduleLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -258,7 +270,7 @@ export default function BookingsPage() {
       .filter((e) => e.start && new Date(e.start) > now)
       .map((e) => ({
         when: new Date(e.start as string),
-        title: e.title || "Calendar event",
+        title: cleanDisplayTitle(e.title) || "Calendar event",
         source: "gcal" as const,
       })),
   ].sort((a, b) => a.when.getTime() - b.when.getTime());
@@ -281,6 +293,44 @@ export default function BookingsPage() {
       setActive({ ...(active as Booking), status });
     }
     await supabase.from("bookings").update({ status }).eq("id", id);
+  };
+
+  // Open the inline reschedule form for a booking, prefilled with its
+  // current date and time (or today's date / 09:00 if not yet scheduled).
+  const startReschedule = (b: Booking) => {
+    const dt = b.booking_datetime ? new Date(b.booking_datetime) : new Date();
+    const date = dt.toISOString().slice(0, 10);
+    const time = dt.toTimeString().slice(0, 5);
+    setRescheduleForm({ date, time });
+    setReschedulingBookingId(b.id);
+  };
+
+  const cancelReschedule = () => {
+    setReschedulingBookingId(null);
+    setRescheduleForm({ date: "", time: "" });
+  };
+
+  // Save the new datetime to the booking. Updates local state + the row.
+  const saveReschedule = async (id: string) => {
+    if (!rescheduleForm.date || !rescheduleForm.time) return;
+    setRescheduleLoading(true);
+    const newDt = new Date(`${rescheduleForm.date}T${rescheduleForm.time}:00`);
+    const iso = newDt.toISOString();
+    const { error } = await supabase
+      .from("bookings")
+      .update({ booking_datetime: iso })
+      .eq("id", id);
+    setRescheduleLoading(false);
+    if (error) {
+      showToast("Could not reschedule", false);
+      return;
+    }
+    setBookings((bs) => bs.map((b) => (b.id === id ? { ...b, booking_datetime: iso } : b)));
+    if (active && !("_isGcal" in active) && (active as Booking).id === id) {
+      setActive({ ...(active as Booking), booking_datetime: iso });
+    }
+    showToast("Booking rescheduled");
+    cancelReschedule();
   };
 
   const deleteBooking = async (id: string) => {
@@ -648,11 +698,12 @@ export default function BookingsPage() {
         </Card>
       )}
 
-      {/* Stats */}
+      {/* Stats — each card is clickable: switches to list view and applies the
+          relevant filter so the owner can drill in without hunting filter chips. */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-        {[
+        {([
           stats.emergency > 0
-            ? { label: "Emergency open", value: stats.emergency, color: "#DC2626", hint: null }
+            ? { label: "Emergency open", value: stats.emergency, color: "#DC2626", hint: null, filter: "Emergency" as Filter }
             : {
                 label: "Total bookings",
                 value: stats.total,
@@ -660,20 +711,29 @@ export default function BookingsPage() {
                 hint: stats.fromGcal > 0
                   ? `incl. ${stats.fromGcal} from Google Calendar`
                   : null,
+                filter: "All" as Filter,
               },
           stats.tentative > 0
-            ? { label: "Awaiting decision", value: stats.tentative, color: "#F59E0B", hint: null }
-            : { label: "Upcoming", value: stats.upcoming, color: "#60A5FA", hint: null },
-          { label: "Completed", value: stats.completed, color: "#22C55E", hint: null },
-          { label: "Est. revenue", value: `R${stats.revenue.toLocaleString("en-ZA")}`, color: "#8B5CF6", hint: null },
-        ].map((s, i) => (
-          <Card key={i} className="!p-4">
-            <p className="text-tiny text-fg-subtle font-medium mb-1">{s.label}</p>
-            <p className="text-h1 text-fg num leading-none" style={{ color: s.color }}>{s.value}</p>
-            {s.hint && (
-              <p className="text-tiny text-fg-muted mt-1.5">{s.hint}</p>
-            )}
-          </Card>
+            ? { label: "Awaiting decision", value: stats.tentative, color: "#F59E0B", hint: null, filter: "Tentative" as Filter }
+            : { label: "Upcoming", value: stats.upcoming, color: "#60A5FA", hint: null, filter: "Booked" as Filter },
+          { label: "Completed", value: stats.completed, color: "#22C55E", hint: null, filter: "Completed" as Filter },
+          { label: "Est. revenue", value: `R${stats.revenue.toLocaleString("en-ZA")}`, color: "#8B5CF6", hint: "click to view completed", filter: "Completed" as Filter },
+        ] as const).map((s, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => { setView("list"); setFilter(s.filter); }}
+            className="text-left"
+            aria-label={`${s.label}: ${s.value}. Click to view ${s.filter.toLowerCase()} in list view.`}
+          >
+            <Card className="!p-4 transition-all hover:border-[var(--border-strong)] hover:bg-surface-hover/50 cursor-pointer h-full">
+              <p className="text-tiny text-fg-subtle font-medium mb-1">{s.label}</p>
+              <p className="text-h1 text-fg num leading-none" style={{ color: s.color }}>{s.value}</p>
+              {s.hint && (
+                <p className="text-tiny text-fg-muted mt-1.5">{s.hint}</p>
+              )}
+            </Card>
+          </button>
         ))}
       </div>
 
@@ -768,7 +828,7 @@ export default function BookingsPage() {
                                 onClick={(e) => { e.stopPropagation(); setActive({ ...item.data, _isGcal: true }); }}
                                 className="w-full text-left px-1.5 py-1 rounded-md text-[10px] font-medium cursor-pointer hover:brightness-110 transition-all bg-[#6366f1]/15 text-[#818cf8] border border-[#6366f1]/25"
                               >
-                                <p className="font-semibold truncate leading-tight">{item.data.title}</p>
+                                <p className="font-semibold truncate leading-tight">{cleanDisplayTitle(item.data.title)}</p>
                                 <p className="opacity-70 truncate leading-tight">{startTime}</p>
                               </button>
                             );
@@ -921,7 +981,7 @@ export default function BookingsPage() {
                         <div className="w-14 h-14 rounded-2xl bg-[#6366f1]/15 border border-[#6366f1]/25 flex items-center justify-center mx-auto mb-3">
                           <Calendar className="w-6 h-6 text-[#818cf8]" />
                         </div>
-                        <p className="text-h2 text-fg">{activeGcal.title}</p>
+                        <p className="text-h2 text-fg">{cleanDisplayTitle(activeGcal.title)}</p>
                         {activeGcal.location && (
                           <p className="text-small text-fg-muted mt-1 flex items-center justify-center gap-1.5">
                             <MapPin className="w-3.5 h-3.5" /> {activeGcal.location}
@@ -1257,6 +1317,64 @@ export default function BookingsPage() {
                     <AlertTriangle className="w-4 h-4" />
                     {activeBooking.is_emergency ? "Remove emergency flag" : "Mark as emergency"}
                   </button>
+
+                  {/* Reschedule, lets the owner change the booking_datetime
+                      inline without deleting and recreating. Available on any
+                      non-cancelled booking. The form prefills with the current
+                      datetime so the common action is "nudge by 30 min". */}
+                  {activeBooking.status !== "cancelled" && reschedulingBookingId !== activeBooking.id && (
+                    <button
+                      type="button"
+                      onClick={() => startReschedule(activeBooking)}
+                      className="w-full min-h-[44px] rounded-xl bg-surface-input border border-[var(--border)] text-small font-medium text-fg-muted hover:text-fg hover:bg-surface-hover cursor-pointer transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <Pencil className="w-4 h-4" /> Reschedule
+                    </button>
+                  )}
+
+                  {reschedulingBookingId === activeBooking.id && (
+                    <div className="panel !p-3 space-y-3">
+                      <p className="text-tiny text-fg-subtle font-medium">Reschedule this booking</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-tiny text-fg-muted mb-1">Date</p>
+                          <input
+                            type="date"
+                            value={rescheduleForm.date}
+                            onChange={(e) => setRescheduleForm({ ...rescheduleForm, date: e.target.value })}
+                            className="w-full h-10 px-3 rounded-xl bg-surface-input border border-[var(--border)] text-small text-fg outline-none focus:border-ember/50 transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-tiny text-fg-muted mb-1">Time</p>
+                          <input
+                            type="time"
+                            value={rescheduleForm.time}
+                            onChange={(e) => setRescheduleForm({ ...rescheduleForm, time: e.target.value })}
+                            className="w-full h-10 px-3 rounded-xl bg-surface-input border border-[var(--border)] text-small text-fg outline-none focus:border-ember/50 transition-colors"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={cancelReschedule}
+                          disabled={rescheduleLoading}
+                          className="flex-1 h-10 rounded-xl bg-surface-input border border-[var(--border)] text-small font-medium text-fg-muted hover:text-fg hover:bg-surface-hover cursor-pointer transition-colors disabled:opacity-50"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => saveReschedule(activeBooking.id)}
+                          disabled={rescheduleLoading || !rescheduleForm.date || !rescheduleForm.time}
+                          className="flex-1 h-10 rounded-xl bg-ember text-paper text-small font-semibold hover:brightness-95 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                        >
+                          <Check className="w-4 h-4" /> {rescheduleLoading ? "Saving…" : "Save"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Standard status grid only renders once the booking is
                       out of tentative state. Tentative bookings must go
