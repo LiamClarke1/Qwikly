@@ -55,9 +55,9 @@ const PLANS: {
     noCard: true,
     features: [
       "30 qualified leads/month",
-      "Full feature access",
+      "Try the Starter tier free",
       "Digital assistant + embed snippet",
-      "Upgrade anytime to any paid tier",
+      "Upgrade to any paid tier anytime",
       "No bank account needed",
     ],
   },

@@ -224,7 +224,9 @@ export default function PricingPage() {
             </span>
           </div>
 
-          {/* Free trial banner — applies to all plans, replaces the old "Trial card" */}
+          {/* Free trial banner — trial is a 7-day taste of the Starter plan.
+              After 7 days the account pauses unless the owner picks a paid
+              plan. Avoids the misleading "trial on every plan" framing. */}
           <div className="mb-10 flex justify-center">
             <a
               href="/signup?plan=trial"
@@ -232,7 +234,7 @@ export default function PricingPage() {
             >
               <span className="w-2 h-2 rounded-full bg-ember" />
               <span className="text-sm text-ink-700">
-                <strong className="text-ink">7-day free trial</strong> on every plan, no card required
+                <strong className="text-ink">7-day free trial of Starter</strong>, no card required
               </span>
             </a>
           </div>

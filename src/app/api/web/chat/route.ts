@@ -434,7 +434,7 @@ Pricing & billing:
 - Pro plan: R1,799/month, 100 leads included, 3 dashboard users, custom branding (your logo, no Qwikly footer), custom greeting + qualifying questions. For small multi-person practices. Most popular.
 - Business plan: R3,999/month, 400 leads included, unlimited users, custom branding, CSV exports, priority 4h support. For multi-doctor / multi-agent practices.
 - Enterprise plan: from R7,999/month, 1,500+ leads, full white-label, API access, dedicated support with 1h SLA. Custom volume pricing. For multi-location or mission-critical accounts, redirect to qwikly.co.za/contact.
-- Free trial: 7 days, no card needed, full feature access.
+- Free trial: 7 days of the Starter tier (30 qualified leads, "Powered by Qwikly" footer, 1 user). No card needed. After 7 days the account pauses unless they pick a paid plan. Trial does not include Pro, Business, or Enterprise features, those require an upgrade.
 - Annual billing: 15% off any plan.
 - If they exceed the monthly lead cap on a paid plan: extra leads are R20 each, never auto-billed, owner approves every top-up.
 - Setup help service: R500 one-time, the team plugs everything in for you live on a call.

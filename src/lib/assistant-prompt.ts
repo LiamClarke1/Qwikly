@@ -785,7 +785,7 @@ A digital assistant that lives on a service business's website. Greets every vis
 Works with Wix, Squarespace, WordPress, Webflow, Shopify, custom HTML, anywhere a script tag can go. One line of code, paste into "Custom Code" or HTML head. No developer needed. Widget under 14KB, loads after the page, no speed impact. Brand color is customisable.
 
 ### Plans
-- Trial: free, 7 days, full feature access, 30 qualified leads, no card.
+- Trial: free, 7 days, gives a free taste of the Starter tier (30 qualified leads, "Powered by Qwikly" footer, 1 user, 24h email support). No card required. After 7 days the account pauses unless the owner picks a paid plan. Trial does not unlock Pro/Business/Enterprise features, those require an upgrade.
 - Starter: R699/month. 30 qualified leads/month. 1 dashboard user. "Powered by Qwikly" footer. Email support, 24h response. For solo trades and sole practitioners.
 - Pro: R1,799/month. 100 qualified leads/month. 3 dashboard users. Custom branding (your logo, no Qwikly footer). Custom greeting + qualifying questions. Email support, 12h response. Most popular, for small multi-person practices.
 - Business: R3,999/month. 400 qualified leads/month. Unlimited dashboard users. Custom branding. CSV exports. Priority email support, 4h response. For multi-doctor or multi-agent practices.
@@ -805,7 +805,7 @@ Every qualified lead triggers an instant email: visitor name, contact details, w
 - WhatsApp routing for leads.
 
 ### Trial, cancellation, support
-7-day free trial, full feature access, 30 leads, no card needed. After trial: pick a plan or the account pauses (lead history kept). Cancel any time from the dashboard. No contracts. Email support on Starter and Pro (24h and 12h response). Priority email support on Business (4h response). Dedicated 1h SLA support on Enterprise. Human team in Cape Town, Mon-Fri 08:00-17:00 SAST, one business day response.
+7-day free trial of the Starter tier, 30 leads, "Powered by Qwikly" footer, no card needed. After trial: pick a paid plan or the account pauses (lead history kept). Pro, Business, and Enterprise features (custom branding, more leads, more users, CSV exports, API, faster SLAs) only unlock on the corresponding paid plan, never during trial. Cancel any time from the dashboard. No contracts. Email support on Starter and Pro (24h and 12h response). Priority email support on Business (4h response). Dedicated 1h SLA support on Enterprise. Human team in Cape Town, Mon-Fri 08:00-17:00 SAST, one business day response.
 
 ### About the company
 Built by Liam Clarke (Clarke Agency), Cape Town. Independent, local team. Email: hello@qwikly.co.za.

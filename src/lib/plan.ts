@@ -17,7 +17,14 @@ interface PlanConfig {
 }
 
 // Tier structure (2026-05-10, refined):
-//   - trial      : 7-day free trial, full Pro feature access, capped at 30 leads
+//   - trial      : 7-day free trial of the Starter tier (NOT full feature
+//                  access). Same 30 lead cap, same "Powered by Qwikly"
+//                  footer, same single-user limit. After 7 days the
+//                  account pauses unless the owner picks a paid plan.
+//                  Keeping trial = Starter prevents the misleading
+//                  positioning of "trial on every plan" and the awkward
+//                  cliff where a Pro-trial user loses custom branding
+//                  the moment they have to pay.
 //   - starter    : R699  · solo trades, individual agents, sole practitioners
 //   - pro        : R1,799 · small multi-person practices, UNLOCKS custom
 //                  branding (your logo, no Qwikly footer) so growing solos
@@ -36,8 +43,11 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     name: 'Trial',
     priceMonthly: 0,
     leadLimit: 30,
-    removeBranding: true,
-    customGreeting: true,
+    // Trial mirrors Starter exactly: same branding (Powered by Qwikly),
+    // same single user, same lack of custom greeting. So a trial user
+    // experiences what they will actually keep paying R699 for.
+    removeBranding: false,
+    customGreeting: false,
     csvExport: false,
     apiAccess: false,
     supportTier: 'email',

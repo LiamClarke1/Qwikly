@@ -487,7 +487,7 @@ export default function BillingPage() {
             <Clock className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" aria-hidden="true" />
             <div>
               <p className="text-small font-semibold text-fg">
-                You&apos;re on a 7-day free trial
+                You&apos;re on a 7-day Starter trial
                 {trialDaysLeft !== null && (
                   <span className="ml-2 text-tiny font-normal text-amber-400">
                     {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining
@@ -495,7 +495,7 @@ export default function BillingPage() {
                 )}
               </p>
               <p className="text-tiny text-fg-muted mt-0.5">
-                No payment taken during trial. Choose a plan below to continue after your trial ends.
+                Trial mirrors the Starter tier (30 leads, &ldquo;Powered by Qwikly&rdquo; footer). No payment taken. Choose a paid plan below to continue or upgrade after the trial ends.
               </p>
             </div>
           </div>

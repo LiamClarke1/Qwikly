@@ -850,7 +850,7 @@ const serviceSchema = {
         name: "Free Trial",
         priceCurrency: "ZAR",
         price: "0",
-        description: "7-day free trial. Full feature access, 30 qualified leads. No card required.",
+        description: "7-day free trial of the Starter tier, 30 qualified leads, no card required.",
         url: "https://www.qwikly.co.za/pricing",
         availability: "https://schema.org/InStock",
       },
