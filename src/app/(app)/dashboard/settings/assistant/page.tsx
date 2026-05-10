@@ -129,6 +129,11 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
     ai_sign_off:               client.ai_sign_off               ?? "",
     quote_mode:                client.quote_mode                ?? "never",
     quote_playbook:            client.quote_playbook            ?? "",
+    regulated_topics:          client.regulated_topics          ?? "",
+    referral_partners:         client.referral_partners         ?? "",
+    active_listings:           client.active_listings           ?? "",
+    stock_notes:               client.stock_notes               ?? "",
+    urgent_keywords:           client.urgent_keywords           ?? "",
   });
 
   const [tone, setTone] = useState(client.tone ?? "");
@@ -149,6 +154,11 @@ function AICard({ client, save, saving }: { client: Client; save: (p: Partial<Cl
     ai_sign_off:               client.ai_sign_off               ?? "",
     quote_mode:                client.quote_mode                ?? "never",
     quote_playbook:            client.quote_playbook            ?? "",
+    regulated_topics:          client.regulated_topics          ?? "",
+    referral_partners:         client.referral_partners         ?? "",
+    active_listings:           client.active_listings           ?? "",
+    stock_notes:               client.stock_notes               ?? "",
+    urgent_keywords:           client.urgent_keywords           ?? "",
   });
   const setp = (k: keyof typeof personality) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setPersonality({ ...personality, [k]: e.target.value });
@@ -350,6 +360,87 @@ Solar install, always quote on site, never give a number in chat.`}
               </Button>
             </div>
           ))}
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Inventory &amp; current state"
+          description="Anything time-sensitive your assistant should know about today. Refresh whenever it changes."
+        />
+        <div className="space-y-4">
+          <Field
+            label="Active listings or current inventory"
+            hint="What you have available right now. Real estate listings, in-stock items, current offers. The assistant references these when a visitor asks &ldquo;is X still available?&rdquo;. Leave blank if it doesn't apply."
+          >
+            <Textarea
+              value={personality.active_listings}
+              onChange={setp("active_listings")}
+              rows={6}
+              placeholder={`12 Beach Rd, Mouille Point: 2-bed apartment, R3.85m, available immediately
+8 The Crescent, Bantry Bay: 3-bed villa, R12m, viewings by appointment
+24 High St, Camps Bay: 1-bed studio, R2.4m, off-plan, occupation Q3 2026`}
+            />
+          </Field>
+          <Field
+            label="Stock status notes"
+            hint="Out-of-stock or low-stock items the assistant should mention when asked. For pharmacies, retailers, or anyone running inventory. Refresh weekly."
+          >
+            <Textarea
+              value={personality.stock_notes}
+              onChange={setp("stock_notes")}
+              rows={4}
+              placeholder={`Out of stock: Insulatard 100IU/ml, Augmentin 875mg
+Low stock: Augmentin 625mg, Voltaren gel
+Restocking expected by Friday`}
+            />
+          </Field>
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="Boundaries &amp; referrals"
+          description="What your assistant should never wing, and where to point people when they ask for something you don't offer."
+        />
+        <div className="space-y-4">
+          <Field
+            label="Regulated or sensitive topics"
+            hint="Topics that need careful handling for your trade. The assistant treats this as authoritative and won't go beyond what you write here. Examples: schedule meds, asbestos handling, legal advice in chat."
+          >
+            <Textarea
+              value={personality.regulated_topics}
+              onChange={setp("regulated_topics")}
+              rows={5}
+              placeholder={`Schedule 5/6 medication: never confirm what we will or will not dispense over chat. Always direct visitors to bring the original prescription in person and let the pharmacist make the call.
+
+Never advise on dosage, interactions, or symptoms, that is the pharmacist's job.`}
+            />
+          </Field>
+          <Field
+            label="Referral partners"
+            hint="Trusted partners we refer to when a visitor asks for something outside our scope or area. The assistant uses these to keep the lead warm instead of letting them leave empty-handed."
+          >
+            <Textarea
+              value={personality.referral_partners}
+              onChange={setp("referral_partners")}
+              rows={4}
+              placeholder={`Bryanston Maxillofacial for surgical extractions
+Riverside Orthodontics for braces
+Pretoria Thatchworks for thatch-roof enquiries`}
+            />
+          </Field>
+          <Field
+            label="Custom urgency cues"
+            hint="Phrases that should make the assistant flag a lead as urgent for your trade specifically. Comma-separated. The standard cues (today, ASAP, emergency, no power) are always on; these layer on top."
+          >
+            <Textarea
+              value={personality.urgent_keywords}
+              onChange={setp("urgent_keywords")}
+              rows={3}
+              placeholder={`for transfer, conveyancer needs, bond inspection, transfer date, before registration`}
+            />
+          </Field>
         </div>
       </Card>
 

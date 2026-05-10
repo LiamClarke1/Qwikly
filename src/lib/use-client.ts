@@ -54,6 +54,13 @@ export interface ClientRow {
   // 20260509_quote_settings.sql
   quote_mode?: "never" | "range" | "exact" | null;
   quote_playbook?: string | null;
+  // 20260510_clients_regulated_referral.sql
+  regulated_topics?: string | null;
+  referral_partners?: string | null;
+  // 20260510_clients_listings_stock_urgent.sql
+  active_listings?: string | null;
+  stock_notes?: string | null;
+  urgent_keywords?: string | null;
   // existing settings fields
   address?: string | null;
   faq?: { q: string; a: string }[] | null;
