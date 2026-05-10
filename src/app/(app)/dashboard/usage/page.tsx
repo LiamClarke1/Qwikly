@@ -179,9 +179,15 @@ export default function UsagePage() {
           </p>
           <p className="text-tiny text-fg-muted mb-5">Current balance</p>
 
-          <Button variant="primary" className="w-full" disabled>
-            Top up (coming soon)
-          </Button>
+          <a
+            href="/contact?subject=topup"
+            className="block w-full h-10 rounded-xl bg-ember text-paper text-small font-semibold flex items-center justify-center hover:brightness-95 cursor-pointer transition-all"
+          >
+            Top up via EFT
+          </a>
+          <p className="text-tiny text-fg-muted mt-2 leading-relaxed">
+            Self-serve via card coming soon. For now: email us, pay by EFT, credits land on your account same day.
+          </p>
 
           <div className="mt-5 pt-4 border-t border-[var(--border)] space-y-2">
             <div className="flex items-center justify-between text-tiny">

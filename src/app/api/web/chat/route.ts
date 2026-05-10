@@ -694,6 +694,58 @@ export async function POST(req: NextRequest) {
         );
       }
     }
+
+    // ── Conversation cap check (API spend protection) ──────────
+    // If the tenant is past their plan's conversationsIncluded for the
+    // month AND has zero top-up credits AND has set zero_balance_behaviour
+    // to 'pause' (the default), stop calling Anthropic. Without this gate
+    // we would keep racking up wholesale API charges that the tenant has
+    // not authorised. Skip in test mode (owner preview) and for the
+    // Qwikly own-site sentinel.
+    if (!isTestMode) {
+      const includedConversations = PLAN_CONFIG[tier].conversationsIncluded;
+      const billingPeriod = new Date(
+        Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1),
+      ).toISOString().slice(0, 10);
+
+      const { data: usageRows } = await supabaseAdmin
+        .from("api_usage")
+        .select("conversation_id")
+        .eq("client_id", Number(client_id))
+        .eq("billing_period", billingPeriod)
+        .eq("is_internal", false);
+
+      const distinctConversations = new Set(
+        (usageRows ?? [])
+          .map((r) => r.conversation_id)
+          .filter((id): id is number | string => id != null),
+      ).size;
+
+      if (distinctConversations >= includedConversations) {
+        const { data: creditsRow } = await supabaseAdmin
+          .from("conversation_credits")
+          .select("balance_zar_cents, zero_balance_behaviour")
+          .eq("client_id", Number(client_id))
+          .maybeSingle();
+
+        const zeroBalanceBehaviour = creditsRow?.zero_balance_behaviour ?? "pause";
+        const balance = creditsRow?.balance_zar_cents ?? 0;
+
+        if (zeroBalanceBehaviour === "pause" && balance <= 0) {
+          // Hard stop. Polite reply to the visitor; the owner is notified
+          // separately via the dashboard /usage page.
+          return NextResponse.json(
+            {
+              reply:
+                "Thanks for reaching out. The team is at conversation capacity for this month. Please come back next month or contact us directly.",
+              conversation_id: null,
+              lead_captured: false,
+            },
+            { headers: CORS }
+          );
+        }
+      }
+    }
   }
 
   // ── Inject KB articles + knowledge_chunks ─────────────────
