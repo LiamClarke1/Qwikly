@@ -50,9 +50,11 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     name: 'Trial',
     priceMonthly: 0,
     leadLimit: 30,
-    // Trial mirrors Starter exactly: same branding (Powered by Qwikly),
-    // same single user, same lack of custom greeting. So a trial user
-    // experiences what they will actually keep paying R699 for.
+    // Trial mirrors Starter on branding/users/greeting (so the experience
+    // is what they'd pay for). Cap is intentionally lower at 20 (vs
+    // Starter's 140) because the trial is a free taste, not a free month.
+    // Bounded worst-case API spend per trial signup is 20 × R1.50 wholesale
+    // = R30, well within typical CAC for SaaS.
     removeBranding: false,
     customGreeting: false,
     csvExport: false,
@@ -60,9 +62,13 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 1,
     responseSlaHours: 24,
-    conversationsIncluded: 200,
-    overageCentsPerConversation: 300,
+    conversationsIncluded: 20,
+    overageCentsPerConversation: 750,
   },
+  // Conversation caps below are tuned so wholesale Anthropic spend at full
+  // cap consumption stays at exactly 30% of revenue, locking gross margin
+  // at >= 70% even in the worst case. Planning constant is R1.50 wholesale
+  // per conversation (measured R0.74 + 100% safety buffer for variance).
   starter: {
     name: 'Starter',
     priceMonthly: 699,
@@ -74,8 +80,11 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 1,
     responseSlaHours: 24,
-    conversationsIncluded: 200,
-    overageCentsPerConversation: 300,
+    // 140 × R1.50 = R210 wholesale at cap → R489 profit on R699 = 70.0% margin.
+    conversationsIncluded: 140,
+    // R7.50/conversation overage = 80% margin (R6.00 profit on R1.50 wholesale).
+    // Slight premium over the in-plan rate (R5/conv) to nudge tier upgrades.
+    overageCentsPerConversation: 750,
   },
   pro: {
     name: 'Pro',
@@ -88,8 +97,9 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 3,
     responseSlaHours: 12,
-    conversationsIncluded: 700,
-    overageCentsPerConversation: 250,
+    // 360 × R1.50 = R540 wholesale at cap → R1,259 profit on R1,799 = 70.0% margin.
+    conversationsIncluded: 360,
+    overageCentsPerConversation: 750,
   },
   business: {
     name: 'Business',
@@ -102,8 +112,9 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'priority',
     teamSeats: null,
     responseSlaHours: 4,
-    conversationsIncluded: 2500,
-    overageCentsPerConversation: 200,
+    // 800 × R1.50 = R1,200 wholesale at cap → R2,799 profit on R3,999 = 70.0% margin.
+    conversationsIncluded: 800,
+    overageCentsPerConversation: 750,
   },
   enterprise: {
     name: 'Enterprise',
@@ -116,8 +127,9 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     supportTier: 'dedicated',
     teamSeats: null,
     responseSlaHours: 1,
-    conversationsIncluded: 10000,
-    overageCentsPerConversation: 150,
+    // 1,600 × R1.50 = R2,400 wholesale at cap → R5,599 profit on R7,999 = 70.0% margin.
+    conversationsIncluded: 1600,
+    overageCentsPerConversation: 750,
   },
   // ── Legacy tier ───────────────────────────────────────────
   // Pre-2026-05-10 customers signed up at R1,999 with 250 leads + custom
@@ -135,8 +147,9 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
     apiAccess: false,
     supportTier: 'priority',
     teamSeats: null,
-    conversationsIncluded: 1500,
-    overageCentsPerConversation: 250,
+    // 400 × R1.50 = R600 wholesale at cap → R1,399 profit on R1,999 = 70.0% margin.
+    conversationsIncluded: 400,
+    overageCentsPerConversation: 750,
     responseSlaHours: 4,
   },
 };

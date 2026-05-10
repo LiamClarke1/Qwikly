@@ -25,9 +25,25 @@ const PRICE_USD_PER_MTOK = {
 // Revisit on any Anthropic price change anyway.
 const USD_ZAR_RATE = 18.5;
 
-// Markup applied to wholesale cost to derive what we charge the client.
-// 2.5× wholesale = 60% gross margin on overage. See pricing memo 2026-05-10.
-const RETAIL_MARKUP = 2.5;
+// Markup applied to wholesale cost to derive what we charge the client on
+// any per-call billable retail price (currently informational only — actual
+// billing uses the per-tier overageCentsPerConversation in plan.ts which
+// is set to R7.50 flat across tiers, an 80% margin).
+//
+// Pricing assumptions (see pricing memo 2026-05-10):
+//   - Measured wholesale per conversation in playtest: R0.74
+//   - Planning constant: R1.50 (100% safety buffer over measured to absorb
+//     production variance, heavy real-estate sessions, tool-loop spikes, FX
+//     drift, future Anthropic price changes within reason)
+//   - Plan caps tuned so cap × R1.50 = 30% of revenue, locking gross margin
+//     at >= 70% in the worst case
+//   - Overage at R7.50/conversation = 80% margin floor (mild upgrade nudge
+//     vs the in-plan effective rate of R5/conversation)
+//
+// 4× wholesale gives 75% margin on a per-call basis — used as the legacy
+// retail cost recorded on each api_usage row, distinct from the per-
+// conversation overage rate the customer is billed at.
+const RETAIL_MARKUP = 4.0;
 
 // Conversations on Qwikly's own marketing site (client_id=1) are tracked
 // for visibility but never billed. Any other "internal" tenants we onboard
