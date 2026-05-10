@@ -1,10 +1,16 @@
 import Link from "next/link";
 
-const productLinks = [
-  { label: "Start trial", href: "/signup" },
-  { label: "Sign in", href: "/login" },
-  { label: "How it works", href: "/how-it-works" },
+const digitalAssistantLinks = [
+  { label: "Digital Assistant", href: "/digital-assistant" },
   { label: "Pricing", href: "/pricing" },
+  { label: "Watch the walkthrough", href: "/watch" },
+  { label: "Compare", href: "/compare" },
+];
+
+const pipelineLinks = [
+  { label: "Pipeline", href: "/pipeline" },
+  { label: "How it works", href: "/how-it-works/lead-gen" },
+  { label: "Case studies", href: "/case-studies" },
 ];
 
 const companyLinks = [
@@ -36,8 +42,8 @@ export default function Footer() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-16 border-b border-paper/10">
-          <div className="md:col-span-4">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-10 pb-16 border-b border-paper/10">
+          <div className="col-span-2 md:col-span-3">
             <p className="eyebrow text-paper/50 mb-5">Contact</p>
             {/* TODO: Set up forwarding rule on the qwikly.co.za domain MX so hello@qwikly.co.za delivers to the team inbox. */}
             <a
@@ -48,14 +54,14 @@ export default function Footer() {
             </a>
             <p className="text-sm text-paper/50 mt-4 max-w-xs leading-relaxed">
               Talk to a human in Cape Town. We&rsquo;ll have you live within
-              24&ndash;48 hours.
+              24 to 48 hours.
             </p>
           </div>
 
-          <div className="md:col-span-3 md:col-start-6">
-            <p className="eyebrow text-paper/50 mb-5">Product</p>
+          <div className="md:col-span-3 md:col-start-5">
+            <p className="eyebrow text-paper/50 mb-5">Digital Assistant</p>
             <ul className="space-y-3">
-              {productLinks.map((link) => (
+              {digitalAssistantLinks.map((link) => (
                 <li key={link.label}>
                   <Link
                     href={link.href}
@@ -68,7 +74,23 @@ export default function Footer() {
             </ul>
           </div>
 
-          <div className="md:col-span-2 md:col-start-9">
+          <div className="md:col-span-2 md:col-start-8">
+            <p className="eyebrow text-paper/50 mb-5">Pipeline</p>
+            <ul className="space-y-3">
+              {pipelineLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-paper/80 hover:text-paper transition-colors duration-200 text-base cursor-pointer"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="md:col-span-2 md:col-start-10">
             <p className="eyebrow text-paper/50 mb-5">Company</p>
             <ul className="space-y-3">
               {companyLinks.map((link) => (
@@ -84,7 +106,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          <div className="md:col-span-2 md:col-start-11">
+          <div className="md:col-span-2 md:col-start-12">
             <p className="eyebrow text-paper/50 mb-5">Legal</p>
             <ul className="space-y-3">
               {legalLinks.map((link) => (

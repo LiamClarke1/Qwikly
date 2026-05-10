@@ -5,6 +5,9 @@ import { Plus, Minus } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 import ManualPaymentModal, { type ManualPaymentPlan } from "@/components/ManualPaymentModal";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
+import { NicheChips } from "@/components/pricing/NicheChips";
+import { LiveCounter } from "@/components/landing/LiveCounter";
+import { TwoServicesSection } from "@/components/landing/two-services/TwoServicesSection";
 
 /* ─────────────────────────────────────────────────────────────
    HELPERS
@@ -918,7 +921,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
 
           {/* Top meta row */}
-          <div className="flex items-center justify-between text-[0.7rem] text-ink-500 mb-16 md:mb-20 reveal-up">
+          <div className="flex items-center justify-between text-[0.7rem] text-ink-500 mb-10 md:mb-14 reveal-up">
             <div className="eyebrow flex items-center gap-3">
               <span className="inline-block w-2 h-2 rounded-full bg-ember tick" />
               Live · Capturing leads now
@@ -930,11 +933,16 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Eyebrow */}
+          <p className="eyebrow text-ink-500 mb-6 reveal-up">
+            Two services. One mission, more booked jobs.
+          </p>
+
           {/* Headline */}
           <div className="reveal-words visible">
             <h1 className="display-huge text-ink max-w-[20ch]">
-              The digital assistant{" "}
-              <em className="italic font-light">platform for your business</em>.
+              Qwikly turns enquiries into{" "}
+              <em className="italic font-light">paying jobs</em>, on every front.
             </h1>
           </div>
 
@@ -942,31 +950,42 @@ export default function Home() {
           <div className="mt-10 md:mt-14 reveal-up">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
               <p className="text-lg md:text-xl text-ink-700 leading-relaxed max-w-lg">
-                Captures every enquiry, qualifies it, and sends it to your inbox. Even when you&rsquo;re asleep.
+                We capture every enquiry on your website and we hunt down qualified sales calls in your inbox. Pick one, run both, scale either.
               </p>
               <div className="flex flex-col gap-4 lg:items-end lg:text-right">
                 <div className="flex flex-wrap gap-4 lg:justify-end items-center">
                   <CTAButton
                     size="lg"
                     variant="solid"
-                    href="/signup?plan=trial"
+                    href="/digital-assistant"
                     className="px-9 py-[1.2rem] text-[1.05rem] font-semibold shadow-[0_18px_36px_-18px_rgba(232,90,44,0.6)]"
                   >
-                    Start Free Trial
+                    See Digital Assistant
                   </CTAButton>
-                  <CTAButton size="lg" variant="outline" href="#how-it-works" withArrow={false}>
-                    See how it works
+                  <CTAButton size="lg" variant="outline" href="/pipeline">
+                    See Pipeline
                   </CTAButton>
                 </div>
-                <p className="text-sm text-ink-500">
-                  7-day free trial. No bank account required. No card needed. Upgrade when you&apos;re ready.
-                </p>
+                <div className="flex flex-wrap gap-x-4 gap-y-2 lg:justify-end items-center text-xs eyebrow text-ink-500">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-ember" />
+                    POPIA compliant
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-ember" />
+                    Hosted in South Africa
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-ember" />
+                    ZAR pricing
+                  </span>
+                </div>
                 <p className="text-sm text-ink-500">
                   Need help setting up?{" "}
                   <a href="/contact" className="text-ember underline transition-colors">
                     We&rsquo;ll do it for you
-                  </a>{" "}
-                  for R500, live the following business day.
+                  </a>
+                  , live the following business day.
                 </p>
               </div>
             </div>
@@ -990,6 +1009,9 @@ export default function Home() {
 
         </div>
       </section>
+
+      {/* ═══════ 01b · TWO SERVICES ══════════════════════════════ */}
+      <TwoServicesSection />
 
       {/* ═══════ 02 · SOCIAL PROOF MARQUEE ══════════════════════ */}
       <section className="py-12 relative">
@@ -1033,7 +1055,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-20">
             <div className="md:col-span-4">
-              <p className="eyebrow text-ink-500 mb-6 reveal-up">How it works</p>
+              <p className="eyebrow text-ink-500 mb-6 reveal-up">How the Digital Assistant works</p>
               <h2 className="display-lg text-ink reveal-up">
                 Six steps.
                 <br />
@@ -1042,8 +1064,8 @@ export default function Home() {
             </div>
             <div className="md:col-span-7 md:col-start-6 md:pt-6">
               <p className="text-lg text-ink-700 leading-relaxed reveal-up">
-                Sign up, and in minutes your digital assistant knows your business inside out. It handles every visitor conversation from first hello to
-                confirmed booking. No setup calls, no integrations to wire, no ongoing work from you.
+                Sign up, and in minutes your Digital Assistant knows your business inside out. It handles every visitor conversation from first hello to confirmed booking. No setup calls, no integrations to wire, no ongoing work from you. For outbound, see{" "}
+                <a href="/pipeline" className="text-ember underline">Qwikly Pipeline</a>.
               </p>
             </div>
           </div>
@@ -1074,7 +1096,7 @@ export default function Home() {
           {/* Header */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-20 md:mb-28">
             <div className="md:col-span-5">
-              <p className="eyebrow text-ink-500 mb-6 reveal-up">What it does</p>
+              <p className="eyebrow text-ink-500 mb-6 reveal-up">What the Digital Assistant does</p>
               <h2 className="display-lg text-ink reveal-up">
                 Everything your{" "}
                 <em className="italic font-light">front desk would do</em>.
@@ -1082,7 +1104,7 @@ export default function Home() {
             </div>
             <div className="md:col-span-6 md:col-start-7 md:pt-2 reveal-up">
               <p className="text-lg text-ink-700 leading-relaxed">
-                Qwikly handles every incoming enquiry on your behalf. It qualifies, books, and delivers warm leads to your inbox. Around the clock.
+                Service 1, inbound. The Digital Assistant handles every incoming enquiry on your website. It qualifies, books, and delivers warm leads to your inbox. Around the clock.
               </p>
             </div>
           </div>
@@ -1126,6 +1148,25 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══════ 04b · NICHE ROW ════════════════════════════════ */}
+      <section className="relative py-20 md:py-24 bg-paper grain overflow-hidden">
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
+          <div className="mb-2 reveal-up">
+            <p className="eyebrow text-ink-500 mb-6">Your trade</p>
+            <h2 className="display-lg text-ink max-w-[22ch]">
+              Built for the way SA service businesses{" "}
+              <em className="italic font-light">actually work</em>.
+            </h2>
+            <p className="mt-4 text-ink-700 text-lg leading-relaxed max-w-xl">
+              Pick your niche to see how Qwikly handles it.
+            </p>
+          </div>
+          <div className="reveal-up">
+            <NicheChips />
+          </div>
+        </div>
+      </section>
+
       {/* ═══════ 05 · WHY QWIKLY ════════════════════════════════ */}
       <section className="relative py-28 md:py-40 bg-ink text-paper overflow-hidden grain-dark">
         <div className="ember-blob w-[500px] h-[500px] top-10 -right-40" />
@@ -1157,13 +1198,14 @@ export default function Home() {
       >
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <div className="text-center mb-14 reveal-up">
-            <p className="eyebrow text-ink-500 mb-4">Pricing</p>
+            <p className="eyebrow text-ink-500 mb-4">Digital Assistant pricing</p>
             <h2 className="display-lg text-ink">
               Start free.{" "}
               <em className="italic font-light text-ember">Scale when you&rsquo;re ready.</em>
             </h2>
             <p className="mt-4 text-ink-700 text-lg max-w-xl mx-auto leading-relaxed">
-              No per-job fees. No commissions. Flat monthly pricing in ZAR.
+              No per-job fees. No commissions. Flat monthly pricing in ZAR. For Qwikly Pipeline pricing,{" "}
+              <a href="/pipeline" className="text-ember underline">see Pipeline</a>.
             </p>
           </div>
 
@@ -1453,6 +1495,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ═══════ 07c · LIVE SCOREBOARD ══════════════════════════ */}
+      <LiveCounter />
+
       {/* ═══════ 08 · FINAL CTA ══════════════════════════════════ */}
       <section className="relative py-32 md:py-44 bg-ink text-paper overflow-hidden grain-dark">
         <div className="ember-blob w-[900px] h-[500px] top-0 left-1/2 -translate-x-1/2" />
@@ -1460,19 +1505,19 @@ export default function Home() {
 
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
           <p className="eyebrow text-paper/60 mb-10 reveal-up">Your move</p>
-          <h2 className="display-huge text-paper reveal-up max-w-[18ch] mx-auto">
-            Get your digital assistant{" "}
-            <em className="italic font-light text-ember">live this week</em>.
+          <h2 className="display-huge text-paper reveal-up max-w-[22ch] mx-auto">
+            Two services. Both built for SA service businesses.{" "}
+            <em className="italic font-light text-ember">Pick a starting point.</em>
           </h2>
           <p className="mt-10 text-paper/70 text-lg md:text-xl max-w-xl mx-auto leading-relaxed reveal-up">
-            Free to start. Live in 5 minutes. No per-job fees, ever.
+            Capture every enquiry on your website, or fill your calendar with qualified outbound meetings. Run one, run both.
           </p>
           <div className="mt-12 flex flex-wrap items-center justify-center gap-4 reveal-up">
-            <CTAButton size="lg" variant="solid" href="/signup?plan=trial">
-              Start Free Trial
+            <CTAButton size="lg" variant="solid" href="/digital-assistant">
+              See Digital Assistant
             </CTAButton>
-            <CTAButton size="lg" variant="outline-light" href="/pricing" withArrow={false}>
-              See all plans
+            <CTAButton size="lg" variant="outline-light" href="/pipeline">
+              See Pipeline
             </CTAButton>
           </div>
           <p className="mt-8 text-sm text-paper/40 reveal-up">

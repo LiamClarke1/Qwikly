@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useFormState, useFormStatus } from "react-dom";
 import {
   submitContactForm,
@@ -11,17 +12,58 @@ import {
 import CalendarPicker from "./CalendarPicker";
 import { useAvailability } from "./useAvailability";
 import type { ContactAvailabilitySlot } from "@/app/api/web/contact-availability/route";
+import ServicePicker, {
+  DEFAULT_SERVICE_INTEREST,
+  type ServiceInterest,
+} from "@/components/landing/service-picker/ServicePicker";
 
 const SETUP_CALL_SUBJECT = "Book a setup call";
+const PIPELINE_STRATEGY_SUBJECT = "Pipeline strategy call";
 
 const SUBJECTS = [
   SETUP_CALL_SUBJECT,
+  PIPELINE_STRATEGY_SUBJECT,
   "Pricing question",
   "Technical issue",
   "Billing enquiry",
   "Partnership",
   "Other",
 ];
+
+/**
+ * Map ?subject= query slugs to a default service_interest.
+ * Keeps URLs like /contact?subject=pipeline-strategy-call routing the
+ * visitor straight to the Pipeline track without changing the
+ * server-side form action.
+ */
+function deriveFromSubjectParam(subjectParam: string | null): {
+  subject: string;
+  service: ServiceInterest;
+} {
+  if (!subjectParam) {
+    return { subject: "", service: DEFAULT_SERVICE_INTEREST };
+  }
+  const slug = subjectParam.toLowerCase();
+  if (slug.includes("pipeline")) {
+    return { subject: PIPELINE_STRATEGY_SUBJECT, service: "Pipeline" };
+  }
+  if (slug.includes("setup") || slug.includes("digital-assistant") || slug.includes("assistant")) {
+    return { subject: SETUP_CALL_SUBJECT, service: "Digital Assistant" };
+  }
+  if (slug.includes("pricing")) {
+    return { subject: "Pricing question", service: DEFAULT_SERVICE_INTEREST };
+  }
+  if (slug.includes("partnership")) {
+    return { subject: "Partnership", service: DEFAULT_SERVICE_INTEREST };
+  }
+  if (slug.includes("billing")) {
+    return { subject: "Billing enquiry", service: DEFAULT_SERVICE_INTEREST };
+  }
+  if (slug.includes("technical")) {
+    return { subject: "Technical issue", service: DEFAULT_SERVICE_INTEREST };
+  }
+  return { subject: "Other", service: DEFAULT_SERVICE_INTEREST };
+}
 
 const messageInitial: ContactFormState = { success: false };
 const setupInitial: SetupCallState = { success: false };
@@ -53,7 +95,16 @@ function SetupSubmitButton({ disabled }: { disabled: boolean }) {
 }
 
 export default function ContactForm() {
-  const [subject, setSubject] = useState("");
+  const searchParams = useSearchParams();
+  const initial = useMemo(
+    () => deriveFromSubjectParam(searchParams?.get("subject") ?? null),
+    [searchParams]
+  );
+
+  const [subject, setSubject] = useState(initial.subject);
+  const [serviceInterest, setServiceInterest] = useState<ServiceInterest>(
+    initial.service
+  );
   const isSetupCall = subject === SETUP_CALL_SUBJECT;
   const [forceTextarea, setForceTextarea] = useState(false);
   const showPicker = isSetupCall && !forceTextarea;
@@ -142,6 +193,12 @@ export default function ContactForm() {
           {errorMsg}
         </div>
       )}
+
+      <ServicePicker
+        value={serviceInterest}
+        onChange={setServiceInterest}
+        name="service_interest"
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>

@@ -1,4 +1,21 @@
 export const FAQ_DATA = [
+  // ── About our two services ──────────────────────────────────────────────
+  {
+    question: "What is the difference between Digital Assistant and Pipeline?",
+    answer:
+      "Digital Assistant captures enquiries that already arrive on your website. Pipeline goes out and finds new buyers and books sales calls on your calendar. Most clients run one, then add the other within 90 days.",
+  },
+  {
+    question: "Do I need both?",
+    answer:
+      "Not at all. Start with whichever solves your bigger problem. Pipeline is for quiet pipelines, Digital Assistant is for busy websites with too many missed enquiries. Run both for full funnel coverage and a 10% bundle discount.",
+  },
+  {
+    question: "Which service is right for a small local business?",
+    answer:
+      "Digital Assistant. Pipeline is built for B2B service businesses with a R2,000+ ticket. Local services like plumbers, salons, and electricians get most of their value from Digital Assistant.",
+  },
+  // ── Existing FAQ ────────────────────────────────────────────────────────
   {
     question: "What is Qwikly?",
     answer:

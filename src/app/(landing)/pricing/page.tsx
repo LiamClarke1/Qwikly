@@ -1,13 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Minus, Plus, Shield, MapPin, Clock, Zap, Users, TrendingDown, MessageSquare, Phone, X } from "lucide-react";
+import { Check, Minus, Plus, Shield, MapPin, Clock, Zap, TrendingDown, MessageSquare, Phone, X, Sparkles } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 import ManualPaymentModal, { type ManualPaymentPlan } from "@/components/ManualPaymentModal";
+import { RevenueCalculator } from "@/components/landing/RevenueCalculator";
+import { LiveCounter } from "@/components/landing/LiveCounter";
+import { CaseStudyCard } from "@/components/pricing/CaseStudyCard";
+import { NicheChips } from "@/components/pricing/NicheChips";
+import { ServiceTabs, type ServiceTab } from "@/components/pricing/ServiceTabs";
+import { PipelinePricingBlock } from "@/components/pricing/PipelinePricingBlock";
 
-// Tier pricing. Annual = monthly × 12 × 0.85 (15% off, rounded).
-const MONTHLY = { starter: 699, pro: 1799, business: 3999, enterprise: 7999 } as const;
-const ANNUAL  = { starter: 7128, pro: 18350, business: 40790, enterprise: 81590 } as const;
+// Tier pricing. Annual = monthly x 12 x 0.85 (15% off, rounded).
+const MONTHLY = { starter: 699, pro: 1799, founders: 2999, business: 3999, enterprise: 7999 } as const;
+const ANNUAL  = { starter: 7128, pro: 18350, founders: 30590, business: 40790, enterprise: 81590 } as const;
 
 type TierId = keyof typeof MONTHLY;
 
@@ -16,7 +22,9 @@ const tiers: {
   name: string;
   tagline: string;
   features: string[];
+  instantReply: { included: boolean; addOnPrice?: number };
   highlight: boolean;
+  pill?: { label: string; variant: "popular" | "handsoff" };
   cta: string;
 }[] = [
   {
@@ -25,10 +33,11 @@ const tiers: {
     tagline: "Solo trades, individual agents, sole practitioners",
     highlight: false,
     cta: "Start with Starter",
+    instantReply: { included: false, addOnPrice: 499 },
     features: [
       "30 qualified leads/month",
       "1 dashboard user",
-      "Digital assistant platform",
+      "Digital assistant on your website",
       "Email lead delivery",
       '"Powered by Qwikly" branding',
       "Email support, 24h response",
@@ -39,7 +48,9 @@ const tiers: {
     name: "Pro",
     tagline: "Small multi-person practices and teams",
     highlight: true,
+    pill: { label: "Most Popular", variant: "popular" },
     cta: "Start with Pro",
+    instantReply: { included: true },
     features: [
       "100 qualified leads/month",
       "3 dashboard users",
@@ -50,11 +61,29 @@ const tiers: {
     ],
   },
   {
+    id: "founders",
+    name: "Founders Concierge",
+    tagline: "Pro plan, plus a real person handling every lead for you",
+    highlight: false,
+    pill: { label: "Hands-off", variant: "handsoff" },
+    cta: "Talk to us",
+    instantReply: { included: true },
+    features: [
+      "Everything in Pro",
+      "Real human responding to every lead in under 60 seconds, business hours",
+      "We book the call into your calendar",
+      "We send the calendar invite to your customer",
+      "You only see qualified, booked appointments",
+      "Limited spots, capacity capped per region",
+    ],
+  },
+  {
     id: "business",
     name: "Business",
     tagline: "Multi-doctor, multi-agent, busy practices",
     highlight: false,
     cta: "Start with Business",
+    instantReply: { included: true },
     features: [
       "400 qualified leads/month",
       "Unlimited dashboard users",
@@ -70,6 +99,7 @@ const tiers: {
     tagline: "Multi-location, white-label, mission-critical",
     highlight: false,
     cta: "Talk to us",
+    instantReply: { included: true },
     features: [
       "1,500+ qualified leads/month",
       "Full white-label, your domain",
@@ -84,21 +114,37 @@ const tiers: {
 type FeatureCell = boolean | string;
 
 const featureRows: { label: string; starter: FeatureCell; pro: FeatureCell; business: FeatureCell; enterprise: FeatureCell }[] = [
-  { label: "Digital assistant platform",       starter: true,    pro: true,    business: true,     enterprise: true     },
-  { label: "Email lead delivery",              starter: true,    pro: true,    business: true,     enterprise: true     },
-  { label: "POPIA compliant",                  starter: true,    pro: true,    business: true,     enterprise: true     },
-  { label: "Qualified leads / month",          starter: "30",    pro: "100",   business: "400",    enterprise: "1,500+" },
-  { label: "Top-up rate beyond plan",          starter: "R23 / lead", pro: "R20 / lead", business: "R12 / lead", enterprise: "Volume" },
-  { label: "Dashboard users",                  starter: "1",     pro: "3",     business: "Unlimited", enterprise: "Unlimited" },
-  { label: "Custom greeting & questions",      starter: false,   pro: true,    business: true,     enterprise: true     },
-  { label: '"Powered by Qwikly" branding',    starter: true,    pro: false,   business: false,    enterprise: false    },
-  { label: "Custom branding (your logo)",      starter: false,   pro: true,    business: true,     enterprise: true     },
-  { label: "Lead exports (CSV)",               starter: false,   pro: false,   business: true,     enterprise: true     },
-  { label: "API access",                       starter: false,   pro: false,   business: false,    enterprise: true     },
-  { label: "Support response SLA",             starter: "24h",   pro: "12h",   business: "4h",     enterprise: "1h"     },
+  { label: "Digital assistant on your website",   starter: true,    pro: true,    business: true,     enterprise: true     },
+  { label: "Email lead delivery",                  starter: true,    pro: true,    business: true,     enterprise: true     },
+  { label: "POPIA compliant",                      starter: true,    pro: true,    business: true,     enterprise: true     },
+  { label: "Qualified leads / month",              starter: "30",    pro: "100",   business: "400",    enterprise: "1,500+" },
+  { label: "Top-up rate beyond plan",              starter: "R23 / lead", pro: "R20 / lead", business: "R12 / lead", enterprise: "Volume" },
+  { label: "Instant Reply 60s, WhatsApp + SMS",    starter: "Add-on R499/mo",   pro: true,    business: true,     enterprise: true     },
+  { label: "Dashboard users",                      starter: "1",     pro: "3",     business: "Unlimited", enterprise: "Unlimited" },
+  { label: "Custom greeting & questions",          starter: false,   pro: true,    business: true,     enterprise: true     },
+  { label: '"Powered by Qwikly" branding',         starter: true,    pro: false,   business: false,    enterprise: false    },
+  { label: "Custom branding (your logo)",          starter: false,   pro: true,    business: true,     enterprise: true     },
+  { label: "Lead exports (CSV)",                   starter: false,   pro: false,   business: true,     enterprise: true     },
+  { label: "API access",                           starter: false,   pro: false,   business: false,    enterprise: true     },
+  { label: "Support response SLA",                 starter: "24h",   pro: "12h",   business: "4h",     enterprise: "1h"     },
 ];
 
 const pricingFAQs = [
+  {
+    question: "What happens if I do not book any jobs?",
+    answer:
+      "If Qwikly does not book you a paying job in your first 30 days, your second month is free. We track every lead the system delivers to your inbox, every booked call, and every job invoiced through it, so we know whether the system worked for you. The guarantee is automatic, you do not have to ask.",
+  },
+  {
+    question: "How fast does Qwikly respond to a new lead?",
+    answer:
+      "Under 60 seconds, every time. The system replies on your website chat, and on Pro and above we also push the lead to the owner by WhatsApp and SMS the same minute. You can call them back while they are still on your website, which is the single biggest reason Qwikly clients close more jobs.",
+  },
+  {
+    question: "Do you handle the response, or do I?",
+    answer:
+      "Your call. On Starter, Pro, Business and Enterprise, the digital assistant captures and qualifies the lead and sends it to you, you make the call. On Founders Concierge, a real person on our team responds inside 60 seconds during business hours, qualifies the job, books the call into your calendar, and sends the customer a calendar invite. You only see appointments, not raw leads.",
+  },
   {
     question: "What counts as a qualified lead?",
     answer:
@@ -107,7 +153,7 @@ const pricingFAQs = [
   {
     question: "What happens when I hit my monthly limit?",
     answer:
-      "We'll notify you before you hit the cap. You can upgrade your plan, or top up extra leads at your plan's per-lead rate (R23 on Starter, R20 on Pro, R12 on Business — close to what you're already paying inside your plan, never a flat overage). No automatic billing, no surprise charges, and your digital assistant keeps working until you decide.",
+      "We'll notify you before you hit the cap. You can upgrade your plan, or top up extra leads at your plan's per-lead rate (R23 on Starter, R20 on Pro, R12 on Business, close to what you're already paying inside your plan, never a flat overage). No automatic billing, no surprise charges, and your digital assistant keeps working until you decide.",
   },
   {
     question: "What happens after my 7-day trial?",
@@ -125,9 +171,24 @@ const pricingFAQs = [
       "Never. Qwikly charges a flat monthly rate only. We earn nothing from your bookings. Every rand you earn stays yours. That's the whole point of flat pricing.",
   },
   {
-    question: "When will calendar integration launch?",
+    question: "How does the pay-per-job add-on work?",
     answer:
-      "Calendar integration is on the roadmap for Q3 2026. Business and Enterprise subscribers will get early access when it launches. You'll be notified by email.",
+      "It is opt-in. When you turn it on, Qwikly invoices R350 once a lead converts to a paid job in your books. Toggle it off any time. Most clients use it as an alignment signal, the price moves with their results.",
+  },
+  {
+    question: "Can I run both services?",
+    answer:
+      "Yes. Most clients do both eventually. We offer a 10% bundle discount when you run Digital Assistant and Pipeline together.",
+  },
+  {
+    question: "Which service should I start with?",
+    answer:
+      "If you have website traffic but miss enquiries, start with Digital Assistant. If your problem is a quiet pipeline, start with Pipeline. Most clients start with one and add the other within 90 days.",
+  },
+  {
+    question: "Is Pipeline available outside South Africa?",
+    answer:
+      "Yes. Pipeline works globally. South African clients pay in ZAR, international clients can request a USD invoice.",
   },
 ];
 
@@ -155,13 +216,14 @@ function TableCell({ value, isPremiumCol }: { value: FeatureCell; isPremiumCol?:
   );
 }
 
-type CompareTab = TierId;
+type CompareTab = Exclude<TierId, "founders">;
 
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
   const [compareTab, setCompareTab] = useState<CompareTab>("pro");
   const [paymentPlan, setPaymentPlan] = useState<ManualPaymentPlan | null>(null);
+  const [activeService, setActiveService] = useState<ServiceTab>("digital-assistant");
 
   function displayPrice(id: TierId) {
     return annual ? Math.round(ANNUAL[id] / 12) : MONTHLY[id];
@@ -170,22 +232,77 @@ export default function PricingPage() {
   return (
     <div className="bg-paper">
 
-      {/* ─── HERO ─── */}
-      <section className="relative pt-36 pb-16 md:pt-44 grain overflow-hidden">
+      {/* SERVICE TOGGLE, top of page */}
+      <section className="relative pt-32 md:pt-36 pb-2 grain overflow-hidden">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <p className="eyebrow text-ink-500 mb-6">Pricing</p>
-          <h1 className="display-xl text-ink max-w-[18ch]">
-            No per-job fees.{" "}
-            <em className="italic font-light">Ever.</em>
-          </h1>
-          <p className="mt-8 text-lg text-ink-700 max-w-xl leading-relaxed">
-            Start with a 7-day trial. Scale when you&apos;re ready.
-            Flat ZAR pricing, no commissions, no lock-in, cancel anytime.
+          <p className="eyebrow text-ink-500 mb-4 text-center">Choose a service</p>
+          <ServiceTabs active={activeService} onChange={setActiveService} />
+          <p className="mt-4 text-center text-xs text-ink-500">
+            Two services, one pricing page. Pick which one you want to see, or scroll for both.
           </p>
         </div>
       </section>
 
-      {/* ─── TOGGLE + TIER CARDS ─── */}
+      {/* DIGITAL ASSISTANT SECTION WRAPPER */}
+      <div id="digital-assistant" className="block scroll-mt-24">
+
+        {/* Section header */}
+        <section className="relative pt-10 pb-6 grain overflow-hidden">
+          <div className="relative mx-auto max-w-site px-6 lg:px-10">
+            <p className="eyebrow text-ember mb-4">Service 1, Digital Assistant</p>
+            <h2 className="display-lg text-ink max-w-[22ch]">
+              Inbound lead capture,
+              <br />
+              <em className="italic font-light">R699 to R7,999/mo.</em>
+            </h2>
+            <p className="mt-6 text-lg text-ink-700 max-w-2xl leading-relaxed">
+              Capture every enquiry on your website and answer it in under 60 seconds.
+            </p>
+          </div>
+        </section>
+
+      {/* HERO */}
+      <section className="relative pt-6 pb-12 grain overflow-hidden">
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
+          <p className="eyebrow text-ink-500 mb-6">Pricing</p>
+          <h1 className="display-xl text-ink max-w-[20ch]">
+            Booked jobs in your{" "}
+            <em className="italic font-light">inbox</em>, every week.
+          </h1>
+          <p className="mt-8 text-lg text-ink-700 max-w-2xl leading-relaxed">
+            Qwikly captures every enquiry from your website, qualifies it, and lands it in your inbox in under 60 seconds. If we don&rsquo;t book you a paying job in your first 30 days, your second month is free.
+          </p>
+          <LiveCounter />
+        </div>
+      </section>
+
+      {/* REVENUE CALCULATOR */}
+      <section className="relative pb-20 grain overflow-hidden">
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
+          <div className="mb-10 max-w-2xl">
+            <p className="eyebrow text-ink-500 mb-4">Your number first</p>
+            <h2 className="display-lg text-ink">
+              How much are slow replies
+              <br />
+              <em className="italic font-light">costing you right now?</em>
+            </h2>
+            <p className="mt-4 text-ink-700 text-base leading-relaxed">
+              Before you look at the price, look at the size of the leak. The
+              numbers below are an industry estimate, varies by niche.
+            </p>
+          </div>
+          <RevenueCalculator />
+        </div>
+      </section>
+
+      {/* CASE STUDY */}
+      <section className="relative pb-20 grain overflow-hidden">
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
+          <CaseStudyCard />
+        </div>
+      </section>
+
+      {/* TOGGLE + TIER CARDS */}
       <section className="relative pb-28 grain overflow-hidden">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
 
@@ -224,9 +341,7 @@ export default function PricingPage() {
             </span>
           </div>
 
-          {/* Free trial banner — trial is a 7-day taste of the Starter plan.
-              After 7 days the account pauses unless the owner picks a paid
-              plan. Avoids the misleading "trial on every plan" framing. */}
+          {/* Free trial banner */}
           <div className="mb-10 flex justify-center">
             <a
               href="/signup?plan=trial"
@@ -239,24 +354,45 @@ export default function PricingPage() {
             </a>
           </div>
 
-          {/* Tier cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch max-w-7xl mx-auto">
+          {/* Live in 24 hours promise band */}
+          <div className="mb-8 max-w-3xl mx-auto">
+            <div className="ed-card flex items-start gap-4 border-l-4 border-ember py-4">
+              <span className="w-9 h-9 rounded-full bg-ember/10 flex items-center justify-center flex-shrink-0">
+                <Zap className="w-4 h-4 text-ember" strokeWidth={2} aria-hidden="true" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="eyebrow text-ember mb-1">Live in 24 hours</p>
+                <p className="text-sm text-ink-700 leading-relaxed">
+                  Live on your website in 24 hours. We handle the install, the brand kit, and the first lead test.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tier cards: Starter, Pro, Founders Concierge, Business, Enterprise */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 items-stretch max-w-7xl mx-auto">
             {tiers.map((tier) => {
               const price = displayPrice(tier.id);
-              const isContact = tier.id === "enterprise";
+              const isContact = tier.id === "enterprise" || tier.id === "founders";
 
               return (
                 <div
                   key={tier.id}
                   className={`relative flex flex-col ${
                     tier.highlight ? "ed-card-ink" : "ed-card-ghost"
-                  } ${tier.highlight ? "pt-10" : ""}`}
+                  } ${tier.pill ? "pt-10" : ""}`}
                 >
-                  {/* Most Popular badge */}
-                  {tier.highlight && (
+                  {/* Pill (Most Popular or Hands-off) */}
+                  {tier.pill && (
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                      <span className="eyebrow bg-ember text-paper px-4 py-1.5 rounded-full whitespace-nowrap">
-                        Most Popular
+                      <span
+                        className={`eyebrow px-4 py-1.5 rounded-full whitespace-nowrap ${
+                          tier.pill.variant === "popular"
+                            ? "bg-ember text-paper"
+                            : "bg-ink text-paper"
+                        }`}
+                      >
+                        {tier.pill.label}
                       </span>
                     </div>
                   )}
@@ -270,18 +406,18 @@ export default function PricingPage() {
                   </p>
 
                   {/* Price */}
-                  <div className="mb-8">
+                  <div className="mb-6">
                     <div className="flex items-baseline gap-1">
                       <span
                         className={`font-display font-medium leading-none ${tier.highlight ? "text-paper" : "text-ink"}`}
-                        style={{ fontSize: "clamp(2rem, 3.5vw, 2.6rem)" }}
+                        style={{ fontSize: "clamp(1.8rem, 3vw, 2.4rem)" }}
                       >
-                        {isContact ? `R${price.toLocaleString()}+` : `R${price.toLocaleString()}`}
+                        {tier.id === "enterprise" ? `R${price.toLocaleString()}+` : `R${price.toLocaleString()}`}
                       </span>
                       <span className={`text-sm ${tier.highlight ? "text-paper/50" : "text-ink-500"}`}>/mo</span>
                     </div>
                     <p className={`text-xs mt-2 ${tier.highlight ? "text-paper/45" : "text-ink-400"}`}>
-                      {isContact
+                      {tier.id === "enterprise"
                         ? "Custom volume pricing"
                         : annual
                           ? `Billed R${ANNUAL[tier.id].toLocaleString()}/year`
@@ -289,8 +425,38 @@ export default function PricingPage() {
                     </p>
                   </div>
 
+                  {/* Instant Reply 60s row */}
+                  <div
+                    className={`mb-6 rounded-xl p-3 border ${
+                      tier.highlight
+                        ? "bg-paper/5 border-paper/10"
+                        : tier.instantReply.included
+                          ? "bg-ember/[0.06] border-ember/20"
+                          : "bg-ink/[0.03] border-ink/10"
+                    }`}
+                  >
+                    <div className="flex items-start gap-2">
+                      <Sparkles
+                        className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
+                          tier.instantReply.included ? "text-ember" : "text-ink-400"
+                        }`}
+                        strokeWidth={2}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-medium leading-snug ${tier.highlight ? "text-paper" : "text-ink"}`}>
+                          Instant Reply 60s, WhatsApp + SMS push to owner
+                        </p>
+                        <p className={`text-[11px] mt-1 ${tier.highlight ? "text-paper/55" : "text-ink-500"}`}>
+                          {tier.instantReply.included
+                            ? "Included"
+                            : `Add-on R${tier.instantReply.addOnPrice}/mo`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Feature list */}
-                  <ul className="flex-1 space-y-3 mb-8">
+                  <ul className="flex-1 space-y-3 mb-6">
                     {tier.features.map((feature, i) => {
                       const isSectionLabel = feature.endsWith(":");
                       return (
@@ -318,9 +484,29 @@ export default function PricingPage() {
                     })}
                   </ul>
 
+                  {/* Pay-per-job add-on (Pro, Founders, Business only) */}
+                  {(tier.id === "pro" || tier.id === "founders" || tier.id === "business") && (
+                    <div
+                      className={`mb-6 pt-4 border-t border-dashed ${
+                        tier.highlight ? "border-paper/20" : "border-ink/15"
+                      }`}
+                    >
+                      <p className={`eyebrow text-[9px] tracking-widest mb-2 ${tier.highlight ? "text-paper/55" : "text-ink-400"}`}>
+                        Optional add-on
+                      </p>
+                      <p className={`text-xs leading-relaxed ${tier.highlight ? "text-paper/75" : "text-ink-700"}`}>
+                        <span className={`font-medium ${tier.highlight ? "text-paper" : "text-ink"}`}>Pay-per-job, R350</span> per booked, paid job. Opt-in only. Pay when Qwikly puts money in your pocket.
+                      </p>
+                    </div>
+                  )}
+
                   {isContact ? (
                     <CTAButton
-                      href="/contact?subject=enterprise"
+                      href={
+                        tier.id === "founders"
+                          ? "/contact?subject=founders-concierge"
+                          : "/contact?subject=enterprise"
+                      }
                       variant="primary"
                       size="md"
                       className="w-full justify-center"
@@ -355,39 +541,40 @@ export default function PricingPage() {
           </div>
 
           <p className="text-center eyebrow text-ink-500 mt-10">
-            Top-ups at your plan&rsquo;s per-lead rate · Cancel anytime · All prices excl. VAT
+            Top-ups at your plan&rsquo;s per-lead rate. Cancel anytime. All prices excl. VAT.
           </p>
         </div>
       </section>
 
-      {/* ─── VALUE JUSTIFICATION ─── */}
+      {/* LOST REVENUE COMPARISON (replaces staff-cost framing) */}
       <section className="py-28 bg-paper-deep grain overflow-hidden">
         <div className="mx-auto max-w-site px-6 lg:px-10">
 
           <div className="mb-16 max-w-2xl">
-            <p className="eyebrow text-ink-500 mb-6">What your money is actually buying</p>
+            <p className="eyebrow text-ink-500 mb-6">What you are losing today</p>
             <h2 className="display-lg text-ink">
               Not signing up
               <br />
               <em className="italic font-light">is the more expensive choice.</em>
             </h2>
             <p className="mt-6 text-lg text-ink-700 leading-relaxed max-w-xl">
-              Every enquiry that goes unanswered is a job you didn&apos;t book.
-              The question isn&apos;t whether R699 a month is worth it, it&apos;s how much losing leads is costing you right now.
+              The average SA service SMB misses 12 enquiries per month. At an
+              average job value of R3,500 and a 35% close rate, that is R14,700
+              of lost work every month. Industry estimate, varies by niche.
             </p>
           </div>
 
-          {/* Cost comparison */}
+          {/* Lost vs Recovered */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-20">
 
-            {/* Without Qwikly */}
+            {/* Without Qwikly: lost revenue framing */}
             <div className="ed-card space-y-5">
-              <p className="eyebrow text-ink-500 mb-6">Without Qwikly</p>
+              <p className="eyebrow text-ink-500 mb-6">Without Qwikly, monthly</p>
               {[
-                { Icon: Users,        text: "Hiring someone to answer enquiries: R4,000 – R8,000/month" },
-                { Icon: Clock,        text: "After-hours enquiries wait until morning, your competitor picks up the phone" },
-                { Icon: TrendingDown, text: "No record of leads lost, no visibility on what you're missing" },
-                { Icon: Zap,          text: "First to respond wins the job. If it isn't you, it's your competitor" },
+                { Icon: TrendingDown, text: "12 enquiries missed every month, industry estimate" },
+                { Icon: Clock,        text: "Average job value R3,500, industry estimate" },
+                { Icon: Zap,          text: "35% close rate on answered leads, industry estimate" },
+                { Icon: TrendingDown, text: "R14,700 of lost work per month, industry estimate" },
               ].map(({ Icon, text }, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <span className="w-8 h-8 rounded-full bg-ink/8 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -396,16 +583,19 @@ export default function PricingPage() {
                   <p className="text-ink-700 text-sm leading-relaxed">{text}</p>
                 </div>
               ))}
+              <p className="text-xs text-ink-400 pt-2 border-t border-ink/[0.08]">
+                All figures industry estimate, varies by niche.
+              </p>
             </div>
 
             {/* With Qwikly */}
             <div className="ed-card-ink space-y-5">
               <p className="eyebrow text-ember mb-6">With Qwikly Pro, R1,799/month</p>
               {[
-                "Qualified leads land in your inbox, no staff required",
-                "Responds instantly, 24/7, including weekends and public holidays",
-                "No sick days, no lunch breaks, no missed calls after 5pm",
+                "Every enquiry answered in under 60 seconds, 24/7",
+                "Owner gets WhatsApp + SMS push the same minute",
                 "Full conversation log and lead history in your dashboard",
+                "If we do not book you a job in 30 days, second month is free",
               ].map((text, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <span className="w-8 h-8 rounded-full bg-ember/15 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -421,16 +611,16 @@ export default function PricingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-20">
             {[
               {
-                stat: "30 min",
-                label: "Most leads go cold within 30 minutes of an unanswered enquiry.",
+                stat: "60s",
+                label: "Reply time on every new enquiry, every time of day.",
               },
               {
                 stat: "R0",
                 label: "Per-job commission Qwikly takes. Every rand you earn stays yours.",
               },
               {
-                stat: "24/7",
-                label: "Your digital assistant is live, even when your phone is off.",
+                stat: "30 days",
+                label: "If we don't book you a paying job, your second month is free.",
               },
             ].map(({ stat, label }, i) => (
               <div key={i} className="ed-card-ghost text-center py-10">
@@ -456,7 +646,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* ─── COMPARISON TABLE ─── */}
+      {/* COMPARISON TABLE */}
       <section className="py-28 bg-paper-deep grain">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="mb-14">
@@ -466,11 +656,13 @@ export default function PricingPage() {
               <br />
               <em className="italic font-light">side by side</em>.
             </h2>
+            <p className="mt-4 text-ink-700 text-sm">
+              Founders Concierge is a custom hands-off plan, talk to us for a fit.
+            </p>
           </div>
 
-          {/* ── Mobile: tabbed comparison ── */}
+          {/* Mobile: tabbed comparison */}
           <div className="sm:hidden">
-            {/* Plan tabs */}
             <div className="flex rounded-xl border border-ink/10 overflow-hidden mb-8">
               {(["starter", "pro", "business", "enterprise"] as CompareTab[]).map((tab) => (
                 <button
@@ -489,7 +681,6 @@ export default function PricingPage() {
               ))}
             </div>
 
-            {/* Feature rows for selected plan */}
             <div className="divide-y divide-ink/[0.06] border-t border-ink/[0.06]">
               {featureRows.map((row) => (
                 <div key={row.label} className="flex items-center justify-between py-4 gap-4">
@@ -502,7 +693,7 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* ── Desktop: full side-by-side table ── */}
+          {/* Desktop: full side-by-side table */}
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full border-collapse min-w-[720px]">
               <thead>
@@ -550,7 +741,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* ─── TOP-UPS EXPLAINER ─── */}
+      {/* TOP-UPS EXPLAINER */}
       <section className="py-16 bg-paper-deep grain border-t border-b border-ink/[0.06]">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -572,33 +763,32 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* ─── GUIDED SETUP ─── */}
+      {/* GUIDED SETUP */}
       <section className="py-16 bg-paper grain border-b border-ink/[0.06]">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="max-w-lg">
               <p className="eyebrow text-ember mb-3">Not sure how to get started?</p>
-              <h3 className="font-display text-2xl text-ink mb-2">We&rsquo;ll set it up for you. One-time R500 setup fee.</h3>
+              <h3 className="font-display text-2xl text-ink mb-2">We&rsquo;ll set it up for you, free.</h3>
               <p className="text-ink-700 text-sm leading-relaxed">
                 If you know your way around your website, setup is a single copy-paste you can do yourself.
-                If you&rsquo;d rather hand it off, we handle everything for a one-time R500 fee.
-                You&rsquo;ll be live the following business day, no code required.
+                If you&rsquo;d rather hand it off, we handle the install, the brand kit, and the first lead test for you at no charge.
+                You&rsquo;ll be live in 24 hours, no code required.
               </p>
             </div>
             <div className="flex-shrink-0">
               <CTAButton variant="outline" size="md" href="/contact">
-                Book setup help
+                Talk to us, free onboarding
               </CTAButton>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── WHAT IS A LEAD ─── */}
+      {/* WHAT IS A LEAD */}
       <section className="py-28 bg-paper grain">
         <div className="mx-auto max-w-site px-6 lg:px-10">
 
-          {/* Header */}
           <div className="mb-16">
             <p className="eyebrow text-ink-500 mb-6">Lead definition</p>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-end">
@@ -614,10 +804,8 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* Three stages */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
 
-            {/* Stage 1 */}
             <div className="rounded-2xl border border-ink/[0.08] bg-white p-8">
               <div className="w-10 h-10 rounded-xl bg-ink/[0.05] flex items-center justify-center mb-6">
                 <MessageSquare className="w-5 h-5 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
@@ -634,7 +822,6 @@ export default function PricingPage() {
               </span>
             </div>
 
-            {/* Stage 2 */}
             <div className="rounded-2xl border border-ember/25 bg-ember/[0.04] p-8">
               <div className="w-10 h-10 rounded-xl bg-ember/15 flex items-center justify-center mb-6">
                 <Phone className="w-5 h-5 text-ember" strokeWidth={1.75} aria-hidden="true" />
@@ -651,7 +838,6 @@ export default function PricingPage() {
               </span>
             </div>
 
-            {/* Stage 3 */}
             <div className="rounded-2xl border border-ink/[0.08] bg-white p-8">
               <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center mb-6">
                 <Zap className="w-5 h-5 text-green-600" strokeWidth={1.75} aria-hidden="true" />
@@ -670,7 +856,6 @@ export default function PricingPage() {
 
           </div>
 
-          {/* What doesn't count */}
           <div className="rounded-2xl border border-ink/[0.08] bg-ink/[0.02] p-8 md:p-12">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
               <div>
@@ -707,7 +892,73 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* ─── PRICING FAQ ─── */}
+      {/* NICHE CHIPS */}
+      <section className="bg-paper grain border-t border-ink/[0.06]">
+        <NicheChips />
+      </section>
+
+      </div>
+      {/* END DIGITAL ASSISTANT SECTION */}
+
+      {/* PIPELINE SECTION */}
+      <div id="pipeline" className="block scroll-mt-24">
+
+        {/* Section header */}
+        <section className="relative pt-20 pb-6 grain overflow-hidden border-t border-ink/[0.06]">
+          <div className="relative mx-auto max-w-site px-6 lg:px-10">
+            <p className="eyebrow text-ember mb-4">Service 2, Pipeline</p>
+            <h2 className="display-lg text-ink max-w-[24ch]">
+              Outbound lead generation,
+              <br />
+              <em className="italic font-light">R7,500 setup + R7,500 to R15,000/mo.</em>
+            </h2>
+            <p className="mt-6 text-lg text-ink-700 max-w-2xl leading-relaxed">
+              We find your ideal buyers, write each a personal email, and book qualified meetings on your calendar.
+            </p>
+          </div>
+        </section>
+
+        {/* Pipeline tiers */}
+        <section className="py-16 bg-paper-deep grain border-t border-b border-ink/[0.06]">
+          <div className="mx-auto max-w-site px-6 lg:px-10">
+            <PipelinePricingBlock />
+
+            {/* Risk reversal */}
+            <div className="mt-12 max-w-3xl mx-auto rounded-2xl border border-ember/25 bg-ember/[0.06] p-8 md:p-10 text-center">
+              <p className="eyebrow text-ember mb-3">Risk reversal</p>
+              <p className="font-display text-xl md:text-2xl text-ink leading-snug">
+                If we do not book you 5 qualified meetings in your first 60 days, your third month is free.
+              </p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+      {/* END PIPELINE SECTION */}
+
+      {/* BUNDLE OFFER */}
+      <section className="py-20 grain overflow-hidden">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+          <div className="max-w-4xl mx-auto rounded-2xl border-2 border-dashed border-ember/40 bg-ember/[0.04] p-8 md:p-12">
+            <p className="eyebrow text-ember mb-4">Bundle</p>
+            <h3 className="font-display text-2xl md:text-3xl text-ink leading-snug mb-4 max-w-[24ch]">
+              Run both services together.
+            </h3>
+            <p className="text-ink-700 text-base leading-relaxed max-w-2xl mb-8">
+              Pipeline brings buyers to your website. Digital Assistant captures and qualifies them in under 60 seconds. Run both, save 10% on monthly fees, lock the entire funnel.
+            </p>
+            <CTAButton
+              href="/contact?subject=qwikly-bundle"
+              variant="primary"
+              size="md"
+            >
+              Talk to us about the bundle
+            </CTAButton>
+          </div>
+        </div>
+      </section>
+
+      {/* PRICING FAQ */}
       <section className="py-28 grain">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
@@ -753,7 +1004,7 @@ export default function PricingPage() {
                       </button>
                       <div
                         className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                          isOpen ? "max-h-64 pb-8" : "max-h-0"
+                          isOpen ? "max-h-96 pb-8" : "max-h-0"
                         }`}
                       >
                         <p className="text-ink-700 text-base leading-relaxed max-w-prose">
@@ -769,7 +1020,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* ─── TRUST STRIP ─── */}
+      {/* TRUST STRIP */}
       <section className="py-12 border-t border-ink/[0.06]">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
@@ -790,44 +1041,30 @@ export default function PricingPage() {
               <span className="eyebrow text-ink-600">ZAR Pricing</span>
             </div>
           </div>
+          <div className="mt-8 flex justify-center">
+            <LiveCounter />
+          </div>
         </div>
       </section>
 
-      {/* ─── FINAL CTA ─── */}
+      {/* FINAL CTA */}
       <section className="relative py-32 bg-ink text-paper overflow-hidden grain-dark">
         <div className="ember-blob w-[800px] h-[500px] top-0 left-1/2 -translate-x-1/2" />
         <div className="dot-grid absolute inset-0 opacity-50" />
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
-          <h2 className="display-xl text-paper max-w-[18ch] mx-auto">
-            Ready to stop{" "}
-            <em className="italic font-light text-ember">losing leads</em>?
+          <h2 className="display-xl text-paper max-w-[20ch] mx-auto">
+            Stop losing leads.{" "}
+            <em className="italic font-light text-ember">Start booking jobs.</em>
           </h2>
           <p className="text-paper/70 text-lg mt-8 max-w-xl mx-auto leading-relaxed">
-            Free to start. No per-job fees, ever.
+            7 days free. If we don&rsquo;t book you a paying job in 30 days, your second month is free.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              type="button"
-              onClick={() => setPaymentPlan("pro")}
-              className="btn-ember btn-ember-solid px-8 py-[1.05rem] text-[1rem] cursor-pointer"
-            >
-              <span className="relative z-10">Start with Pro</span>
-              <svg
-                className="btn-arrow w-4 h-4 relative z-10"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.25"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-            </button>
-            <CTAButton size="lg" variant="outline-light" href="/signup?plan=trial" withArrow={false}>
-              Start Free
+            <CTAButton size="lg" variant="solid" href="/signup?plan=trial">
+              Start free trial
+            </CTAButton>
+            <CTAButton size="lg" variant="outline-light" href="/contact" withArrow={false}>
+              Talk to us
             </CTAButton>
           </div>
         </div>

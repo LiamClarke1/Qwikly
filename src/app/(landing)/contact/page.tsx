@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import ContactForm from "./ContactForm";
 
 export const metadata: Metadata = {
@@ -21,15 +22,12 @@ export default function ContactPage() {
         <div className="max-w-3xl mx-auto">
           <p className="eyebrow text-ink-500 mb-6">Contact</p>
           <h1 className="font-display font-medium text-[clamp(2.5rem,5vw,4rem)] leading-tight tracking-tight text-ink mb-4">
-            We&rsquo;re in Cape Town.
-            <br />
-            <em className="italic font-light">Talk to a human.</em>
+            Talk to us about{" "}
+            <em className="italic font-light">Qwikly.</em>
           </h1>
           <p className="text-ink-700 text-lg leading-relaxed mb-16 max-w-xl">
-            The chat in the corner is Qwikly itself. Ask it anything about
-            pricing, setup, or whether it&rsquo;ll work for your business, it
-            replies straight away. Prefer email or the form? Use whichever feels
-            right.
+            Two services. Tell us what you want to do, we will route you to the
+            right person.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
@@ -64,7 +62,9 @@ export default function ContactPage() {
 
             {/* Form */}
             <div className="md:col-span-8">
-              <ContactForm />
+              <Suspense fallback={<div className="text-ink-500">Loading form, one second...</div>}>
+                <ContactForm />
+              </Suspense>
             </div>
           </div>
         </div>

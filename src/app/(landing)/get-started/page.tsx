@@ -531,7 +531,73 @@ ${f.ai_never_say || "Not specified"}
           <span className="inline-block bg-accent/10 text-accent text-sm font-semibold px-4 py-1.5 rounded-full mb-4">
             Cancel anytime. No lock-in contracts.
           </span>
-          <h1 className="text-3xl font-bold text-text-dark mb-2">Set up your digital assistant</h1>
+          <h1 className="text-3xl font-bold text-text-dark mb-2">Which service do you want to start with?</h1>
+          <p className="text-text-muted-dark text-sm">
+            Qwikly has two services. Pick the one that fits, you can add the other later.
+          </p>
+        </div>
+
+        {/* Service picker cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+          {/* Digital Assistant card */}
+          <a
+            href="#assistant-setup"
+            className="group bg-white rounded-2xl border-2 border-accent shadow-sm p-6 flex flex-col hover:shadow-md transition-all duration-200"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wide text-accent">
+                Service 1, inbound
+              </span>
+              <span className="text-[0.7rem] font-medium text-accent bg-accent/10 px-2 py-1 rounded-full">
+                7-day free trial
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-text-dark mb-2">
+              Start the 7-day Digital Assistant trial
+            </h2>
+            <p className="text-sm text-text-muted-dark leading-relaxed mb-5 flex-1">
+              Self-serve. Live on your website in under 24 hours. No card
+              required for the trial. Best for service businesses with a
+              website that already gets enquiries.
+            </p>
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
+              Set up your assistant
+              <ChevronRight className="w-4 h-4" />
+            </span>
+          </a>
+
+          {/* Pipeline card */}
+          <a
+            href="/contact?subject=pipeline-strategy-call"
+            className="group bg-white rounded-2xl border-2 border-border-light shadow-sm p-6 flex flex-col hover:border-accent/40 hover:shadow-md transition-all duration-200"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wide text-text-muted-dark">
+                Service 2, outbound
+              </span>
+              <span className="text-[0.7rem] font-medium text-text-muted-dark bg-bg-subtle px-2 py-1 rounded-full">
+                Strategy call
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-text-dark mb-2">
+              Talk to us about Pipeline
+            </h2>
+            <p className="text-sm text-text-muted-dark leading-relaxed mb-5 flex-1">
+              Pipeline is consultative, no self-serve trial. We scope your
+              ideal buyer, set up sending domains, and book a strategy call
+              before any work begins. No credit card needed to start the
+              conversation.
+            </p>
+            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-text-dark group-hover:text-accent transition-colors">
+              Book a strategy call
+              <ChevronRight className="w-4 h-4" />
+            </span>
+          </a>
+        </div>
+
+        {/* Anchor + sub-header for the existing trial flow */}
+        <div id="assistant-setup" className="text-center mb-8 scroll-mt-24">
+          <h2 className="text-2xl font-bold text-text-dark mb-2">Set up your digital assistant</h2>
           <p className="text-text-muted-dark text-sm">
             The more detail you give, the better your assistant responds. Takes about 5 minutes.
           </p>

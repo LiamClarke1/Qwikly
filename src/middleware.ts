@@ -40,11 +40,22 @@ const PUBLIC_PREFIXES = [
   "/api/auth/forgot-password",
   "/api/privacy",
   "/auth/verify",
-  // Public widget endpoints — must be accessible from any external site
+  // Public widget endpoints, must be accessible from any external site
   "/api/chat",
   "/api/embed/branding",
   "/embed.js",
   "/faq",
+  // Instant Reply 60s, internal-token + Twilio-signature gated
+  "/api/leads/instant-reply",
+  // Public scoreboard data for landing pages
+  "/api/scoreboard",
+  // Niche, pipeline, case studies, all public landing routes
+  "/niche",
+  "/pipeline",
+  "/case-studies",
+  // Pipeline platform internal endpoints, gated by the route handlers themselves
+  "/api/pipeline/generate",
+  "/api/pipeline/setup/notify",
 ];
 
 export async function middleware(request: NextRequest) {

@@ -40,11 +40,11 @@ export const metadata: Metadata = {
     google: "tczIM2WulV3rRXOHYYDCnONsEPUKckjx-U2WTu5xy2w",
   },
   title: {
-    default: "Qwikly | Never Miss a Lead Again",
+    default: "Qwikly, the lead engine for SA service businesses",
     template: "%s | Qwikly",
   },
   description:
-    "Qwikly is the digital assistant for South African service businesses. It captures every website lead, qualifies it, and books it in, 24/7. Flat monthly plans, no per-job fees, POPIA compliant.",
+    "Qwikly captures every enquiry from your website, qualifies it, and lands a paying job in your inbox in under 60 seconds. POPIA compliant, hosted in South Africa, ZAR pricing.",
   applicationName: "Qwikly",
   authors: [{ name: "Clarke Agency", url: "https://www.qwikly.co.za/about" }],
   creator: "Clarke Agency",
@@ -56,9 +56,9 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "Qwikly | Never Miss a Lead Again",
+    title: "Qwikly, the lead engine for SA service businesses",
     description:
-      "The digital assistant for your website. Captures every lead, qualifies them, books them in. Flat monthly plans from free. No per-job fees, ever.",
+      "Qwikly captures every enquiry from your website, qualifies it, and lands a paying job in your inbox in under 60 seconds. POPIA compliant, hosted in South Africa, ZAR pricing.",
     type: "website",
     url: "https://www.qwikly.co.za",
     siteName: "Qwikly",
@@ -68,15 +68,15 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Qwikly, digital assistant for South African service businesses",
+        alt: "Qwikly, the lead engine for SA service businesses",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Qwikly | Never Miss a Lead Again",
+    title: "Qwikly, the lead engine for SA service businesses",
     description:
-      "The digital assistant for your website. Captures every lead, qualifies them, and delivers them to your inbox, 24/7.",
+      "Qwikly captures every enquiry from your website, qualifies it, and lands a paying job in your inbox in under 60 seconds. POPIA compliant, hosted in South Africa, ZAR pricing.",
     images: ["/og-image.png"],
   },
   robots: {

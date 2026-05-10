@@ -34,6 +34,18 @@ export default function FAQPage() {
         </div>
       </section>
 
+      {/* Section header: About our two services */}
+      <section className="pt-16 pb-2 grain">
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
+          <p className="eyebrow text-ember mb-3">About our two services</p>
+          <p className="text-ink-700 max-w-2xl text-base leading-relaxed">
+            Qwikly is two services that can run on their own or together. The
+            three questions below cover how to choose, when to layer them, and
+            which one fits a small local business.
+          </p>
+        </div>
+      </section>
+
       {/* Full FAQ list */}
       <FAQ />
 
