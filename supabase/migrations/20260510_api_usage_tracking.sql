@@ -19,7 +19,9 @@
 CREATE TABLE IF NOT EXISTS api_usage (
   id                          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id                   BIGINT       NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
-  conversation_id             UUID         REFERENCES conversations(id) ON DELETE SET NULL,
+  -- conversations.id is BIGINT in this database (the early v1 schema used
+  -- UUID, recent migrations standardised on BIGINT). FK matches that.
+  conversation_id             BIGINT       REFERENCES conversations(id) ON DELETE SET NULL,
   occurred_at                 TIMESTAMPTZ  NOT NULL DEFAULT now(),
   -- Anthropic returns these on every messages.create response.
   input_tokens                INT          NOT NULL DEFAULT 0,
