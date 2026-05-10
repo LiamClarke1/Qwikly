@@ -12,6 +12,19 @@ import {
   MockProspect,
 } from "@/lib/pipeline/generator/types";
 
+// Strip undefined values from an object before passing to Supabase. The PostgREST
+// client rejects undefined column values, so we coerce them out entirely. Nulls
+// are kept (a null is a meaningful column write).
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const k of Object.keys(obj) as (keyof T)[]) {
+    if (obj[k] !== undefined) {
+      out[k] = obj[k];
+    }
+  }
+  return out;
+}
+
 // Server action used by the in-dashboard form. Re-used logic is also exposed
 // over HTTP via /api/pipeline/generate for internal callers.
 export async function generateProspects(
@@ -50,12 +63,14 @@ export async function generateProspects(
   }
 
   const db = supabaseAdmin();
-  const { data: client } = await db
-    .from("clients")
+  // pipeline_prospects.business_id FK references businesses(id), not clients(id).
+  // Resolve the tenant via businesses.user_id = auth.uid().
+  const { data: business } = await db
+    .from("businesses")
     .select("id")
-    .eq("auth_user_id", user.id)
+    .eq("user_id", user.id)
     .maybeSingle();
-  const tenantId = (client as { id?: number | string } | null)?.id ?? null;
+  const tenantId = (business as { id?: string } | null)?.id ?? null;
   if (!tenantId) {
     return { ok: false, reason: "no_tenant" };
   }
@@ -65,6 +80,14 @@ export async function generateProspects(
 
 // Shared between the server action and the API route, so behaviour stays in
 // one place.
+//
+// Shape of each inserted pipeline_prospects row matches the canonical columns
+// from supabase/migrations/20260510_pipeline_platform.sql. Extra fields the
+// generator emits (phone, website, rating, reviews_count, business_status,
+// place_types, email_verification_status, site_recon, score_breakdown,
+// unique_hook, suburb) live inside icp_match JSONB, since the table does not
+// have dedicated columns for them. enrichment_score in the schema is INTEGER
+// 0 to 100, while p.score is 1 to 10, so we multiply by 10.
 export async function persistProspects(args: {
   input: GenerateProspectInput;
   tenantId: number | string;
@@ -74,24 +97,44 @@ export async function persistProspects(args: {
   const runId = nanoid();
 
   const db = supabaseAdmin();
-  const rows = prospects.map((p) => ({
-    tenant_id: tenantId,
-    run_id: runId,
-    source: "demo_generator",
-    first_name: p.first_name,
-    last_name: p.last_name,
-    full_name: p.full_name,
-    title: p.title,
-    company: p.company,
-    industry: p.industry,
-    employees: p.employees,
-    city: p.city,
-    email: p.email,
-    email_verified: p.email_verified,
-    linkedin_url: p.linkedin_url,
-    intent_signals: p.intent_signals,
-    enrichment_score: p.enrichment_score,
-  }));
+  const rows = prospects.map((p) => {
+    const enrichmentScoreRaw = Math.round((p.score ?? 0) * 10);
+    const enrichmentScore = Math.max(0, Math.min(100, enrichmentScoreRaw));
+    const row = {
+      business_id: tenantId,
+      campaign_id: null,
+      first_name: p.first_name,
+      last_name: p.last_name,
+      title: p.title,
+      company: p.company,
+      industry: p.industry,
+      employees: p.employees,
+      city: p.city,
+      country: "ZA",
+      email: p.email,
+      email_verified: p.email_verified,
+      linkedin_url: p.linkedin_url,
+      intent_signals: p.intent_signals,
+      enrichment_score: enrichmentScore,
+      status: "new",
+      source: "google_places",
+      icp_match: {
+        run_id: runId,
+        phone: p.phone ?? null,
+        website: p.website ?? null,
+        rating: p.rating ?? null,
+        reviews_count: p.reviews_count ?? null,
+        business_status: p.business_status ?? null,
+        place_types: p.place_types ?? null,
+        email_verification_status: p.email_verification_status ?? null,
+        site_recon: p.site_recon ?? null,
+        score_breakdown: p.score_breakdown ?? null,
+        unique_hook: p.unique_hook ?? null,
+        suburb: p.city ?? null,
+      },
+    };
+    return stripUndefined(row);
+  });
 
   const { error } = await db.from("pipeline_prospects").insert(rows);
   if (error) {
@@ -101,7 +144,18 @@ export async function persistProspects(args: {
     if (code === "42P01") {
       return { ok: false, reason: "schema_pending" };
     }
-    return { ok: false, reason: "insert_failed" };
+    // Log the full error so server logs surface the underlying cause, and
+    // bubble the message up to the UI so it is not just a generic red box.
+    console.error("[pipeline/persistProspects] insert failed", {
+      code,
+      message: (error as { message?: string }).message,
+      details: (error as { details?: string }).details,
+      hint: (error as { hint?: string }).hint,
+    });
+    return {
+      ok: false,
+      reason: (error as { message?: string }).message ?? "insert_failed",
+    };
   }
 
   return { ok: true, count: rows.length, runId };

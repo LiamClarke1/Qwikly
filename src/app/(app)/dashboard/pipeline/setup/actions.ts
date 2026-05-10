@@ -20,14 +20,19 @@ import {
   type JobTitle,
   type IntentSignal,
 } from "@/lib/pipeline/generator/types";
+import { suggestIcpFromOffer } from "@/lib/pipeline/icp-suggester";
+import type { SuggestedIcp } from "@/lib/pipeline/icp-suggester.types";
 
 export type SaveResult = { ok: true } | { ok: false; reason: string };
 export type GenerateResult =
   | { ok: true; count: number }
   | { ok: false; reason: string };
+export type SuggestResult =
+  | { ok: true; icp: SuggestedIcp }
+  | { ok: false; reason: string };
 
 async function resolveTenantId(): Promise<
-  { ok: true; tenantId: number | string } | { ok: false; reason: string }
+  { ok: true; tenantId: string } | { ok: false; reason: string }
 > {
   const cookieStore = cookies();
   const auth = createServerClient(
@@ -53,13 +58,15 @@ async function resolveTenantId(): Promise<
   if (!user) return { ok: false, reason: "Not signed in" };
 
   const db = supabaseAdmin();
-  const { data: client } = await db
-    .from("clients")
+  // pipeline_* tables FK to businesses(id), not clients(id). Resolve the tenant
+  // via businesses.user_id so inserts do not hit a FK violation.
+  const { data: business } = await db
+    .from("businesses")
     .select("id")
-    .eq("auth_user_id", user.id)
+    .eq("user_id", user.id)
     .maybeSingle();
 
-  const tenantId = (client as { id?: number | string } | null)?.id;
+  const tenantId = (business as { id?: string } | null)?.id;
   if (!tenantId) return { ok: false, reason: "No tenant found for this account" };
   return { ok: true, tenantId };
 }
@@ -174,5 +181,31 @@ export async function generateAndRedirect(
   } catch (err) {
     console.error("[pipeline-setup/generateAndRedirect] failed:", err);
     return { ok: false, reason: "Could not generate your prospect list, try again." };
+  }
+}
+
+/**
+ * Suggest a full ICP based on a one or two sentence description of the
+ * client's offer. The heavy lifting lives in src/lib/pipeline/icp-suggester.ts
+ * (shipped by a sibling agent), this action is a thin wrapper that validates
+ * the input and surfaces a stable error shape to the client form.
+ */
+export async function suggestIcp(offer: string): Promise<SuggestResult> {
+  const trimmed = (offer ?? "").trim();
+  if (trimmed.length < 5) {
+    return { ok: false, reason: "Tell us a bit more about your offer, at least a few words." };
+  }
+  if (trimmed.length > 1000) {
+    return { ok: false, reason: "Keep your offer description under 1000 characters." };
+  }
+
+  try {
+    const icp = await suggestIcpFromOffer({ offer: trimmed });
+    return { ok: true, icp };
+  } catch (err) {
+    console.error("[pipeline-setup/suggestIcp] failed:", err);
+    const reason =
+      err instanceof Error && err.message ? err.message : "suggestion_failed";
+    return { ok: false, reason };
   }
 }

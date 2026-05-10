@@ -1,6 +1,22 @@
 // Types and zod schemas for the Pipeline generator. Keep this file pure (no
 // runtime side effects) so it is safe to import from both server actions and
 // client components for shared validation.
+//
+// MockProspect fields, persistence map for pipeline_prospects:
+//
+//   Persisted to dedicated columns:
+//     first_name, last_name, title, company, industry, employees, city,
+//     email, email_verified, linkedin_url, intent_signals, enrichment_score
+//     (derived from `score` * 10, clamped 0 to 100).
+//
+//   Persisted inside icp_match JSONB:
+//     phone, website, rating, reviews_count, business_status, place_types,
+//     email_verification_status, site_recon, score_breakdown, unique_hook,
+//     suburb (currently mirrors city), run_id.
+//
+//   Not persisted (derived on the client or unused at this stage):
+//     full_name (server reconstructs from first_name + last_name when needed),
+//     score (raw 1 to 10 value, only the * 10 form is stored).
 
 import { z } from "zod";
 

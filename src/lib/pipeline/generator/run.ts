@@ -36,6 +36,10 @@ const SITE_BATCH_SIZE = 5;
 const HOOK_BATCH_SIZE = 10;
 const OVERSAMPLE_FACTOR = 3;
 const HARD_CAP = 100;
+// TODO: replace with plan-based cap from tenant subscription. For now we
+// hard-cap test runs at 5 prospects so we do not burn external API quota
+// while the pipeline is still being shaken down.
+const TEST_MODE_CAP = 5;
 
 // --- helpers ------------------------------------------------------------
 
@@ -183,17 +187,32 @@ function buildCandidate(args: {
 
 // --- main entry ---------------------------------------------------------
 
+// Run the full live pipeline: search, enrich, score, hook. Returns at most
+// `effectiveQuantity` prospects, where `effectiveQuantity = min(input.quantity,
+// TEST_MODE_CAP)`. The TEST_MODE_CAP is a temporary safety rail while we are
+// still burning in the integration, see the constant declaration above.
 export async function runGenerator(
   input: GenerateProspectInput,
 ): Promise<MockProspect[]> {
+  const effectiveQuantity = Math.min(input.quantity, TEST_MODE_CAP);
+  if (effectiveQuantity < input.quantity) {
+    console.log(
+      `[pipeline/runGenerator] capped quantity from ${input.quantity} to ${effectiveQuantity} (TEST_MODE_CAP)`,
+    );
+  }
+  const cappedInput: GenerateProspectInput = {
+    ...input,
+    quantity: effectiveQuantity,
+  };
+
   if (!process.env.GOOGLE_PLACES_API_KEY) {
     console.warn(
       "[pipeline/runGenerator] GOOGLE_PLACES_API_KEY missing, falling back to deterministic mock generator",
     );
-    return runMockGenerator(input);
+    return runMockGenerator(cappedInput);
   }
 
-  const oversampleTarget = Math.min(input.quantity * OVERSAMPLE_FACTOR, HARD_CAP);
+  const oversampleTarget = Math.min(cappedInput.quantity * OVERSAMPLE_FACTOR, HARD_CAP);
 
   let places: PlaceResult[] = [];
   try {
@@ -266,11 +285,11 @@ export async function runGenerator(
     c.score_breakdown = scored.breakdown;
   }
 
-  // Step 5: filter, sort, truncate.
+  // Step 5: filter, sort, truncate. Honour the effective (post-cap) quantity.
   const survivors = candidates
     .filter((p) => p.score >= SCORE_FLOOR)
     .sort((a, b) => b.score - a.score)
-    .slice(0, input.quantity);
+    .slice(0, cappedInput.quantity);
 
   // Step 6: generate hooks in batches of 10.
   const offer = input.offer && input.offer.trim().length > 0
