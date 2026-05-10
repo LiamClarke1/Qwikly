@@ -59,6 +59,13 @@ type NotifyLeadInput = {
     /** Assistant flagged this as a handoff because an escalation rule fired,
      *  not a normal lead capture. Switches subject + email body styling. */
     isEscalation?: boolean | null;
+    /** Trade-specific structured detail captured by the assistant (budget,
+     *  property type, medical aid, matter type, etc.). Rendered as a
+     *  key-value list in the lead summary. */
+    details?: Record<string, string> | null;
+    /** Visitor confirmed they're a returning patient/client. Surfaces a
+     *  "RETURNING CLIENT" badge so the owner can prioritise. */
+    isReturningCustomer?: boolean | null;
   };
 };
 
@@ -241,10 +248,14 @@ export async function notifyLeadCaptured(input: NotifyLeadInput): Promise<Notify
     isUrgent: input.lead.isUrgent ?? false,
     expectedDays: input.lead.expectedDays ?? null,
     isEscalation: input.lead.isEscalation ?? false,
+    details: input.lead.details ?? null,
+    isReturningCustomer: input.lead.isReturningCustomer ?? false,
   };
 
   const baseSubject = input.lead.isUrgent
     ? `URGENT lead, ${input.lead.name ?? input.lead.contact}`
+    : input.lead.isReturningCustomer
+    ? `Returning lead, ${input.lead.name ?? input.lead.contact}`
     : `New lead, ${input.lead.name ?? input.lead.contact}`;
   const subject = input.lead.isEscalation
     ? `[ESCALATION] ${baseSubject}`

@@ -566,12 +566,18 @@ export async function POST(req: NextRequest) {
     visitor_id?: string;
     page_url?: string;
     conversation_id?: string;
+    /** When true, skip all DB writes, lead notifications, sequence enrolment,
+     *  and lead-cap counting. Used by the dashboard "test as visitor" preview
+     *  so an owner can stress-test their assistant without polluting their
+     *  own lead inbox or billing. The chat behaviour itself is unchanged. */
+    test_mode?: boolean;
   };
   try { body = await req.json(); } catch {
     return NextResponse.json({ error: "invalid_json" }, { status: 400, headers: CORS });
   }
 
-  const { client_id, message, history = [], visitor_id, page_url, conversation_id: existingCid } = body;
+  const { client_id, message, history = [], visitor_id, page_url, conversation_id: existingCid, test_mode } = body;
+  const isTestMode = test_mode === true;
   if (!client_id || !message) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400, headers: CORS });
   }
@@ -602,7 +608,7 @@ export async function POST(req: NextRequest) {
   if (client_id !== "1") {
     const { data: clientRow } = await supabaseAdmin
       .from("clients")
-      .select("system_prompt, business_name, owner_name, trade, phone, address, years_in_business, certifications, brands_used, team_size, services_offered, services_excluded, emergency_response, charge_type, callout_fee, example_prices, minimum_job, free_quotes, payment_methods, payment_terms, working_hours_text, booking_lead_time, booking_preference, response_time, after_hours, unique_selling_point, guarantees, star_rating, review_count, testimonials, common_questions, common_objections, faq, tone, ai_tone, ai_language, ai_response_style, ai_conversation_speed, ai_greeting, ai_sign_off, ai_always_do, ai_never_say, ai_unhappy_customer, ai_escalation_triggers, ai_escalation_custom, web_widget_greeting, plan, auth_user_id, crm_status")
+      .select("system_prompt, business_name, owner_name, trade, phone, address, years_in_business, certifications, brands_used, team_size, services_offered, services_excluded, emergency_response, charge_type, callout_fee, example_prices, minimum_job, free_quotes, payment_methods, payment_terms, working_hours_text, booking_lead_time, booking_preference, response_time, after_hours, unique_selling_point, guarantees, star_rating, review_count, testimonials, common_questions, common_objections, faq, tone, ai_tone, ai_language, ai_response_style, ai_conversation_speed, ai_greeting, ai_sign_off, ai_always_do, ai_never_say, ai_unhappy_customer, ai_escalation_triggers, ai_escalation_custom, web_widget_greeting, plan, auth_user_id, crm_status, regulated_topics, referral_partners, active_listings, stock_notes, urgent_keywords")
       .eq("id", client_id)
       .maybeSingle();
 
@@ -657,10 +663,12 @@ export async function POST(req: NextRequest) {
     systemPrompt += `\n\n${PROMPT_SAFETY_NOTE}`;
 
     // ── Lead cap check ─────────────────────────────────────────
+    // Skip in test mode, an owner stress-testing their own assistant should
+    // not be blocked by the lead cap they have already paid against.
     const tier = resolvePlan(clientRow?.plan);
     const cap = PLAN_CONFIG[tier].leadLimit;
     leadCap = cap;
-    if (cap !== null) {
+    if (!isTestMode && cap !== null) {
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
       const { count: monthLeads } = await supabaseAdmin
         .from("conversations")
@@ -720,8 +728,11 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Get or create conversation ─────────────────────────────
+  // In test mode skip the DB insert entirely so the dashboard preview
+  // doesn't pollute the conversations table. The convoId stays null and
+  // every downstream "if (convoId)" gate becomes a no-op.
   let convoId: string | null = existingCid ?? null;
-  if (!convoId) {
+  if (!convoId && !isTestMode) {
     const { data: newConvo } = await supabaseAdmin
       .from("conversations")
       .insert({
@@ -739,7 +750,7 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Save visitor message to log ────────────────────────────
-  if (convoId) {
+  if (convoId && !isTestMode) {
     await supabaseAdmin.from("messages_log").insert({
       conversation_id: convoId,
       role: "customer",
@@ -870,7 +881,7 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Save AI reply to log ───────────────────────────────────
-  if (convoId) {
+  if (convoId && !isTestMode) {
     await supabaseAdmin.from("messages_log").insert({
       conversation_id: convoId,
       role: "assistant",
@@ -917,7 +928,11 @@ export async function POST(req: NextRequest) {
   const hasContact = !!(visitorInfo?.phone || visitorInfo?.email);
   const leadCaptured = hasContact;
 
-  if (visitorInfo && convoId) {
+  // Test mode skips ALL Supabase writes, lead notifications, sequence
+  // enrolment, and lead-cap counting. The chat itself runs identically;
+  // only the side effects are bypassed so an owner can preview their
+  // assistant without polluting their own inbox or billing.
+  if (!isTestMode && visitorInfo && convoId) {
     if (hasContact) {
       // Contact info captured — this is a real lead, count against cap.
       // Re-check the lead count after the update window to catch concurrent
@@ -934,7 +949,7 @@ export async function POST(req: NextRequest) {
           .gte("created_at", startOfMonth);
         if ((priorLeads ?? 0) >= leadCap) raceTopUp = true;
       }
-      const updates: Record<string, string | boolean | number> = { status: "lead", is_lead: true };
+      const updates: Record<string, string | boolean | number | Record<string, string>> = { status: "lead", is_lead: true };
       if (visitorInfo.name)           updates.customer_name  = visitorInfo.name;
       if (visitorInfo.phone)          updates.customer_phone = visitorInfo.phone;
       if (visitorInfo.email)          updates.customer_email = visitorInfo.email;
@@ -949,6 +964,26 @@ export async function POST(req: NextRequest) {
         updates.expected_days = visitorInfo.expected_days;
       }
       if (isTopUp || raceTopUp)       updates.is_top_up      = true;
+      // Trade-specific structured detail captured by the assistant.
+      // The model populates this incrementally as the visitor reveals info,
+      // so we merge with whatever was previously saved on the conversation
+      // rather than overwriting (a later turn shouldn't lose earlier keys).
+      if (visitorInfo.details && typeof visitorInfo.details === "object") {
+        const cleanDetails: Record<string, string> = {};
+        for (const [k, v] of Object.entries(visitorInfo.details)) {
+          if (typeof v === "string" && v.trim()) cleanDetails[k] = v.trim();
+        }
+        if (Object.keys(cleanDetails).length > 0) {
+          const { data: priorDetailsRow } = await supabaseAdmin
+            .from("conversations")
+            .select("details")
+            .eq("id", convoId)
+            .maybeSingle();
+          const prior = (priorDetailsRow as { details?: Record<string, string> | null } | null)?.details ?? {};
+          updates.details = { ...prior, ...cleanDetails };
+        }
+      }
+      if (visitorInfo.is_returning_customer) updates.is_returning_customer = true;
 
       // Detect "first time becoming a lead" so we only fire the notification
       // once per conversation, not on every subsequent message that re-enters
@@ -978,6 +1013,8 @@ export async function POST(req: NextRequest) {
             isUrgent: !!visitorInfo.is_urgent,
             expectedDays: typeof visitorInfo.expected_days === "number" ? visitorInfo.expected_days : null,
             isEscalation: !!visitorInfo.is_escalation,
+            details: (updates.details as Record<string, string> | undefined) ?? null,
+            isReturningCustomer: !!visitorInfo.is_returning_customer,
           },
         })
           .then((r) => {
@@ -995,7 +1032,7 @@ export async function POST(req: NextRequest) {
       }
     } else {
       // Name only (or booking_intent without contact) — save name and intent but do not count as a lead
-      const nameUpdate: Record<string, string | boolean | number> = {};
+      const nameUpdate: Record<string, string | boolean | number | Record<string, string>> = {};
       if (visitorInfo.name)           nameUpdate.customer_name  = visitorInfo.name;
       if (visitorInfo.booking_intent) nameUpdate.booking_intent = true;
       if (visitorInfo.job_type)       nameUpdate.job_type       = visitorInfo.job_type;
@@ -1007,6 +1044,22 @@ export async function POST(req: NextRequest) {
           && visitorInfo.expected_days <= 14) {
         nameUpdate.expected_days = visitorInfo.expected_days;
       }
+      if (visitorInfo.details && typeof visitorInfo.details === "object") {
+        const cleanDetails: Record<string, string> = {};
+        for (const [k, v] of Object.entries(visitorInfo.details)) {
+          if (typeof v === "string" && v.trim()) cleanDetails[k] = v.trim();
+        }
+        if (Object.keys(cleanDetails).length > 0) {
+          const { data: priorDetailsRow } = await supabaseAdmin
+            .from("conversations")
+            .select("details")
+            .eq("id", convoId)
+            .maybeSingle();
+          const prior = (priorDetailsRow as { details?: Record<string, string> | null } | null)?.details ?? {};
+          nameUpdate.details = { ...prior, ...cleanDetails };
+        }
+      }
+      if (visitorInfo.is_returning_customer) nameUpdate.is_returning_customer = true;
       if (Object.keys(nameUpdate).length > 0) {
         await supabaseAdmin.from("conversations").update(nameUpdate).eq("id", convoId);
       }

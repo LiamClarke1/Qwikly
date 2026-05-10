@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "npm run lint:no-long-dash",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint:no-long-dash": "if grep -lE '\\xe2\\x80\\x94|\\xe2\\x80\\x93' src/lib/assistant-prompt.ts; then echo 'ERROR: long-dash characters in assistant-prompt.ts (em-dash or en-dash). Replace with comma or full stop.' >&2; exit 1; fi"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",

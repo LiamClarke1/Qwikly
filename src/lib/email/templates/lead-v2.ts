@@ -31,6 +31,15 @@ export type LeadEmailArgs = {
   /** Assistant escalated this conversation rather than capturing a normal lead.
    *  Renders a red banner so the owner can see the difference at a glance. */
   isEscalation?: boolean | null;
+  /** Trade-specific structured detail captured by the assistant during the
+   *  conversation (budget, property type, medical aid, matter type, etc.).
+   *  Rendered as a key-value list inside the Details block so the owner can
+   *  scan trade-specific facts without reading the full transcript. */
+  details?: Record<string, string> | null;
+  /** Visitor explicitly confirmed they have engaged with the business before.
+   *  Renders a small "RETURNING CLIENT" pill above the headline so the owner
+   *  knows to prioritise. */
+  isReturningCustomer?: boolean | null;
 };
 
 export function leadNotificationHtml(args: LeadEmailArgs) {
@@ -49,6 +58,8 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
     isUrgent,
     expectedDays,
     isEscalation,
+    details,
+    isReturningCustomer,
   } = args;
   // Detect whether the visitor gave us a phone number or an email so the
   // "tap to call / email / WhatsApp" buttons can deep-link appropriately.
@@ -260,6 +271,35 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
       </p>`
     : "";
 
+  // Returning-client pill, sits above the headline so the owner spots a
+  // repeat customer at a glance.
+  const returningPill = isReturningCustomer
+    ? `<p style="margin:0 0 10px;"><span style="display:inline-block;background:#0E0E0C;color:#FFFFFF;font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:5px 9px;border-radius:4px;">Returning client</span></p>`
+    : "";
+
+  // Trade-specific detail block, rendered as a key-value list. Keys are
+  // shown in title-case for readability (matter_type → Matter type), values
+  // verbatim. Only renders when the assistant captured at least one detail.
+  const detailsBlock = (() => {
+    const map = details && typeof details === "object" ? details : null;
+    if (!map) return "";
+    const entries = Object.entries(map).filter(([, v]) => typeof v === "string" && v.trim());
+    if (entries.length === 0) return "";
+    const titleCase = (k: string) => k
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    const rows = entries.map(([k, v]) => `
+      <tr>
+        <td style="padding:9px 18px 9px 0;color:#6A6A63;font-size:12px;width:140px;vertical-align:top;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;">${esc(titleCase(k))}</td>
+        <td style="padding:9px 0;color:#0E0E0C;font-size:15px;line-height:1.5;font-weight:500;">${esc(v)}</td>
+      </tr>`).join("");
+    return `
+      <p style="margin:24px 0 10px;font-size:11px;font-weight:600;color:#6A6A63;letter-spacing:0.12em;text-transform:uppercase;">What they told the assistant</p>
+      <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 4px;background:#FAF5EC;border:1px solid #E6E0D4;border-radius:8px;padding:6px 18px;">
+        ${rows}
+      </table>`;
+  })();
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -321,9 +361,12 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
           <!-- Urgency banner -->
           ${urgentBanner}
 
+          <!-- Returning-client pill (only when the assistant flagged it) -->
+          ${returningPill}
+
           <!-- Editorial display headline -->
           <h1 class="qw-display" style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:34px;font-weight:400;color:#0E0E0C;line-height:1.15;letter-spacing:-0.6px;">
-            You've got a <em style="font-style:italic;font-weight:400;color:#0E0E0C;">new lead</em>${need ? `<span style="color:#6A6A63;font-style:normal;">.</span>` : `<span style="color:#E85A2C;">.</span>`}
+            You've got a <em style="font-style:italic;font-weight:400;color:#0E0E0C;">${isReturningCustomer ? "returning lead" : "new lead"}</em>${need ? `<span style="color:#6A6A63;font-style:normal;">.</span>` : `<span style="color:#E85A2C;">.</span>`}
           </h1>
 
           ${expectedDaysLine}
@@ -338,6 +381,9 @@ export function leadNotificationHtml(args: LeadEmailArgs) {
           <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin:0 0 4px;background:#FAF5EC;border:1px solid #E6E0D4;border-radius:8px;padding:6px 18px;">
             ${detailRows}
           </table>
+
+          <!-- Trade-specific structured detail captured by the assistant -->
+          ${detailsBlock}
 
           <!-- Conversation transcript -->
           ${conversationBlock}
@@ -420,10 +466,15 @@ export function leadNotificationText(args: LeadEmailArgs) {
     isUrgent,
     expectedDays,
     isEscalation,
+    details,
+    isReturningCustomer,
   } = args;
   const lines: string[] = [];
   if (isEscalation) {
     lines.push("ESCALATED, handed off by your digital assistant.", "");
+  }
+  if (isReturningCustomer) {
+    lines.push("RETURNING CLIENT.", "");
   }
   lines.push(
     `${isUrgent ? "URGENT lead" : "New lead"} , ${businessName}`,
@@ -437,6 +488,17 @@ export function leadNotificationText(args: LeadEmailArgs) {
     preferredTime ? `Time:    ${preferredTime}` : "",
     expectedDays && expectedDays > 1 ? `Job span: ~${expectedDays} days (hold a follow-up slot)` : "",
   );
+  if (details && typeof details === "object") {
+    const entries = Object.entries(details).filter(([, v]) => typeof v === "string" && v.trim());
+    if (entries.length > 0) {
+      lines.push("", "What they told the assistant:");
+      const pad = Math.max(...entries.map(([k]) => k.length));
+      for (const [k, v] of entries) {
+        const label = k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).padEnd(pad + 2);
+        lines.push(`  ${label} ${v}`);
+      }
+    }
+  }
 
   const turns = Array.isArray(conversation) ? conversation : [];
   if (turns.length > 0) {
