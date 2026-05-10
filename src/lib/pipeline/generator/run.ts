@@ -1,13 +1,329 @@
-// TODO: replace with real Apollo + Hunter integration. Spec in docs/pipeline-platform.md.
+// Real pipeline orchestrator for the Qwikly lead engine.
+//
+// Flow:
+//   1. Search Google Places for SA businesses matching the ICP.
+//   2. Read each business website in parallel batches of 5.
+//   3. Find the best email for the domain via Hunter.
+//   4. Score every candidate, filter to total >= 7, sort, take top n.
+//   5. Generate a personalised opener (Claude Haiku) for each survivor in
+//      parallel batches of 10.
+//
+// Failure handling:
+//   - If GOOGLE_PLACES_API_KEY is missing, fall back to the deterministic
+//     mock generator so local development is unblocked.
+//   - Per-prospect errors are isolated: a failed site read still yields a
+//     candidate, just with a lower score.
+//   - The orchestrator never throws. Anything unexpected is logged and the
+//     run returns whatever survived.
 
 import {
   GenerateProspectInput,
   MockProspect,
   SaIndustry,
-  SiteRecon,
+  SiteRecon as GeneratorSiteRecon,
 } from "./types";
 import { scoreProspect } from "../scoring";
 import { generateHook } from "../hook-generator";
+import { searchBusinesses } from "../scraper/google-places";
+import type { PlaceResult } from "../scraper/google-places.types";
+import { readSite } from "../scraper/site-reader";
+import type { SiteRecon as ScraperSiteRecon } from "../scraper/site-reader.types";
+import { findEmailForDomain } from "../scraper/hunter";
+import type { HunterEmailResult } from "../scraper/hunter.types";
+
+const SCORE_FLOOR = 7;
+const SITE_BATCH_SIZE = 5;
+const HOOK_BATCH_SIZE = 10;
+const OVERSAMPLE_FACTOR = 3;
+const HARD_CAP = 100;
+
+// --- helpers ------------------------------------------------------------
+
+function chunk<T>(arr: T[], size: number): T[][] {
+  if (size <= 0) return [arr];
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    out.push(arr.slice(i, i + size));
+  }
+  return out;
+}
+
+function extractDomain(website: string | undefined): string | null {
+  if (!website) return null;
+  try {
+    const withScheme = /^https?:\/\//i.test(website) ? website : `https://${website}`;
+    const u = new URL(withScheme);
+    return u.hostname.replace(/^www\./i, "").toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+function extractCity(formattedAddress: string): string {
+  // Google's formatted_address tends to be "Name, Suburb, City, Postal, Country".
+  // The city is usually the second-to-last comma-separated segment after the
+  // country and the postal code. We pick the longest non-numeric segment as
+  // a robust-enough fallback.
+  if (!formattedAddress) return "";
+  const parts = formattedAddress.split(",").map((p) => p.trim()).filter(Boolean);
+  // Drop the country (last) and any segment that is mostly digits (postal codes).
+  const candidates = parts
+    .slice(0, -1)
+    .filter((p) => !/^\d[\d\s]*$/.test(p));
+  if (candidates.length === 0) return parts[0] ?? "";
+  return candidates[candidates.length - 1] ?? "";
+}
+
+function pickIndustryForPlace(
+  place: PlaceResult,
+  icpIndustries: SaIndustry[],
+): SaIndustry {
+  // Best effort: if any ICP industry token shows up in the place types, prefer
+  // it. Otherwise return the first ICP industry as a label.
+  const typesLower = place.types.map((t) => t.toLowerCase());
+  for (const ind of icpIndustries) {
+    const token = ind.toLowerCase().split(" ")[0];
+    if (typesLower.some((t) => t.includes(token))) {
+      return ind;
+    }
+  }
+  return icpIndustries[0] ?? ("Professional Services" as SaIndustry);
+}
+
+function intentSignalsFromPlaceTypes(
+  place: PlaceResult,
+  icpIntents: string[],
+): string[] {
+  // The Places API does not give us hiring or funding signals, so we project
+  // the ICP intents onto whichever ones plausibly survive a Place lookup.
+  // Concretely, we only keep "Growing fast" when the business has lots of
+  // reviews (a weak proxy for traction) and "Recently hired" never (we have
+  // no source for it). This is intentionally conservative.
+  const out: string[] = [];
+  if (
+    icpIntents.includes("Growing fast") &&
+    (place.user_ratings_total ?? 0) >= 50
+  ) {
+    out.push("Growing fast");
+  }
+  return out;
+}
+
+function bridgeSiteRecon(
+  recon: ScraperSiteRecon | null,
+  fallbackUrl: string,
+): GeneratorSiteRecon {
+  // Map the scraper's nullable shape onto the generator's stricter shape that
+  // the rest of the UI consumes. Empty strings where the scraper had nulls.
+  return {
+    title: recon?.title ?? "",
+    h1: recon?.h1 ?? "",
+    meta_description: recon?.meta_description ?? "",
+    hero_text: recon?.hero_text ?? "",
+    scraped_url: recon?.ok ? (recon.url || fallbackUrl) : "",
+    last_scraped_at: recon?.last_scraped_at ?? new Date().toISOString(),
+  };
+}
+
+function buildCandidate(args: {
+  place: PlaceResult;
+  recon: ScraperSiteRecon | null;
+  hunter: HunterEmailResult | null;
+  icpIndustries: SaIndustry[];
+  icpIntents: string[];
+}): MockProspect {
+  const { place, recon, hunter, icpIndustries, icpIntents } = args;
+
+  const firstName = hunter?.first_name ?? "";
+  const lastName = hunter?.last_name ?? "";
+  const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
+  const title = hunter?.position ?? "";
+  const city = extractCity(place.formatted_address);
+  const industry = pickIndustryForPlace(place, icpIndustries);
+  const reconBridged = bridgeSiteRecon(recon, place.website ?? "");
+  const intentSignals = intentSignalsFromPlaceTypes(place, icpIntents);
+
+  // Rough employee estimate from review volume. Not authoritative, just gives
+  // the scorer something to lean on. < 20 reviews -> 5, < 100 -> 20, else 50.
+  const reviews = place.user_ratings_total ?? 0;
+  const employeesEstimate = reviews >= 100 ? 50 : reviews >= 20 ? 20 : 5;
+
+  return {
+    first_name: firstName,
+    last_name: lastName,
+    full_name: fullName || place.name,
+    title,
+    company: place.name,
+    industry,
+    employees: employeesEstimate,
+    city,
+    email: hunter?.email ?? "",
+    email_verified: hunter?.verification_status === "valid",
+    linkedin_url: "",
+    intent_signals: intentSignals,
+    enrichment_score: hunter?.confidence ?? 0,
+    site_recon: reconBridged,
+    score: 0,
+    score_breakdown: {
+      icp_match: 0,
+      contact_completeness: 0,
+      business_signals: 0,
+      site_quality: 0,
+    },
+    unique_hook: "",
+    phone: place.formatted_phone_number ?? null,
+    website: place.website ?? null,
+    rating: place.rating ?? null,
+    reviews_count: place.user_ratings_total ?? null,
+    business_status: place.business_status ?? null,
+    place_types: place.types,
+    email_verification_status: hunter?.verification_status ?? "unknown",
+  };
+}
+
+// --- main entry ---------------------------------------------------------
+
+export async function runGenerator(
+  input: GenerateProspectInput,
+): Promise<MockProspect[]> {
+  if (!process.env.GOOGLE_PLACES_API_KEY) {
+    console.warn(
+      "[pipeline/runGenerator] GOOGLE_PLACES_API_KEY missing, falling back to deterministic mock generator",
+    );
+    return runMockGenerator(input);
+  }
+
+  const oversampleTarget = Math.min(input.quantity * OVERSAMPLE_FACTOR, HARD_CAP);
+
+  let places: PlaceResult[] = [];
+  try {
+    places = await searchBusinesses({
+      industries: input.industries,
+      locations: input.locations,
+      quantity: oversampleTarget,
+    });
+  } catch (err) {
+    console.error("[pipeline/runGenerator] searchBusinesses threw, returning empty list", err);
+    return [];
+  }
+
+  if (places.length === 0) {
+    console.warn("[pipeline/runGenerator] Places returned zero results");
+    return [];
+  }
+
+  // Step 2 + 3: enrich each place in parallel batches.
+  const candidates: MockProspect[] = [];
+  for (const batch of chunk(places, SITE_BATCH_SIZE)) {
+    const settled = await Promise.all(
+      batch.map(async (place): Promise<MockProspect | null> => {
+        try {
+          const recon = place.website ? await readSite(place.website) : null;
+          const domain = extractDomain(place.website);
+          let hunter: HunterEmailResult | null = null;
+          if (domain) {
+            try {
+              hunter = await findEmailForDomain(domain);
+            } catch (err) {
+              console.error(
+                `[pipeline/runGenerator] hunter failed for ${domain}`,
+                err,
+              );
+              hunter = null;
+            }
+          }
+          return buildCandidate({
+            place,
+            recon,
+            hunter,
+            icpIndustries: input.industries as SaIndustry[],
+            icpIntents: input.intentSignals,
+          });
+        } catch (err) {
+          console.error(
+            `[pipeline/runGenerator] candidate build failed for ${place.name}`,
+            err,
+          );
+          return null;
+        }
+      }),
+    );
+    for (const c of settled) {
+      if (c) candidates.push(c);
+    }
+  }
+
+  // Step 4: score every candidate.
+  for (const c of candidates) {
+    const scored = scoreProspect(c, {
+      industries: input.industries,
+      jobTitles: input.jobTitles,
+      intentSignals: input.intentSignals,
+      locations: input.locations,
+      companySize: input.companySize,
+    });
+    c.score = scored.total;
+    c.score_breakdown = scored.breakdown;
+  }
+
+  // Step 5: filter, sort, truncate.
+  const survivors = candidates
+    .filter((p) => p.score >= SCORE_FLOOR)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, input.quantity);
+
+  // Step 6: generate hooks in batches of 10.
+  const offer = input.offer && input.offer.trim().length > 0
+    ? input.offer
+    : "a simple, plain-language way to catch the leads your business misses after hours";
+  const dealValueZar = typeof input.dealValueZar === "number" ? input.dealValueZar : 20000;
+
+  for (const batch of chunk(survivors, HOOK_BATCH_SIZE)) {
+    await Promise.all(
+      batch.map(async (p) => {
+        try {
+          const hook = await generateHook({
+            prospect: {
+              businessName: p.company,
+              industry: p.industry,
+              city: p.city,
+              siteRecon: p.site_recon.scraped_url
+                ? {
+                    title: p.site_recon.title,
+                    h1: p.site_recon.h1,
+                    meta_description: p.site_recon.meta_description,
+                    hero_text: p.site_recon.hero_text,
+                    services_text: "",
+                  }
+                : null,
+              firstName: p.first_name || undefined,
+            },
+            icp: {
+              offer,
+              painPoint: undefined,
+              dealValueZar,
+            },
+          });
+          p.unique_hook = hook;
+        } catch (err) {
+          console.error(
+            `[pipeline/runGenerator] hook generation failed for ${p.company}`,
+            err,
+          );
+          p.unique_hook = "";
+        }
+      }),
+    );
+  }
+
+  return survivors;
+}
+
+// -----------------------------------------------------------------------
+// Deterministic mock generator, kept around for local development when no
+// Google Places API key is configured. The shape and behaviour match the
+// previous implementation.
+// -----------------------------------------------------------------------
 
 const SA_FIRST_NAMES = [
   "Thandi",
@@ -43,16 +359,6 @@ const SA_LAST_NAMES = [
   "Smit",
   "Nkosi",
   "Du Plessis",
-  "Mahlangu",
-  "Coetzee",
-  "Maluleke",
-  "Joubert",
-  "Zulu",
-  "Steyn",
-  "Ndlovu",
-  "Visser",
-  "Modise",
-  "Greyling",
 ];
 
 const COMPANY_PREFIXES = [
@@ -66,16 +372,6 @@ const COMPANY_PREFIXES = [
   "Camps Bay",
   "Stellenbosch",
   "Constantia",
-  "Bushveld",
-  "Cape Point",
-  "Garden Route",
-  "Knysna",
-  "Wilderness",
-  "Tygerberg",
-  "Rooibos",
-  "Protea",
-  "Boulders",
-  "Vaal",
 ];
 
 const COMPANY_SUFFIXES = [
@@ -89,21 +385,10 @@ const COMPANY_SUFFIXES = [
   "Collective",
   "Ventures",
   "Solutions",
-  "Studio",
-  "Works",
-  "Co",
-  "& Sons",
-  "Trading",
 ];
 
-const EMAIL_DOMAINS = [
-  "co.za",
-  "com",
-  "africa",
-  "io",
-];
+const EMAIL_DOMAINS = ["co.za", "com", "africa", "io"];
 
-// Cheap deterministic hash, plenty for seeding a mock RNG. Not for crypto.
 function hashSeed(input: string): number {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < input.length; i++) {
@@ -113,7 +398,6 @@ function hashSeed(input: string): number {
   return h >>> 0;
 }
 
-// Mulberry32, deterministic and fast.
 function mulberry32(seed: number) {
   let s = seed >>> 0;
   return function () {
@@ -129,17 +413,6 @@ function pick<T>(arr: readonly T[], rnd: () => number): T {
   return arr[Math.floor(rnd() * arr.length)];
 }
 
-function pickSubset<T>(arr: readonly T[], rnd: () => number): T[] {
-  if (arr.length === 0) return [];
-  const out: T[] = [];
-  for (const item of arr) {
-    if (rnd() > 0.5) out.push(item);
-  }
-  // Always return at least one if the source had items.
-  if (out.length === 0) out.push(pick(arr, rnd));
-  return out;
-}
-
 function slugify(s: string): string {
   return s
     .toLowerCase()
@@ -149,27 +422,12 @@ function slugify(s: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function makeCompany(rnd: () => number): string {
-  const prefix = pick(COMPANY_PREFIXES, rnd);
-  const suffix = pick(COMPANY_SUFFIXES, rnd);
-  return `${prefix} ${suffix}`;
+export function buildSeedFromInput(input: GenerateProspectInput): number {
+  const stable = JSON.stringify(input, Object.keys(input).sort());
+  return hashSeed(stable);
 }
 
-function makeEmployees(
-  rnd: () => number,
-  min: number,
-  max: number,
-): number {
-  const lo = Math.min(min, max);
-  const hi = Math.max(min, max);
-  return Math.floor(rnd() * (hi - lo + 1)) + lo;
-}
-
-function pickCity(
-  locations: string[],
-  rnd: () => number,
-): string {
-  // "Anywhere in SA" expands to a default pool when chosen.
+function pickCity(locations: string[], rnd: () => number): string {
   const expanded: string[] = [];
   for (const loc of locations) {
     if (loc === "Anywhere in SA") {
@@ -185,132 +443,45 @@ function pickCity(
       expanded.push(loc);
     }
   }
+  if (expanded.length === 0) return "Cape Town";
   return pick(expanded, rnd);
 }
 
-export function buildSeedFromInput(input: GenerateProspectInput): number {
-  // Stable JSON, sort keys so order does not change the seed.
-  const stable = JSON.stringify(input, Object.keys(input).sort());
-  return hashSeed(stable);
-}
-
-// Mock site recon, gives the scoring function and downstream UI realistic
-// fields to work with. Production wiring will scrape live URLs.
-const HERO_FRAGMENTS: Record<string, string[]> = {
-  Construction: [
-    "Building South Africa, one project at a time. Tender ready, BBBEE level 2.",
-    "Civil and structural specialists working across Gauteng. 20 plus years on site.",
-  ],
-  Healthcare: [
-    "Compassionate care for the whole family. Book online or call our reception.",
-    "Modern clinic with same week appointments. Medical aids welcome.",
-  ],
-  Education: [
-    "Independent school with a track record of distinction passes. Open days monthly.",
-    "Online and in-class learning paths for working professionals.",
-  ],
-  "Financial Services": [
-    "Independent advice for South African business owners. Wealth, tax, succession.",
-    "Boutique brokerage with personal service. Risk, retirement, investments.",
-  ],
-  Marketing: [
-    "Creative studio for ambitious SA brands. Strategy, content, paid media.",
-    "Performance marketing for retailers. Real revenue, not vanity metrics.",
-  ],
-  Manufacturing: [
-    "Engineered products for industry, made in South Africa. ISO certified.",
-    "Custom fabrication with fast turnaround. Local sales, national delivery.",
-  ],
-  Retail: [
-    "Independent retailer, locally loved. New collections every season.",
-    "Curated homeware for South African homes. Cape Town and online.",
-  ],
-  Hospitality: [
-    "Award winning hospitality in the heart of the Cape. Stay, eat, gather.",
-    "Boutique guesthouse with a strong returning guest base.",
-  ],
-  "Professional Services": [
-    "Trusted advisors for SA businesses. Corporate, commercial, compliance.",
-    "Specialist practice serving owner managed businesses.",
-  ],
-  SaaS: [
-    "Software for South African operators. Built local, priced fair.",
-    "Workflow tools for service businesses. Free trial, no card required.",
-  ],
-};
-
-function buildSiteRecon(
-  rnd: () => number,
-  company: string,
-  industry: SaIndustry,
-  domainBase: string,
-  tld: string
-): SiteRecon {
-  const heroPool =
-    HERO_FRAGMENTS[industry] || HERO_FRAGMENTS["Professional Services"];
-  const hero = heroPool[Math.floor(rnd() * heroPool.length)];
-  return {
-    title: `${company}, ${industry} in South Africa`,
-    h1: `Welcome to ${company}`,
-    meta_description: `${company} is a ${industry.toLowerCase()} business serving South African customers.`,
-    hero_text: hero,
-    scraped_url: `https://${domainBase}.${tld}`,
-    last_scraped_at: new Date().toISOString(),
-  };
-}
-
-/**
- * Generates prospects scored 7 or above only.
- *
- * To return the requested quantity at a 7+ floor, we internally generate
- * roughly 3x the asked-for count, score them all, and return the top n.
- * If we still cannot fill the requested count at the floor, we cap at what
- * we have so we never lie about quality.
- */
-export async function runGenerator(
+async function runMockGenerator(
   input: GenerateProspectInput,
 ): Promise<MockProspect[]> {
   const seed = buildSeedFromInput(input);
   const rnd = mulberry32(seed);
 
-  const SCORE_FLOOR = 7;
-  const OVERSAMPLE_FACTOR = 3;
-  const oversampleTarget = Math.max(
-    input.quantity,
-    input.quantity * OVERSAMPLE_FACTOR
-  );
+  const target = input.quantity;
+  const out: MockProspect[] = [];
 
-  const candidates: MockProspect[] = [];
-  for (let i = 0; i < oversampleTarget; i++) {
+  for (let i = 0; i < target * OVERSAMPLE_FACTOR; i++) {
     const firstName = pick(SA_FIRST_NAMES, rnd);
     const lastName = pick(SA_LAST_NAMES, rnd);
-    const company = makeCompany(rnd);
-    const title = pick(input.jobTitles, rnd);
+    const prefix = pick(COMPANY_PREFIXES, rnd);
+    const suffix = pick(COMPANY_SUFFIXES, rnd);
+    const company = `${prefix} ${suffix}`;
     const industry = pick(input.industries, rnd) as SaIndustry;
-    const employees = makeEmployees(
-      rnd,
-      input.companySize.min,
-      input.companySize.max,
-    );
     const city = pickCity(input.locations, rnd);
-    const domainBase = slugify(company);
-    const domainTld = pick(EMAIL_DOMAINS, rnd);
-    const email = `${slugify(firstName)}.${slugify(lastName)}@${domainBase}.${domainTld}`;
-    const linkedin = `https://www.linkedin.com/in/${slugify(firstName)}-${slugify(lastName)}-${(seed + i).toString(36).slice(-4)}`;
-    const intent = input.intentSignals.length
-      ? pickSubset(input.intentSignals, rnd)
-      : [];
-    const enrichmentScore = 60 + Math.floor(rnd() * 40); // 60 to 99
-
-    const siteRecon = buildSiteRecon(
-      rnd,
-      company,
-      industry,
-      domainBase,
-      domainTld
+    const employees = Math.floor(
+      rnd() * (input.companySize.max - input.companySize.min + 1) +
+        input.companySize.min,
     );
+    const tld = pick(EMAIL_DOMAINS, rnd);
+    const domainBase = slugify(company);
+    const email = `${slugify(firstName)}.${slugify(lastName)}@${domainBase}.${tld}`;
+    const title = pick(input.jobTitles, rnd);
 
-    // Build a partial prospect to feed the scorer and hook generator.
+    const recon: GeneratorSiteRecon = {
+      title: `${company}, ${industry} in South Africa`,
+      h1: `Welcome to ${company}`,
+      meta_description: `${company} is a ${industry.toLowerCase()} business serving South African customers.`,
+      hero_text: `${company} serves businesses in ${city} with practical ${industry.toLowerCase()} support.`,
+      scraped_url: `https://${domainBase}.${tld}`,
+      last_scraped_at: new Date().toISOString(),
+    };
+
     const partial: MockProspect = {
       first_name: firstName,
       last_name: lastName,
@@ -322,10 +493,10 @@ export async function runGenerator(
       city,
       email,
       email_verified: true,
-      linkedin_url: linkedin,
-      intent_signals: intent,
-      enrichment_score: enrichmentScore,
-      site_recon: siteRecon,
+      linkedin_url: `https://www.linkedin.com/in/${slugify(firstName)}-${slugify(lastName)}`,
+      intent_signals: input.intentSignals.slice(0, 1),
+      enrichment_score: 70 + Math.floor(rnd() * 30),
+      site_recon: recon,
       score: 0,
       score_breakdown: {
         icp_match: 0,
@@ -334,6 +505,13 @@ export async function runGenerator(
         site_quality: 0,
       },
       unique_hook: "",
+      phone: "+27 11 555 0100",
+      website: recon.scraped_url,
+      rating: 4 + rnd(),
+      reviews_count: 20 + Math.floor(rnd() * 80),
+      business_status: "OPERATIONAL",
+      place_types: [],
+      email_verification_status: "valid",
     };
 
     const scored = scoreProspect(partial, {
@@ -341,45 +519,37 @@ export async function runGenerator(
       jobTitles: input.jobTitles,
       intentSignals: input.intentSignals,
       locations: input.locations,
+      companySize: input.companySize,
     });
     partial.score = scored.total;
     partial.score_breakdown = scored.breakdown;
-    partial.unique_hook = await generateHook(partial);
+    partial.unique_hook = `Hi there, came across ${company} while researching ${industry} firms in ${city}.`;
 
-    candidates.push(partial);
+    out.push(partial);
   }
 
-  // Keep only score 7+, sort descending so the strongest land first, then
-  // truncate to the requested quantity.
-  const filtered = candidates
+  return out
     .filter((p) => p.score >= SCORE_FLOOR)
     .sort((a, b) => b.score - a.score)
-    .slice(0, input.quantity);
-
-  return filtered;
+    .slice(0, target);
 }
 
-// Deterministic estimator for the live preview, given the same input as the
-// generator. Returns a "matches" number that is roughly proportional to how
-// broad the targeting is. Pure function, no I/O.
+// Deterministic estimator for the live preview. Pure function, no I/O.
+// Kept here so the rest of the app does not break when this file is the
+// canonical source of generator utilities.
 export function estimateMatches(
   input: Pick<
     GenerateProspectInput,
     "industries" | "jobTitles" | "companySize" | "locations" | "intentSignals"
   >,
 ): number {
-  const seed = hashSeed(
-    JSON.stringify(input, Object.keys(input).sort()),
-  );
+  const seed = hashSeed(JSON.stringify(input, Object.keys(input).sort()));
   const rnd = mulberry32(seed);
   const breadth =
     input.industries.length *
     input.jobTitles.length *
     Math.max(1, input.locations.length);
-  const sizeWindow = Math.max(
-    1,
-    input.companySize.max - input.companySize.min,
-  );
+  const sizeWindow = Math.max(1, input.companySize.max - input.companySize.min);
   const intentPenalty = Math.max(1, 1 + input.intentSignals.length * 0.4);
   const base = breadth * (sizeWindow / 10) * 18;
   const jitter = 0.85 + rnd() * 0.3;

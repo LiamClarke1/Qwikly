@@ -74,6 +74,10 @@ export const generateProspectInputSchema = z.object({
     z.enum(INTENT_SIGNALS as unknown as [string, ...string[]]),
   ),
   quantity: z.number().int().min(25).max(500),
+  // Optional fields forwarded from the IcpDefinition. Used by the hook
+  // generator and the cadence body. Generator-shape stays backward compatible.
+  offer: z.string().optional(),
+  dealValueZar: z.number().optional(),
 });
 
 export type GenerateProspectInput = z.infer<typeof generateProspectInputSchema>;
@@ -114,6 +118,15 @@ export interface MockProspect {
   score: number; // 1 to 10
   score_breakdown: ProspectScoreBreakdown;
   unique_hook: string;
+
+  // Optional, populated when the real pipeline runs against Google Places.
+  phone?: string | null;
+  website?: string | null;
+  rating?: number | null;
+  reviews_count?: number | null;
+  business_status?: string | null;
+  place_types?: string[];
+  email_verification_status?: "valid" | "accept_all" | "invalid" | "unknown";
 }
 
 export type GeneratorResult =

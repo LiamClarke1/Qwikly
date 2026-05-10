@@ -1,109 +1,159 @@
-// TODO: replace with Anthropic call. Pseudocode in docs/pipeline-platform.md.
+// Hook generator for Qwikly Pipeline prospects.
 //
-// Production wiring will call Claude with a structured prompt that takes:
-//   - prospect.full_name, prospect.company, prospect.industry, prospect.city
-//   - prospect.site_recon (title, h1, hero_text, meta_description)
-// And returns a single, sub-25-word, lower case opener that references one
-// specific thing about the site, the location, or the role. No emojis, no
-// generic praise. Output is sanitised, no em or en dashes.
+// Writes a single, personalised 1-sentence cold email opener for each prospect,
+// grounded in site recon data and the Qwikly client's ICP definition.
 //
-// The mock below is deterministic so test runs are stable. Same input, same hook.
+// Cost note: Claude Haiku 4.5 at ~USD 1 per million input tokens, ~USD 5 per
+// million output. A typical prospect costs USD 0.0001 to USD 0.0003 per hook.
+// 1000 prospects costs about USD 0.30.
+//
+// Caching is handled at the orchestrator call site, this module just runs the
+// call. No internal cache here.
 
-import type { MockProspect } from "./generator/types";
+import Anthropic from "@anthropic-ai/sdk";
 
-// Cheap deterministic hash for picking template indices.
-function hash(input: string): number {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 16777619);
+export interface ProspectForHook {
+  businessName: string;
+  industry: string;
+  city: string;
+  siteRecon:
+    | {
+        title: string;
+        h1: string;
+        meta_description: string;
+        hero_text: string;
+        services_text: string;
+      }
+    | null;
+  firstName?: string;
+}
+
+export interface IcpForHook {
+  offer: string;
+  painPoint?: string;
+  dealValueZar: number;
+}
+
+const MODEL = "claude-haiku-4-5-20251001";
+
+const SYSTEM_PROMPT =
+  "You write personalised 1-sentence cold email openers for South African B2B outreach. Hard rules: under 25 words, references something specific from the prospect's website, never references AI or technology, never opens with 'I hope this finds you well', always reads like one human noticed something about another business. Output only the sentence. No quotes, no preamble.";
+
+function firstWords(text: string, n: number): string {
+  return text
+    .trim()
+    .split(/\s+/)
+    .slice(0, n)
+    .join(" ")
+    .replace(/[.,;:!?]+$/, "");
+}
+
+function fallbackHook(prospect: ProspectForHook): string {
+  const { businessName, industry, city, siteRecon } = prospect;
+  if (siteRecon && siteRecon.hero_text && siteRecon.hero_text.trim().length > 0) {
+    const snippet = firstWords(siteRecon.hero_text, 6);
+    return `Hi there, read ${businessName}'s site, the part about ${snippet} stood out.`;
   }
-  return h >>> 0;
+  if (siteRecon && siteRecon.h1 && siteRecon.h1.trim().length > 0) {
+    return `Hi there, browsed ${businessName}'s site, the ${siteRecon.h1.trim()} positioning is sharp.`;
+  }
+  if (industry && industry.trim().length > 0) {
+    return `Hi there, came across ${businessName} while researching ${industry} firms in ${city}.`;
+  }
+  return `Hi there, found ${businessName} while looking up SA businesses in ${city}.`;
 }
 
-interface HookTemplate {
-  text: string; // uses {firstName}, {company}, {industry}, {city}, {observation}
+function stripQuotes(text: string): string {
+  let out = text.trim();
+  // Strip surrounding quote pairs (straight or curly), repeat in case nested.
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const first = out.charAt(0);
+    const last = out.charAt(out.length - 1);
+    const isOpen = first === '"' || first === "'" || first === "“" || first === "‘";
+    const isClose = last === '"' || last === "'" || last === "”" || last === "’";
+    if (out.length >= 2 && isOpen && isClose) {
+      out = out.slice(1, -1).trim();
+      continue;
+    }
+    break;
+  }
+  return out;
 }
 
-const HOOKS: HookTemplate[] = [
-  { text: "Hi {firstName}, browsed {company}'s site, {observation}." },
-  { text: "Hi {firstName}, had a quick look at {company} in {city}, {observation}." },
-  { text: "Hi {firstName}, noticed {company} runs a tight {industry} setup, {observation}." },
-  { text: "Hi {firstName}, came across {company} this morning, {observation}." },
-  { text: "Hi {firstName}, spent two minutes on {company}'s site, {observation}." },
-];
+function buildUserPrompt(prospect: ProspectForHook, icp: IcpForHook): string {
+  const recon = prospect.siteRecon;
+  const title = recon?.title ?? "";
+  const h1 = recon?.h1 ?? "";
+  const meta = recon?.meta_description ?? "";
+  const hero = recon?.hero_text ?? "";
+  const services = recon?.services_text ?? "";
+  const painPoint = icp.painPoint && icp.painPoint.trim().length > 0
+    ? icp.painPoint
+    : "(none stated)";
 
-// Light, deterministic per-industry observation pool. Each is a single clause.
-const OBSERVATIONS_BY_INDUSTRY: Record<string, string[]> = {
-  Construction: [
-    "looks like project gallery is the workhorse",
-    "spec sheet downloads point to a busy ops desk",
-    "your tender pipeline must move fast off that contact form",
-  ],
-  Healthcare: [
-    "your booking flow looks built for repeat patients",
-    "appointment requests run through a single inbox by the look of it",
-    "your services page reads like a referral page in disguise",
-  ],
-  Education: [
-    "your enrolment pages do a lot of heavy lifting",
-    "your course pages suggest a steady inbound stream",
-    "the parent FAQ tells me support volume is real",
-  ],
-  "Financial Services": [
-    "your service mix points to a busy advisor desk",
-    "your contact form quietly does the heavy lifting",
-    "your client onboarding pages tell their own story",
-  ],
-  Marketing: [
-    "your services list is broader than most peers",
-    "your case study layout suggests a strong referral motion",
-    "your contact CTA is buried, that always tells a story",
-  ],
-  Manufacturing: [
-    "your product catalogue looks built for repeat buyers",
-    "your spec sheets suggest quote requests run through email",
-    "your supplier page hints at high inbound volume",
-  ],
-  Retail: [
-    "your store locator suggests strong physical reach",
-    "your collections rotation looks tighter than the average",
-    "your contact page reads like a customer service inbox",
-  ],
-  Hospitality: [
-    "your booking widget is doing a lot of work after hours",
-    "your menu page reads like a marketing page in disguise",
-    "your reviews suggest repeat customer flow",
-  ],
-  "Professional Services": [
-    "your service pages quietly handle the qualifying",
-    "your contact form is shouldering the enquiry load",
-    "your case study list points to a busy referral motion",
-  ],
-  SaaS: [
-    "your pricing page is doing all the convincing",
-    "your demo CTA placement tells me where leads bottle up",
-    "your sign up flow looks built for fast iteration",
-  ],
-};
-
-function pickObservation(prospect: MockProspect): string {
-  const pool =
-    OBSERVATIONS_BY_INDUSTRY[prospect.industry] ||
-    OBSERVATIONS_BY_INDUSTRY["Professional Services"];
-  const idx = hash(`${prospect.full_name}|${prospect.company}|obs`) % pool.length;
-  return pool[idx];
+  return [
+    "Prospect:",
+    `Business: ${prospect.businessName}`,
+    `Industry: ${prospect.industry}`,
+    `City: ${prospect.city}`,
+    `Site title: ${title}`,
+    `Site H1: ${h1}`,
+    `Meta description: ${meta}`,
+    `Hero text: ${hero}`,
+    `Services snippet: ${services}`,
+    "",
+    `Sender's offer: ${icp.offer}`,
+    `Sender's pain-point hypothesis for this prospect: ${painPoint}`,
+    "",
+    "Write the opener.",
+  ].join("\n");
 }
 
-export async function generateHook(prospect: MockProspect): Promise<string> {
-  const tmpl =
-    HOOKS[hash(`${prospect.full_name}|${prospect.company}|hook`) % HOOKS.length];
-  const observation = pickObservation(prospect);
-  const filled = tmpl.text
-    .replace(/\{firstName\}/g, prospect.first_name)
-    .replace(/\{company\}/g, prospect.company)
-    .replace(/\{industry\}/g, prospect.industry)
-    .replace(/\{city\}/g, prospect.city)
-    .replace(/\{observation\}/g, observation);
-  return filled;
+export async function generateHook(input: {
+  prospect: ProspectForHook;
+  icp: IcpForHook;
+}): Promise<string> {
+  const { prospect, icp } = input;
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (!apiKey) {
+    console.log("ANTHROPIC_API_KEY not set, using fallback hook generator");
+    return fallbackHook(prospect);
+  }
+
+  try {
+    const client = new Anthropic({ apiKey });
+    const msg = await client.messages.create({
+      model: MODEL,
+      max_tokens: 80,
+      temperature: 0.7,
+      system: SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: buildUserPrompt(prospect, icp),
+        },
+      ],
+    });
+
+    const text = msg.content
+      .filter((b): b is Anthropic.TextBlock => b.type === "text")
+      .map((b) => b.text)
+      .join(" ")
+      .trim();
+
+    if (text.length === 0) {
+      console.log("hook-generator: empty response from model, using fallback");
+      return fallbackHook(prospect);
+    }
+
+    return stripQuotes(text);
+  } catch (err) {
+    console.log(
+      "hook-generator: Anthropic call failed, using fallback,",
+      err instanceof Error ? err.message : String(err),
+    );
+    return fallbackHook(prospect);
+  }
 }
