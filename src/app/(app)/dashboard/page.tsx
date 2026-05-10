@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Zap, AlertTriangle, ArrowRight, TrendingUp, CheckCircle2,
-  Users, Clock, ChevronRight, WifiOff, Rocket, PauseCircle,
+  Users, Clock, ChevronRight, WifiOff, Rocket, PauseCircle, Activity,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useClient } from "@/lib/use-client";
@@ -323,6 +323,16 @@ export default function HomePage() {
   const [newLeadsToday, setNewLeadsToday] = useState(0);
   const [tier, setTier] = useState<PlanTier>("pro");
   const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
+  // Compact usage snapshot for the home strip. Hits the same endpoint the
+  // full /dashboard/usage page uses, just renders a one-row summary here so
+  // the owner sees their conversation cap at a glance.
+  const [usage, setUsage] = useState<{
+    conversations: number;
+    included: number;
+    percent: number;
+    balance_zar_cents: number;
+    over_plan: boolean;
+  } | null>(null);
 
   const widgetLive = !!(client?.web_widget_last_seen_at);
 
@@ -367,6 +377,22 @@ export default function HomePage() {
       if (subRes?.trialEndsAt) setTrialEndsAt(new Date(subRes.trialEndsAt));
       setLoading(false);
     })();
+
+    // Fetch usage in parallel, fire-and-forget. If the endpoint fails or
+    // the tenant has no api_usage rows yet we just hide the strip.
+    fetch("/api/usage/conversations")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((u) => {
+        if (!u) return;
+        setUsage({
+          conversations: u.usage.conversations ?? 0,
+          included: u.plan.conversations_included ?? 0,
+          percent: u.usage.percent_used ?? 0,
+          balance_zar_cents: u.credits.balance_zar_cents ?? 0,
+          over_plan: (u.overage.conversations_over_plan ?? 0) > 0,
+        });
+      })
+      .catch(() => {});
   }, [client?.id, clientLoading]);
 
   const greeting = (() => {
@@ -448,6 +474,51 @@ export default function HomePage() {
           </>
         )}
       </div>
+
+      {/* ── Usage snapshot ───────────────────────────────────────────
+           Compact one-row view of conversation usage this month, with a
+           progress bar against the plan cap. Click through to the full
+           Usage & credits page for credit balance, top-ups, behaviour,
+           and projected overage. */}
+      {usage && (
+        <Link
+          href="/dashboard/settings/usage"
+          className="block rounded-2xl bg-white border border-ink/[0.08] p-5 shadow-[0_1px_4px_rgba(14,14,12,0.05)] hover:border-ink/[0.16] transition-colors group"
+        >
+          <div className="flex items-center justify-between gap-4 mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-ember/10 flex items-center justify-center">
+                <Activity className="w-3.5 h-3.5 text-ember" />
+              </div>
+              <p className="text-small font-semibold text-ink">Conversations this month</p>
+            </div>
+            <div className="flex items-center gap-2 text-tiny text-ink-500 group-hover:text-ink transition-colors">
+              View details <ChevronRight className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-2 mb-2">
+            <span className="text-2xl font-bold num text-ink leading-none">{usage.conversations.toLocaleString()}</span>
+            <span className="text-tiny text-ink-500">of {usage.included.toLocaleString()} included</span>
+            {usage.over_plan && (
+              <span className="ml-auto text-tiny font-semibold text-danger">over plan</span>
+            )}
+            {!usage.over_plan && usage.balance_zar_cents > 0 && (
+              <span className="ml-auto text-tiny text-ink-500">
+                R{(usage.balance_zar_cents / 100).toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} in credits
+              </span>
+            )}
+          </div>
+          <div className="w-full h-2 rounded-full bg-ink/[0.06] overflow-hidden">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all",
+                usage.over_plan ? "bg-danger" : usage.percent > 80 ? "bg-warning" : "bg-ember",
+              )}
+              style={{ width: `${Math.min(100, usage.percent)}%` }}
+            />
+          </div>
+        </Link>
+      )}
 
       {/* ── Recent leads ─────────────────────────────────────────── */}
       <div className="rounded-2xl bg-white border border-ink/[0.08] overflow-hidden shadow-[0_1px_4px_rgba(14,14,12,0.05)]">

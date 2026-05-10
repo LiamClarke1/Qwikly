@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/cn";
 import {
-  User, Building2, Bot, Users, Key, Plug, CreditCard, AlertTriangle, Code2, Paperclip,
+  User, Building2, Bot, Users, Key, Plug, CreditCard, AlertTriangle, Code2, Paperclip, Activity,
 } from "lucide-react";
 
 const NAV = [
@@ -16,6 +16,7 @@ const NAV = [
   { href: "/dashboard/settings/api-keys",    label: "API Keys",      icon: Key           },
   { href: "/dashboard/settings/integrations",label: "Integrations",  icon: Plug          },
   { href: "/dashboard/settings/billing",     label: "Billing",       icon: CreditCard    },
+  { href: "/dashboard/settings/usage",       label: "Usage & credits", icon: Activity     },
   { href: "/dashboard/embed",                label: "Install widget", icon: Code2         },
   { href: "/dashboard/settings/danger-zone", label: "Danger Zone",   icon: AlertTriangle },
 ] as const;
