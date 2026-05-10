@@ -26,7 +26,7 @@ const tiers: {
     highlight: false,
     cta: "Start with Starter",
     features: [
-      "50 qualified leads/month",
+      "30 qualified leads/month",
       "1 dashboard user",
       "Digital assistant platform",
       "Email lead delivery",
@@ -41,10 +41,10 @@ const tiers: {
     highlight: true,
     cta: "Start with Pro",
     features: [
-      "200 qualified leads/month",
+      "100 qualified leads/month",
       "3 dashboard users",
+      "Custom branding, your logo and colours",
       "Custom greeting + qualifying questions",
-      "Everything in Starter",
       "Email support, 12h response",
       "Annual billing saves 15%",
     ],
@@ -56,7 +56,7 @@ const tiers: {
     highlight: false,
     cta: "Start with Business",
     features: [
-      "600 qualified leads/month",
+      "400 qualified leads/month",
       "Unlimited dashboard users",
       "Custom branding (your logo, no Qwikly footer)",
       "Lead exports (CSV)",
@@ -87,12 +87,12 @@ const featureRows: { label: string; starter: FeatureCell; pro: FeatureCell; busi
   { label: "Digital assistant platform",       starter: true,    pro: true,    business: true,     enterprise: true     },
   { label: "Email lead delivery",              starter: true,    pro: true,    business: true,     enterprise: true     },
   { label: "POPIA compliant",                  starter: true,    pro: true,    business: true,     enterprise: true     },
-  { label: "Qualified leads / month",          starter: "50",    pro: "200",   business: "600",    enterprise: "1,500+" },
+  { label: "Qualified leads / month",          starter: "30",    pro: "100",   business: "400",    enterprise: "1,500+" },
   { label: "Extra leads beyond plan",          starter: "R20 / lead", pro: "R20 / lead", business: "R20 / lead", enterprise: "Volume" },
   { label: "Dashboard users",                  starter: "1",     pro: "3",     business: "Unlimited", enterprise: "Unlimited" },
   { label: "Custom greeting & questions",      starter: false,   pro: true,    business: true,     enterprise: true     },
-  { label: '"Powered by Qwikly" branding',    starter: true,    pro: true,    business: false,    enterprise: false    },
-  { label: "Custom branding (your logo)",      starter: false,   pro: false,   business: true,     enterprise: true     },
+  { label: '"Powered by Qwikly" branding',    starter: true,    pro: false,   business: false,    enterprise: false    },
+  { label: "Custom branding (your logo)",      starter: false,   pro: true,    business: true,     enterprise: true     },
   { label: "Lead exports (CSV)",               starter: false,   pro: false,   business: true,     enterprise: true     },
   { label: "API access",                       starter: false,   pro: false,   business: false,    enterprise: true     },
   { label: "Support response SLA",             starter: "24h",   pro: "12h",   business: "4h",     enterprise: "1h"     },
@@ -110,7 +110,7 @@ const pricingFAQs = [
       "We'll notify you before you hit the cap. You can upgrade your plan, or add extra leads at R20 each. No automatic billing, no surprise charges, and your digital assistant keeps working until you decide.",
   },
   {
-    question: "What happens after my 14-day trial?",
+    question: "What happens after my 7-day trial?",
     answer:
       "At the end of your trial, you choose a paid plan to continue. If you don't upgrade, your account pauses. You keep your dashboard and all lead history. Upgrade at any time to reactivate.",
   },
@@ -179,7 +179,7 @@ export default function PricingPage() {
             <em className="italic font-light">Ever.</em>
           </h1>
           <p className="mt-8 text-lg text-ink-700 max-w-xl leading-relaxed">
-            Start with a 14-day trial. Scale when you&apos;re ready.
+            Start with a 7-day trial. Scale when you&apos;re ready.
             Flat ZAR pricing, no commissions, no lock-in, cancel anytime.
           </p>
         </div>
@@ -232,7 +232,7 @@ export default function PricingPage() {
             >
               <span className="w-2 h-2 rounded-full bg-ember" />
               <span className="text-sm text-ink-700">
-                <strong className="text-ink">14-day free trial</strong> on every plan, no card required
+                <strong className="text-ink">7-day free trial</strong> on every plan, no card required
               </span>
             </a>
           </div>
@@ -445,7 +445,7 @@ export default function PricingPage() {
 
           {/* Section CTA */}
           <div className="text-center">
-            <p className="eyebrow text-ink-500 mb-6">14 days free, no card required</p>
+            <p className="eyebrow text-ink-500 mb-6">7 days free, no card required</p>
             <CTAButton href="/signup?plan=trial" variant="primary" size="lg">
               Start your free trial
             </CTAButton>

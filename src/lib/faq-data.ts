@@ -7,7 +7,7 @@ export const FAQ_DATA = [
   {
     question: "How much does it cost?",
     answer:
-      "Qwikly has four plans. Starter is R699/month for 50 leads, ideal for solos. Pro is R1,799/month for 200 leads with custom greeting and qualifying questions, ideal for small multi-person practices. Business is R3,999/month for 600 leads with custom branding (your logo, no Qwikly footer), CSV exports, and priority support, ideal for multi-doctor or multi-agent practices. Enterprise is from R7,999/month with white-label, API access, and a 1-hour support SLA, custom volume pricing on request. All plans start with a free 14-day trial. Annual billing saves 15%. Extra leads are R20 each. No per-job fees, no commissions ever.",
+      "Qwikly has four plans. Starter is R699/month for 30 leads, ideal for solos. Pro is R1,799/month for 100 leads with custom branding (your logo), custom greeting, and qualifying questions, ideal for small multi-person practices. Business is R3,999/month for 400 leads with unlimited users, CSV exports, and priority support, ideal for multi-doctor or multi-agent practices. Enterprise is from R7,999/month with white-label, API access, and a 1-hour support SLA, custom volume pricing on request. All plans start with a free 7-day trial. Annual billing saves 15%. Extra leads are R20 each. No per-job fees, no commissions ever.",
   },
   {
     question: "What counts as a qualified lead?",
@@ -20,7 +20,7 @@ export const FAQ_DATA = [
       "We'll notify you before you hit your cap. You can upgrade your plan or add extra leads at R20 each. No automatic billing, no surprise charges. Your digital assistant keeps working either way.",
   },
   {
-    question: "What happens after my 14-day trial?",
+    question: "What happens after my 7-day trial?",
     answer:
       "At the end of your trial, you choose a paid plan to continue. If you don't upgrade, your account pauses and no further leads are captured. You keep access to your dashboard and all lead history. Upgrade at any time to reactivate.",
   },
@@ -37,7 +37,7 @@ export const FAQ_DATA = [
   {
     question: "Can I use my own branding?",
     answer:
-      "Yes. On the Business and Enterprise plans, your digital assistant uses your logo and colour scheme with no Qwikly branding. Starter and Pro plans show 'Powered by Qwikly' in the footer.",
+      "Yes. On Pro, Business, and Enterprise plans, your digital assistant uses your logo and colour scheme with no Qwikly branding. Only the Starter plan shows 'Powered by Qwikly' in the footer.",
   },
   {
     question: "Can I see what the assistant is saying to visitors?",

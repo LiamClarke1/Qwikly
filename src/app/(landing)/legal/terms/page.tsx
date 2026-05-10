@@ -147,9 +147,11 @@ export default function TermsPage() {
                 </p>
                 <ul className="space-y-2 mt-2 ml-4">
                   {[
-                    "Free Trial, 14 days free, identical to Pro, no card required",
-                    "Pro, R999/month (up to 75 qualified leads per month, email lead delivery, email support)",
-                    "Premium, R1,999/month (up to 250 qualified leads per month, custom branding, custom questions, CSV export, priority support)",
+                    "Free Trial, 7 days free, full feature access, no card required",
+                    "Starter, R699/month (up to 30 qualified leads per month, 1 dashboard user, email support)",
+                    "Pro, R1,799/month (up to 100 qualified leads per month, 3 dashboard users, custom branding, custom greeting and qualifying questions)",
+                    "Business, R3,999/month (up to 400 qualified leads per month, unlimited users, custom branding, CSV export, priority 4-hour support)",
+                    "Enterprise, from R7,999/month (1,500+ qualified leads per month, full white-label, API access, dedicated 1-hour SLA support, custom volume pricing on request)",
                     "Annual billing is available at a 15% discount off the monthly rate",
                     "Subscription fees are billed monthly in advance on the anniversary of your sign-up date",
                     "Payment is due on the billing date; failure to pay may result in suspension of the Service",

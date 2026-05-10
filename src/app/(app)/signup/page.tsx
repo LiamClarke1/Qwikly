@@ -49,12 +49,12 @@ const PLANS: {
     id: "trial",
     name: "Free Trial",
     price: "Free",
-    sub: "14 days",
+    sub: "7 days",
     badge: "No card required",
     cta: "Start Free Trial",
     noCard: true,
     features: [
-      "50 qualified leads/month",
+      "30 qualified leads/month",
       "Full feature access",
       "Digital assistant + embed snippet",
       "Upgrade anytime to any paid tier",
@@ -69,7 +69,7 @@ const PLANS: {
     cta: "Start with Starter",
     noCard: false,
     features: [
-      "50 qualified leads/month",
+      "30 qualified leads/month",
       "1 dashboard user",
       '"Powered by Qwikly" branding',
       "Email support, 24h response",
@@ -85,10 +85,10 @@ const PLANS: {
     cta: "Choose Pro",
     noCard: false,
     features: [
-      "200 qualified leads/month",
+      "100 qualified leads/month",
       "3 dashboard users",
+      "Custom branding (your logo)",
       "Custom greeting + qualifying questions",
-      "Email support, 12h response",
       "Small multi-person practices",
     ],
   },
@@ -100,7 +100,7 @@ const PLANS: {
     cta: "Choose Business",
     noCard: false,
     features: [
-      "600 qualified leads/month",
+      "400 qualified leads/month",
       "Unlimited dashboard users",
       "Custom branding (your logo)",
       "Lead exports (CSV) + priority support",
@@ -122,7 +122,7 @@ function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
       <div className="mb-8">
         <h2 className="text-h1 text-ink">Start your free trial</h2>
         <p className="text-ink-500 text-small mt-1.5">
-          14 days free. No bank account required. Upgrade when you&apos;re ready.
+          7 days free. No bank account required. Upgrade when you&apos;re ready.
         </p>
       </div>
 
@@ -273,13 +273,13 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
   }
 
   const planLabel =
-    plan === "trial" ? "Free Trial — 14 days, no card required" :
+    plan === "trial" ? "Free Trial — 7 days, no card required" :
     plan === "starter" ? "Starter — R699/mo" :
     plan === "pro" ? "Pro — R1,799/mo" :
     plan === "business" ? "Business — R3,999/mo" :
     plan === "enterprise" ? "Enterprise — from R7,999/mo" :
     plan === "premium" ? "Premium — R1,999/mo (legacy)" :
-    "Free Trial — 14 days, no card required";
+    "Free Trial — 7 days, no card required";
 
   return (
     <div className="w-full max-w-md">

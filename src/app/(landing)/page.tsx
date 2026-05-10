@@ -748,11 +748,11 @@ const teaserTiers = [
     highlight: false,
     isTrial: false,
     features: [
-      "50 qualified leads/month",
+      "30 qualified leads/month",
       "1 dashboard user",
       '"Powered by Qwikly" branding',
       "Email support",
-      "14-day free trial",
+      "7-day free trial",
     ],
     cta: "Start with Starter",
     href: "/signup?plan=starter",
@@ -766,11 +766,11 @@ const teaserTiers = [
     highlight: true,
     isTrial: false,
     features: [
-      "200 qualified leads/month",
+      "100 qualified leads/month",
       "3 dashboard users",
+      "Custom branding (your logo)",
       "Custom greeting + questions",
-      "Email support, 12h response",
-      "14-day free trial",
+      "7-day free trial",
     ],
     cta: "Start with Pro",
     href: "/signup?plan=pro",
@@ -784,7 +784,7 @@ const teaserTiers = [
     highlight: false,
     isTrial: false,
     features: [
-      "600 qualified leads/month",
+      "400 qualified leads/month",
       "Unlimited users",
       "Custom branding (your logo)",
       "Lead exports (CSV)",
@@ -807,7 +807,7 @@ const faqTeaser = [
   },
   {
     q: "Can I use my own logo and colours?",
-    a: "Yes. On Business and Enterprise plans, your digital assistant uses your branding, not ours. Starter and Pro plans show 'Powered by Qwikly'.",
+    a: "Yes. On Pro, Business, and Enterprise plans, your digital assistant uses your branding, not ours. Only the Starter plan shows 'Powered by Qwikly'.",
   },
   {
     q: "Do you take a cut of my jobs?",
@@ -850,7 +850,7 @@ const serviceSchema = {
         name: "Free Trial",
         priceCurrency: "ZAR",
         price: "0",
-        description: "14-day free trial. Full feature access, 50 qualified leads. No card required.",
+        description: "7-day free trial. Full feature access, 30 qualified leads. No card required.",
         url: "https://www.qwikly.co.za/pricing",
         availability: "https://schema.org/InStock",
       },
@@ -859,7 +859,7 @@ const serviceSchema = {
         name: "Starter",
         priceCurrency: "ZAR",
         price: "699",
-        description: "50 qualified leads per month. Email lead delivery. POPIA compliant. R699 per month.",
+        description: "30 qualified leads per month. Email lead delivery. POPIA compliant. R699 per month.",
         url: "https://www.qwikly.co.za/pricing",
         availability: "https://schema.org/InStock",
       },
@@ -868,7 +868,7 @@ const serviceSchema = {
         name: "Pro",
         priceCurrency: "ZAR",
         price: "1799",
-        description: "200 qualified leads per month. Custom greeting + qualifying questions. 3 users. R1,799 per month.",
+        description: "100 qualified leads per month. Custom branding (your logo), custom greeting + qualifying questions, 3 users. R1,799 per month.",
         url: "https://www.qwikly.co.za/pricing",
         availability: "https://schema.org/InStock",
       },
@@ -877,7 +877,7 @@ const serviceSchema = {
         name: "Business",
         priceCurrency: "ZAR",
         price: "3999",
-        description: "600 qualified leads per month. Custom branding (your logo, no Qwikly footer), CSV exports, priority support. R3,999 per month.",
+        description: "400 qualified leads per month. Unlimited users, CSV exports, priority support, custom branding. R3,999 per month.",
         url: "https://www.qwikly.co.za/pricing",
         availability: "https://schema.org/InStock",
       },
@@ -959,7 +959,7 @@ export default function Home() {
                   </CTAButton>
                 </div>
                 <p className="text-sm text-ink-500">
-                  14-day free trial. No bank account required. No card needed. Upgrade when you&apos;re ready.
+                  7-day free trial. No bank account required. No card needed. Upgrade when you&apos;re ready.
                 </p>
                 <p className="text-sm text-ink-500">
                   Need help setting up?{" "}

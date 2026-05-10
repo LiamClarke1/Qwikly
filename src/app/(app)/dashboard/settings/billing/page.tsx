@@ -25,7 +25,7 @@ async function verifyPassword(password: string): Promise<boolean> {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type PlanId = "pro" | "premium";
+type PlanId = "starter" | "pro" | "business" | "enterprise" | "premium";
 type BillingCycle = "monthly" | "annual";
 type InvoiceStatus = "paid" | "open" | "overdue";
 
@@ -77,27 +77,75 @@ async function requestCancel(): Promise<void> {
 
 // ─── Pricing constants ────────────────────────────────────────────────────────
 
-const MONTHLY: Record<PlanId, number> = { pro: 999, premium: 1999 };
-// Annual = 15% discount
-const ANNUAL:  Record<PlanId, number> = { pro: 10188, premium: 20390 };
+const MONTHLY: Record<PlanId, number> = {
+  starter: 699,
+  pro: 1799,
+  business: 3999,
+  enterprise: 7999,
+  premium: 1999, // legacy, kept so grandfathered subs render correctly
+};
+// Annual = 15% discount on monthly × 12
+const ANNUAL: Record<PlanId, number> = {
+  starter: 7128,
+  pro: 18350,
+  business: 40790,
+  enterprise: 81590,
+  premium: 20390, // legacy
+};
 
 const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean; features: string[] }> = {
-  pro: {
-    name: "Pro",
-    tagline: "For businesses just getting started",
+  starter: {
+    name: "Starter",
+    tagline: "Solo trades and sole practitioners",
     highlight: false,
     features: [
-      "75 qualified leads/month",
-      "Digital assistant",
-      "Email lead delivery",
+      "30 qualified leads/month",
+      "1 dashboard user",
       '"Powered by Qwikly" branding',
-      "Email support",
+      "Email support, 24h response",
     ],
   },
-  premium: {
-    name: "Premium",
-    tagline: "Most popular for growing businesses",
+  pro: {
+    name: "Pro",
+    tagline: "Most popular, small multi-person practices",
     highlight: true,
+    features: [
+      "100 qualified leads/month",
+      "3 dashboard users",
+      "Custom branding (your logo)",
+      "Custom greeting + qualifying questions",
+      "Email support, 12h response",
+    ],
+  },
+  business: {
+    name: "Business",
+    tagline: "Multi-doctor, multi-agent, busy practices",
+    highlight: false,
+    features: [
+      "400 qualified leads/month",
+      "Unlimited dashboard users",
+      "Custom branding (your logo)",
+      "Lead exports (CSV)",
+      "Priority email support, 4h response",
+    ],
+  },
+  enterprise: {
+    name: "Enterprise",
+    tagline: "Multi-location, white-label, mission-critical",
+    highlight: false,
+    features: [
+      "1,500+ qualified leads/month",
+      "Full white-label, your domain",
+      "API access for custom integrations",
+      "Dedicated support, 1h SLA",
+    ],
+  },
+  // Legacy tier, displayed only when an existing customer is grandfathered
+  // on the original R1,999 Premium subscription. New signups never land here.
+  premium: {
+    name: "Premium (legacy)",
+    tagline: "Original R1,999 plan, grandfathered for early customers",
+    highlight: false,
     features: [
       "250 qualified leads/month",
       "Custom branding (your logo)",
@@ -439,7 +487,7 @@ export default function BillingPage() {
             <Clock className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" aria-hidden="true" />
             <div>
               <p className="text-small font-semibold text-fg">
-                You&apos;re on a 14-day free trial
+                You&apos;re on a 7-day free trial
                 {trialDaysLeft !== null && (
                   <span className="ml-2 text-tiny font-normal text-amber-400">
                     {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining

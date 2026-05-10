@@ -24,7 +24,7 @@ const howToSchema = {
   totalTime: "PT10M",
   estimatedCost: { "@type": "MonetaryAmount", currency: "ZAR", value: "0" },
   supply: [{ "@type": "HowToSupply", name: "An existing business website (Wix, WordPress, Squarespace, Webflow, Shopify, or any custom site)" }],
-  tool: [{ "@type": "HowToTool", name: "Qwikly account (free 14-day trial)" }],
+  tool: [{ "@type": "HowToTool", name: "Qwikly account (free 7-day trial)" }],
   step: [
     {
       "@type": "HowToStep",

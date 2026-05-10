@@ -34,10 +34,10 @@ function trialReminderHtml({
     : "Your free trial is almost up.";
 
   const body = isExpired
-    ? `Your 14-day free trial has ended and your Qwikly digital assistant has been paused on your website. Visitors can no longer reach it. <strong style="color:#1C1A18;">Your data, leads, and settings are all safe</strong> and ready to reactivate the moment you pick a plan.`
+    ? `Your 7-day free trial has ended and your Qwikly digital assistant has been paused on your website. Visitors can no longer reach it. <strong style="color:#1C1A18;">Your data, leads, and settings are all safe</strong> and ready to reactivate the moment you pick a plan.`
     : isUrgent
     ? `You have <strong style="color:#1C1A18;">${daysLeft} day${daysLeft === 1 ? "" : "s"} left</strong> in your free trial. After that, your Qwikly digital assistant will be paused and visitors won't be able to reach it on your website. Pick a plan now to keep everything running without interruption.`
-    : `You have <strong style="color:#1C1A18;">${daysLeft} days left</strong> in your Qwikly free trial. Your digital assistant is live and capturing leads on your website. To keep it running after your trial, pick a plan — Pro starts at R999/month with no per-lead fees.`;
+    : `You have <strong style="color:#1C1A18;">${daysLeft} days left</strong> in your Qwikly free trial. Your digital assistant is live and capturing leads on your website. To keep it running after your trial, pick a plan — Starter starts at R699/month with no per-lead fees.`;
 
   const ctaLabel = isExpired ? "Reactivate my assistant" : "Pick a plan";
 
@@ -71,7 +71,7 @@ function trialReminderHtml({
             Your data is safe and will never be deleted. Upgrading reactivates your assistant immediately — no setup needed.
           </p>` : `
           <p style="margin:24px 0 0;font-size:12px;color:#9C9690;line-height:1.6;">
-            Pro from R999/month · No per-lead fees · Cancel anytime
+            Starter from R699/month · No per-lead fees · Cancel anytime
           </p>`}
 
         </td></tr>

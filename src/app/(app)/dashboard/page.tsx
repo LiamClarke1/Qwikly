@@ -39,8 +39,15 @@ function SkeletonCard({ className }: { className?: string }) {
 function TrialBanner() {
   const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
   const [ready, setReady] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
+    // Respect a per-day dismissal so the banner doesn't badger the user
+    // every time they reload the dashboard.
+    const today = new Date().toISOString().slice(0, 10);
+    if (typeof window !== "undefined" && localStorage.getItem("qw-trial-banner-dismissed") === today) {
+      setDismissed(true);
+    }
     fetch("/api/subscription")
       .then((r) => r.json())
       .then((data) => {
@@ -52,12 +59,24 @@ function TrialBanner() {
       .catch(() => setReady(true));
   }, []);
 
-  if (!ready || !trialEndsAt) return null;
+  if (!ready || !trialEndsAt || dismissed) return null;
 
   const now = new Date();
   const msLeft = trialEndsAt.getTime() - now.getTime();
   const daysLeft = Math.ceil(msLeft / (1000 * 60 * 60 * 24));
   const expired = msLeft <= 0;
+
+  // Only nag the user when something actually needs attention. With more than
+  // 5 days left the trial is healthy and nothing is needed from them.
+  if (!expired && daysLeft > 5) return null;
+
+  const handleDismiss = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("qw-trial-banner-dismissed", today);
+    }
+    setDismissed(true);
+  };
 
   if (expired) {
     return (
@@ -69,7 +88,7 @@ function TrialBanner() {
           <div>
             <p className="text-sm font-semibold text-amber-900">Your digital assistant is paused</p>
             <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-              Your 14-day trial has ended. Visitors can no longer reach your assistant. Your data and leads are safe, pick a plan to reactivate instantly.
+              Your 7-day trial has ended. Visitors can no longer reach your assistant. Your data and leads are safe, pick a plan to reactivate instantly.
             </p>
           </div>
         </div>
@@ -101,15 +120,27 @@ function TrialBanner() {
             : "Your assistant is live and fully active on Pro features."}
         </p>
       </div>
-      <Link
-        href="/dashboard/settings/billing"
-        className={cn(
-          "inline-flex items-center gap-2 px-4 h-8 rounded-xl text-sm font-semibold transition-colors duration-150 cursor-pointer shrink-0",
-          urgent ? "bg-amber-600 text-white hover:bg-amber-700" : "bg-sky-600 text-white hover:bg-sky-700"
-        )}
-      >
-        View plans <ArrowRight className="w-3.5 h-3.5" />
-      </Link>
+      <div className="flex items-center gap-2 shrink-0">
+        <Link
+          href="/dashboard/settings/billing"
+          className={cn(
+            "inline-flex items-center gap-2 px-4 h-8 rounded-xl text-sm font-semibold transition-colors duration-150 cursor-pointer",
+            urgent ? "bg-amber-600 text-white hover:bg-amber-700" : "bg-sky-600 text-white hover:bg-sky-700"
+          )}
+        >
+          View plans <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+        <button
+          onClick={handleDismiss}
+          aria-label="Dismiss for today"
+          className={cn(
+            "h-8 px-2 rounded-xl text-sm font-medium hover:opacity-80 cursor-pointer",
+            urgent ? "text-amber-700" : "text-sky-700"
+          )}
+        >
+          Later
+        </button>
+      </div>
     </div>
   );
 }

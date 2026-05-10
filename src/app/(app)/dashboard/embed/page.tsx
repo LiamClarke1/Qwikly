@@ -146,7 +146,7 @@ export default function EmbedPage() {
             <div>
               <p className="text-sm font-semibold text-amber-900">Your digital assistant is paused</p>
               <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
-                Your 14-day trial has ended. Your assistant is off and visitors can&apos;t reach it. Your data and settings are safe. Pick a plan to reactivate.
+                Your 7-day trial has ended. Your assistant is off and visitors can&apos;t reach it. Your data and settings are safe. Pick a plan to reactivate.
               </p>
             </div>
           </div>

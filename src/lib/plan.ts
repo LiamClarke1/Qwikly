@@ -16,22 +16,28 @@ interface PlanConfig {
   responseSlaHours: number;
 }
 
-// Tier structure (2026-05-10):
-//   - trial      : free 14-day, full features but capped at 50 leads
+// Tier structure (2026-05-10, refined):
+//   - trial      : 7-day free trial, full Pro feature access, capped at 30 leads
 //   - starter    : R699  · solo trades, individual agents, sole practitioners
-//   - pro        : R1,799 · small multi-person practices
+//   - pro        : R1,799 · small multi-person practices, UNLOCKS custom
+//                  branding (your logo, no Qwikly footer) so growing solos
+//                  have a real reason to upgrade
 //   - business   : R3,999 · multi-doctor / multi-agent / busy practices,
-//                  unlocks custom branding (no "Powered by Qwikly" footer)
-//   - enterprise : R7,999+ · multi-location, white-label, SLA, contact-us
+//                  adds CSV exports, unlimited users, priority support
+//   - enterprise : R7,999+ · multi-location, full white-label, API, SLA
 //   - premium    : LEGACY tier kept so existing R1,999 subscriptions keep
 //                  resolving cleanly. New signups never land here.
+//
+// Lead caps tightened from the original sketch (50/200/600 → 30/100/400) so
+// genuine growth nudges customers toward the next tier instead of letting
+// them sit at Starter forever.
 export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
   trial: {
     name: 'Trial',
     priceMonthly: 0,
-    leadLimit: 50,
-    removeBranding: false,
-    customGreeting: false,
+    leadLimit: 30,
+    removeBranding: true,
+    customGreeting: true,
     csvExport: false,
     apiAccess: false,
     supportTier: 'email',
@@ -41,7 +47,7 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
   starter: {
     name: 'Starter',
     priceMonthly: 699,
-    leadLimit: 50,
+    leadLimit: 30,
     removeBranding: false,
     customGreeting: false,
     csvExport: false,
@@ -53,8 +59,8 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
   pro: {
     name: 'Pro',
     priceMonthly: 1799,
-    leadLimit: 200,
-    removeBranding: false,
+    leadLimit: 100,
+    removeBranding: true,
     customGreeting: true,
     csvExport: false,
     apiAccess: false,
@@ -65,7 +71,7 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
   business: {
     name: 'Business',
     priceMonthly: 3999,
-    leadLimit: 600,
+    leadLimit: 400,
     removeBranding: true,
     customGreeting: true,
     csvExport: true,
