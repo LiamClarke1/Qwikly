@@ -12,31 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/ui/page";
 
 type Turn = { role: "visitor" | "assistant"; content: string };
-type Captured = {
-  name: string | null;
-  email: string | null;
-  phone: string | null;
-  job_type: string | null;
-  area: string | null;
-  preferred_time: string | null;
-  is_urgent: boolean;
-  is_returning_customer: boolean;
-  booking_intent: boolean;
-  details: Record<string, string> | null;
-};
-
-const EMPTY_CAPTURED: Captured = {
-  name: null,
-  email: null,
-  phone: null,
-  job_type: null,
-  area: null,
-  preferred_time: null,
-  is_urgent: false,
-  is_returning_customer: false,
-  booking_intent: false,
-  details: null,
-};
 
 export default function AssistantPreviewPage() {
   const { client, loading } = useClient();
@@ -44,7 +19,6 @@ export default function AssistantPreviewPage() {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [captured, setCaptured] = useState<Captured>(EMPTY_CAPTURED);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when a new turn arrives
@@ -101,7 +75,6 @@ export default function AssistantPreviewPage() {
 
   function reset() {
     setTurns([]);
-    setCaptured(EMPTY_CAPTURED);
     setError(null);
     setInput("");
   }
@@ -240,7 +213,7 @@ export default function AssistantPreviewPage() {
           <h3 className="text-sm font-semibold mt-5 mb-3">Try these</h3>
           <ul className="text-xs text-[var(--text-muted)] space-y-1.5">
             <li className="cursor-pointer hover:text-[var(--text)]" onClick={() => setInput("Hi")}>
-              · A casual "Hi"
+              · A casual &ldquo;Hi&rdquo;
             </li>
             <li
               className="cursor-pointer hover:text-[var(--text)]"
