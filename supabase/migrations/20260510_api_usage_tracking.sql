@@ -61,7 +61,7 @@ CREATE POLICY api_usage_owner_read ON api_usage
   FOR SELECT
   USING (
     client_id IN (
-      SELECT id FROM clients WHERE auth_user_id = auth.uid()
+      SELECT id FROM clients WHERE auth_user_id = auth.uid()::text
     )
   );
 
@@ -99,7 +99,7 @@ CREATE POLICY conversation_credits_owner_read ON conversation_credits
   FOR SELECT
   USING (
     client_id IN (
-      SELECT id FROM clients WHERE auth_user_id = auth.uid()
+      SELECT id FROM clients WHERE auth_user_id = auth.uid()::text
     )
   );
 
@@ -108,12 +108,12 @@ CREATE POLICY conversation_credits_owner_update ON conversation_credits
   FOR UPDATE
   USING (
     client_id IN (
-      SELECT id FROM clients WHERE auth_user_id = auth.uid()
+      SELECT id FROM clients WHERE auth_user_id = auth.uid()::text
     )
   )
   WITH CHECK (
     client_id IN (
-      SELECT id FROM clients WHERE auth_user_id = auth.uid()
+      SELECT id FROM clients WHERE auth_user_id = auth.uid()::text
     )
   );
 
@@ -143,7 +143,7 @@ CREATE POLICY credit_topups_owner_read ON credit_topups
   FOR SELECT
   USING (
     client_id IN (
-      SELECT id FROM clients WHERE auth_user_id = auth.uid()
+      SELECT id FROM clients WHERE auth_user_id = auth.uid()::text
     )
   );
 
