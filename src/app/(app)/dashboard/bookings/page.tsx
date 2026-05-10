@@ -258,13 +258,19 @@ export default function BookingsPage() {
 
   // Find the next upcoming appointment from either source for the
   // "Next up" strip.
-  const upcomingItems: Array<{ when: Date; title: string; source: "booking" | "gcal" }> = [
+  const upcomingItems: Array<{
+    when: Date;
+    title: string;
+    source: "booking" | "gcal";
+    isEmergency: boolean;
+  }> = [
     ...bookings
       .filter((b) => b.booking_datetime && new Date(b.booking_datetime) > now && b.status === "booked")
       .map((b) => ({
         when: new Date(b.booking_datetime as string),
         title: (b.customer_name || "Booking") + (b.job_type ? `, ${b.job_type}` : ""),
         source: "booking" as const,
+        isEmergency: !!b.is_emergency,
       })),
     ...gCalEvents
       .filter((e) => e.start && new Date(e.start) > now)
@@ -272,6 +278,7 @@ export default function BookingsPage() {
         when: new Date(e.start as string),
         title: cleanDisplayTitle(e.title) || "Calendar event",
         source: "gcal" as const,
+        isEmergency: false,
       })),
   ].sort((a, b) => a.when.getTime() - b.when.getTime());
   const nextUp = upcomingItems[0] ?? null;
@@ -679,17 +686,32 @@ export default function BookingsPage() {
         </Card>
       )}
 
-      {/* Next-up strip — shows the soonest upcoming appointment so the owner
-          gets a glanceable "what's next?" without having to scan the calendar. */}
+      {/* Next-up strip, shows the soonest upcoming appointment so the owner
+          gets a glanceable "what's next?" without having to scan the
+          calendar. Emergency leads pop in red so the owner spots them
+          before reading anything else. */}
       {nextUp && (
-        <Card className="!p-4 mb-3 flex items-center gap-3 flex-wrap">
-          <span className="text-tiny font-semibold text-fg-subtle uppercase tracking-wider">Next up</span>
+        <Card className={cn(
+          "!p-4 mb-3 flex items-center gap-3 flex-wrap",
+          nextUp.isEmergency && "!bg-danger/5 !border-danger/30"
+        )}>
+          <span className={cn(
+            "text-tiny font-semibold uppercase tracking-wider",
+            nextUp.isEmergency ? "text-danger" : "text-fg-subtle"
+          )}>
+            {nextUp.isEmergency ? "Urgent next" : "Next up"}
+          </span>
           <span className="text-small font-medium text-fg">
             {nextUp.when.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short" })}
             {" at "}
             {nextUp.when.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit", hour12: false })}
           </span>
           <span className="text-small text-fg-muted">{nextUp.title}</span>
+          {nextUp.isEmergency && (
+            <span className="inline-flex items-center gap-1 text-tiny px-2 py-0.5 rounded-md bg-danger/15 border border-danger/30 text-danger font-semibold">
+              <AlertTriangle className="w-3 h-3" /> Emergency
+            </span>
+          )}
           {nextUp.source === "gcal" && (
             <span className="text-tiny px-2 py-0.5 rounded-md bg-[#6366f1]/10 border border-[#6366f1]/25 text-[#818cf8] font-medium">
               From Google Calendar
@@ -835,16 +857,25 @@ export default function BookingsPage() {
                           }
                           const b = item.data;
                           const startTime = b.booking_datetime ? new Date(b.booking_datetime).toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit", hour12: false }) : "";
+                          // Emergency overrides the status colour so urgent
+                          // jobs visibly stand out on the grid regardless of
+                          // their booking state.
+                          const slotClass = b.is_emergency
+                            ? "bg-danger/20 text-danger border border-danger/50 ring-1 ring-danger/20"
+                            : SLOT_COLOR[b.status] ?? "bg-ember/15 text-ember border border-ember/25";
                           return (
                             <button
                               key={idx}
                               onClick={(e) => { e.stopPropagation(); setActive({ ...b, _isGcal: false } as Booking & { _isGcal: false }); }}
                               className={cn(
                                 "w-full text-left px-1.5 py-1 rounded-md text-[10px] font-medium cursor-pointer hover:brightness-110 transition-all",
-                                SLOT_COLOR[b.status] ?? "bg-ember/15 text-ember border border-ember/25"
+                                slotClass
                               )}
                             >
-                              <p className="font-semibold truncate leading-tight">{b.customer_name}</p>
+                              <p className="font-semibold truncate leading-tight flex items-center gap-0.5">
+                                {b.is_emergency && <AlertTriangle className="w-2.5 h-2.5 shrink-0" />}
+                                <span className="truncate">{b.customer_name}</span>
+                              </p>
                               <p className="opacity-75 truncate leading-tight">{startTime} · {b.job_type ?? "Service"}</p>
                             </button>
                           );
@@ -896,7 +927,16 @@ export default function BookingsPage() {
                       const followUps = jobsById.get(b.id);
                       const dayCount = followUps && followUps.length > 1 ? followUps.length : null;
                       return (
-                        <tr key={b.id} className="hover:bg-surface-hover cursor-pointer transition-colors" onClick={() => setActive({ ...b, _isGcal: false })}>
+                        <tr
+                          key={b.id}
+                          className={cn(
+                            "cursor-pointer transition-colors",
+                            b.is_emergency
+                              ? "bg-danger/5 hover:bg-danger/10 border-l-2 border-l-danger"
+                              : "hover:bg-surface-hover"
+                          )}
+                          onClick={() => setActive({ ...b, _isGcal: false })}
+                        >
                           <td className="px-5 py-3 font-medium">
                             <div className="flex items-center gap-3">
                               <Avatar name={b.customer_name} size={28} />
