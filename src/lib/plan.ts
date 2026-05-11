@@ -6,10 +6,21 @@
  */
 export type InboundPlanTier = 'trial' | 'starter' | 'pro' | 'founders' | 'business' | 'enterprise' | 'premium';
 
-/** @deprecated Use InboundPlanTier. Pipeline tiers retired 2026-05-11. */
+/**
+ * Outbound (Pipeline) product tiers. Distinct from Inbound because they
+ * don't share the PLAN_CONFIG model — Pipeline caps live in
+ * src/lib/pipeline/billing/cap-check.ts (wholesale-cost ceilings) and the
+ * daily prospect quota lives on clients.pipeline_daily_quota.
+ */
 export type PipelinePlanTier = 'pipeline_lite' | 'pipeline_pro';
 
-export type PlanTier = InboundPlanTier;
+/**
+ * Union of every plan a signup can resolve to. Use this for UI surfaces
+ * that render any plan card (signup page, dashboard plan badge). Use
+ * InboundPlanTier directly when indexing into PLAN_CONFIG, since Pipeline
+ * plans intentionally aren't in that config.
+ */
+export type PlanTier = InboundPlanTier | PipelinePlanTier;
 
 interface PlanConfig {
   name: string;
