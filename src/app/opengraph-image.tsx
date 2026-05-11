@@ -1,17 +1,25 @@
 import { ImageResponse } from "next/og";
-import { readFile } from "fs/promises";
-import path from "path";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt =
   "Qwikly — Reply to every visitor. Find new clients every day. Two products for SA service businesses.";
 
+const BASE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000");
+
 export default async function Image() {
   const [bold, regular] = await Promise.all([
-    readFile(path.join(process.cwd(), "src/app/fonts/Inter-Bold.ttf")),
-    readFile(path.join(process.cwd(), "src/app/fonts/Inter-Regular.ttf")),
+    fetch(new URL("/fonts/Inter-Bold.ttf", BASE_URL)).then((r) =>
+      r.arrayBuffer()
+    ),
+    fetch(new URL("/fonts/Inter-Regular.ttf", BASE_URL)).then((r) =>
+      r.arrayBuffer()
+    ),
   ]);
 
   return new ImageResponse(
@@ -43,7 +51,7 @@ export default async function Image() {
           }}
         />
 
-        {/* Top: wordmark + eyebrow */}
+        {/* Top: eyebrow + wordmark */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div
@@ -68,7 +76,7 @@ export default async function Image() {
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 0 }}>
             <span
               style={{
                 fontFamily: "Inter",
@@ -95,13 +103,7 @@ export default async function Image() {
         </div>
 
         {/* Middle: two-line headline */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 6,
-          }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <span
             style={{
               fontFamily: "Inter",
@@ -128,7 +130,7 @@ export default async function Image() {
           </span>
         </div>
 
-        {/* Bottom: two product descriptors + domain */}
+        {/* Bottom: two product lines + domain */}
         <div
           style={{
             display: "flex",
