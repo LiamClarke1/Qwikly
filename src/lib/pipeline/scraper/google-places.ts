@@ -1,45 +1,66 @@
-// Live Google Places scraper for the Qwikly Pipeline lead engine. Replaces
-// the previous mocked deterministic generator with real SA business data
-// pulled from the Places web service (Text Search + Place Details).
+// Live Google Places scraper for the Qwikly Pipeline lead engine. Calls the
+// Places API (New) at places.googleapis.com/v1, replacing the legacy
+// maps.googleapis.com/maps/api/place/... endpoints which Google retired for
+// new projects in 2024.
 //
-// Each prospect costs roughly USD 0.034 (Text Search + Place Details). Cap is
-// hardcoded at 100 prospects per run.
+// Key differences vs the legacy API:
+//   - One endpoint (searchText) returns name + address + phone + website +
+//     types + rating + reviews + business status in a single call, so we no
+//     longer need a separate place_details round trip per prospect.
+//   - Auth is via X-Goog-Api-Key header (not ?key= query param).
+//   - Field selection is via X-Goog-FieldMask header. Google bills based on
+//     the fields requested — we ask for Pro-tier fields (~$32/1000).
 //
-// Notes:
-// - Uses native fetch, no new dependencies.
-// - Reads process.env.GOOGLE_PLACES_API_KEY. When missing, returns [] and
-//   logs a warning so callers degrade gracefully instead of throwing.
-// - Region biased to South Africa, English language.
+// Each prospect costs roughly USD 0.032. Cap is hardcoded at 100 prospects
+// per run.
+//
+// Reads process.env.GOOGLE_PLACES_API_KEY. When missing, returns [] and logs
+// a warning so callers degrade gracefully instead of throwing.
 
 import { recordPipelineUsage } from "@/lib/pipeline/billing/pipeline-usage";
 
-import type {
-  PlaceResult,
-  PlaceSearchInput,
-  PlacesDetailsResponse,
-  PlacesTextSearchResponse,
-} from "./google-places.types";
+import type { PlaceResult, PlaceSearchInput } from "./google-places.types";
 
 const PROSPECT_HARD_CAP = 100;
 const MAX_QUERIES_PER_RUN = 10;
 
-const TEXT_SEARCH_URL =
-  "https://maps.googleapis.com/maps/api/place/textsearch/json";
-const PLACE_DETAILS_URL =
-  "https://maps.googleapis.com/maps/api/place/details/json";
+const SEARCH_TEXT_URL = "https://places.googleapis.com/v1/places:searchText";
 
-const PLACE_DETAILS_FIELDS = [
-  "name",
-  "formatted_address",
-  "formatted_phone_number",
-  "website",
-  "types",
-  "rating",
-  "user_ratings_total",
-  "business_status",
-  "geometry",
-  "opening_hours",
+// Fields the downstream generator + scoring need. Anything not listed here
+// is NOT returned by the API. Adding fields here MAY raise the per-call
+// price tier — keep it tight.
+const SEARCH_TEXT_FIELD_MASK = [
+  "places.id",
+  "places.displayName",
+  "places.formattedAddress",
+  "places.types",
+  "places.rating",
+  "places.userRatingCount",
+  "places.businessStatus",
+  "places.location",
+  "places.websiteUri",
+  "places.nationalPhoneNumber",
 ].join(",");
+
+// Raw shape of a single place in the Places API (New) response body. Modelled
+// only as far as we actually consume it.
+interface PlacesV1Place {
+  id?: string;
+  displayName?: { text?: string; languageCode?: string };
+  formattedAddress?: string;
+  types?: string[];
+  rating?: number;
+  userRatingCount?: number;
+  businessStatus?: string;
+  location?: { latitude?: number; longitude?: number };
+  websiteUri?: string;
+  nationalPhoneNumber?: string;
+}
+
+interface PlacesV1SearchTextResponse {
+  places?: PlacesV1Place[];
+  error?: { code?: number; message?: string; status?: string };
+}
 
 // Maps IcpDefinition industry labels to natural Google Places search terms.
 // If an industry label is not in this table, the scraper falls back to the
@@ -97,55 +118,108 @@ function pickQueryCombos(
   return combos.slice(0, maxQueries);
 }
 
+// Map a Places API (New) response object onto the internal PlaceResult shape
+// the rest of the codebase still consumes. Returns null when required fields
+// are missing.
+function mapPlaceV1ToResult(p: PlacesV1Place): PlaceResult | null {
+  const id = p.id;
+  const name = p.displayName?.text;
+  const formattedAddress = p.formattedAddress;
+  const lat = p.location?.latitude;
+  const lng = p.location?.longitude;
+
+  if (
+    typeof id !== "string" ||
+    id.length === 0 ||
+    typeof name !== "string" ||
+    name.length === 0 ||
+    typeof formattedAddress !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    place_id: id,
+    name,
+    formatted_address: formattedAddress,
+    formatted_phone_number: p.nationalPhoneNumber,
+    website: p.websiteUri,
+    types: Array.isArray(p.types) ? p.types : [],
+    rating: typeof p.rating === "number" ? p.rating : undefined,
+    user_ratings_total:
+      typeof p.userRatingCount === "number" ? p.userRatingCount : undefined,
+    business_status:
+      typeof p.businessStatus === "string" ? p.businessStatus : "OPERATIONAL",
+    geometry: {
+      location: {
+        lat: typeof lat === "number" ? lat : 0,
+        lng: typeof lng === "number" ? lng : 0,
+      },
+    },
+  };
+}
+
 async function runTextSearch(
   industry: string,
   location: string,
   apiKey: string,
   clientId: string | number,
-): Promise<{ status: "ok"; placeIds: string[] } | { status: "quota" } | { status: "skip" }> {
-  const query = `${industryToQueryTerm(industry)} ${locationToQuerySuffix(location)}`;
-  const params = new URLSearchParams({
-    query,
-    region: "za",
-    language: "en",
-    key: apiKey,
-  });
+  pageSize: number,
+): Promise<
+  { status: "ok"; places: PlaceResult[] } | { status: "quota" } | { status: "skip" }
+> {
+  const textQuery = `${industryToQueryTerm(industry)} ${locationToQuerySuffix(location)}`;
 
   let response: Response;
   try {
-    response = await fetch(`${TEXT_SEARCH_URL}?${params.toString()}`);
+    response = await fetch(SEARCH_TEXT_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask": SEARCH_TEXT_FIELD_MASK,
+      },
+      body: JSON.stringify({
+        textQuery,
+        regionCode: "ZA",
+        languageCode: "en",
+        pageSize: Math.min(Math.max(1, pageSize), 20),
+      }),
+    });
   } catch (err) {
     console.warn(
-      `[google-places] text search network error for "${query}", skipping`,
+      `[google-places] searchText network error for "${textQuery}", skipping`,
       err,
     );
     return { status: "skip" };
   }
 
-  if (!response.ok) {
+  if (response.status === 429) {
     console.warn(
-      `[google-places] text search HTTP ${response.status} for "${query}", skipping`,
-    );
-    return { status: "skip" };
-  }
-
-  const data = (await response.json()) as PlacesTextSearchResponse;
-
-  if (data.status === "OVER_QUERY_LIMIT") {
-    console.warn(
-      `[google-places] OVER_QUERY_LIMIT on text search for "${query}", returning what we have`,
+      `[google-places] 429 quota hit on searchText for "${textQuery}"`,
     );
     return { status: "quota" };
   }
-  if (data.status === "REQUEST_DENIED") {
+  if (response.status === 403) {
+    const body = await response.text().catch(() => "");
     console.error(
-      `[google-places] REQUEST_DENIED on text search for "${query}": ${data.error_message ?? "no message"}`,
+      `[google-places] 403 REQUEST_DENIED on searchText for "${textQuery}": ${body.slice(0, 200)}`,
     );
     return { status: "skip" };
   }
-  if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
     console.warn(
-      `[google-places] unexpected status "${data.status}" on text search for "${query}"`,
+      `[google-places] HTTP ${response.status} on searchText for "${textQuery}": ${body.slice(0, 200)}`,
+    );
+    return { status: "skip" };
+  }
+
+  const data = (await response.json()) as PlacesV1SearchTextResponse;
+
+  if (data.error) {
+    console.error(
+      `[google-places] API error on searchText for "${textQuery}": ${data.error.message ?? "no message"}`,
     );
     return { status: "skip" };
   }
@@ -157,115 +231,12 @@ async function runTextSearch(
     endpoint: "text_search",
   });
 
-  const placeIds: string[] = [];
-  for (const r of data.results ?? []) {
-    if (typeof r.place_id === "string" && r.place_id.length > 0) {
-      placeIds.push(r.place_id);
-    }
+  const places: PlaceResult[] = [];
+  for (const p of data.places ?? []) {
+    const mapped = mapPlaceV1ToResult(p);
+    if (mapped) places.push(mapped);
   }
-  return { status: "ok", placeIds };
-}
-
-async function fetchPlaceDetails(
-  placeId: string,
-  apiKey: string,
-  clientId: string | number,
-): Promise<
-  | { status: "ok"; result: PlaceResult }
-  | { status: "quota" }
-  | { status: "skip" }
-> {
-  const params = new URLSearchParams({
-    place_id: placeId,
-    fields: PLACE_DETAILS_FIELDS,
-    language: "en",
-    region: "za",
-    key: apiKey,
-  });
-
-  let response: Response;
-  try {
-    response = await fetch(`${PLACE_DETAILS_URL}?${params.toString()}`);
-  } catch (err) {
-    console.warn(
-      `[google-places] details network error for place_id=${placeId}, skipping`,
-      err,
-    );
-    return { status: "skip" };
-  }
-
-  if (!response.ok) {
-    console.warn(
-      `[google-places] details HTTP ${response.status} for place_id=${placeId}, skipping`,
-    );
-    return { status: "skip" };
-  }
-
-  const data = (await response.json()) as PlacesDetailsResponse;
-
-  if (data.status === "OVER_QUERY_LIMIT") {
-    console.warn(
-      `[google-places] OVER_QUERY_LIMIT on details for place_id=${placeId}, returning what we have`,
-    );
-    return { status: "quota" };
-  }
-  if (data.status === "REQUEST_DENIED") {
-    console.error(
-      `[google-places] REQUEST_DENIED on details for place_id=${placeId}: ${data.error_message ?? "no message"}`,
-    );
-    return { status: "skip" };
-  }
-  if (data.status !== "OK") {
-    console.warn(
-      `[google-places] unexpected status "${data.status}" on details for place_id=${placeId}`,
-    );
-    return { status: "skip" };
-  }
-
-  const r = data.result;
-  if (!r) {
-    return { status: "skip" };
-  }
-
-  // Tag the successful call against the tenant for cost tracking.
-  void recordPipelineUsage({
-    clientId,
-    provider: "google_places",
-    endpoint: "place_details",
-  });
-
-  const lat = r.geometry?.location?.lat;
-  const lng = r.geometry?.location?.lng;
-  if (
-    typeof r.name !== "string" ||
-    typeof r.formatted_address !== "string" ||
-    typeof lat !== "number" ||
-    typeof lng !== "number"
-  ) {
-    return { status: "skip" };
-  }
-
-  const result: PlaceResult = {
-    place_id: placeId,
-    name: r.name,
-    formatted_address: r.formatted_address,
-    formatted_phone_number: r.formatted_phone_number,
-    website: r.website,
-    types: Array.isArray(r.types) ? r.types : [],
-    rating: typeof r.rating === "number" ? r.rating : undefined,
-    user_ratings_total:
-      typeof r.user_ratings_total === "number" ? r.user_ratings_total : undefined,
-    business_status:
-      typeof r.business_status === "string" ? r.business_status : "OPERATIONAL",
-    geometry: { location: { lat, lng } },
-    opening_hours: r.opening_hours
-      ? {
-          open_now: r.opening_hours.open_now,
-          weekday_text: r.opening_hours.weekday_text,
-        }
-      : undefined,
-  };
-  return { status: "ok", result };
+  return { status: "ok", places };
 }
 
 export async function searchBusinesses(
@@ -297,59 +268,32 @@ export async function searchBusinesses(
     MAX_QUERIES_PER_RUN,
   );
 
-  const seenPlaceIds = new Set<string>();
-  const orderedPlaceIds: string[] = [];
+  // Each searchText call now returns up to 20 places with all the fields
+  // we need. Spread the target across combos: ceil(target / combos) per call.
+  const pageSize = Math.min(
+    20,
+    Math.max(1, Math.ceil(targetQuantity / Math.max(1, combos.length))),
+  );
 
-  let quotaHit = false;
+  const seenPlaceIds = new Set<string>();
+  const results: PlaceResult[] = [];
+
   for (const combo of combos) {
-    const searchOutcome = await runTextSearch(
+    if (results.length >= targetQuantity) break;
+    const outcome = await runTextSearch(
       combo.industry,
       combo.location,
       apiKey,
       clientId,
+      pageSize,
     );
-    if (searchOutcome.status === "quota") {
-      quotaHit = true;
-      break;
-    }
-    if (searchOutcome.status === "skip") {
-      continue;
-    }
-    for (const placeId of searchOutcome.placeIds) {
-      if (!seenPlaceIds.has(placeId)) {
-        seenPlaceIds.add(placeId);
-        orderedPlaceIds.push(placeId);
-      }
-      if (orderedPlaceIds.length >= targetQuantity) {
-        break;
-      }
-    }
-    if (orderedPlaceIds.length >= targetQuantity) {
-      break;
-    }
-  }
-
-  if (orderedPlaceIds.length === 0) {
-    return [];
-  }
-
-  const results: PlaceResult[] = [];
-  const idsToEnrich = orderedPlaceIds.slice(0, targetQuantity);
-  for (const placeId of idsToEnrich) {
-    if (quotaHit) {
-      break;
-    }
-    const detailsOutcome = await fetchPlaceDetails(placeId, apiKey, clientId);
-    if (detailsOutcome.status === "quota") {
-      quotaHit = true;
-      break;
-    }
-    if (detailsOutcome.status === "skip") {
-      continue;
-    }
-    results.push(detailsOutcome.result);
-    if (results.length >= targetQuantity) {
-      break;
+    if (outcome.status === "quota") break;
+    if (outcome.status === "skip") continue;
+    for (const place of outcome.places) {
+      if (seenPlaceIds.has(place.place_id)) continue;
+      seenPlaceIds.add(place.place_id);
+      results.push(place);
+      if (results.length >= targetQuantity) break;
     }
   }
 

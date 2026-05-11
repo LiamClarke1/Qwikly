@@ -43,46 +43,8 @@ export interface PlaceSearchInput {
   quantity: number;
 }
 
-// Raw shapes returned by the Google Places web service. We model the subset
-// we actually read so the scraper can stay strictly typed without leaking
-// "any" into the rest of the codebase.
-
-export interface PlacesTextSearchResponse {
-  status: string;
-  error_message?: string;
-  results?: Array<{
-    place_id?: string;
-    name?: string;
-    formatted_address?: string;
-    types?: string[];
-    rating?: number;
-    user_ratings_total?: number;
-    business_status?: string;
-    geometry?: {
-      location?: { lat?: number; lng?: number };
-    };
-  }>;
-}
-
-export interface PlacesDetailsResponse {
-  status: string;
-  error_message?: string;
-  result?: {
-    place_id?: string;
-    name?: string;
-    formatted_address?: string;
-    formatted_phone_number?: string;
-    website?: string;
-    types?: string[];
-    rating?: number;
-    user_ratings_total?: number;
-    business_status?: string;
-    geometry?: {
-      location?: { lat?: number; lng?: number };
-    };
-    opening_hours?: {
-      open_now?: boolean;
-      weekday_text?: string[];
-    };
-  };
-}
+// The legacy maps.googleapis.com response shapes (PlacesTextSearchResponse +
+// PlacesDetailsResponse) were removed on 2026-05-11 when we migrated the
+// scraper to Places API (New). Raw response shapes for the new API live
+// alongside their callers in google-places.ts and google-places-profile.ts
+// because they are an implementation detail of those files.
