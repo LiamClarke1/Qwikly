@@ -25,7 +25,7 @@ async function verifyPassword(password: string): Promise<boolean> {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type PlanId = "starter" | "pro" | "business" | "enterprise" | "premium";
+type PlanId = "starter" | "pro" | "founders" | "business" | "enterprise" | "premium";
 type BillingCycle = "monthly" | "annual";
 type InvoiceStatus = "paid" | "open" | "overdue";
 
@@ -80,6 +80,7 @@ async function requestCancel(): Promise<void> {
 const MONTHLY: Record<PlanId, number> = {
   starter: 699,
   pro: 1799,
+  founders: 2999,
   business: 3999,
   enterprise: 7999,
   premium: 1999, // legacy, kept so grandfathered subs render correctly
@@ -88,6 +89,7 @@ const MONTHLY: Record<PlanId, number> = {
 const ANNUAL: Record<PlanId, number> = {
   starter: 7128,
   pro: 18350,
+  founders: 30590,
   business: 40790,
   enterprise: 81590,
   premium: 20390, // legacy
@@ -115,6 +117,18 @@ const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean;
       "Custom branding (your logo)",
       "Custom greeting + qualifying questions",
       "Email support, 12h response",
+    ],
+  },
+  founders: {
+    name: "Founders Concierge",
+    tagline: "Pro plan, plus a real person handling every lead",
+    highlight: false,
+    features: [
+      "Everything in Pro",
+      "Real human responding to every lead",
+      "We book calls into your calendar",
+      "5 hand-picked prospects/day (Outbound)",
+      "Limited spots, capacity capped per region",
     ],
   },
   business: {
