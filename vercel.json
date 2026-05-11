@@ -58,19 +58,19 @@
     },
     {
       "path": "/api/cron/payfast-reconcile",
-      "schedule": "0 * * * *"
+      "schedule": "0 4 * * *"
     },
     {
       "path": "/api/cron/renewal-sweep",
-      "schedule": "15 * * * *"
+      "schedule": "0 5 * * *"
     },
     {
       "path": "/api/cron/trial-sweep",
-      "schedule": "30 * * * *"
+      "schedule": "0 6 * * *"
     },
     {
       "path": "/api/cron/dunning-sweep",
-      "schedule": "45 * * * *"
+      "schedule": "0 7 * * *"
     }
   ]
 }
