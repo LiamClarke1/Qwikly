@@ -5,12 +5,12 @@ import { FAQ_DATA, buildFAQSchema } from "@/lib/faq-data";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "Qwikly scans your website, configures your digital assistant, and has it live in under 10 minutes. Here is exactly how the six-step process works.",
+    "Two things, done well. We plug the digital assistant onto your site, then start delivering daily Outbound prospects on Pro and up. Live in under 10 minutes.",
   alternates: { canonical: "https://www.qwikly.co.za/how-it-works" },
   openGraph: {
-    title: "How Qwikly Works: From Sign-Up to First Lead in 10 Minutes",
+    title: "How Qwikly Works: Two Steps, Live in 10 Minutes",
     description:
-      "Six steps. We scan your website, configure your digital assistant, and you paste one script tag. Live in minutes, no developer needed.",
+      "We plug the digital assistant onto your site and start delivering daily Outbound prospects (Pro and up). One script tag. No developer.",
     url: "https://www.qwikly.co.za/how-it-works",
   },
 };
@@ -18,9 +18,9 @@ export const metadata: Metadata = {
 const howToSchema = {
   "@context": "https://schema.org",
   "@type": "HowTo",
-  name: "How to set up the Qwikly digital assistant on your website",
+  name: "How to set up Qwikly on your website",
   description:
-    "Six steps to take a South African service business from no website assistant to qualified leads landing in your inbox, 24/7.",
+    "Two things, done well. We plug the digital assistant onto your site, then start delivering daily Outbound prospects on Pro and up. Live in under 10 minutes.",
   totalTime: "PT10M",
   estimatedCost: { "@type": "MonetaryAmount", currency: "ZAR", value: "0" },
   supply: [{ "@type": "HowToSupply", name: "An existing business website (Wix, WordPress, Squarespace, Webflow, Shopify, or any custom site)" }],
@@ -65,7 +65,7 @@ const howToSchema = {
       "@type": "HowToStep",
       position: 6,
       name: "Leads land in your inbox from the first visitor.",
-      text: "Your digital assistant greets every visitor, answers their questions using your content, qualifies them based on your criteria, and sends confirmed leads straight to your inbox with a one-click confirmation.",
+      text: "Your digital assistant greets every visitor, answers their questions using your content, qualifies them, and emails the lead's contact details straight to you. On Pro and up, we also start delivering hand-picked Outbound prospects every business day for you to decide who to reach out to.",
       url: "https://www.qwikly.co.za/how-it-works#step-6",
     },
   ],
@@ -106,7 +106,7 @@ const steps = [
     stamp: "vi.",
     title: "Leads land in your inbox from the first visitor.",
     body:
-      "Your digital assistant greets every visitor, answers their questions using your content, qualifies them based on your criteria, and sends confirmed leads straight to your inbox with a one-click confirmation.",
+      "Your digital assistant greets every visitor, answers their questions using your content, qualifies them, and emails their contact details straight to you. On Pro and up, we also start delivering hand-picked Outbound prospects every business day, so you decide who to reach out to.",
   },
 ];
 
@@ -119,7 +119,7 @@ const underTheHood = [
   {
     title: "Instant email notifications",
     body:
-      "Every qualified lead hits your inbox immediately with all the context you need: name, contact, what they want, and their requested booking time. No dashboard login required.",
+      "Every qualified lead hits your inbox immediately with all the context you need: name, contact, what they want, and any preferred time they mentioned. You follow up directly. No dashboard login required.",
   },
   {
     title: "Full conversation log",
@@ -169,12 +169,11 @@ export default function HowItWorksPage() {
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <p className="eyebrow text-ink-500 mb-6">How it works</p>
           <h1 className="display-xl text-ink max-w-[20ch]">
-            From first visit to{" "}
-            <em className="italic font-light">qualified lead in your inbox</em>.
+            Two things,{" "}
+            <em className="italic font-light">done well</em>.
           </h1>
           <p className="mt-8 text-lg text-ink-700 max-w-xl leading-relaxed">
-            Qwikly scans your website, configures your digital assistant, and has it live in under 10 minutes.
-            No integrations. No developer. No ongoing work from you.
+            One, we plug a digital assistant onto your site that replies in under 60 seconds, qualifies the visitor, and emails their contact details to you. Two, on Pro and up, we deliver hand-picked Outbound prospects every business day, you decide who to reach out to.
           </p>
           <div className="mt-6 flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-ember/10 border border-ember/20">

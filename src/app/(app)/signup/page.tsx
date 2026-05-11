@@ -94,18 +94,16 @@ const PLANS: {
   },
   {
     id: "founders",
-    name: "Founders Concierge",
+    name: "Founders",
     price: "R2,999",
     sub: "/month",
     cta: "Choose Founders",
     noCard: false,
     features: [
       "Everything in Pro",
-      "Real human responding to every lead in under 60 seconds, business hours",
-      "We book the call into your calendar",
-      "We send the calendar invite to your customer",
-      "5 hand-picked prospects per business day (Outbound)",
-      "Limited spots, capacity capped per region",
+      "10 hand-picked prospects per business day (Outbound)",
+      "100 qualified leads/month",
+      "Priority support, 4h response",
     ],
   },
   {
@@ -117,10 +115,10 @@ const PLANS: {
     noCard: false,
     features: [
       "400 qualified leads/month",
+      "15 hand-picked prospects per business day (Outbound)",
       "Unlimited dashboard users",
       "Custom branding (your logo)",
       "Lead exports (CSV) + priority support",
-      "Multi-doctor or multi-agent practices",
     ],
   },
 ];
@@ -292,7 +290,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
     plan === "trial" ? "Free Trial — 7 days, no card required" :
     plan === "starter" ? "Starter — R699/mo" :
     plan === "pro" ? "Pro — R1,799/mo" :
-    plan === "founders" ? "Founders Concierge — R2,999/mo" :
+    plan === "founders" ? "Founders — R2,999/mo" :
     plan === "business" ? "Business — R3,999/mo" :
     plan === "enterprise" ? "Enterprise — from R7,999/mo" :
     plan === "premium" ? "Premium — R1,999/mo (legacy)" :

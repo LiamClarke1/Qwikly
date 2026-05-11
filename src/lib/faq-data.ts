@@ -1,19 +1,19 @@
 export const FAQ_DATA = [
   // ── About our two services ──────────────────────────────────────────────
   {
-    question: "What is the difference between Digital Assistant and Pipeline?",
+    question: "What is the difference between the Digital Assistant and Outbound?",
     answer:
-      "Digital Assistant captures enquiries that already arrive on your website. Pipeline goes out and finds new buyers and books sales calls on your calendar. Most clients run one, then add the other within 90 days.",
+      "The Digital Assistant lives on your website. It replies in under 60 seconds, qualifies the visitor, and emails the lead's contact details to you. Outbound is the other direction: every business day we deliver a short list of hand-picked prospects in your area, and you decide who to reach out to. Most clients start with one and add the other within 90 days.",
   },
   {
     question: "Do I need both?",
     answer:
-      "Not at all. Start with whichever solves your bigger problem. Pipeline is for quiet pipelines, Digital Assistant is for busy websites with too many missed enquiries. Run both for full funnel coverage and a 10% bundle discount.",
+      "Not at all. Start with whichever solves your bigger problem. Outbound is for quiet pipelines, the Digital Assistant is for busy websites with too many missed enquiries. The Digital Assistant is included in every plan; Outbound starts on Pro.",
   },
   {
     question: "Which service is right for a small local business?",
     answer:
-      "Digital Assistant. Pipeline is built for B2B service businesses with a R2,000+ ticket. Local services like plumbers, salons, and electricians get most of their value from Digital Assistant.",
+      "The Digital Assistant. Local services like plumbers, salons, and electricians usually get most of their value from the assistant on their site. Outbound is most useful once you want a steady flow of new prospects to chase yourself.",
   },
   // ── Existing FAQ ────────────────────────────────────────────────────────
   {
@@ -62,9 +62,19 @@ export const FAQ_DATA = [
       "Yes. Your dashboard shows every conversation in full: what the visitor asked, how the assistant responded, and whether the lead was qualified. You can review and export at any time.",
   },
   {
-    question: "What happens when a lead is qualified?",
+    question: "How does the digital assistant notify me?",
     answer:
-      "You receive an email with the lead's name, contact details, what they're looking for, and a one-click confirmation link to accept the booking request. You're always in control of what gets booked.",
+      "By email. As soon as a visitor is qualified, you get an email with their name, contact details, what they're looking for, and any preferred time they mentioned. You follow up directly. We don't send SMS or WhatsApp notifications to the owner.",
+  },
+  {
+    question: "Do you book the call into my calendar?",
+    answer:
+      "No, we don't book calendars or send calendar invites. We deliver the lead's contact info to your inbox and you follow up directly. This keeps you in full control of when and how you respond.",
+  },
+  {
+    question: "Is there a setup fee for Outbound?",
+    answer:
+      "No, Outbound is included on Pro and up at no setup cost. Pro gets 5 hand-picked prospects per business day, Founders 10, Business 15. You decide who to reach out to.",
   },
   {
     question: "Will visitors know it's a digital assistant?",
@@ -82,9 +92,9 @@ export const FAQ_DATA = [
       "Yes. Qwikly is fully POPIA-compliant. All visitor data is processed and stored in South Africa. We never sell your data or your customers' data to third parties.",
   },
   {
-    question: "When will calendar integration launch?",
+    question: "Will you ever book calls into my calendar for me?",
     answer:
-      "Calendar integration is on the roadmap for Q3 2026. Business and Enterprise subscribers will get early access. You'll be notified by email when it's available.",
+      "Not today. Today we email you the lead's contact details and any preferred time they mentioned, and you follow up directly. Calendar integration is on the roadmap, but until it ships, every plan delivers leads by email, no calendar booking on our side.",
   },
 ];
 
