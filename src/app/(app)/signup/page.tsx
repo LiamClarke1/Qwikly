@@ -100,11 +100,12 @@ const PLANS: {
     cta: "Choose Founders",
     noCard: false,
     features: [
-      "100 qualified leads/month",
-      "3 dashboard users",
-      "Custom branding (your logo)",
-      "Priority support, 4h response",
-      "5 hand-picked prospects per business day",
+      "Everything in Pro",
+      "Real human responding to every lead in under 60 seconds, business hours",
+      "We book the call into your calendar",
+      "We send the calendar invite to your customer",
+      "5 hand-picked prospects per business day (Outbound)",
+      "Limited spots, capacity capped per region",
     ],
   },
   {
