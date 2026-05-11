@@ -24,7 +24,7 @@ export function generateMetadata({
   }
 
   const title = `Qwikly for ${niche.label} in South Africa`;
-  const description = `Qwikly is the digital assistant for ${niche.label} in South Africa. Capture every website enquiry, qualify it in seconds, and book it before your competitor replies.`;
+  const description = `Qwikly is the digital assistant for ${niche.label} in South Africa. Capture every website enquiry, qualify it in seconds, and email it to you before your competitor replies.`;
 
   return {
     title,
@@ -166,7 +166,7 @@ export default function NichePage({
             <p className="eyebrow text-ink-500 mb-6">How Qwikly handles this</p>
             <h2 className="display-lg text-ink">
               From website visitor,{" "}
-              <em className="italic font-light">to booked job</em>, in under a minute.
+              <em className="italic font-light">to qualified lead in your inbox</em>, in under a minute.
             </h2>
           </div>
 
@@ -227,7 +227,7 @@ export default function NichePage({
                   {t.jobsBooked > 0 ? t.jobsBooked : "TODO"}
                 </p>
                 <p className="text-paper/60 text-xs mt-1">
-                  jobs booked through Qwikly
+                  leads captured through Qwikly
                 </p>
               </div>
             </div>

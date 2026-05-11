@@ -670,7 +670,7 @@ const howSteps = [
   {
     stamp: "vi.",
     title: "Leads land in your inbox from day one.",
-    body: "Your digital assistant greets visitors, answers questions using your content, qualifies them, and sends confirmed leads straight to your inbox.",
+    body: "Your digital assistant greets visitors, answers questions using your content, qualifies them, and emails the full lead straight to your inbox the moment they leave their details.",
     icon: (
       <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
@@ -704,23 +704,22 @@ const features = [
   {
     icon: (
       <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
+        <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+        <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z" />
       </svg>
     ),
-    title: "Instant booking requests",
-    body: "Qualified leads can request a booking time directly in the chat. You get notified the moment they do. No forms, no back-and-forth emails.",
+    title: "Emailed to you instantly",
+    body: "The moment a visitor leaves their contact details, the full lead lands in your inbox. Name, what they want, how to reach them. You take it from there.",
   },
   {
     icon: (
       <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.82 19.79 19.79 0 01.27 1.2 2 2 0 012.24 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.62-.62a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z" />
+        <path d="M3 3v18h18" />
+        <path d="M7 14l4-4 4 4 5-5" />
       </svg>
     ),
-    title: "One-click confirmation",
-    body: "Leads are emailed to you with a single confirmation button. Accept a booking in seconds, from anywhere, on any device.",
+    title: "Every lead, in one dashboard",
+    body: "Every conversation, every lead, every contact, in one place. Search them, export them, follow up when you&rsquo;re ready. You own the data.",
   },
 ];
 
@@ -835,7 +834,7 @@ const serviceSchema = {
   name: "Qwikly Digital Assistant Platform",
   serviceType: "Digital assistant for service business websites",
   description:
-    "A digital assistant that lives on your website, captures every visitor enquiry, qualifies it through conversation, and delivers warm leads with one-click booking confirmation to your inbox 24/7. POPIA compliant, hosted in South Africa, no per-job fees.",
+    "A digital assistant that lives on your website, replies to every visitor in under 60 seconds, qualifies the lead, and emails the full lead to the business owner 24/7. POPIA compliant, hosted in South Africa, no setup fees, no per-job fees.",
   provider: { "@id": "https://www.qwikly.co.za/#organization" },
   areaServed: { "@type": "Country", name: "South Africa" },
   audience: {
@@ -935,14 +934,14 @@ export default function Home() {
 
           {/* Eyebrow */}
           <p className="eyebrow text-ink-500 mb-6 reveal-up">
-            Two services. One mission, more booked jobs.
+            Two products. No setup fees.
           </p>
 
           {/* Headline */}
           <div className="reveal-words visible">
             <h1 className="display-huge text-ink max-w-[20ch]">
-              Qwikly turns enquiries into{" "}
-              <em className="italic font-light">paying jobs</em>, on every front.
+              Reply to every website visitor, and find{" "}
+              <em className="italic font-light">new clients</em> every day.
             </h1>
           </div>
 
@@ -950,7 +949,7 @@ export default function Home() {
           <div className="mt-10 md:mt-14 reveal-up">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
               <p className="text-lg md:text-xl text-ink-700 leading-relaxed max-w-lg">
-                We capture every enquiry on your website and we hunt down qualified sales calls in your inbox. Pick one, run both, scale either.
+                A digital assistant on your website that replies to visitors in under 60 seconds and emails you each new lead. Plus a daily list of hand-picked prospects matching your target client, delivered to your dashboard. That&rsquo;s it.
               </p>
               <div className="flex flex-col gap-4 lg:items-end lg:text-right">
                 <div className="flex flex-wrap gap-4 lg:justify-end items-center">
@@ -981,11 +980,11 @@ export default function Home() {
                   </span>
                 </div>
                 <p className="text-sm text-ink-500">
-                  Need help setting up?{" "}
+                  Need a hand getting started?{" "}
                   <a href="/contact" className="text-ember underline transition-colors">
-                    We&rsquo;ll do it for you
-                  </a>
-                  , live the following business day.
+                    Get in touch
+                  </a>{" "}
+                  and we&rsquo;ll walk you through it.
                 </p>
               </div>
             </div>
@@ -1064,7 +1063,7 @@ export default function Home() {
             </div>
             <div className="md:col-span-7 md:col-start-6 md:pt-6">
               <p className="text-lg text-ink-700 leading-relaxed reveal-up">
-                Sign up, and in minutes your Digital Assistant knows your business inside out. It handles every visitor conversation from first hello to confirmed booking. No setup calls, no integrations to wire, no ongoing work from you. For outbound, see{" "}
+                Sign up, and in minutes your Digital Assistant knows your business inside out. It replies to every visitor in under 60 seconds, qualifies them, and emails you each new lead. No setup calls, no integrations to wire, no ongoing work from you. For outbound, see{" "}
                 <a href="/pipeline" className="text-ember underline">Qwikly Pipeline</a>.
               </p>
             </div>
@@ -1104,7 +1103,7 @@ export default function Home() {
             </div>
             <div className="md:col-span-6 md:col-start-7 md:pt-2 reveal-up">
               <p className="text-lg text-ink-700 leading-relaxed">
-                Service 1, inbound. The Digital Assistant handles every incoming enquiry on your website. It qualifies, books, and delivers warm leads to your inbox. Around the clock.
+                Service 1, inbound. The Digital Assistant handles every incoming enquiry on your website. It replies, qualifies, and emails warm leads straight to your inbox. Around the clock.
               </p>
             </div>
           </div>
@@ -1325,36 +1324,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════ SETUP HELP STRIP ═══════════════════════════════ */}
-      <section className="py-14 bg-paper-deep border-t border-b border-ink/[0.06]">
-        <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
-            <div className="max-w-xl">
-              <p className="eyebrow text-ember mb-2">Not sure how to get started?</p>
-              <h3 className="font-display text-2xl text-ink mb-2">
-                Can&rsquo;t set it up yourself? We&rsquo;ll do it for you.
-              </h3>
-              <p className="text-ink-700 text-sm leading-relaxed">
-                If you&rsquo;re not comfortable adding code to your website, we handle the full setup.
-                No technical knowledge required. You&rsquo;ll be live the following business day.
-              </p>
-            </div>
-            <div className="flex-shrink-0 flex flex-col items-start md:items-end gap-3">
-              <div>
-                <p className="font-display text-3xl font-medium text-ink">R500</p>
-                <p className="text-ink-500 text-xs eyebrow mt-0.5">one-time fee</p>
-              </div>
-              <a
-                href="/contact"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-ember text-paper rounded-xl font-medium text-sm hover:bg-ember/90 transition-colors cursor-pointer whitespace-nowrap"
-              >
-                Book setup help
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ═══════ 07 · FAQ TEASER ════════════════════════════════ */}
       <section className="relative py-28 md:py-36 overflow-hidden grain">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
@@ -1444,9 +1413,9 @@ export default function Home() {
               <p className="text-sm text-ink-500 mt-4">
                 Not comfortable doing it yourself?{" "}
                 <a href="/contact" className="text-ember underline transition-colors">
-                  We&rsquo;ll set it up for you
+                  Get in touch
                 </a>{" "}
-                for a one-time R500 fee, live the following business day.
+                and we&rsquo;ll walk you through it.
               </p>
             </div>
 
@@ -1479,7 +1448,7 @@ export default function Home() {
                           <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
                         </svg>
                         <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
-                        Reply in 30s
+                        Reply in 60s
                       </div>
                     </div>
                   </div>
@@ -1506,11 +1475,11 @@ export default function Home() {
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
           <p className="eyebrow text-paper/60 mb-10 reveal-up">Your move</p>
           <h2 className="display-huge text-paper reveal-up max-w-[22ch] mx-auto">
-            Two services. Both built for SA service businesses.{" "}
+            Two products. Built for SA service businesses.{" "}
             <em className="italic font-light text-ember">Pick a starting point.</em>
           </h2>
           <p className="mt-10 text-paper/70 text-lg md:text-xl max-w-xl mx-auto leading-relaxed reveal-up">
-            Capture every enquiry on your website, or fill your calendar with qualified outbound meetings. Run one, run both.
+            Reply to every visitor on your website and get emailed each new lead, or get a daily list of hand-picked prospects delivered to your dashboard. Run one, run both.
           </p>
           <div className="mt-12 flex flex-wrap items-center justify-center gap-4 reveal-up">
             <CTAButton size="lg" variant="solid" href="/digital-assistant">

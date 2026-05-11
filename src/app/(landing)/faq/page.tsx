@@ -39,9 +39,7 @@ export default function FAQPage() {
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <p className="eyebrow text-ember mb-3">About our two services</p>
           <p className="text-ink-700 max-w-2xl text-base leading-relaxed">
-            Qwikly is two services that can run on their own or together. The
-            three questions below cover how to choose, when to layer them, and
-            which one fits a small local business.
+            Qwikly does two things. A digital assistant on your site that replies in under 60 seconds and emails you qualified leads, and an Outbound feed that delivers hand-picked prospects every business day on Pro and up. The three questions below cover how to choose, when to layer them, and which one fits a small local business.
           </p>
         </div>
       </section>

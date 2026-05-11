@@ -1,130 +1,104 @@
-import { Check, Target, Mail, Inbox, Banknote, MousePointerClick, MailX, Calendar, Zap, Reply, type LucideIcon } from "lucide-react";
+import { Check, Target, Mail, Inbox, Users, FileText, ListChecks, type LucideIcon } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 import PipelineHero from "@/components/pipeline/PipelineHero";
 import PipelineFAQ, { type FAQItem } from "@/components/pipeline/PipelineFAQ";
-import PipelineCalculatorSection from "@/components/pipeline-calculator/PipelineCalculatorSection";
 
-const problems: { Icon: LucideIcon; title: string; body: string }[] = [
-  {
-    Icon: Banknote,
-    title: "Sales reps are expensive and burn out fast",
-    body: "Sales reps cost R70,000+ per year and burn out at 20 personal emails a day.",
-  },
-  {
-    Icon: MousePointerClick,
-    title: "Marketing brings clicks, not booked calls",
-    body: "Marketing brings in clicks, not booked calls. Founders end up doing sales themselves.",
-  },
-  {
-    Icon: MailX,
-    title: "Generic cold email is dead",
-    body: "Generic cold email is dead. Mass templates land in spam.",
-  },
-];
-
-const systemColumns: { Icon: LucideIcon; title: string; body: string; bullets: string[] }[] = [
+const whatYouGet: { Icon: LucideIcon; title: string; body: string; bullets: string[] }[] = [
   {
     Icon: Target,
-    title: "Targeting and enrichment",
-    body: "We pull from multiple data sources, filter to your exact ICP, layer in intent signals, and verify every contact before we touch them.",
+    title: "Matched to your ICP",
+    body: "Tell us who your ideal client is. We hand-pick prospects that fit your target profile, filtered for size, industry, role, and location.",
     bullets: [
-      "Multiple data sources",
-      "ICP filtering",
-      "Intent signals",
-      "Verified contact info",
-      "Full prospect profile",
+      "Defined to your ICP",
+      "Filtered by industry and role",
+      "Filtered by company size",
+      "Filtered by location",
     ],
   },
   {
     Icon: Mail,
-    title: "Personalized outreach",
-    body: "Every email is written for the specific person, not first-name merge tags. Three emails over six days, soft CTAs only, written to start a conversation.",
+    title: "Verified contact info",
+    body: "Every prospect we deliver comes with a verified work email. No bouncing addresses, no out of date contacts, no role mailboxes.",
     bullets: [
-      "Written per prospect",
-      "No mass templates",
-      "3 emails over 6 days",
-      "Soft CTAs only",
-      "Reply-driven, not click-driven",
+      "Verified work email",
+      "Name and role",
+      "Company and website",
+      "Linked source where possible",
     ],
   },
   {
-    Icon: Inbox,
-    title: "Deliverability infrastructure",
-    body: "Multiple sending domains, two-week warmup, daily inbox checks. Your messages land in the primary inbox, not promotions, not spam.",
+    Icon: FileText,
+    title: "Suggested outreach copy",
+    body: "Each prospect ships with a starting message you can adapt and send yourself. You stay in control of tone, follow-up, and timing.",
     bullets: [
-      "Multiple sending domains",
-      "Two-week warmup",
-      "Daily inbox placement checks",
-      "Primary-inbox placement",
-      "SPF, DKIM, DMARC handled",
+      "Personalised starter message",
+      "Adapt before you send",
+      "Reply-driven framing",
+      "You send from your own inbox",
     ],
   },
 ];
 
-const numbers: { Icon: LucideIcon; stat: string; label: string; estimate: boolean }[] = [
-  {
-    Icon: Calendar,
-    stat: "15 to 30",
-    label: "qualified meetings per month per client",
-    estimate: true,
-  },
-  {
-    Icon: Reply,
-    stat: "4 to 15%",
-    label: "reply rate, vs 0.5% industry average",
-    estimate: true,
-  },
-  {
-    Icon: Zap,
-    stat: "Under 60s",
-    label: "reply window when prospects respond",
-    estimate: false,
-  },
+const dailyVolume: { tier: string; perDay: string; note: string }[] = [
+  { tier: "Pro", perDay: "5", note: "prospects per business day" },
+  { tier: "Founders", perDay: "10", note: "prospects per business day" },
+  { tier: "Business", perDay: "15", note: "prospects per business day" },
+  { tier: "Enterprise", perDay: "Custom", note: "volume agreed with you" },
 ];
 
-const timeline: { week: string; title: string; body: string }[] = [
+const howItWorks: { step: string; title: string; body: string }[] = [
   {
-    week: "Week 1",
-    title: "Define and build",
-    body: "Define your ICP, build your lead list, write your sequences.",
+    step: "01",
+    title: "You define your ICP",
+    body: "On setup we agree on the exact profile you want, industry, role, size, region. You can adjust it from your dashboard at any time.",
   },
   {
-    week: "Week 2",
-    title: "Launch",
-    body: "Launch first campaign, monitor deliverability.",
+    step: "02",
+    title: "We hand-pick prospects daily",
+    body: "Every business day we research and verify a fresh batch that matches your ICP. No mass scrapes, no recycled lists.",
   },
   {
-    week: "Weeks 3 to 8",
-    title: "Refine and scale",
-    body: "AB test copy, refine ICP, scale sending.",
+    step: "03",
+    title: "Delivered to your dashboard",
+    body: "Your prospect list appears in your Qwikly dashboard each morning, with contact details and a suggested outreach message.",
   },
   {
-    week: "Week 9 onward",
-    title: "Dialled in",
-    body: "15 to 30 booked meetings per month, dialled in.",
+    step: "04",
+    title: "You decide who to contact",
+    body: "Open the list, pick the ones you want to pursue, adapt the suggested copy, and send from your own inbox.",
   },
 ];
 
 const faqs: FAQItem[] = [
   {
-    question: "Is cold email still legal in SA under POPIA?",
+    question: "Does Qwikly send the emails for me?",
     answer:
-      "Yes, with the right framing. POPIA allows business-to-business outreach under legitimate interest, provided every email has a clear opt-out and you respect any direct marketing requests. We handle the compliance side for you, including suppression lists, opt-out routing, and POPIA-aligned copy.",
+      "No. Outbound delivers the qualified prospect list. You decide who to contact, adapt the suggested copy if you want to, and send from your own inbox. You stay in control of every message.",
   },
   {
-    question: "How long until I see meetings?",
+    question: "Does Qwikly book the meeting on my calendar?",
     answer:
-      "First replies usually start landing inside two weeks of the first send. Full ramp, where the system is dialled in and consistently producing meetings, typically lands by month 3 once we have AB tested copy across your ICPs.",
+      "No. We do not book meetings, send calendar invites, or track who responded. Outbound is a daily prospect feed. Booking the meeting is your job once a prospect replies.",
   },
   {
-    question: "Do you guarantee meetings?",
+    question: "How are prospects delivered?",
     answer:
-      "Yes. If we do not book you 5 qualified meetings in your first 60 days, your third month is free. See the /pricing page for the full terms.",
+      "Through your Qwikly dashboard each business day. You log in and see the day's batch, with contact details and suggested copy. We do not push leads via SMS or WhatsApp.",
   },
   {
-    question: "Can I see the system before I commit?",
+    question: "How many prospects do I get?",
     answer:
-      "Yes. The strategy call walks you through Mission Control, our internal dashboard, so you can see the lead list, the sequences, the deliverability monitors, and the inbox in real time before you commit.",
+      "Pro is 5 per business day, Founders is 10 per business day, Business is 15 per business day, and Enterprise is a custom volume agreed with you.",
+  },
+  {
+    question: "Is there a setup fee?",
+    answer:
+      "No. Outbound is bundled into every Qwikly plan from Pro upward at no extra setup cost. There are no add-on fees.",
+  },
+  {
+    question: "Is cold outreach legal in SA under POPIA?",
+    answer:
+      "Yes, with the right framing. POPIA allows business-to-business outreach under legitimate interest, provided every message has a clear opt-out and you respect direct marketing requests. We brief you on the compliance side at setup.",
   },
 ];
 
@@ -135,49 +109,37 @@ export default function PipelinePage() {
       {/* HERO */}
       <PipelineHero />
 
-      {/* PROBLEM */}
+      {/* WHAT OUTBOUND IS */}
       <section className="py-28 bg-paper-deep grain overflow-hidden border-t border-ink/[0.06]">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="mb-14 max-w-2xl">
-            <p className="eyebrow text-ink-500 mb-6">The problem</p>
+            <p className="eyebrow text-ink-500 mb-6">What Outbound is</p>
             <h2 className="display-lg text-ink">
-              Outbound is broken,
+              Outbound finds your next client.
               <br />
-              <em className="italic font-light">and founders are paying the price.</em>
+              <em className="italic font-light">You decide who to reach out to.</em>
             </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {problems.map(({ Icon, title, body }) => (
-              <div key={title} className="ed-card-ghost">
-                <div className="w-10 h-10 rounded-xl bg-ember/12 flex items-center justify-center mb-6">
-                  <Icon className="w-5 h-5 text-ember" strokeWidth={1.75} aria-hidden />
-                </div>
-                <h3 className="font-display text-xl text-ink leading-snug mb-3">{title}</h3>
-                <p className="text-ink-700 text-sm leading-relaxed">{body}</p>
-              </div>
-            ))}
+            <p className="mt-6 text-lg text-ink-700 leading-relaxed max-w-xl">
+              We don&apos;t book anything. We deliver a qualified, verified prospect list to your dashboard every business day, with suggested outreach copy you can adapt. You stay in control of every message.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* SYSTEM */}
-      <section id="system" className="py-28 grain overflow-hidden">
+      {/* WHAT YOU GET */}
+      <section id="what-you-get" className="py-28 grain overflow-hidden">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="mb-16 max-w-2xl">
-            <p className="eyebrow text-ember mb-6">The system</p>
+            <p className="eyebrow text-ember mb-6">What you get</p>
             <h2 className="display-lg text-ink">
-              A real pipeline,
+              A daily hand-picked list,
               <br />
-              <em className="italic font-light">built end to end.</em>
+              <em className="italic font-light">ready to act on.</em>
             </h2>
-            <p className="mt-6 text-lg text-ink-700 leading-relaxed max-w-xl">
-              Qwikly Pipeline is not a tool you log into. It is a managed system that runs in the background and books meetings on your calendar.
-            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {systemColumns.map(({ Icon, title, body, bullets }) => (
+            {whatYouGet.map(({ Icon, title, body, bullets }) => (
               <div key={title} className="ed-card flex flex-col">
                 <div className="w-11 h-11 rounded-xl bg-ink/[0.05] flex items-center justify-center mb-6">
                   <Icon className="w-5 h-5 text-ink" strokeWidth={1.75} aria-hidden />
@@ -198,91 +160,58 @@ export default function PipelinePage() {
         </div>
       </section>
 
-      {/* WHAT YOU GET */}
+      {/* DAILY VOLUME BY TIER */}
       <section className="py-28 bg-ink text-paper grain-dark relative overflow-hidden">
         <div className="ember-blob w-[700px] h-[400px] top-0 left-1/2 -translate-x-1/2 opacity-50" aria-hidden="true" />
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <div className="mb-16 max-w-2xl">
-            <p className="eyebrow text-ember mb-6">What you get</p>
+            <p className="eyebrow text-ember mb-6">Daily volume</p>
             <h2 className="display-lg text-paper">
-              Numbers we work to,
+              How many prospects,
               <br />
-              <em className="italic font-light text-ember">tracked weekly.</em>
+              <em className="italic font-light text-ember">per business day.</em>
             </h2>
+            <p className="mt-6 text-lg text-paper/70 leading-relaxed max-w-xl">
+              Outbound is included in every plan from Pro upward. Your daily prospect count scales with your tier.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {numbers.map(({ Icon, stat, label, estimate }) => (
-              <div key={label} className="rounded-2xl border border-paper/10 bg-paper/[0.03] p-8">
-                <div className="w-11 h-11 rounded-xl bg-ember/15 flex items-center justify-center mb-6">
-                  <Icon className="w-5 h-5 text-ember" strokeWidth={1.75} aria-hidden />
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {dailyVolume.map(({ tier, perDay, note }) => (
+              <div key={tier} className="rounded-2xl border border-paper/10 bg-paper/[0.03] p-8">
+                <p className="eyebrow text-paper/60 mb-4">{tier}</p>
                 <p
-                  className="font-display font-medium text-ember leading-none mb-4"
+                  className="font-display font-medium text-ember leading-none mb-4 num"
                   style={{ fontSize: "clamp(2.25rem, 4vw, 3rem)" }}
                 >
-                  {stat}
+                  {perDay}
                 </p>
-                <p className="text-paper/80 text-sm leading-relaxed mb-4">{label}</p>
-                {estimate && (
-                  <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-paper/[0.06] border border-paper/15">
-                    <span className="w-1.5 h-1.5 rounded-full bg-ember" aria-hidden="true" />
-                    <span className="eyebrow text-[9px] tracking-widest text-paper/70">industry estimate</span>
-                  </span>
-                )}
+                <p className="text-paper/80 text-sm leading-relaxed">{note}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* FORECAST CALCULATOR */}
-      <PipelineCalculatorSection />
-
-      {/* PROOF / CASE STUDY PLACEHOLDER */}
-      <section className="py-28 grain">
-        <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="mb-12 max-w-2xl">
-            <p className="eyebrow text-ink-500 mb-6">Proof</p>
-            <h2 className="display-lg text-ink">
-              Real case studies,
-              <br />
-              <em className="italic font-light">coming soon.</em>
-            </h2>
-          </div>
-
-          <div className="rounded-2xl border-2 border-dashed border-ink/15 bg-ink/[0.02] p-10 md:p-14 text-center max-w-3xl mx-auto">
-            <p className="eyebrow text-ember mb-4">TODO, swap in real case study</p>
-            <h3 className="font-display text-2xl md:text-3xl text-ink leading-snug mb-4">
-              Case study coming soon.
-            </h3>
-            <p className="text-ink-700 leading-relaxed max-w-xl mx-auto">
-              Pilot client onboarding now. We will publish the first end-to-end case study, ICP, sequences, reply rate, meetings booked, here once the pilot completes its first 90 days.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* PROCESS TIMELINE */}
-      <section className="py-28 grain">
+      {/* HOW IT WORKS */}
+      <section id="how-it-works" className="py-28 grain">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="mb-16 max-w-2xl">
-            <p className="eyebrow text-ink-500 mb-6">Process</p>
+            <p className="eyebrow text-ink-500 mb-6">How it works</p>
             <h2 className="display-lg text-ink">
-              From kickoff
+              From your ICP
               <br />
-              <em className="italic font-light">to dialled in.</em>
+              <em className="italic font-light">to your dashboard.</em>
             </h2>
           </div>
 
-          <div className="relative grid grid-cols-1 md:grid-cols-4 gap-6">
-            {timeline.map((step, i) => (
-              <div key={step.week} className="relative ed-card-ghost">
-                <span className="absolute -top-3 left-6 inline-flex items-center justify-center w-8 h-8 rounded-full bg-ink text-paper font-display text-sm">
-                  {i + 1}
+          <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {howItWorks.map((step) => (
+              <div key={step.step} className="relative ed-card-ghost">
+                <span className="absolute -top-3 left-6 inline-flex items-center justify-center w-10 h-8 rounded-full bg-ink text-paper font-display text-xs num px-2">
+                  {step.step}
                 </span>
-                <p className="eyebrow text-ember mt-3 mb-3">{step.week}</p>
-                <h3 className="font-display text-xl text-ink leading-snug mb-3">{step.title}</h3>
+                <h3 className="font-display text-xl text-ink leading-snug mt-3 mb-3">{step.title}</h3>
                 <p className="text-ink-700 text-sm leading-relaxed">{step.body}</p>
               </div>
             ))}
@@ -290,8 +219,57 @@ export default function PipelinePage() {
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* WHAT IT IS NOT */}
       <section className="py-28 bg-paper-deep grain border-t border-ink/[0.06]">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
+            <div className="md:col-span-5">
+              <p className="eyebrow text-ink-500 mb-6">Plain talk</p>
+              <h2 className="display-lg text-ink">
+                What Outbound
+                <br />
+                <em className="italic font-light">isn&apos;t.</em>
+              </h2>
+              <p className="mt-6 text-base text-ink-700 leading-relaxed max-w-md">
+                We&apos;d rather under-promise. Here&apos;s exactly what Outbound does not do.
+              </p>
+            </div>
+
+            <div className="md:col-span-7 space-y-4">
+              {[
+                {
+                  Icon: Users,
+                  title: "We do not book meetings on your calendar",
+                  body: "No calendar invites, no scheduling on your behalf. When a prospect replies, you book the meeting.",
+                },
+                {
+                  Icon: ListChecks,
+                  title: "We do not track who responded or showed up",
+                  body: "Outbound is a daily prospect feed, not a CRM. Tracking replies, attendance and outcomes is on your side.",
+                },
+                {
+                  Icon: Inbox,
+                  title: "We do not deliver via SMS or WhatsApp",
+                  body: "Prospects arrive in your Qwikly dashboard each business day. That&rsquo;s the only delivery channel for Outbound.",
+                },
+              ].map(({ Icon, title, body }) => (
+                <div key={title} className="ed-card flex items-start gap-5 p-6">
+                  <div className="w-10 h-10 rounded-xl bg-ink/[0.05] flex items-center justify-center flex-shrink-0">
+                    <Icon className="w-5 h-5 text-ink" strokeWidth={1.75} aria-hidden />
+                  </div>
+                  <div>
+                    <h3 className="font-display text-lg text-ink leading-snug mb-1.5">{title}</h3>
+                    <p className="text-ink-700 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: body }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-28 grain">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
             <div className="md:col-span-4">
@@ -316,11 +294,11 @@ export default function PipelinePage() {
         <div className="dot-grid absolute inset-0 opacity-50" aria-hidden="true" />
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
           <h2 className="display-xl text-paper max-w-[24ch] mx-auto">
-            Ready to add{" "}
-            <em className="italic font-light text-ember">Outbound?</em>
+            See pricing for{" "}
+            <em className="italic font-light text-ember">Outbound.</em>
           </h2>
           <p className="text-paper/70 text-lg mt-8 max-w-2xl mx-auto leading-relaxed">
-            Included with every Qwikly plan from Pro upward.
+            Outbound is included in every plan from Pro upward. No setup fee, no add-ons.
           </p>
           <div className="mt-12 flex justify-center">
             <CTAButton href="/pricing" variant="solid" size="lg">

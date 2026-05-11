@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   Plus, X, Check, Play, Pause, Trash2,
   CalendarCheck, Clock, AlertTriangle, ArrowRight,
-  Bell, Mail, MessageSquare, Smartphone, FileText, CreditCard,
+  Bell, Mail, MessageSquare, FileText, CreditCard,
   Wrench, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -29,7 +29,7 @@ type TriggerType =
   | "quote_sent"
   | "payment_due";
 
-type ActionType = "send_whatsapp" | "send_email" | "escalate" | "alert_email";
+type ActionType = "send_whatsapp" | "send_email" | "alert_email";
 
 interface Automation {
   id: string;
@@ -59,7 +59,6 @@ const TRIGGERS: Record<TriggerType, { label: string; desc: string; icon: React.C
 const ACTIONS: Record<ActionType, { label: string; desc: string; recipient: "customer" | "owner"; channel: "whatsapp" | "email"; icon: React.ComponentType<{ className?: string }> }> = {
   send_whatsapp: { label: "Send WhatsApp",        desc: "Message sent to the customer",          recipient: "customer", channel: "whatsapp", icon: MessageSquare },
   send_email:    { label: "Send Email",           desc: "Email sent to the customer",            recipient: "customer", channel: "email",    icon: Mail },
-  escalate:      { label: "Alert me (WhatsApp)",  desc: "You get a WhatsApp notification",       recipient: "owner",    channel: "whatsapp", icon: Smartphone },
   alert_email:   { label: "Alert me (Email)",     desc: "You get an email notification",         recipient: "owner",    channel: "email",    icon: Bell },
 };
 
@@ -82,16 +81,16 @@ const STANDARD_RECIPES: RecipeConfig[] = [
   },
   {
     name: "1-hour job reminder (you)",
-    description: "Get a WhatsApp alert 1 hour before each job so you're never late.",
+    description: "Get an email 1 hour before each job so you're never late.",
     trigger_type: "job_starting_soon", trigger_config: { delay_minutes: 60 },
-    action_type: "escalate",
+    action_type: "alert_email",
     action_config: { template_body: "Heads up: {{customer}} in {{suburb}} starts in 1 hour. Address: {{address}}" },
   },
   {
     name: "30-min job reminder (you)",
-    description: "Get a WhatsApp alert 30 minutes before each job starts. Good for back-to-back days.",
+    description: "Get an email 30 minutes before each job starts. Good for back-to-back days.",
     trigger_type: "job_starting_soon", trigger_config: { delay_minutes: 30 },
-    action_type: "escalate",
+    action_type: "alert_email",
     action_config: { template_body: "Heads up: {{customer}} in {{suburb}} starts in 30 minutes. Address: {{address}}" },
   },
   {
@@ -118,13 +117,6 @@ const STANDARD_RECIPES: RecipeConfig[] = [
 ];
 
 const OPTIONAL_RECIPES: RecipeConfig[] = [
-  {
-    name: "30-min job reminder via email",
-    description: "Same as the WhatsApp reminder, but delivered to your inbox instead.",
-    trigger_type: "job_starting_soon", trigger_config: { delay_minutes: 30 },
-    action_type: "alert_email",
-    action_config: { template_body: "Job starting soon: {{customer}} in {{suburb}} at {{time}}. Address: {{address}}" },
-  },
   {
     name: "Quote follow-up",
     description: "Nudge customers who haven't replied to a quote after 24 hours.",
@@ -735,7 +727,7 @@ function AutomationEditor({
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const isOwnerAlert = action === "escalate" || action === "alert_email";
+  const isOwnerAlert = action === "alert_email";
 
   const save = async () => {
     setErr(null);

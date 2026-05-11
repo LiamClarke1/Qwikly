@@ -8,6 +8,7 @@
 // verification harness once it runs (see Task 27).
 
 import { getMonthlyWholesaleCents } from "./pipeline-usage";
+import { isInternalClientId } from "@/lib/billing/internal-tenant";
 
 const CAP_CENTS_BY_PLAN: Record<string, number> = {
   // Bundle tiers
@@ -19,13 +20,6 @@ const CAP_CENTS_BY_PLAN: Record<string, number> = {
   pipeline_lite: 25000,
   pipeline_pro:  75000,
 };
-
-// Internal Qwikly tenants. Mirrors INTERNAL_CLIENT_IDS in pipeline-usage.ts.
-// Calls for these tenants are tracked (is_internal=true) but bypass the
-// plan-tier cap so Liam can run the wizard against his own Qwikly tenant
-// without manually setting plan=pipeline_lite/pro on a trial row. Keep this
-// list in sync with pipeline-usage.ts.
-const INTERNAL_CLIENT_IDS = new Set<string>(["1"]);
 
 // Effectively unlimited cap for internal tenants. High enough that no
 // realistic test run hits it; low enough that a runaway loop still trips
@@ -63,7 +57,7 @@ export async function checkCapForTenant(args: {
   plan: string;
   projectedCents: number;
 }): Promise<{ over: boolean; spentCents: number; capCents: number }> {
-  const isInternal = INTERNAL_CLIENT_IDS.has(String(args.clientId));
+  const isInternal = isInternalClientId(args.clientId);
   const capCents = isInternal
     ? INTERNAL_TENANT_CAP_CENTS
     : wholesaleCapForPlan(args.plan);

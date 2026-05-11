@@ -160,7 +160,7 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     topUpPricePerLeadZar: 20,
   },
   founders: {
-    name: 'Founders Concierge',
+    name: 'Founders',
     priceMonthly: 2999,
     leadLimit: 100,
     removeBranding: true,
@@ -327,12 +327,13 @@ export function productsForPlan(plan: InboundPlanTier): ('inbound' | 'outbound')
 export function dailyProspectQuotaForPlan(plan: InboundPlanTier): number {
   switch (plan) {
     case 'pro':
-    case 'founders':
       return 5;
-    case 'business':
+    case 'founders':
       return 10;
+    case 'business':
+      return 15;
     case 'enterprise':
-      return 20;
+      return 25;
     default:
       return 0;
   }

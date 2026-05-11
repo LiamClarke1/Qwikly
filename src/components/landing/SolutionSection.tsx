@@ -12,35 +12,35 @@ interface SolutionContent {
 const content: Record<Problem, SolutionContent> = {
   "missing-calls": {
     headline: "Qwikly picks up every time. Even at 11pm on a Sunday.",
-    body: "When a visitor chats on your website, Qwikly replies in under 5 seconds. No missed message, no lost job, no chasing them tomorrow morning.",
-    bullets: ["Replies in under 30 seconds, 24/7", "Speaks like you, not like a bot", "Books straight into your Google Calendar"],
+    body: "When a visitor chats on your website, Qwikly replies in under 60 seconds, qualifies the enquiry, and emails you the full conversation. No missed message, no chasing them tomorrow morning.",
+    bullets: ["Replies in under 60 seconds, 24/7", "Speaks like you, not like a bot", "Emails you the lead the moment they leave their details"],
     conversation: [
       { sender: "customer", text: "Hi, I need a plumber urgently. Burst geyser in Sandton." },
-      { sender: "ai", text: "Hi! Sorry to hear that. I can get someone out tonight. What's your address and is the mains off?" },
+      { sender: "ai", text: "Hi! Sorry to hear that. What's your address and is the mains off?" },
       { sender: "customer", text: "Morningside. Mains is off now." },
-      { sender: "ai", text: "Got it. Tech will be there by 10pm. I'll send a confirmation now." },
+      { sender: "ai", text: "Got it. I've passed your details to the owner, they'll be in touch shortly to confirm." },
     ],
   },
   "slow-reply": {
-    headline: "Reply in 30 seconds, even when you're elbow-deep in a geyser.",
-    body: "Every website visitor gets a thoughtful reply instantly. Customers don't wait. They book. By the time you check your phone at lunch, the job is in your calendar.",
-    bullets: ["30-second response, always", "Qualifies the lead so you only deal with real jobs", "You wake up to booked appointments, not unread messages"],
+    headline: "Reply in 60 seconds, even when you're elbow-deep in a geyser.",
+    body: "Every website visitor gets a thoughtful reply instantly. Customers don't wait. They share their details. By the time you check your phone at lunch, the lead is in your inbox.",
+    bullets: ["Under 60 second response, always", "Qualifies the lead so you only deal with real enquiries", "You wake up to qualified leads, not unread messages"],
     conversation: [
       { sender: "customer", text: "Do you do aircon servicing? And how much roughly?" },
       { sender: "ai", text: "Yes, we do full services and gas recharges. Service is R950 all-in. Which area are you in?" },
       { sender: "customer", text: "Bryanston. This week if possible." },
-      { sender: "ai", text: "We're in Bryanston on Wednesday. 9am or 2pm, which suits?" },
+      { sender: "ai", text: "Great. Leave me your name and number and the owner will reach out today to set a time." },
     ],
   },
   "quoting": {
     headline: "Quote a customer before you've put down your tools.",
-    body: "Qwikly knows your services and your prices. It quotes the customer, sends a calendar link, and only buzzes you when the job is confirmed and booked.",
-    bullets: ["Quotes based on your exact price list", "Handles negotiation and objections naturally", "Sends the confirmation. You just show up."],
+    body: "Qwikly knows your services and your prices. It quotes the customer, qualifies the enquiry, and emails you the conversation so you can follow up.",
+    bullets: ["Quotes based on your exact price list", "Handles negotiation and objections naturally", "Emails you the full transcript when the lead is ready"],
     conversation: [
       { sender: "customer", text: "How much for weekly pool cleaning in Fourways?" },
-      { sender: "ai", text: "Weekly is R650 a month, no contract. For a neglected pool we usually start with a R450 deep clean. Want to lock in this Thursday?" },
-      { sender: "customer", text: "Yes, Thursdays work perfectly." },
-      { sender: "ai", text: "Booked. Deep clean this Thursday, then weekly. What's your name and address?" },
+      { sender: "ai", text: "Weekly is R650 a month, no contract. For a neglected pool we usually start with a R450 deep clean. Sound good?" },
+      { sender: "customer", text: "Yes. Thursdays would work." },
+      { sender: "ai", text: "Perfect. What's your name and address? I'll send this through to the owner to confirm Thursday." },
     ],
   },
   "ghosting": {
@@ -49,7 +49,7 @@ const content: Record<Problem, SolutionContent> = {
     bullets: ["Automated follow-ups at 4h, 24h, 2d, 5d", "Dormant-lead revival at 30 days", "Follows up automatically if they go quiet"],
     conversation: [
       { sender: "customer", text: "Hey, what do you charge for electrical COC?" },
-      { sender: "ai", text: "COC is R2,500 for a standard property. I can get you booked in this week. When works?" },
+      { sender: "ai", text: "COC is R2,500 for a standard property. Happy to send the owner your details, when do you need it done?" },
       { sender: "customer", text: "Let me check and get back to you." },
       { sender: "ai", text: "No problem! I'll send you a quick note tomorrow in case it helps. Have a great day." },
     ],

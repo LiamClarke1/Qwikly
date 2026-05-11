@@ -3,7 +3,7 @@ import {
   Check,
   MessageSquare,
   Filter,
-  Smartphone,
+  Mail,
   LayoutDashboard,
   Zap,
   ShieldCheck,
@@ -21,7 +21,7 @@ import DigitalAssistantFAQ, { type FAQItem } from "@/components/digital-assistan
 export const metadata: Metadata = {
   title: "Qwikly Digital Assistant, inbound lead capture for SA service businesses",
   description:
-    "The digital assistant that turns website visitors into paying jobs. Every enquiry captured, qualified, and pinged to your phone in under 60 seconds. Built for SA service businesses.",
+    "A chat widget on your website that replies to visitors in under 60 seconds, qualifies them, and emails you the contact info and transcript. Built for SA service businesses.",
 };
 
 const problems: { Icon: LucideIcon; title: string; body: string }[] = [
@@ -33,58 +33,58 @@ const problems: { Icon: LucideIcon; title: string; body: string }[] = [
   {
     Icon: Hourglass,
     title: "On-site, off-comms",
-    body: "Owner is on a job. WhatsApp lights up later. Lead has booked the next plumber by then.",
+    body: "Owner is on a job. The enquiry sits unread for hours. Lead has called the next plumber by then.",
   },
   {
     Icon: MessagesSquare,
-    title: "Chats, not bookings",
-    body: "Generic chat tools collect chats, not bookings. You still chase manually.",
+    title: "Chats, not contact details",
+    body: "Generic chat tools collect chit-chat, not qualified leads with real contact info. You still chase manually.",
   },
 ];
 
 const steps: { Icon: LucideIcon; title: string; body: string; bullets: string[] }[] = [
   {
     Icon: MessageSquare,
-    title: "Captures the enquiry",
-    body: "Greets the visitor, gets their name, contact, and the actual problem in their own words.",
+    title: "Replies on your website in under 60 seconds",
+    body: "A chat widget sits on your site and greets every visitor instantly, day or night.",
     bullets: [
       "24/7 availability",
-      "Multilingual",
+      "Lives on your website",
       "Works on mobile and desktop",
-      "Logged before they even hit send",
+      "No app to install",
     ],
   },
   {
     Icon: Filter,
     title: "Qualifies the lead",
-    body: "Asks the questions you set, suburb, urgency, type of job, and filters out bots and tyre-kickers before they reach you.",
+    body: "Asks the qualifying questions you set during onboarding, suburb, urgency, type of job, so you only hear about leads worth your time.",
     bullets: [
       "Your qualifying questions",
-      "Bot and spam filtering",
-      "Tyre-kicker filtering",
-      "Tags urgency level",
+      "Set during onboarding",
+      "Captures the problem in their words",
+      "Filters out time-wasters",
     ],
   },
   {
-    Icon: Smartphone,
-    title: "Pings you in under 60 seconds",
-    body: "WhatsApp lands on your phone with the full lead. Reply YES, the booking link goes straight to the customer.",
+    Icon: Mail,
+    title: "Captures their contact info",
+    body: "Gets the visitor's name, email, and phone number before the conversation ends.",
     bullets: [
-      "WhatsApp first, SMS and email fallback",
-      "One tap to send the booking link",
-      "Customer gets the link instantly",
-      "No app to install",
+      "Name",
+      "Email",
+      "Phone number",
+      "Logged in your dashboard",
     ],
   },
   {
     Icon: LayoutDashboard,
-    title: "Logs the lead and the booking",
-    body: "Every enquiry, every reply, every booked job is logged in your dashboard. You see exactly what Qwikly is producing.",
+    title: "Emails you the lead and the transcript",
+    body: "When a new qualified lead comes in, you get an email with their contact info and the full chat transcript. You take it from there.",
     bullets: [
-      "Lead history",
-      "Bookings logged",
-      "Monthly ROI summary",
-      "Export anytime",
+      "Email to the business owner",
+      "Contact info included",
+      "Full chat transcript attached",
+      "Lead history in your dashboard",
     ],
   },
 ];
@@ -93,14 +93,14 @@ const youGet: { Icon: LucideIcon; stat: string; label: string; estimate: boolean
   {
     Icon: Zap,
     stat: "Under 60s",
-    label: "lead-to-owner-ping, average",
-    estimate: true,
+    label: "first reply to your website visitor",
+    estimate: false,
   },
   {
-    Icon: Smartphone,
-    stat: "99.9%",
-    label: "WhatsApp + SMS + email fallback delivery",
-    estimate: true,
+    Icon: Mail,
+    stat: "Email",
+    label: "lead alert with contact info and transcript",
+    estimate: false,
   },
   {
     Icon: ShieldCheck,
@@ -117,7 +117,7 @@ const youGet: { Icon: LucideIcon; stat: string; label: string; estimate: boolean
 ];
 
 const tiers: {
-  id: "starter" | "pro" | "concierge";
+  id: "starter" | "pro" | "founders";
   name: string;
   price: string;
   tagline: string;
@@ -127,21 +127,21 @@ const tiers: {
     id: "starter",
     name: "Starter",
     price: "R699",
-    tagline: "For solo operators getting their first inbound system live.",
+    tagline: "For solo operators getting their first inbound capture live.",
     highlight: false,
   },
   {
     id: "pro",
     name: "Pro",
     price: "R1,799",
-    tagline: "For growing teams that want bookings, not just leads.",
+    tagline: "For growing teams that want every website enquiry qualified and emailed in.",
     highlight: true,
   },
   {
-    id: "concierge",
-    name: "Founders Concierge",
+    id: "founders",
+    name: "Founders",
     price: "R2,999",
-    tagline: "We respond to leads on your behalf when you cannot.",
+    tagline: "Pro features, double the daily Outbound prospects (10 per business day).",
     highlight: false,
   },
 ];
@@ -150,17 +150,22 @@ const faqs: FAQItem[] = [
   {
     question: "Will Qwikly answer like a human?",
     answer:
-      "Yes. We script Qwikly in your tone with your qualifying questions, your service areas, and your pricing rules. Visitors get a calm, branded conversation that feels like your best receptionist on her best day, not a generic widget.",
+      "Yes. We set up Qwikly in your tone with your qualifying questions, your service areas, and your pricing rules. Visitors get a calm, branded conversation that feels like your best receptionist on her best day, not a generic widget.",
   },
   {
-    question: "What if I do not respond in time?",
+    question: "How do I find out about a new lead?",
     answer:
-      "On Starter and Pro, the lead is still captured and logged so you can follow up. On Founders Concierge, our team picks up after a set window and replies on your behalf, so you never lose a job because you were under a sink.",
+      "Email. When a new qualified lead finishes the chat, we email you with their name, email, phone number, and the full transcript of what they said. You reply to them directly from your inbox.",
   },
   {
-    question: "Can it book directly into my calendar?",
+    question: "Does it book leads into my calendar?",
     answer:
-      "Yes. When you reply YES on WhatsApp, the customer gets a booking link that lands on your calendar. You can also wire it into Google Calendar, so confirmed slots are blocked the moment the customer picks one.",
+      "No. The digital assistant captures, qualifies, and emails you the lead with their contact info and transcript. You decide when and how to follow up. We do not book calls, send calendar invites, or take any action beyond the initial chat.",
+  },
+  {
+    question: "Do you also notify me on WhatsApp or SMS?",
+    answer:
+      "Not for the digital assistant. Owner notifications go by email only. Email gives you the contact info and the full transcript in one place, so you can reply to the lead without switching apps.",
   },
   {
     question: "Can I cancel anytime?",
@@ -208,12 +213,12 @@ export default function DigitalAssistantPage() {
           <div className="mb-16 max-w-2xl">
             <p className="eyebrow text-ember mb-6">What Qwikly does</p>
             <h2 className="display-lg text-ink">
-              Four steps,
+              A chat widget on your site,
               <br />
-              <em className="italic font-light">visitor to booked job.</em>
+              <em className="italic font-light">that emails you the lead.</em>
             </h2>
             <p className="mt-6 text-lg text-ink-700 leading-relaxed max-w-xl">
-              Qwikly is not another chat widget. It is a managed digital assistant that captures, qualifies, and routes every enquiry to your phone, then logs the outcome.
+              Qwikly is a chat widget on your website that replies in under 60 seconds, qualifies the visitor with your questions, captures their contact info, and emails you the lead with the full transcript.
             </p>
           </div>
 
@@ -249,7 +254,7 @@ export default function DigitalAssistantPage() {
           <div className="mb-16 max-w-2xl">
             <p className="eyebrow text-ember mb-6">What you get</p>
             <h2 className="display-lg text-paper">
-              The numbers,
+              The basics,
               <br />
               <em className="italic font-light text-ember">in plain ZAR terms.</em>
             </h2>
@@ -303,7 +308,7 @@ export default function DigitalAssistantPage() {
               First inbound case study, in flight.
             </h3>
             <p className="text-ink-700 leading-relaxed max-w-xl mx-auto mb-8">
-              Pilot service businesses are running Qwikly on their sites now. We will publish the first end-to-end case study, leads captured, response time, jobs booked, once the pilot completes its first 90 days.
+              Pilot service businesses are running Qwikly on their sites now. We will publish the first end-to-end case study, leads captured, qualifying questions answered, contact info delivered, once the pilot completes its first 90 days.
             </p>
             <CTAButton href="/case-studies" variant="primary" size="md">
               See case studies
@@ -323,7 +328,7 @@ export default function DigitalAssistantPage() {
               <em className="italic font-light">flat ZAR pricing.</em>
             </h2>
             <p className="mt-6 text-lg text-ink-700 leading-relaxed max-w-xl">
-              Pick a tier, go live in 24 hours, cancel anytime. Full feature breakdown lives on the pricing page.
+              Pick a tier, go live in 24 hours, cancel anytime. The under-60-second reply is included with every tier. Full feature breakdown lives on the pricing page.
             </p>
           </div>
 
@@ -403,7 +408,7 @@ export default function DigitalAssistantPage() {
             <em className="italic font-light text-ember">free for 7 days.</em>
           </h2>
           <p className="text-paper/70 text-lg mt-8 max-w-2xl mx-auto leading-relaxed">
-            Live on your website in 24 hours. No card-on-file, no lock-in. If it does not produce real leads, walk away.
+            Live on your website in 24 hours. No card-on-file, no lock-in. If it does not produce real, emailed leads, walk away.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
             <CTAButton href="/get-started" variant="solid" size="lg">

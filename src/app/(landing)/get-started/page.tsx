@@ -468,8 +468,6 @@ ${f.ai_never_say || "Not specified"}
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!form.business_name.trim()) { setSubmitError("Business name is required."); return; }
-    if (!form.whatsapp_number.trim()) { setSubmitError("WhatsApp number is required."); return; }
-    if (!form.google_calendar_email.trim()) { setSubmitError("Google Calendar email is required."); return; }
 
     setSubmitting(true);
     setSubmitError(null);
@@ -480,8 +478,7 @@ ${f.ai_never_say || "Not specified"}
       business_name: form.business_name,
       owner_name: form.owner_name,
       trade: form.trade.toLowerCase(),
-      whatsapp_number: form.whatsapp_number,
-      google_calendar_id: form.google_calendar_email,
+      whatsapp_number: form.whatsapp_number || null,
       system_prompt: buildSystemPrompt(),
       ai_escalation_triggers: form.ai_escalation_triggers || null,
       ai_escalation_custom: form.ai_escalation_custom || null,
@@ -510,10 +507,10 @@ ${f.ai_never_say || "Not specified"}
           </div>
           <h1 className="text-3xl font-bold text-text-dark mb-4">You&apos;re in.</h1>
           <p className="text-text-muted-dark text-lg leading-relaxed mb-6">
-            Your digital assistant will be live within 24–48 hours. We&apos;ll confirm on WhatsApp once it&apos;s ready.
+            Your digital assistant will be live within 24 to 48 hours. We&apos;ll confirm by email once it&apos;s ready.
           </p>
           <p className="text-sm text-text-muted-dark">
-            Make sure your WhatsApp number ({form.whatsapp_number}) is active and receiving messages.
+            Lead notifications will be sent to the email on your account.
           </p>
         </div>
       </div>
@@ -933,16 +930,10 @@ ${f.ai_never_say || "Not specified"}
 
               <Field
                 label="Your WhatsApp number"
-                hint="Customers will message this number. Bookings and confirmations are sent here. Must be active on WhatsApp."
+                optional
+                hint="Optional contact number for your records. Lead notifications from the digital assistant are delivered by email, not WhatsApp."
               >
                 <Input value={form.whatsapp_number} onChange={set("whatsapp_number")} placeholder="e.g. 083 123 4567" type="tel" />
-              </Field>
-
-              <Field
-                label="Your Google Calendar email address"
-                hint="Every booking your assistant makes will automatically appear in this calendar. Must be the Gmail address linked to Google Calendar."
-              >
-                <Input value={form.google_calendar_email} onChange={set("google_calendar_email")} placeholder="e.g. pete@gmail.com" type="email" />
               </Field>
             </>}
 

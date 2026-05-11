@@ -28,7 +28,7 @@ export function OutboundLockedOverlay({ currentPlan }: Props) {
         <h2 className="text-xl font-semibold text-ink-900">Outbound is on the Pro plan</h2>
         <p className="mt-2 text-sm text-ink-600">
           You are on {tierLabel}. Upgrade to Pro for R1,799/month to unlock daily hand-picked prospects,
-          warmed sending domains, and the full Outbound pipeline.
+          verified contact info, and suggested outreach copy delivered to your dashboard each business day.
         </p>
         <div className="mt-6 flex flex-col gap-2">
           <Link href="/dashboard/settings/billing?plan=pro">
