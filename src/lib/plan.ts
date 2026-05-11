@@ -49,6 +49,11 @@ interface PlanConfig {
    *  punitive overage that would penalise higher tiers (whose in-plan
    *  rate is much lower than R20/lead). */
   topUpPricePerLeadZar: number;
+  /** Starting AI credit grant in ZAR cents, credited to the
+   *  conversation_credits wallet on signup and reset on every renewal.
+   *  Plan revenue covers the platform; AI use comes from this grant plus
+   *  customer top-ups. See spec Section 1, plan-grants table. */
+  startingGrantZarCents: number;
 }
 
 // Tier structure (2026-05-10, refined):
@@ -96,6 +101,9 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     // Trial mirrors Starter top-up rate so a converted trial signup
     // doesn't see a price change in their first month past cap.
     topUpPricePerLeadZar: 23,
+    // R30 loss-leader grant. Worst-case wholesale R11.25, capped by the
+    // 7-day window.
+    startingGrantZarCents: 3000,
   },
   // Conversation caps are sized at the WORST-HONEST-CASE conv:lead ratio
   // (~20× for explore-heavy industries like real-estate) so an honest
@@ -137,6 +145,9 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     // R23.30), so a customer who goes one lead over pays the same per-
     // lead rate they were already paying — not a punitive flat overage.
     topUpPricePerLeadZar: 23,
+    // R100 grant on R699 plan revenue. Worst-case wholesale R37.50 at
+    // planning rate, leaving 94.6% margin.
+    startingGrantZarCents: 10000,
   },
   pro: {
     name: 'Pro',
@@ -158,6 +169,9 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     // up indefinitely, but still close enough to the in-plan rate to not
     // feel punitive.
     topUpPricePerLeadZar: 20,
+    // R280 grant on R1,799 plan revenue. Worst-case wholesale R105 at
+    // planning rate, leaving 94.2% margin.
+    startingGrantZarCents: 28000,
   },
   founders: {
     name: 'Founders',
@@ -173,6 +187,9 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     conversationsIncluded: 2000,
     overageCentsPerConversation: 750,
     topUpPricePerLeadZar: 20,
+    // R450 grant on R2,999 plan revenue. Worst-case wholesale R168.75 at
+    // planning rate, leaving 94.4% margin.
+    startingGrantZarCents: 45000,
   },
   business: {
     name: 'Business',
@@ -197,6 +214,9 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     // priced), so the nudge keeps them honest about which tier they
     // actually need.
     topUpPricePerLeadZar: 12,
+    // R650 grant on R3,999 plan revenue. Worst-case wholesale R243.75
+    // at planning rate, leaving 93.9% margin.
+    startingGrantZarCents: 65000,
   },
   enterprise: {
     name: 'Enterprise',
@@ -219,6 +239,9 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     // negotiated anyway and overages above the published cap are
     // treated as a contract-renegotiation trigger.
     topUpPricePerLeadZar: 8,
+    // R1,500 grant on R7,999 floor plan revenue. Worst-case wholesale
+    // R562.50 at planning rate, leaving 93.0% margin.
+    startingGrantZarCents: 150000,
   },
   // ── Legacy tier ───────────────────────────────────────────
   // Pre-2026-05-10 customers signed up at R1,999 with 250 leads + custom
@@ -244,6 +267,9 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     // Legacy Premium aligns with Business top-up rate (closest equivalent
     // tier in the new structure).
     topUpPricePerLeadZar: 12,
+    // Legacy Premium grant matches Pro (closest equivalent in the new
+    // grant structure). New signups never land here.
+    startingGrantZarCents: 28000,
   },
 };
 
@@ -344,3 +370,13 @@ export function dailyProspectQuotaForPlan(plan: InboundPlanTier): number {
 // (pipeline_lite/pipeline_pro) have their own marketing page at /pipeline and
 // are intentionally excluded from this list.
 export const PUBLIC_TIERS: InboundPlanTier[] = ['starter', 'pro', 'founders', 'business', 'enterprise'];
+
+/**
+ * Starting AI credit grant for a given plan, in ZAR cents. Credited to the
+ * conversation_credits wallet on signup and reset on every renewal. See the
+ * end-to-end billing spec (Section 1, plan-grants table) for the rationale
+ * behind each tier's number.
+ */
+export function startingGrantZarCents(tier: InboundPlanTier): number {
+  return PLAN_CONFIG[tier].startingGrantZarCents;
+}
