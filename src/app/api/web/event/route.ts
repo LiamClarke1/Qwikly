@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseAdmin } from "@/lib/supabase-server";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +12,7 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
-  const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  const db = supabaseAdmin();
   let body: {
     client_id?: string;
     visitor_id?: string;
@@ -30,27 +30,26 @@ export async function POST(req: NextRequest) {
   const { client_id, visitor_id, event_type, page_url, conversation_id } = body;
   if (!client_id || !event_type) return NextResponse.json({}, { headers: CORS });
 
-  const { data: clientRow } = await supabaseAdmin
+  // The embed sends client_id = public_key (qw_pk_...). Resolve to the numeric id.
+  const { data: clientRow } = await db
     .from("clients")
     .select("id")
-    .eq("id", client_id)
-    .limit(1)
+    .eq("public_key", client_id)
     .maybeSingle();
   if (!clientRow) return NextResponse.json({}, { status: 404, headers: CORS });
 
-  await supabaseAdmin.from("web_widget_events").insert({
-    client_id: Number(client_id),
+  await db.from("web_widget_events").insert({
+    client_id: clientRow.id,
     visitor_id,
     event_type,
     page_url,
     conversation_id: conversation_id ? Number(conversation_id) : null,
   }).then(() => {});
 
-  // Update client last_seen_at
-  await supabaseAdmin
+  await db
     .from("clients")
     .update({ web_widget_last_seen_at: new Date().toISOString() })
-    .eq("id", client_id);
+    .eq("id", clientRow.id);
 
   return NextResponse.json({ ok: true }, { headers: CORS });
 }
