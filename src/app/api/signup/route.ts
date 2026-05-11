@@ -8,8 +8,10 @@ import { resend, FROM, newSignupAdminNotificationHtml } from "@/lib/resend";
 import {
   productsForPlan,
   dailyProspectQuotaForPlan,
+  startingGrantZarCents,
   type InboundPlanTier,
 } from "@/lib/plan";
+import { applySubscriptionToClient } from "@/lib/billing/apply-subscription";
 
 export const dynamic = "force-dynamic";
 
@@ -97,14 +99,18 @@ export async function POST(req: NextRequest) {
     const trialEndsAt = resolvedPlan === "trial"
       ? trialEndsFromNow().toISOString()
       : null;
+    const periodStart = new Date().toISOString();
+    const periodEnd = trialEndsAt ?? new Date(Date.now() + 30 * 86400_000).toISOString();
 
-    const { error: subError } = await db.from("subscriptions").upsert({
+    const { data: subRow, error: subError } = await db.from("subscriptions").upsert({
       user_id: data.user.id,
       plan: resolvedPlan,
       billing_cycle: "monthly",
       status: "active",
+      current_period_start: periodStart,
+      current_period_end: periodEnd,
       ...(trialEndsAt ? { trial_ends_at: trialEndsAt } : {}),
-    }, { onConflict: "user_id" });
+    }, { onConflict: "user_id" }).select("id, client_id").single();
 
     if (subError) {
       return NextResponse.json({ error: "account_setup_failed" }, { status: 500 });
@@ -118,8 +124,9 @@ export async function POST(req: NextRequest) {
       .eq("auth_user_id", data.user.id)
       .maybeSingle();
 
+    let clientId: number | null = null;
     if (!existingClient) {
-      await db.from("clients").insert({
+      const { data: newClient } = await db.from("clients").insert({
         auth_user_id: data.user.id,
         business_name: businessName ?? "",
         onboarding_step: 1,
@@ -128,12 +135,35 @@ export async function POST(req: NextRequest) {
         products: productsForPlan(resolvedPlan),
         pipeline_daily_quota: dailyProspectQuotaForPlan(resolvedPlan),
         ...(trialEndsAt ? { trial_ends_at: trialEndsAt } : {}),
-      });
-    } else if (trialEndsAt) {
-      await db.from("clients").update({
-        plan: resolvedPlan,
-        trial_ends_at: trialEndsAt,
-      }).eq("id", existingClient.id);
+      }).select("id").single();
+      clientId = newClient?.id ?? null;
+    } else {
+      clientId = existingClient.id;
+      if (trialEndsAt) {
+        await db.from("clients").update({
+          plan: resolvedPlan,
+          trial_ends_at: trialEndsAt,
+        }).eq("id", existingClient.id);
+      }
+    }
+
+    // Wire subscription -> client link if missing, then credit the starting AI grant
+    // and run the source-of-truth writer so clients reflects current entitlement.
+    if (subRow?.id && clientId) {
+      if (!subRow.client_id) {
+        await db.from("subscriptions").update({ client_id: clientId }).eq("id", subRow.id);
+      }
+      await db.from("conversation_credits").upsert({
+        client_id: clientId,
+        granted_balance_zar_cents: startingGrantZarCents(resolvedPlan),
+        granted_expires_at: periodEnd,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "client_id" });
+      try {
+        await applySubscriptionToClient(subRow.id);
+      } catch (err) {
+        console.error("[signup] applySubscriptionToClient failed:", err);
+      }
     }
   }
 
