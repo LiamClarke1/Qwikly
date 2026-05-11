@@ -9,7 +9,6 @@ import { LiveCounter } from "@/components/landing/LiveCounter";
 import { CaseStudyCard } from "@/components/pricing/CaseStudyCard";
 import { NicheChips } from "@/components/pricing/NicheChips";
 import { ServiceTabs, type ServiceTab } from "@/components/pricing/ServiceTabs";
-import { PipelinePricingBlock } from "@/components/pricing/PipelinePricingBlock";
 
 // Tier pricing. Annual = monthly x 12 x 0.85 (15% off, rounded).
 const MONTHLY = { starter: 699, pro: 1799, founders: 2999, business: 3999, enterprise: 7999 } as const;
@@ -26,6 +25,7 @@ const tiers: {
   highlight: boolean;
   pill?: { label: string; variant: "popular" | "handsoff" };
   cta: string;
+  bundleBadge?: string;
 }[] = [
   {
     id: "starter",
@@ -51,7 +51,9 @@ const tiers: {
     pill: { label: "Most Popular", variant: "popular" },
     cta: "Start with Pro",
     instantReply: { included: true },
+    bundleBadge: "Outbound included",
     features: [
+      "5 hand-picked prospects/day (Outbound)",
       "100 qualified leads/month",
       "3 dashboard users",
       "Custom branding, your logo and colours",
@@ -68,7 +70,9 @@ const tiers: {
     pill: { label: "Hands-off", variant: "handsoff" },
     cta: "Talk to us",
     instantReply: { included: true },
+    bundleBadge: "Outbound included",
     features: [
+      "5 hand-picked prospects/day (Outbound)",
       "Everything in Pro",
       "Real human responding to every lead in under 60 seconds, business hours",
       "We book the call into your calendar",
@@ -84,7 +88,9 @@ const tiers: {
     highlight: false,
     cta: "Start with Business",
     instantReply: { included: true },
+    bundleBadge: "Outbound included",
     features: [
+      "10 hand-picked prospects/day (Outbound)",
       "400 qualified leads/month",
       "Unlimited dashboard users",
       "Custom branding (your logo, no Qwikly footer)",
@@ -100,7 +106,9 @@ const tiers: {
     highlight: false,
     cta: "Talk to us",
     instantReply: { included: true },
+    bundleBadge: "Outbound included",
     features: [
+      "Custom Outbound volume",
       "1,500+ qualified leads/month",
       "Full white-label, your domain",
       "API access for custom integrations",
@@ -401,9 +409,17 @@ export default function PricingPage() {
                   <p className={`eyebrow mb-1 ${tier.highlight ? "text-ember" : "text-ink-500"}`}>
                     {tier.name}
                   </p>
-                  <p className={`text-sm leading-snug mb-6 ${tier.highlight ? "text-paper/65" : "text-ink-700"}`}>
+                  <p className={`text-sm leading-snug ${tier.bundleBadge ? "mb-2" : "mb-6"} ${tier.highlight ? "text-paper/65" : "text-ink-700"}`}>
                     {tier.tagline}
                   </p>
+                  {tier.bundleBadge && (
+                    <div className="mb-6">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-ink-50 text-tiny text-ink-700">
+                        <Sparkles className="w-3 h-3" aria-hidden />
+                        {tier.bundleBadge}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Price */}
                   <div className="mb-6">
@@ -921,7 +937,14 @@ export default function PricingPage() {
         {/* Pipeline tiers */}
         <section className="py-16 bg-paper-deep grain border-t border-b border-ink/[0.06]">
           <div className="mx-auto max-w-site px-6 lg:px-10">
-            <PipelinePricingBlock />
+            <section className="my-12 text-center">
+              <p className="text-sm text-ink-600 max-w-2xl mx-auto">
+                Outbound, our daily hand-picked prospect pipeline, is included on every plan from Pro upward.
+                No separate purchase needed.
+                {" "}
+                <a href="/pipeline" className="underline">See how Outbound works</a>.
+              </p>
+            </section>
 
             {/* Risk reversal */}
             <div className="mt-12 max-w-3xl mx-auto rounded-2xl border border-ember/25 bg-ember/[0.06] p-8 md:p-10 text-center">
