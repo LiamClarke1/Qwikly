@@ -12,11 +12,11 @@ export const dynamic = "force-dynamic";
 /**
  * AI conversation credit top-up landing page. Three flat packs (small,
  * medium, large) priced uniformly across tiers, with bonus credit on the
- * medium and large packs per the spec.
+ * medium and large packs.
  *
- *   Small  — R100 buys R100 credit  (~135 conversations)
- *   Medium — R250 buys R280 credit  (~378 conversations, 12% bonus)
- *   Large  — R500 buys R600 credit  (~810 conversations, 20% bonus)
+ *   Small  — R100 buys R100 credit  (~130 extra conversations)
+ *   Medium — R250 buys R280 credit  (~370 extra conversations, 12% bonus)
+ *   Large  — R500 buys R600 credit  (~800 extra conversations, 20% bonus)
  *
  * Each "Buy" button POSTs `/api/payfast/topup-ai` with the pack name and
  * redirects to the returned hosted-checkout URL.
@@ -38,7 +38,7 @@ const PACKS: Pack[] = [
     label: "Small pack",
     priceZar: 100,
     creditCents: 10_000,
-    approxConversations: 135,
+    approxConversations: 130,
     bonusPct: 0,
   },
   {
@@ -46,7 +46,7 @@ const PACKS: Pack[] = [
     label: "Medium pack",
     priceZar: 250,
     creditCents: 28_000,
-    approxConversations: 378,
+    approxConversations: 370,
     bonusPct: 12,
     highlight: true,
   },
@@ -55,7 +55,7 @@ const PACKS: Pack[] = [
     label: "Large pack",
     priceZar: 500,
     creditCents: 60_000,
-    approxConversations: 810,
+    approxConversations: 800,
     bonusPct: 20,
   },
 ];
@@ -127,7 +127,7 @@ export default async function TopupAiPage() {
             )}
             <p className="text-tiny text-fg-muted mt-3 leading-relaxed">
               Approx. {p.approxConversations.toLocaleString()} extra
-              conversations at planning wholesale.
+              conversations added to your balance.
             </p>
             <div className="mt-5">
               <BuyAiPackButton pack={p.pack} label={`Buy ${p.label.toLowerCase()}`} />

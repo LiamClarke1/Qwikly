@@ -64,7 +64,7 @@ export async function getEntitlement(clientId: number): Promise<Entitlement> {
   const [clientRow, subRow, creditsRow, usageRow, topupsRow] = await Promise.all([
     db
       .from('clients')
-      .select('id, plan, ai_paused')
+      .select('id, plan, ai_paused, auth_user_id')
       .eq('id', clientId)
       .maybeSingle(),
     db
@@ -92,7 +92,7 @@ export async function getEntitlement(clientId: number): Promise<Entitlement> {
       .gt('expires_at', now.toISOString()),
   ]);
 
-  const client = (clientRow as { data: { plan?: string; ai_paused?: boolean } | null }).data ?? null;
+  const client = (clientRow as { data: { plan?: string; ai_paused?: boolean; auth_user_id?: string } | null }).data ?? null;
   const subscription = (subRow as {
     data: {
       plan?: string;
@@ -113,6 +113,33 @@ export async function getEntitlement(clientId: number): Promise<Entitlement> {
 
   const tier = resolvePlan(subscription?.plan ?? client?.plan ?? 'trial');
   const cfg = PLAN_CONFIG[tier];
+
+  // Owner account gets unlimited access regardless of plan.
+  if (client?.auth_user_id) {
+    const ownerEmail = process.env.OWNER_EMAIL ?? 'liamclarke21@outlook.com';
+    const { data: authUser } = await db.auth.admin.getUserById(client.auth_user_id);
+    if (authUser?.user?.email?.toLowerCase() === ownerEmail.toLowerCase()) {
+      return {
+        plan: 'enterprise',
+        status: 'active',
+        assistantPaused: false,
+        leadsThisMonth: 0,
+        leadLimit: Number.MAX_SAFE_INTEGER,
+        topupLeadsRemaining: 0,
+        totalLeadsAvailable: Number.MAX_SAFE_INTEGER,
+        aiCreditGrantedZarCents: 9_999_999_99,
+        aiCreditPurchasedZarCents: 0,
+        aiCreditTotalZarCents: 9_999_999_99,
+        hasOutbound: true,
+        pipelineDailyQuota: 999,
+        periodStart: null,
+        periodEnd: null,
+        trialEndsAt: null,
+        cancelAtPeriodEnd: false,
+        pendingPlan: null,
+      };
+    }
+  }
 
   const grantedCents = credits?.granted_balance_zar_cents ?? 0;
   const purchasedCents = credits?.purchased_balance_zar_cents ?? 0;

@@ -56,39 +56,26 @@ interface PlanConfig {
   startingGrantZarCents: number;
 }
 
-// Tier structure (2026-05-10, refined):
-//   - trial      : 7-day free trial of the Starter tier (NOT full feature
-//                  access). Same 30 lead cap, same "Powered by Qwikly"
-//                  footer, same single-user limit. After 7 days the
-//                  account pauses unless the owner picks a paid plan.
-//                  Keeping trial = Starter prevents the misleading
-//                  positioning of "trial on every plan" and the awkward
-//                  cliff where a Pro-trial user loses custom branding
-//                  the moment they have to pay.
-//   - starter    : R699  · solo trades, individual agents, sole practitioners
-//   - pro        : R1,799 · small multi-person practices, UNLOCKS custom
-//                  branding (your logo, no Qwikly footer) so growing solos
-//                  have a real reason to upgrade
-//   - business   : R3,999 · multi-doctor / multi-agent / busy practices,
-//                  adds CSV exports, unlimited users, priority support
-//   - enterprise : R7,999+ · multi-location, full white-label, API, SLA
+// Tier structure (2026-05-11, tightened for API cost control):
+//   - trial      : 7-day taste of Starter. 15 leads, 150 conversation cap.
+//   - starter    : R699  · 20 leads · solo trades, sole practitioners
+//   - pro        : R1,799 · 50 leads · small teams, UNLOCKS custom branding
+//   - founders   : R2,999 · 60 leads · Pro + 10 Outbound prospects/day
+//   - business   : R3,999 · 200 leads · multi-agent, unlimited users
+//   - enterprise : R7,999+ · 600 leads · multi-location, white-label, API
 //   - premium    : LEGACY tier kept so existing R1,999 subscriptions keep
 //                  resolving cleanly. New signups never land here.
 //
-// Lead caps tightened from the original sketch (50/200/600 → 30/100/400) so
-// genuine growth nudges customers toward the next tier instead of letting
-// them sit at Starter forever.
+// Lead caps reduced (100 → 50 on Pro, 400 → 200 on Business, etc.) to keep
+// API costs inside healthy margins. The conversation cap is set at 20× the
+// lead cap so no honest customer trips it before their lead cap.
 export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
   trial: {
     name: 'Trial',
     priceMonthly: 0,
-    leadLimit: 30,
-    // Trial mirrors Starter on branding/users/greeting. Conversation cap
-    // is set at 10× the lead cap (300 = 30 leads × 10×) — enough for
-    // typical honest trial use (7-8× × 30 leads + headroom) without the
-    // unbounded R600 worst-case wholesale that would hit if we mirrored
-    // Starter's full 20× cap. A 7-day trial is a taste, not a full
-    // month. Worst-case wholesale per trial: 300 × R1 = R300.
+    leadLimit: 15,
+    // Trial is a 7-day taste of Starter. 15 leads × 10× conservative ratio
+    // = 150 conversations max. Worst-case wholesale: 150 × R1 = R150.
     removeBranding: false,
     customGreeting: false,
     csvExport: false,
@@ -96,14 +83,11 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 1,
     responseSlaHours: 24,
-    conversationsIncluded: 300,
+    conversationsIncluded: 150,
     overageCentsPerConversation: 750,
-    // Trial mirrors Starter top-up rate so a converted trial signup
-    // doesn't see a price change in their first month past cap.
-    topUpPricePerLeadZar: 23,
-    // R30 loss-leader grant. Worst-case wholesale R11.25, capped by the
-    // 7-day window.
-    startingGrantZarCents: 3000,
+    topUpPricePerLeadZar: 35,
+    // R20 loss-leader grant for 7-day window.
+    startingGrantZarCents: 2000,
   },
   // Conversation caps are sized at the WORST-HONEST-CASE conv:lead ratio
   // (~20× for explore-heavy industries like real-estate) so an honest
@@ -126,7 +110,7 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
   starter: {
     name: 'Starter',
     priceMonthly: 699,
-    leadLimit: 30,
+    leadLimit: 20,
     removeBranding: false,
     customGreeting: false,
     csvExport: false,
@@ -134,25 +118,19 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 1,
     responseSlaHours: 24,
-    // 30 leads × 20× ratio = 600 conversations. Sized for the worst-
-    // honest-case conversion rate (real-estate-style explore traffic) so
-    // the customer NEVER hits the conversation cap before their lead
-    // cap. Realistic utilisation (~7-8× × 30% of leads) sits at 10-15%
-    // of cap → 90% margin in the typical month.
-    conversationsIncluded: 600,
+    // 20 leads × 20× = 400 conversations. Covers worst-case explore
+    // traffic while keeping API cost manageable on a R699 plan.
+    conversationsIncluded: 400,
     overageCentsPerConversation: 750,
-    // R23/lead matches the Starter in-plan effective rate (R699/30 =
-    // R23.30), so a customer who goes one lead over pays the same per-
-    // lead rate they were already paying — not a punitive flat overage.
-    topUpPricePerLeadZar: 23,
-    // R100 grant on R699 plan revenue. Worst-case wholesale R37.50 at
-    // planning rate, leaving 94.6% margin.
-    startingGrantZarCents: 10000,
+    // R35/lead matches Starter in-plan effective rate (R699/20 = R34.95).
+    topUpPricePerLeadZar: 35,
+    // R80 grant. Worst-case wholesale R29.60 at planning rate.
+    startingGrantZarCents: 8000,
   },
   pro: {
     name: 'Pro',
     priceMonthly: 1799,
-    leadLimit: 100,
+    leadLimit: 50,
     removeBranding: true,
     customGreeting: true,
     csvExport: false,
@@ -160,23 +138,19 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     supportTier: 'email',
     teamSeats: 3,
     responseSlaHours: 12,
-    // 100 leads × 20× = 2,000 conversations. Same explore-headroom as
-    // Starter — Pro customers have similar conv:lead profiles, just
-    // more volume.
-    conversationsIncluded: 2000,
+    // 50 leads × 20× = 1,000 conversations. Keeps API cost well inside
+    // margin on a R1,799 plan. Worst-case wholesale: R1,000 (planning rate).
+    conversationsIncluded: 1000,
     overageCentsPerConversation: 750,
-    // R20/lead vs R17.99 in-plan = ~11% nudge to upgrade rather than top
-    // up indefinitely, but still close enough to the in-plan rate to not
-    // feel punitive.
-    topUpPricePerLeadZar: 20,
-    // R280 grant on R1,799 plan revenue. Worst-case wholesale R105 at
-    // planning rate, leaving 94.2% margin.
-    startingGrantZarCents: 28000,
+    // R36/lead vs R35.98 in-plan (R1799/50) — minimal nudge to upgrade.
+    topUpPricePerLeadZar: 36,
+    // R200 grant on R1,799 plan revenue. Covers ~200 typical conversations.
+    startingGrantZarCents: 20000,
   },
   founders: {
     name: 'Founders',
     priceMonthly: 2999,
-    leadLimit: 100,
+    leadLimit: 60,
     removeBranding: true,
     customGreeting: true,
     csvExport: false,
@@ -184,17 +158,17 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     supportTier: 'priority',
     teamSeats: 3,
     responseSlaHours: 4,
-    conversationsIncluded: 2000,
+    // 60 leads × 20× = 1,200 conversations.
+    conversationsIncluded: 1200,
     overageCentsPerConversation: 750,
-    topUpPricePerLeadZar: 20,
-    // R450 grant on R2,999 plan revenue. Worst-case wholesale R168.75 at
-    // planning rate, leaving 94.4% margin.
-    startingGrantZarCents: 45000,
+    topUpPricePerLeadZar: 36,
+    // R250 grant on R2,999 plan revenue.
+    startingGrantZarCents: 25000,
   },
   business: {
     name: 'Business',
     priceMonthly: 3999,
-    leadLimit: 400,
+    leadLimit: 200,
     removeBranding: true,
     customGreeting: true,
     csvExport: true,
@@ -202,26 +176,19 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     supportTier: 'priority',
     teamSeats: null,
     responseSlaHours: 4,
-    // 400 leads × 15× = 6,000 conversations. Slightly tighter ratio
-    // than Starter/Pro because Business customers have proven volume
-    // (the 15× still covers real-estate-style explore traffic). At
-    // realistic utilisation (~30% × 7×) we sit at ~14% of cap, leaving
-    // a comfortable margin profile.
-    conversationsIncluded: 6000,
+    // 200 leads × 20× = 4,000 conversations. Tightened from 400 leads
+    // to keep API cost inside a healthy margin on a R3,999 plan.
+    conversationsIncluded: 4000,
     overageCentsPerConversation: 750,
-    // R12/lead vs R9.99 in-plan = ~20% nudge. Business customers tend
-    // to top up rather than upgrade to Enterprise (which is custom-
-    // priced), so the nudge keeps them honest about which tier they
-    // actually need.
-    topUpPricePerLeadZar: 12,
-    // R650 grant on R3,999 plan revenue. Worst-case wholesale R243.75
-    // at planning rate, leaving 93.9% margin.
-    startingGrantZarCents: 65000,
+    // R20/lead vs R19.99 in-plan (R3999/200) — minimal nudge to upgrade.
+    topUpPricePerLeadZar: 20,
+    // R500 grant on R3,999 plan revenue.
+    startingGrantZarCents: 50000,
   },
   enterprise: {
     name: 'Enterprise',
     priceMonthly: 7999,
-    leadLimit: 1500,
+    leadLimit: 600,
     removeBranding: true,
     customGreeting: true,
     csvExport: true,
@@ -229,19 +196,14 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     supportTier: 'dedicated',
     teamSeats: null,
     responseSlaHours: 1,
-    // 1,500 leads × 15× = 22,500 conversations as the published starting
-    // point. Enterprise is "from R7,999" with negotiated caps — actual
-    // contracts get tuned per customer based on observed traffic. Cap is
-    // generous enough that no honest Enterprise customer will trip it.
-    conversationsIncluded: 22500,
+    // 600 leads × 20× = 12,000 conversations. Enterprise is negotiated;
+    // actual caps are set per contract above this floor.
+    conversationsIncluded: 12000,
     overageCentsPerConversation: 750,
-    // R8/lead vs R5.33 in-plan = ~50% premium, but Enterprise is
-    // negotiated anyway and overages above the published cap are
-    // treated as a contract-renegotiation trigger.
-    topUpPricePerLeadZar: 8,
-    // R1,500 grant on R7,999 floor plan revenue. Worst-case wholesale
-    // R562.50 at planning rate, leaving 93.0% margin.
-    startingGrantZarCents: 150000,
+    // R14/lead vs R13.33 in-plan (R7999/600) — minimal nudge.
+    topUpPricePerLeadZar: 14,
+    // R1,200 grant on R7,999 floor plan revenue.
+    startingGrantZarCents: 120000,
   },
   // ── Legacy tier ───────────────────────────────────────────
   // Pre-2026-05-10 customers signed up at R1,999 with 250 leads + custom

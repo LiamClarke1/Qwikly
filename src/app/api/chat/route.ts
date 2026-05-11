@@ -34,9 +34,13 @@ export async function OPTIONS() {
   return new NextResponse(null, { headers: CORS });
 }
 
+const MAX_MESSAGE_LENGTH = 1000;
+
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const ipOk = await checkRateLimit(`chat:ip:${ip}`, 30);
+
+  // 15 messages/minute per IP (down from 30) — blocks burst spammers
+  const ipOk = await checkRateLimit(`chat:ip:${ip}`, 15);
   if (!ipOk) {
     return NextResponse.json(
       { error: "Too many requests. Please slow down." },
@@ -65,7 +69,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "missing_fields" }, { status: 400, headers: CORS });
   }
 
-  const tenantOk = await checkRateLimit(`chat:tenant:${tenantId}`, 2000, "hour");
+  // Reject oversized messages — no legitimate user types 1000+ chars in a chat
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    return NextResponse.json(
+      { error: "Message too long." },
+      { status: 400, headers: CORS }
+    );
+  }
+
+  // 300 messages/hour per tenant (down from 2000) — realistic for any single business
+  const tenantOk = await checkRateLimit(`chat:tenant:${tenantId}`, 300, "hour");
   if (!tenantOk) {
     return NextResponse.json(
       { error: "Tenant hourly rate limit exceeded." },
@@ -74,6 +87,20 @@ export async function POST(req: NextRequest) {
         headers: { ...CORS, "Retry-After": String(retryAfterSeconds("hour")) },
       }
     );
+  }
+
+  // 50 messages/hour per session — stops one visitor from looping indefinitely
+  if (sessionId) {
+    const sessionOk = await checkRateLimit(`chat:session:${sessionId}`, 50, "hour");
+    if (!sessionOk) {
+      return NextResponse.json(
+        { error: "Session rate limit exceeded. Please start a new conversation." },
+        {
+          status: 429,
+          headers: { ...CORS, "Retry-After": String(retryAfterSeconds("hour")) },
+        }
+      );
+    }
   }
 
   const db = createSupabaseAdmin();

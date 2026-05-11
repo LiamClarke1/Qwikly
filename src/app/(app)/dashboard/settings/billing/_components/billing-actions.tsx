@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { fmtDateLong } from "@/lib/money";
 import { X, AlertTriangle } from "lucide-react";
+import Link from "next/link";
 
 /**
  * Tiny client-side action buttons for the billing settings page. Each one
@@ -34,23 +35,12 @@ async function postAndRedirect(path: string, body?: Record<string, unknown>) {
 }
 
 export function UpgradeButton() {
-  const [loading, setLoading] = useState(false);
   return (
-    <Button
-      variant="primary"
-      loading={loading}
-      onClick={async () => {
-        setLoading(true);
-        try {
-          await postAndRedirect("/api/payfast/upgrade");
-        } catch (err) {
-          setLoading(false);
-          alert(err instanceof Error ? err.message : "Upgrade failed");
-        }
-      }}
-    >
-      Upgrade plan
-    </Button>
+    <Link href="/pricing">
+      <Button variant="primary" className="w-full">
+        Upgrade plan
+      </Button>
+    </Link>
   );
 }
 

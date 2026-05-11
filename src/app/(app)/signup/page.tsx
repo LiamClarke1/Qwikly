@@ -54,7 +54,7 @@ const PLANS: {
     cta: "Start Free Trial",
     noCard: true,
     features: [
-      "30 qualified leads/month",
+      "15 qualified leads (7-day trial)",
       "Try the Starter tier free",
       "Digital assistant + embed snippet",
       "Upgrade to any paid tier anytime",
@@ -69,7 +69,7 @@ const PLANS: {
     cta: "Start with Starter",
     noCard: false,
     features: [
-      "30 qualified leads/month",
+      "20 qualified leads/month",
       "1 dashboard user",
       '"Powered by Qwikly" branding',
       "Email support, 24h response",
@@ -85,7 +85,7 @@ const PLANS: {
     cta: "Choose Pro",
     noCard: false,
     features: [
-      "100 qualified leads/month",
+      "50 qualified leads/month",
       "3 dashboard users",
       "Custom branding (your logo)",
       "Custom greeting + qualifying questions",
@@ -102,7 +102,7 @@ const PLANS: {
     features: [
       "Everything in Pro",
       "10 hand-picked prospects per business day (Outbound)",
-      "100 qualified leads/month",
+      "60 qualified leads/month",
       "Priority support, 4h response",
     ],
   },
@@ -114,7 +114,7 @@ const PLANS: {
     cta: "Choose Business",
     noCard: false,
     features: [
-      "400 qualified leads/month",
+      "200 qualified leads/month",
       "15 hand-picked prospects per business day (Outbound)",
       "Unlimited dashboard users",
       "Custom branding (your logo)",

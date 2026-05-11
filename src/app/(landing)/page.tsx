@@ -458,25 +458,40 @@ export default function Home() {
             <LiveCounter />
           </div>
 
-          {/* Three numeric stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 reveal-stagger border-t border-ink/[0.08] pt-16 md:pt-20">
-            <div className="text-center md:text-left">
+          {/* Three numeric stats — premium cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 reveal-stagger">
+            <div className="rounded-2xl border border-ink/[0.08] bg-white/60 px-8 py-8 flex flex-col gap-4">
               <p className="display-xl text-ink leading-none">
                 &lt;60<span className="text-ember">s</span>
               </p>
-              <p className="eyebrow text-ink-500 mt-4">Reply time, every visitor</p>
+              <div>
+                <p className="eyebrow text-ink-500">Reply time, every visitor</p>
+                <p className="text-sm text-ink-600 mt-2 leading-relaxed">
+                  Your digital assistant responds before a visitor can even think to leave.
+                </p>
+              </div>
             </div>
-            <div className="text-center md:text-left">
+            <div className="rounded-2xl border border-ink/[0.08] bg-white/60 px-8 py-8 flex flex-col gap-4">
               <p className="display-xl text-ink leading-none">
                 24<span className="text-ember">/</span>7
               </p>
-              <p className="eyebrow text-ink-500 mt-4">Coverage, no days off</p>
+              <div>
+                <p className="eyebrow text-ink-500">Coverage, no days off</p>
+                <p className="text-sm text-ink-600 mt-2 leading-relaxed">
+                  Weekends, public holidays, after hours — every lead captured, no exceptions.
+                </p>
+              </div>
             </div>
-            <div className="text-center md:text-left">
+            <div className="rounded-2xl border border-ink/[0.08] bg-white/60 px-8 py-8 flex flex-col gap-4">
               <p className="display-xl text-ink leading-none">
                 100<span className="text-ember">%</span>
               </p>
-              <p className="eyebrow text-ink-500 mt-4">POPIA compliant, hosted in SA</p>
+              <div>
+                <p className="eyebrow text-ink-500">POPIA compliant, hosted in SA</p>
+                <p className="text-sm text-ink-600 mt-2 leading-relaxed">
+                  Built for South African businesses. Data stays in South Africa.
+                </p>
+              </div>
             </div>
           </div>
         </div>

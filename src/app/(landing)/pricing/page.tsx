@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Check, X, Sparkles } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
-import ManualPaymentModal, { type ManualPaymentPlan } from "@/components/ManualPaymentModal";
 
 // Tier pricing. Annual = monthly x 12 x 0.85 (15% off, rounded).
 const MONTHLY = { starter: 699, pro: 1799, founders: 2999, business: 3999, enterprise: 7999 } as const;
@@ -30,7 +29,7 @@ const tiers: {
     features: [
       "Digital assistant on your website",
       "Replies to visitors in under 60 seconds",
-      "30 qualified leads/month",
+      "20 qualified leads/month",
       "Email lead delivery to the business owner",
       "1 dashboard user",
       '"Powered by Qwikly" branding',
@@ -48,7 +47,7 @@ const tiers: {
     features: [
       "Everything in Starter",
       "Outbound system, 5 hand-picked prospects per business day",
-      "100 qualified leads/month",
+      "50 qualified leads/month",
       "3 dashboard users",
       "Custom branding, your logo and colours",
       "Custom greeting and qualifying questions",
@@ -66,7 +65,7 @@ const tiers: {
     features: [
       "Everything in Pro",
       "Outbound system, 10 hand-picked prospects per business day",
-      "Same 100 qualified leads/month",
+      "60 qualified leads/month",
       "Priority email support",
     ],
   },
@@ -80,7 +79,7 @@ const tiers: {
     features: [
       "Everything in Pro",
       "Outbound system, 15 hand-picked prospects per business day",
-      "400 qualified leads/month",
+      "200 qualified leads/month",
       "Unlimited dashboard users",
       "Lead exports, CSV",
       "Priority email support, 4h response",
@@ -96,7 +95,7 @@ const tiers: {
     features: [
       "Everything in Business",
       "Custom Outbound prospect volume",
-      "1,500+ qualified leads/month",
+      "600+ qualified leads/month",
       "API access for custom integrations",
       "Dedicated support, 1h response",
       "Custom onboarding",
@@ -108,32 +107,32 @@ const tiers: {
 const cardHighlights: Record<TierId, string[]> = {
   starter: [
     "Digital assistant on your website",
-    "30 qualified leads/month",
+    "20 qualified leads/month",
     "Email lead delivery",
     "Email support, 24h response",
   ],
   pro: [
     "Everything in Starter",
     "Outbound, 5 prospects per business day",
-    "100 qualified leads/month",
+    "50 qualified leads/month",
     "Custom branding and questions",
   ],
   founders: [
     "Everything in Pro",
     "Outbound, 10 prospects per business day",
-    "Same 100 qualified leads/month",
+    "60 qualified leads/month",
     "Priority email support",
   ],
   business: [
     "Everything in Pro",
     "Outbound, 15 prospects per business day",
-    "400 qualified leads/month",
+    "200 qualified leads/month",
     "Unlimited dashboard users",
   ],
   enterprise: [
     "Everything in Business",
     "Custom Outbound volume",
-    "1,500+ qualified leads/month",
+    "600+ qualified leads/month",
     "API access, dedicated support",
   ],
 };
@@ -153,9 +152,9 @@ const featureRows: {
   { label: "Reply under 60 seconds",              starter: true,         pro: true,         founders: true,        business: true,           enterprise: true            },
   { label: "Email lead delivery",                 starter: true,         pro: true,         founders: true,        business: true,           enterprise: true            },
   { label: "POPIA compliant",                     starter: true,         pro: true,         founders: true,        business: true,           enterprise: true            },
-  { label: "Qualified leads / month",             starter: "30",         pro: "100",        founders: "100",       business: "400",          enterprise: "1,500+"        },
+  { label: "Qualified leads / month",             starter: "20",         pro: "50",         founders: "60",        business: "200",          enterprise: "600+"          },
   { label: "Outbound prospects / business day",   starter: false,        pro: "5",          founders: "10",        business: "15",           enterprise: "Custom"        },
-  { label: "Top-up rate beyond plan",             starter: "R23 / lead", pro: "R20 / lead", founders: "R20 / lead", business: "R12 / lead",  enterprise: "Volume"        },
+  { label: "Top-up rate beyond plan",             starter: "R35 / lead", pro: "R36 / lead", founders: "R36 / lead", business: "R20 / lead",  enterprise: "Volume"        },
   { label: "Dashboard users",                     starter: "1",          pro: "3",          founders: "3",         business: "Unlimited",    enterprise: "Unlimited"     },
   { label: "Custom greeting and questions",       starter: false,        pro: true,         founders: true,        business: true,           enterprise: true            },
   { label: '"Powered by Qwikly" branding',        starter: true,         pro: false,        founders: false,       business: false,          enterprise: false           },
@@ -189,12 +188,12 @@ const pricingFAQs = [
   {
     question: "What happens when I hit my monthly lead limit?",
     answer:
-      "We notify you before you hit the cap. You can upgrade your plan, or top up at your plan's per-lead rate, R23 on Starter, R20 on Pro, R12 on Business. No flat overage, no automatic billing, no surprise charges. Your digital assistant keeps working until you decide.",
+      "We notify you before you hit the cap. You can upgrade your plan, or top up at your plan's per-lead rate: R35 on Starter, R36 on Pro and Founders, R20 on Business. No flat overage, no automatic billing, no surprise charges. Your digital assistant keeps working until you decide.",
   },
   {
     question: "What happens after my 7-day trial?",
     answer:
-      "At the end of your trial, you choose a paid plan to continue. If you do not upgrade, your account pauses. You keep your dashboard and your lead history. Upgrade any time to reactivate.",
+      "At the end of your 7-day trial you choose a paid plan to continue. If you do not upgrade, your account pauses. You keep your dashboard and your lead history. Upgrade any time to reactivate.",
   },
   {
     question: "Can I switch plans anytime?",
@@ -240,7 +239,6 @@ function MatrixCell({ value, isPremiumCol }: { value: FeatureCell; isPremiumCol?
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
-  const [paymentPlan, setPaymentPlan] = useState<ManualPaymentPlan | null>(null);
 
   function displayPrice(id: TierId) {
     return annual ? Math.round(ANNUAL[id] / 12) : MONTHLY[id];
@@ -251,7 +249,7 @@ export default function PricingPage() {
       window.location.href = "/contact?subject=enterprise";
       return;
     }
-    setPaymentPlan(id as ManualPaymentPlan);
+    window.location.href = `/signup?plan=${id}`;
   }
 
   return (
@@ -519,17 +517,16 @@ export default function PricingPage() {
                       {tier.cta}
                     </CTAButton>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => setPaymentPlan(tier.id as ManualPaymentPlan)}
-                      className={`w-full text-center text-xs font-medium py-2.5 rounded-full cursor-pointer transition-colors ${
+                    <a
+                      href={`/signup?plan=${tier.id}`}
+                      className={`w-full block text-center text-xs font-medium py-2.5 rounded-full cursor-pointer transition-colors ${
                         isPro
                           ? "bg-ember text-paper hover:bg-ember/90"
                           : "border border-ink/15 text-ink hover:bg-ink hover:text-paper hover:border-ink"
                       }`}
                     >
                       {tier.cta}
-                    </button>
+                    </a>
                   )}
                 </div>
               );
@@ -563,7 +560,7 @@ export default function PricingPage() {
             </div>
             <div className="md:col-span-8 md:col-start-5 space-y-6 text-ink-700 text-base leading-relaxed">
               <p>
-                If you hit your monthly lead cap, you can top up at the same per-lead rate you are already paying inside your plan. That is R23 per lead on Starter, R20 on Pro and Founders, R12 on Business. Enterprise tops up at volume pricing. There is no flat overage charge, no plan change required, and no automatic billing. You approve every top-up.
+                If you hit your monthly lead cap, you can top up at the per-lead rate on your plan. That is R35 per lead on Starter, R36 on Pro and Founders, R20 on Business. Enterprise tops up at volume pricing. There is no flat overage charge, no plan change required, and no automatic billing. You approve every top-up.
               </p>
               <p>
                 Outbound prospect volume is fixed per tier, 5 per business day on Pro, 10 on Founders, 15 on Business, custom on Enterprise. If you need more, the cleanest path is moving up a tier rather than buying ad-hoc add-ons. That keeps your monthly bill predictable.
@@ -658,14 +655,6 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {paymentPlan && (
-        <ManualPaymentModal
-          open={!!paymentPlan}
-          plan={paymentPlan}
-          cycle={annual ? "annual" : "monthly"}
-          onClose={() => setPaymentPlan(null)}
-        />
-      )}
     </div>
   );
 }

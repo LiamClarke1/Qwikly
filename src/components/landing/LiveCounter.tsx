@@ -33,44 +33,58 @@ export function LiveCounter() {
         if (!cancelled) setStats(data);
       })
       .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
-  const cards: Array<{ value: string; label: string; footnote?: string }> = [
-    { value: stats.jobsBooked.toLocaleString("en-ZA"), label: "Jobs booked" },
+  const cards: Array<{ value: string; label: string; footnote?: string; show: boolean }> = [
+    {
+      value: stats.jobsBooked.toLocaleString("en-ZA"),
+      label: "Jobs booked",
+      show: true,
+    },
     {
       value: formatZar(stats.revenueGenerated),
       label: "Revenue captured for SA businesses",
       footnote: stats.revenueIsEstimate ? "industry estimate" : undefined,
+      show: true,
     },
-    { value: stats.businessesPowered.toLocaleString("en-ZA"), label: "Businesses powered" },
+    {
+      value: stats.businessesPowered.toLocaleString("en-ZA"),
+      label: "Businesses powered",
+      show: true,
+    },
   ];
 
   return (
     <section
       aria-label="Live Qwikly scoreboard"
-      className="relative py-16 md:py-20 grain overflow-hidden"
+      className="relative rounded-3xl overflow-hidden bg-ink grain-dark"
     >
-      <div className="relative mx-auto max-w-site px-6 lg:px-10">
+      {/* ambient glow */}
+      <div className="ember-blob w-[560px] h-[380px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-25 pointer-events-none" />
+
+      <div className="relative px-8 py-10 md:px-12 md:py-14">
+        {/* header row */}
         <div className="flex items-center gap-3 mb-10">
           <span className="inline-block w-1.5 h-1.5 rounded-full bg-ember tick" />
-          <p className="eyebrow text-ink-500">Live scoreboard</p>
+          <p className="eyebrow text-paper/50">Live scoreboard</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {cards.map((c) => (
-            <div key={c.label} className="ed-card-ghost">
+        <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-paper/[0.08]">
+          {cards.map((c, i) => (
+            <div
+              key={c.label}
+              className={`${i === 0 ? "" : "md:pl-10 lg:pl-14"} ${i === cards.length - 1 ? "" : "pb-8 md:pb-0 md:pr-10 lg:pr-14"}`}
+            >
               <p
-                className="font-mono num text-ink leading-none"
-                style={{ fontSize: "clamp(2.25rem, 4.5vw, 3.5rem)", letterSpacing: "-0.02em" }}
+                className="font-mono num text-paper leading-none"
+                style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)", letterSpacing: "-0.03em" }}
               >
                 {c.value}
               </p>
-              <p className="eyebrow text-ink-500 mt-5">{c.label}</p>
+              <p className="eyebrow text-paper/45 mt-4 leading-snug">{c.label}</p>
               {c.footnote && (
-                <p className="mt-2 text-[11px] text-ink-400 italic">{c.footnote}</p>
+                <p className="mt-1.5 text-[11px] text-paper/30 italic">{c.footnote}</p>
               )}
             </div>
           ))}
