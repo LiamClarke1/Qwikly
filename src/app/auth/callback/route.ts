@@ -6,6 +6,35 @@ import { supabaseAdmin } from "@/lib/supabase-server";
 import { resolvePlan } from "@/lib/plan";
 import { trialEndsFromNow } from "@/lib/trial";
 
+// Pipeline (Outbound) plans get products=['outbound'] and a per-tier daily
+// prospect quota. resolvePlan() downgrades non-Inbound tiers to 'trial', so
+// we preserve the raw plan string for Pipeline tiers separately.
+const VALID_PLANS = new Set([
+  "trial", "starter", "pro", "business", "enterprise", "premium",
+  "pipeline_lite", "pipeline_pro",
+]);
+
+function resolvePlanForSignup(raw: string | null): string {
+  if (raw && VALID_PLANS.has(raw)) return raw;
+  // Fall back to inbound resolvePlan for legacy aliases (lite -> starter, etc.).
+  return resolvePlan(raw);
+}
+
+function productsForPlan(plan: string): string[] {
+  if (plan === "pipeline_lite" || plan === "pipeline_pro") return ["outbound"];
+  return ["inbound"];
+}
+
+function pipelineDailyQuotaForPlan(plan: string): number {
+  if (plan === "pipeline_lite") return 3;
+  if (plan === "pipeline_pro") return 8;
+  return 3; // default for inbound, never read
+}
+
+function isPipelinePlan(plan: string): boolean {
+  return plan === "pipeline_lite" || plan === "pipeline_pro";
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
@@ -46,7 +75,7 @@ export async function GET(request: NextRequest) {
           user.user_metadata?.full_name ??
           user.user_metadata?.name ??
           "";
-        const resolvedPlan = resolvePlan(plan);
+        const resolvedPlan = resolvePlanForSignup(plan);
         const trialEndsAt = resolvedPlan === "trial"
           ? trialEndsFromNow().toISOString()
           : null;
@@ -78,22 +107,33 @@ export async function GET(request: NextRequest) {
             onboarding_step: 1,
             web_widget_enabled: true,
             plan: resolvedPlan,
+            products: productsForPlan(resolvedPlan),
+            pipeline_daily_quota: pipelineDailyQuotaForPlan(resolvedPlan),
             ...(trialEndsAt ? { trial_ends_at: trialEndsAt } : {}),
           });
         }
       }
     }
 
-    // Redirect to onboarding if the user hasn't completed it yet
+    // Redirect to onboarding if the user hasn't completed it yet.
+    // Pipeline (Outbound) plans go to the Pipeline wizard, never the Inbound
+    // assistant onboarding wizard. The Pipeline setup is what they paid for.
     if (user) {
       const { data: client } = await supabase
         .from("clients")
-        .select("id, onboarding_completed_at")
+        .select("id, onboarding_completed_at, plan")
         .eq("auth_user_id", user.id)
         .limit(1)
         .maybeSingle();
 
       if (!client || !client.onboarding_completed_at) {
+        const effectivePlan =
+          (client?.plan as string | undefined) ?? resolvePlanForSignup(plan);
+        if (isPipelinePlan(effectivePlan)) {
+          return NextResponse.redirect(
+            new URL("/dashboard/pipeline/setup", requestUrl.origin),
+          );
+        }
         const onboardingPath = plan
           ? `/dashboard/setup?plan=${plan}`
           : "/dashboard/setup";

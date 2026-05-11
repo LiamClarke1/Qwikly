@@ -63,7 +63,19 @@ export async function GET() {
       return NextResponse.json({ hasOutbound: false, status: "pending" as PipelineSetupStatus });
     }
 
-    const state = await getSetupState(row.id);
+    // pipeline_setup_state is keyed by business_id (UUID), not clients.id.
+    // Resolve the businesses row off the same user before reading state.
+    const { data: business } = await db
+      .from("businesses")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    const businessId = (business as { id?: string } | null)?.id;
+    if (!businessId) {
+      return NextResponse.json({ hasOutbound: true, status: "pending" as PipelineSetupStatus });
+    }
+
+    const state = await getSetupState(businessId);
     return NextResponse.json({ hasOutbound: true, status: state.status });
   } catch {
     return NextResponse.json(fallback, { status: 200 });

@@ -42,8 +42,19 @@ export default async function PipelineSetupPage() {
     redirect("/dashboard/setup");
   }
 
-  const tenantId = (client as { id: number | string }).id;
-  const state = await getSetupState(tenantId);
+  // pipeline_setup_state is keyed by business_id (UUID), not clients.id
+  // (BIGINT). Resolve the businesses row off the same user.
+  const { data: business } = await db
+    .from("businesses")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  const businessId = (business as { id?: string } | null)?.id;
+  if (!businessId) {
+    redirect("/dashboard/setup");
+  }
+
+  const state = await getSetupState(businessId);
 
   // We treat the ICP as "existing" if the user has previously generated a
   // prospect list. That switches the page header and copy into refresh mode.

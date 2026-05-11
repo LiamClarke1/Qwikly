@@ -271,7 +271,15 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
       return;
     }
     if (!json.needsConfirmation) {
-      router.push(`/dashboard/setup?plan=${plan}`);
+      // Pipeline (Outbound) plans go to the Pipeline wizard, not the Inbound
+      // assistant onboarding. Inbound plans keep their existing /dashboard/setup
+      // route.
+      const isPipeline = plan === "pipeline_lite" || plan === "pipeline_pro";
+      router.push(
+        isPipeline
+          ? `/dashboard/pipeline/setup`
+          : `/dashboard/setup?plan=${plan}`,
+      );
       return;
     }
     setLoading(false);

@@ -97,54 +97,43 @@ function normalize(raw: unknown): PipelineSetupState {
 }
 
 /**
- * Read setup state for a tenant. Tries the JSONB column on clients first,
- * then a dedicated pipeline_setup_state table, then returns a default state.
- * Fail-soft on every error so the page renders even before any migration
- * has been applied.
+ * Read setup state for a business. The single source of truth is the
+ * `pipeline_setup_state` table from 20260510_pipeline_platform.sql, keyed by
+ * business_id (UUID), with the ICP stored in its own JSONB column. The
+ * 20260511_outbound_v1_setup_state_fix.sql migration added last_generated_at
+ * and widened the status CHECK constraint.
+ *
+ * Callers MUST pass a business_id (UUID), not clients.id (BIGINT). The two
+ * are different tenant keys. Resolve businesses.id via auth.uid() ↔ user_id
+ * before calling.
+ *
+ * Fail-soft: returns the default state on any error so the UI never throws.
  */
 export async function getSetupState(tenantId: string | number): Promise<PipelineSetupState> {
   const db = supabaseAdmin();
 
-  // Path A: JSONB column on clients.
   try {
     const { data, error } = await db
-      .from("clients")
-      .select("pipeline_setup_state")
-      .eq("id", tenantId)
-      .maybeSingle();
-    if (!error && data) {
-      const c = data as { pipeline_setup_state?: unknown };
-      if (c.pipeline_setup_state && typeof c.pipeline_setup_state === "object") {
-        return normalize(c.pipeline_setup_state);
-      }
-      return emptySetupState();
-    }
-  } catch {
-    // ignore, try fallback
-  }
-
-  // Path B: dedicated table.
-  try {
-    const { data } = await db
       .from("pipeline_setup_state")
-      .select("state")
-      .eq("tenant_id", tenantId)
+      .select("icp, status, last_generated_at")
+      .eq("business_id", tenantId)
       .maybeSingle();
-    if (data) {
-      const d = data as { state?: unknown };
-      return normalize(d.state);
-    }
+    if (error || !data) return emptySetupState();
+    return normalize({
+      icp: (data as { icp?: unknown }).icp,
+      status: (data as { status?: unknown }).status,
+      last_generated_at: (data as { last_generated_at?: unknown }).last_generated_at,
+    });
   } catch {
-    // ignore
+    return emptySetupState();
   }
-
-  return emptySetupState();
 }
 
 /**
- * Merge a partial update into the tenant's setup state. Reads, mutates,
- * writes. Best-effort. Tries the JSONB column first, then the dedicated
- * table. Returns the next state regardless of whether persistence succeeded.
+ * Merge a partial update into the business's setup state. Reads, mutates,
+ * writes via upsert on the pipeline_setup_state.business_id UNIQUE
+ * constraint. Returns the next state regardless of whether persistence
+ * succeeded so callers can render optimistically.
  */
 export async function updateSetupState(
   tenantId: string | number,
@@ -158,23 +147,18 @@ export async function updateSetupState(
   };
 
   const db = supabaseAdmin();
-
-  // Try JSONB column on clients.
-  try {
-    const res = await db
-      .from("clients")
-      .update({ pipeline_setup_state: next })
-      .eq("id", tenantId);
-    if (!res.error) return next;
-  } catch {
-    // ignore, try the dedicated table
-  }
-
-  // Try dedicated table upsert.
   try {
     await db
       .from("pipeline_setup_state")
-      .upsert({ tenant_id: tenantId, state: next });
+      .upsert(
+        {
+          business_id: tenantId,
+          icp: next.icp,
+          status: next.status,
+          last_generated_at: next.last_generated_at,
+        },
+        { onConflict: "business_id" },
+      );
   } catch {
     // soft fail, state is still returned to caller
   }
