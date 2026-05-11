@@ -8,7 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "lint:no-long-dash": "if grep -lE '\\xe2\\x80\\x94|\\xe2\\x80\\x93' src/lib/assistant-prompt.ts; then echo 'ERROR: long-dash characters in assistant-prompt.ts (em-dash or en-dash). Replace with comma or full stop.' >&2; exit 1; fi"
+    "lint:no-long-dash": "if grep -lE '\\xe2\\x80\\x94|\\xe2\\x80\\x93' src/lib/assistant-prompt.ts; then echo 'ERROR: long-dash characters in assistant-prompt.ts (em-dash or en-dash). Replace with comma or full stop.' >&2; exit 1; fi",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
@@ -39,16 +41,21 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vitest/ui": "^4.1.5",
     "dotenv": "^17.4.2",
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
+    "happy-dom": "^20.9.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.5"
   }
 }
