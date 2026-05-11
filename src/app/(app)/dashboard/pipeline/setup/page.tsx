@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { getSetupState } from "@/lib/pipeline/setup-state";
 import IcpForm from "@/components/pipeline-setup/IcpForm";
+import { Wizard } from "@/components/pipeline-setup/Wizard";
 
 export const dynamic = "force-dynamic";
 
@@ -48,5 +49,8 @@ export default async function PipelineSetupPage() {
   // prospect list. That switches the page header and copy into refresh mode.
   const hasExistingIcp = state.status === "generated" || state.last_generated_at != null;
 
-  return <IcpForm initialIcp={state.icp} hasExistingIcp={hasExistingIcp} />;
+  if (hasExistingIcp) {
+    return <IcpForm initialIcp={state.icp} hasExistingIcp={true} />;
+  }
+  return <Wizard />;
 }
