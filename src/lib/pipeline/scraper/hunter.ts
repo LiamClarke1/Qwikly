@@ -4,6 +4,7 @@
 // is 25/month, paid is 500 starting around USD 49/mo. Cache verified emails by
 // domain in pipeline_prospects.icp_match.email_source so we do not re-call.
 
+import { recordPipelineUsage } from "@/lib/pipeline/billing/pipeline-usage";
 import type {
   HunterEmailResult,
   HunterVerificationStatus,
@@ -141,10 +142,18 @@ function redactKey(url: string): string {
 async function verifyEmail(
   email: string,
   apiKey: string,
+  clientId: string | number,
 ): Promise<HunterVerificationStatus> {
   const url = `${HUNTER_BASE}/email-verifier?email=${encodeURIComponent(email)}&api_key=${encodeURIComponent(apiKey)}`;
   const res = await fetchJson<HunterVerifierResponse>(url);
   if (!res || !res.data) return "unknown";
+  // Successful verifier call, tag tenant usage for cost tracking.
+  await recordPipelineUsage({
+    clientId,
+    provider: "hunter",
+    endpoint: "email_verifier",
+    units: 1,
+  });
   // Hunter returns "status" (e.g. "valid", "invalid", "accept_all", "webmail",
   // "disposable", "unknown"). We map non, standard values to "unknown".
   return coerceVerificationStatus(res.data.status);
@@ -152,6 +161,7 @@ async function verifyEmail(
 
 export async function findEmailForDomain(
   domain: string,
+  clientId: string | number,
   opts?: { firstName?: string; lastName?: string },
 ): Promise<HunterEmailResult | null> {
   const apiKey = process.env.HUNTER_API_KEY;
@@ -181,9 +191,18 @@ export async function findEmailForDomain(
       `&api_key=${encodeURIComponent(apiKey)}`;
 
     const finder = await fetchJson<HunterEmailFinderResponse>(finderUrl);
+    if (finder) {
+      // Successful email-finder call, tag tenant usage for cost tracking.
+      await recordPipelineUsage({
+        clientId,
+        provider: "hunter",
+        endpoint: "email_finder",
+        units: 1,
+      });
+    }
     const found = finder?.data?.email;
     if (found) {
-      const verification = await verifyEmail(found, apiKey);
+      const verification = await verifyEmail(found, apiKey, clientId);
       const confidence =
         typeof finder?.data?.score === "number" ? finder.data.score : 0;
       return {
@@ -207,6 +226,16 @@ export async function findEmailForDomain(
     `&api_key=${encodeURIComponent(apiKey)}`;
 
   const search = await fetchJson<HunterDomainSearchResponse>(searchUrl);
+  if (search) {
+    // Successful domain-search call, tag tenant usage for cost tracking.
+    // Domain-search shares the email-finder credit cost on Hunter's plans.
+    await recordPipelineUsage({
+      clientId,
+      provider: "hunter",
+      endpoint: "email_finder",
+      units: 1,
+    });
+  }
   const emails = search?.data?.emails ?? [];
   if (emails.length === 0) {
     return null;
@@ -222,7 +251,7 @@ export async function findEmailForDomain(
     return null;
   }
 
-  const verification = await verifyEmail(top.value, apiKey);
+  const verification = await verifyEmail(top.value, apiKey, clientId);
 
   return {
     email: top.value,
