@@ -79,7 +79,7 @@ function DisputeModal({ periodId, onClose, onDone }: { periodId: string; onClose
               <div>
                 <label className="block text-small font-medium text-fg mb-1.5">Reason for dispute</label>
                 <textarea value={reason} onChange={e => setReason(e.target.value)} required rows={4}
-                  placeholder="e.g. Invoice #INV-2025-0023 was refunded but still included in commission…"
+                  placeholder="e.g. The subscription fee for this period looks wrong…"
                   className="w-full bg-white/5 border border-line rounded-xl px-4 py-2.5 text-small text-fg placeholder:text-fg-faint outline-none focus:border-brand/40 resize-none" />
               </div>
               <div className="flex gap-3 pt-1">
@@ -195,7 +195,7 @@ export default function BillingPeriodPage() {
               </div>
               {period.vat_zar > 0 && (
                 <div className="flex justify-between items-center py-2 border-b border-line/50">
-                  <span className="text-small text-fg-muted">VAT on commission</span>
+                  <span className="text-small text-fg-muted">VAT on subscription fee</span>
                   <span className="text-small text-fg">{fmt(period.vat_zar)}</span>
                 </div>
               )}
