@@ -10,8 +10,14 @@
 import { getMonthlyWholesaleCents } from "./pipeline-usage";
 
 const CAP_CENTS_BY_PLAN: Record<string, number> = {
-  pipeline_lite: 25000, // R250
-  pipeline_pro: 75000, // R750
+  // Bundle tiers
+  pro:        25000,
+  founders:   25000,
+  business:   75000,
+  enterprise: 200000,
+  // Legacy pipeline tiers, kept for one release while the backfill rolls.
+  pipeline_lite: 25000,
+  pipeline_pro:  75000,
 };
 
 // Internal Qwikly tenants. Mirrors INTERNAL_CLIENT_IDS in pipeline-usage.ts.
@@ -26,7 +32,8 @@ const INTERNAL_CLIENT_IDS = new Set<string>(["1"]);
 // the check before bankrupting us. R100k = ~1.5M Google Places calls.
 const INTERNAL_TENANT_CAP_CENTS = 10_000_000;
 
-export type PipelinePlan = "pipeline_lite" | "pipeline_pro";
+/** @deprecated Use InboundPlanTier from @/lib/plan. */
+export type PipelinePlan = 'pro' | 'founders' | 'business' | 'enterprise';
 
 export function wholesaleCapForPlan(plan: string): number {
   return CAP_CENTS_BY_PLAN[plan] ?? 0;
