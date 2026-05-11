@@ -1,16 +1,17 @@
 "use client";
 
 import { cn } from "@/lib/cn";
+import type { StatusTone } from "./status-tones";
+
+export type { StatusTone } from "./status-tones";
+export {
+  prospectStatusTone,
+  campaignStatusTone,
+  replyClassTone,
+} from "./status-tones";
 
 // Warm cream palette status tones, mirrored from Mission Control.
 // Pills stay readable on the cream surface and on hovered ed-card surfaces.
-export type StatusTone =
-  | "neutral"
-  | "info"
-  | "success"
-  | "warning"
-  | "danger"
-  | "muted";
 
 const TONE_STYLES: Record<StatusTone, string> = {
   neutral: "bg-[#F1EADD] text-[#3C3C38] ring-1 ring-[#E8DFD0]",
@@ -43,59 +44,4 @@ export function StatusPill({
   );
 }
 
-// Shared mappers, used across prospects, campaigns, replies.
-export function prospectStatusTone(status: string | null | undefined): StatusTone {
-  switch ((status || "").toLowerCase()) {
-    case "new":
-      return "info";
-    case "contacted":
-      return "neutral";
-    case "replied":
-      return "warning";
-    case "qualified":
-      return "success";
-    case "booked":
-      return "success";
-    case "dead":
-      return "danger";
-    default:
-      return "muted";
-  }
-}
-
-export function campaignStatusTone(status: string | null | undefined): StatusTone {
-  switch ((status || "").toLowerCase()) {
-    case "draft":
-      return "muted";
-    case "warming":
-      return "warning";
-    case "sending":
-      return "success";
-    case "paused":
-      return "neutral";
-    case "completed":
-      return "info";
-    default:
-      return "muted";
-  }
-}
-
-export function replyClassTone(cls: string | null | undefined): StatusTone {
-  switch ((cls || "").toLowerCase()) {
-    case "interested":
-      return "success";
-    case "not interested":
-    case "not_interested":
-      return "danger";
-    case "ooo":
-      return "warning";
-    case "wrong person":
-    case "wrong_person":
-      return "neutral";
-    case "ask later":
-    case "ask_later":
-      return "info";
-    default:
-      return "muted";
-  }
-}
+// Tone mappers live in ./status-tones for use by server components too.
