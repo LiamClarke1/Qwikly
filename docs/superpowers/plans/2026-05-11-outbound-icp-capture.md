@@ -69,6 +69,79 @@ When a Pipeline task needs both keys (e.g. record a Google Places call against b
 
 **If a task in this plan says `pipeline_prospects.client_id`, it's a plan bug — use `business_id` instead.**
 
+## Additional schema and tooling corrections (from audit)
+
+The plan was written before a full read of the existing codebase. These corrections apply to every task that follows:
+
+1. **`pipeline_prospects.email_verification_status` is NOT a top-level column.** It is stored inside the `icp_match` JSONB blob (see `src/app/(app)/dashboard/pipeline/generate/actions.ts:129`). Any filter that needs it must use a JSONB path query: `.filter("icp_match->>email_verification_status", "eq", "valid")`. Task 18 reflects this.
+
+2. **`clients.website_url` does NOT exist.** Don't read it. The wizard captures `websiteUrl` from the user in IntakeScreen and passes it through the request body to the enrichment API. The verification harness (Task 26) reads `website_url` from `businesses` (UUID-keyed) rather than `clients`, via the auth.uid() → businesses lookup the existing generator already does.
+
+3. **`site-reader.ts` does NOT return `about_text`.** Only `hero_text`, `services_text`, `title`, `h1`, `meta_description`. Task 10 (orchestrator) and Task 9 (synthesis prompt) drop the `about` field.
+
+4. **`notifyLead` does not exist. The function is `notifyLeadCaptured(input: NotifyLeadInput): Promise<NotifyLeadResult>`** from `src/lib/notify-lead.ts`. Task 26 calls `notifyLeadCaptured` with the real input shape. The harness should construct a minimal test payload that matches `NotifyLeadInput`.
+
+5. **Vitest is NOT installed.** Test-bearing tasks (2, 3, 9, 10) cannot run until Task 0 below installs it.
+
+6. **Tailwind colour `cream-50` is NOT defined.** Use `bg-light` (#F4EEE4) which is the project's cream token. All wizard components use `bg-light` instead of `bg-light`.
+
+7. **`runGenerator` exists with a DIFFERENT signature**: `runGenerator(input: GenerateProspectInput): Promise<MockProspect[]>` per `src/lib/pipeline/generator/run.ts`. Task 18 is therefore a **refactor**, not an additive wrapper. The new signature takes a `RunGeneratorInput` and returns `RunGeneratorResult`, and every existing caller must be updated. Existing callers: `src/app/(app)/dashboard/pipeline/generate/actions.ts` and any other file that imports it.
+
+8. **`clients` and `businesses` are TWO separate tenancy keys**, joined only by `auth_user_id` (TEXT) → `user_id` (UUID) via `auth.uid()`. The generator actions.ts already does this dual lookup. Reuse that pattern; do not invent a new resolver.
+
+## Task 0: Install Vitest test framework
+
+**Files:**
+- Modify: `package.json`
+- Create: `vitest.config.ts`
+
+- [ ] **Step 1: Install vitest + helpers**
+
+```bash
+npm install -D vitest @vitest/ui happy-dom @testing-library/react @testing-library/jest-dom
+```
+
+- [ ] **Step 2: Add test scripts to package.json**
+
+```json
+"scripts": {
+  "test": "vitest run",
+  "test:watch": "vitest"
+}
+```
+
+- [ ] **Step 3: Create vitest.config.ts**
+
+```ts
+import { defineConfig } from "vitest/config";
+import path from "node:path";
+
+export default defineConfig({
+  test: {
+    environment: "happy-dom",
+    globals: false,
+    include: ["src/**/__tests__/**/*.test.ts", "src/**/__tests__/**/*.test.tsx"],
+  },
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+});
+```
+
+- [ ] **Step 4: Smoke test**
+
+Run: `npx vitest run --reporter=verbose`
+Expected: "No test files found" (no tests yet) but command exits 0 cleanly.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add package.json package-lock.json vitest.config.ts
+git commit -m "chore(test): install vitest + happy-dom for outbound pipeline tests"
+```
+
 ---
 
 ## Task 1: Database migration
@@ -1258,7 +1331,7 @@ export function WhyTooltip({ provenance }: { provenance: FieldProvenance | undef
         Why?
       </button>
       {open && (
-        <div className="absolute z-10 top-full left-0 mt-1 w-64 rounded-md border border-ink-200 bg-cream-50 p-3 shadow-lg text-tiny text-ink-700">
+        <div className="absolute z-10 top-full left-0 mt-1 w-64 rounded-md border border-ink-200 bg-light p-3 shadow-lg text-tiny text-ink-700">
           <div className="font-medium text-ink-900 mb-1">{SOURCE_LABEL[provenance.source]}</div>
           <div className="italic">"{provenance.evidence}"</div>
         </div>
@@ -1863,6 +1936,10 @@ export async function runGenerator(input: RunGeneratorInput): Promise<RunGenerat
   const scored = candidates
     .map((p) => ({ p, score: scoreProspect(p, state.icp) }))
     .filter((x) => x.score.total >= QUALITY_SCORE_THRESHOLD)
+    // email_verification_status lives in icp_match JSONB on the in-memory
+    // prospect from the scraper. After scraping, the generator writes it
+    // into icp_match before insert, so we filter against the in-memory
+    // shape here, not the DB row.
     .filter((x) => x.p.email_verification_status === "valid");
 
   // Dedupe against existing prospects for this tenant.
