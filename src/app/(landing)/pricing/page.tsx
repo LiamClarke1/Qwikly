@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Check, X, Sparkles } from "lucide-react";
+import { Check, X } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 
 // Tier pricing. Annual = monthly x 12 x 0.85 (15% off, rounded).
-const MONTHLY = { starter: 699, pro: 1799, founders: 2999, business: 3999, enterprise: 7999 } as const;
-const ANNUAL  = { starter: 7128, pro: 18350, founders: 30590, business: 40790, enterprise: 81590 } as const;
+const MONTHLY = { starter: 699, pro: 1799, business: 3999, enterprise: 7999 } as const;
+const ANNUAL  = { starter: 7128, pro: 18350, business: 40790, enterprise: 81590 } as const;
 
 type TierId = keyof typeof MONTHLY;
 
@@ -16,9 +16,9 @@ const tiers: {
   tagline: string;
   features: string[];
   highlight: boolean;
-  pill?: { label: string; variant: "popular" | "outbound" };
-  cta: string;
+  pill?: { label: string; variant: "popular" };
   bundleBadge?: string;
+  cta: string;
 }[] = [
   {
     id: "starter",
@@ -43,10 +43,8 @@ const tiers: {
     highlight: true,
     pill: { label: "Most Popular", variant: "popular" },
     cta: "Start with Pro",
-    bundleBadge: "Outbound included",
     features: [
       "Everything in Starter",
-      "Outbound system, 5 hand-picked prospects per business day",
       "50 qualified leads/month",
       "3 dashboard users",
       "Custom branding, your logo and colours",
@@ -55,30 +53,13 @@ const tiers: {
     ],
   },
   {
-    id: "founders",
-    name: "Founders",
-    tagline: "Pro plan with double the Outbound volume",
-    highlight: false,
-    pill: { label: "10 prospects/day", variant: "outbound" },
-    cta: "Start with Founders",
-    bundleBadge: "More Outbound",
-    features: [
-      "Everything in Pro",
-      "Outbound system, 10 hand-picked prospects per business day",
-      "60 qualified leads/month",
-      "Priority email support",
-    ],
-  },
-  {
     id: "business",
     name: "Business",
     tagline: "Multi-doctor, multi-agent, busy practices",
     highlight: false,
     cta: "Start with Business",
-    bundleBadge: "Outbound included",
     features: [
       "Everything in Pro",
-      "Outbound system, 15 hand-picked prospects per business day",
       "200 qualified leads/month",
       "Unlimited dashboard users",
       "Lead exports, CSV",
@@ -91,10 +72,8 @@ const tiers: {
     tagline: "Multi-location, white-label, mission-critical",
     highlight: false,
     cta: "Talk to us",
-    bundleBadge: "Outbound included",
     features: [
       "Everything in Business",
-      "Custom Outbound prospect volume",
       "600+ qualified leads/month",
       "API access for custom integrations",
       "Dedicated support, 1h response",
@@ -113,72 +92,59 @@ const cardHighlights: Record<TierId, string[]> = {
   ],
   pro: [
     "Everything in Starter",
-    "Outbound, 5 prospects per business day",
     "50 qualified leads/month",
     "Custom branding and questions",
-  ],
-  founders: [
-    "Everything in Pro",
-    "Outbound, 10 prospects per business day",
-    "60 qualified leads/month",
-    "Priority email support",
+    "Email support, 12h response",
   ],
   business: [
     "Everything in Pro",
-    "Outbound, 15 prospects per business day",
     "200 qualified leads/month",
     "Unlimited dashboard users",
+    "CSV lead exports",
   ],
   enterprise: [
     "Everything in Business",
-    "Custom Outbound volume",
     "600+ qualified leads/month",
     "API access, dedicated support",
+    "Custom onboarding",
   ],
 };
 
 type FeatureCell = boolean | string;
 
-// Comparison matrix rows, all 5 tiers, derived from the tier feature lists above.
+// Comparison matrix rows — 4 tiers: Starter, Pro, Business, Enterprise.
 const featureRows: {
   label: string;
   starter: FeatureCell;
   pro: FeatureCell;
-  founders: FeatureCell;
   business: FeatureCell;
   enterprise: FeatureCell;
 }[] = [
-  { label: "Digital assistant on your website",  starter: true,         pro: true,         founders: true,        business: true,           enterprise: true            },
-  { label: "Reply under 60 seconds",              starter: true,         pro: true,         founders: true,        business: true,           enterprise: true            },
-  { label: "Email lead delivery",                 starter: true,         pro: true,         founders: true,        business: true,           enterprise: true            },
-  { label: "POPIA compliant",                     starter: true,         pro: true,         founders: true,        business: true,           enterprise: true            },
-  { label: "Qualified leads / month",             starter: "20",         pro: "50",         founders: "60",        business: "200",          enterprise: "600+"          },
-  { label: "Outbound prospects / business day",   starter: false,        pro: "5",          founders: "10",        business: "15",           enterprise: "Custom"        },
-  { label: "Top-up rate beyond plan",             starter: "R35 / lead", pro: "R36 / lead", founders: "R36 / lead", business: "R20 / lead",  enterprise: "Volume"        },
-  { label: "Dashboard users",                     starter: "1",          pro: "3",          founders: "3",         business: "Unlimited",    enterprise: "Unlimited"     },
-  { label: "Custom greeting and questions",       starter: false,        pro: true,         founders: true,        business: true,           enterprise: true            },
-  { label: '"Powered by Qwikly" branding',        starter: true,         pro: false,        founders: false,       business: false,          enterprise: false           },
-  { label: "Custom branding, your logo",          starter: false,        pro: true,         founders: true,        business: true,           enterprise: true            },
-  { label: "Lead exports, CSV",                   starter: false,        pro: false,        founders: false,       business: true,           enterprise: true            },
-  { label: "API access",                          starter: false,        pro: false,        founders: false,       business: false,          enterprise: true            },
-  { label: "Support response",                    starter: "24h",        pro: "12h",        founders: "Priority",  business: "4h",           enterprise: "1h"            },
+  { label: "Digital assistant on your website",  starter: true,         pro: true,         business: true,           enterprise: true            },
+  { label: "Reply under 60 seconds",              starter: true,         pro: true,         business: true,           enterprise: true            },
+  { label: "Email lead delivery",                 starter: true,         pro: true,         business: true,           enterprise: true            },
+  { label: "POPIA compliant",                     starter: true,         pro: true,         business: true,           enterprise: true            },
+  { label: "Qualified leads / month",             starter: "20",         pro: "50",         business: "200",          enterprise: "600+"          },
+  { label: "Top-up rate beyond plan",             starter: "R35 / lead", pro: "R36 / lead", business: "R20 / lead",  enterprise: "Volume"        },
+  { label: "Dashboard users",                     starter: "1",          pro: "3",          business: "Unlimited",    enterprise: "Unlimited"     },
+  { label: "Custom greeting and questions",       starter: false,        pro: true,         business: true,           enterprise: true            },
+  { label: '"Powered by Qwikly" branding',        starter: true,         pro: false,        business: false,          enterprise: false           },
+  { label: "Custom branding, your logo",          starter: false,        pro: true,         business: true,           enterprise: true            },
+  { label: "Lead exports, CSV",                   starter: false,        pro: false,        business: true,           enterprise: true            },
+  { label: "API access",                          starter: false,        pro: false,        business: false,          enterprise: true            },
+  { label: "Support response",                    starter: "24h",        pro: "12h",        business: "4h",           enterprise: "1h"            },
 ];
 
 const pricingFAQs = [
   {
     question: "What exactly does Qwikly do?",
     answer:
-      "Two things. One, a digital assistant on your website that replies to visitors in under 60 seconds, asks them your qualifying questions, captures their contact info, and emails you when a new lead comes in. Two, on Pro and above, an Outbound system that hand-picks prospects that match your target client, verifies their contact info, and delivers them to your dashboard daily. You decide who to reach out to. That is the whole product.",
+      "A digital assistant on your website that replies to visitors in under 60 seconds, asks them your qualifying questions, captures their contact info, and emails you when a new lead comes in. That is the whole product.",
   },
   {
     question: "How fast does Qwikly reply to a new visitor?",
     answer:
       "Under 60 seconds, every time. The digital assistant replies in the chat on your website, and as soon as the visitor shares their phone number or email, the lead lands in your inbox by email. That is the only notification channel, no SMS, no WhatsApp, just email.",
-  },
-  {
-    question: "How does the Outbound system work?",
-    answer:
-      "On Pro and above, we hand-pick prospects each business day that match the target client you describe to us. We verify the contact info before handing it over and deliver the list to your dashboard with suggested outreach copy. You decide who to actually contact and when. We do not send anything on your behalf. Pro gets 5 prospects per business day, Founders gets 10, Business gets 15, Enterprise is custom.",
   },
   {
     question: "What counts as a qualified lead?",
@@ -208,7 +174,7 @@ const pricingFAQs = [
   {
     question: "Is there a setup fee?",
     answer:
-      "No. Every paid plan is a flat monthly fee, no setup fee, no onboarding charge. Outbound is included from Pro upward at no extra cost.",
+      "No. Every paid plan is a flat monthly fee, no setup fee, no onboarding charge.",
   },
 ];
 
@@ -315,7 +281,7 @@ export default function PricingPage() {
               </h2>
             </div>
             <p className="text-ink-500 text-sm max-w-md">
-              Pro is the most popular plan. Founders sits between Pro and Business, same Inbound limits as Pro with double the daily Outbound.
+              Pro is the most popular plan. Business steps up to 200 leads per month with unlimited users and CSV exports.
             </p>
           </div>
 
@@ -391,9 +357,6 @@ export default function PricingPage() {
                         <MatrixCell value={row.pro} isPremiumCol />
                       </td>
                       <td className="py-4 px-5 text-left">
-                        <MatrixCell value={row.founders} />
-                      </td>
-                      <td className="py-4 px-5 text-left">
                         <MatrixCell value={row.business} />
                       </td>
                       <td className="py-4 px-5 text-left">
@@ -459,17 +422,6 @@ export default function PricingPage() {
                   <p className={`text-xs leading-snug mb-3 ${isPro ? "text-paper/65" : "text-ink-700"}`}>
                     {tier.tagline}
                   </p>
-
-                  {tier.bundleBadge && (
-                    <div className="mb-3">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] ${
-                        isPro ? "bg-paper/10 text-paper/80" : "bg-ink-50 text-ink-700"
-                      }`}>
-                        <Sparkles className="w-3 h-3" aria-hidden />
-                        {tier.bundleBadge}
-                      </span>
-                    </div>
-                  )}
 
                   <div className="mb-4">
                     <div className="flex items-baseline gap-1">
@@ -560,10 +512,7 @@ export default function PricingPage() {
             </div>
             <div className="md:col-span-8 md:col-start-5 space-y-6 text-ink-700 text-base leading-relaxed">
               <p>
-                If you hit your monthly lead cap, you can top up at the per-lead rate on your plan. That is R35 per lead on Starter, R36 on Pro and Founders, R20 on Business. Enterprise tops up at volume pricing. There is no flat overage charge, no plan change required, and no automatic billing. You approve every top-up.
-              </p>
-              <p>
-                Outbound prospect volume is fixed per tier, 5 per business day on Pro, 10 on Founders, 15 on Business, custom on Enterprise. If you need more, the cleanest path is moving up a tier rather than buying ad-hoc add-ons. That keeps your monthly bill predictable.
+                If you hit your monthly lead cap, you can top up at the per-lead rate on your plan. That is R35 per lead on Starter, R36 on Pro, R20 on Business. Enterprise tops up at volume pricing. There is no flat overage charge, no plan change required, and no automatic billing. You approve every top-up.
               </p>
               <p>
                 A lead is only counted when a visitor shares a phone number or email. Bounced chats, bots, name-only conversations, and your own test messages never come out of your monthly allowance. You only pay for people you can actually reach.
@@ -644,7 +593,7 @@ export default function PricingPage() {
         <div className="dot-grid absolute inset-0 opacity-50" />
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
           <h2 className="display-xl text-paper max-w-[22ch] mx-auto">
-            Two things, done well.{" "}
+            One thing, done well.{" "}
             <em className="italic font-light text-ember">Try it for 7 days.</em>
           </h2>
           <div className="mt-12 flex justify-center">

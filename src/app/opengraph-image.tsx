@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt =
-  "Qwikly — Digital assistant for South African service businesses. Never miss a lead again.";
+  "Qwikly — Reply to every visitor. Find new clients every day. Two products for SA service businesses.";
 
 export default async function Image() {
   const [bold, regular] = await Promise.all([
@@ -64,7 +64,7 @@ export default async function Image() {
                 textTransform: "uppercase",
               }}
             >
-              Digital Assistant for SA Service Businesses
+              Two products for SA service businesses
             </span>
           </div>
 
@@ -94,29 +94,41 @@ export default async function Image() {
           </div>
         </div>
 
-        {/* Middle: headline */}
+        {/* Middle: two-line headline */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: 8,
+            gap: 6,
           }}
         >
           <span
             style={{
               fontFamily: "Inter",
               fontWeight: 700,
-              fontSize: 76,
+              fontSize: 68,
               color: "#F4EEE4",
               letterSpacing: "-2.5px",
               lineHeight: 1.05,
             }}
           >
-            Never miss a lead again.
+            Reply to every visitor.
+          </span>
+          <span
+            style={{
+              fontFamily: "Inter",
+              fontWeight: 700,
+              fontSize: 68,
+              color: "#E85A2C",
+              letterSpacing: "-2.5px",
+              lineHeight: 1.05,
+            }}
+          >
+            Find new clients every day.
           </span>
         </div>
 
-        {/* Bottom: descriptor + domain */}
+        {/* Bottom: two product descriptors + domain */}
         <div
           style={{
             display: "flex",
@@ -124,26 +136,47 @@ export default async function Image() {
             alignItems: "flex-end",
           }}
         >
-          <span
+          <div
             style={{
-              fontFamily: "Inter",
-              fontWeight: 400,
-              fontSize: 24,
-              color: "rgba(244,238,228,0.55)",
-              maxWidth: 700,
-              lineHeight: 1.4,
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+              maxWidth: 760,
             }}
           >
-            Replies to every visitor in under 60 seconds. Qualifies them.
-            Books them in. Built for South Africa.
-          </span>
+            <span
+              style={{
+                fontFamily: "Inter",
+                fontWeight: 400,
+                fontSize: 21,
+                color: "rgba(244,238,228,0.60)",
+                lineHeight: 1.4,
+              }}
+            >
+              Digital Assistant — replies to every website visitor in under 60s,
+              qualifies them, emails you the lead.
+            </span>
+            <span
+              style={{
+                fontFamily: "Inter",
+                fontWeight: 400,
+                fontSize: 21,
+                color: "rgba(244,238,228,0.60)",
+                lineHeight: 1.4,
+              }}
+            >
+              Outbound — a daily list of hand-picked new prospects delivered
+              straight to your dashboard.
+            </span>
+          </div>
           <span
             style={{
               fontFamily: "Inter",
               fontWeight: 400,
               fontSize: 20,
-              color: "rgba(244,238,228,0.35)",
+              color: "rgba(244,238,228,0.30)",
               letterSpacing: "0.05em",
+              alignSelf: "flex-end",
             }}
           >
             qwikly.co.za

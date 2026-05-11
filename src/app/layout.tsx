@@ -40,11 +40,11 @@ export const metadata: Metadata = {
     google: "tczIM2WulV3rRXOHYYDCnONsEPUKckjx-U2WTu5xy2w",
   },
   title: {
-    default: "Qwikly — Never miss a lead again",
+    default: "Qwikly — Reply to every visitor. Find new clients every day.",
     template: "%s | Qwikly",
   },
   description:
-    "A digital assistant for your website that replies to every visitor in under 60 seconds, qualifies them, and emails you each new lead. Flat monthly plans, no setup fees. Built for South African service businesses.",
+    "Two products for SA service businesses: a digital assistant that replies to every website visitor in under 60 seconds and emails you each new lead, plus a daily list of hand-picked prospects delivered to your dashboard. Flat monthly plans, no setup fees.",
   applicationName: "Qwikly",
   authors: [{ name: "Clarke Agency", url: "https://www.qwikly.co.za/about" }],
   creator: "Clarke Agency",
@@ -56,9 +56,9 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "Qwikly — Never miss a lead again",
+    title: "Qwikly — Reply to every visitor. Find new clients every day.",
     description:
-      "A digital assistant for your website that replies to every visitor in under 60 seconds, qualifies them, and emails you each new lead. Flat monthly plans, no setup fees. Built for South African service businesses.",
+      "Two products for SA service businesses: a digital assistant that replies to every website visitor in under 60 seconds and emails you each new lead, plus a daily list of hand-picked prospects delivered to your dashboard. Flat monthly plans, no setup fees.",
     type: "website",
     url: "https://www.qwikly.co.za",
     siteName: "Qwikly",
@@ -66,9 +66,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Qwikly — Never miss a lead again",
+    title: "Qwikly — Reply to every visitor. Find new clients every day.",
     description:
-      "A digital assistant for your website that replies to every visitor in under 60 seconds, qualifies them, and emails you each new lead. Flat monthly plans, no setup fees. Built for South African service businesses.",
+      "Two products for SA service businesses: a digital assistant that replies to every website visitor in under 60 seconds and emails you each new lead, plus a daily list of hand-picked prospects delivered to your dashboard. Flat monthly plans, no setup fees.",
   },
   robots: {
     index: true,
