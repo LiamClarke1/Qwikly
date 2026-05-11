@@ -93,6 +93,21 @@ const PLANS: {
     ],
   },
   {
+    id: "founders",
+    name: "Founders Concierge",
+    price: "R2,999",
+    sub: "/month",
+    cta: "Choose Founders",
+    noCard: false,
+    features: [
+      "100 qualified leads/month",
+      "3 dashboard users",
+      "Custom branding (your logo)",
+      "Priority support, 4h response",
+      "5 hand-picked prospects per business day",
+    ],
+  },
+  {
     id: "business",
     name: "Business",
     price: "R3,999",
@@ -105,36 +120,6 @@ const PLANS: {
       "Custom branding (your logo)",
       "Lead exports (CSV) + priority support",
       "Multi-doctor or multi-agent practices",
-    ],
-  },
-  {
-    id: "pipeline_lite",
-    name: "Pipeline Lite",
-    price: "R7,500",
-    sub: "/month",
-    cta: "Start with Pipeline Lite",
-    noCard: false,
-    features: [
-      "3 hand-picked prospects per business day",
-      "Verified contact info on every prospect",
-      "Daily delivery to your dashboard",
-      "Email + WhatsApp + LinkedIn ready",
-      "POPIA compliant",
-    ],
-  },
-  {
-    id: "pipeline_pro",
-    name: "Pipeline Pro",
-    price: "R15,000",
-    sub: "/month",
-    cta: "Start with Pipeline Pro",
-    noCard: false,
-    features: [
-      "8 hand-picked prospects per business day",
-      "Multi-ICP support",
-      "Pull extra batches on demand",
-      "Priority support",
-      "POPIA compliant",
     ],
   },
 ];
@@ -271,15 +256,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
       return;
     }
     if (!json.needsConfirmation) {
-      // Pipeline (Outbound) plans go to the Pipeline wizard, not the Inbound
-      // assistant onboarding. Inbound plans keep their existing /dashboard/setup
-      // route.
-      const isPipeline = plan === "pipeline_lite" || plan === "pipeline_pro";
-      router.push(
-        isPipeline
-          ? `/dashboard/pipeline/setup`
-          : `/dashboard/setup?plan=${plan}`,
-      );
+      router.push(`/dashboard/setup?plan=${plan}`);
       return;
     }
     setLoading(false);
@@ -314,11 +291,10 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
     plan === "trial" ? "Free Trial — 7 days, no card required" :
     plan === "starter" ? "Starter — R699/mo" :
     plan === "pro" ? "Pro — R1,799/mo" :
+    plan === "founders" ? "Founders Concierge — R2,999/mo" :
     plan === "business" ? "Business — R3,999/mo" :
     plan === "enterprise" ? "Enterprise — from R7,999/mo" :
     plan === "premium" ? "Premium — R1,999/mo (legacy)" :
-    plan === "pipeline_lite" ? "Pipeline Lite — R7,500/mo" :
-    plan === "pipeline_pro" ? "Pipeline Pro — R15,000/mo" :
     "Free Trial — 7 days, no card required";
 
   return (
@@ -452,7 +428,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
 function SignupContent() {
   const searchParams = useSearchParams();
   const rawPlan = searchParams.get("plan");
-  const validPlans: PlanTier[] = ["trial", "starter", "pro", "business", "enterprise", "premium", "pipeline_lite", "pipeline_pro"];
+  const validPlans: PlanTier[] = ["trial", "starter", "pro", "founders", "business", "enterprise", "premium"];
   const initialPlan: PlanTier | null = validPlans.includes(rawPlan as PlanTier)
     ? (rawPlan as PlanTier)
     : null;
