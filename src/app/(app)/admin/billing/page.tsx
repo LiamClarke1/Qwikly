@@ -1,3 +1,11 @@
+// DEPRECATED labels: legacy 8% commission model, removed 2026-05-11.
+//
+// This admin page still reads from `qwikly_billing_periods`, which is now
+// reused to store monthly subscription periods (the `commission_zar` column
+// stores the subscription fee for the period). The schema is being kept for
+// audit and will be migrated in a follow-up. Stat labels and the per-row "Fee"
+// column reflect the subscription fee per period.
+
 "use client";
 
 export const dynamic = "force-dynamic";
@@ -60,7 +68,7 @@ export default function AdminBillingPage() {
 
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-          <p className="text-[13px] text-slate-500 mb-1">Total commissions</p>
+          <p className="text-[13px] text-slate-500 mb-1">Total subscription fees</p>
           <p className="text-display-2 font-display text-slate-800">{fmt(totalCommission)}</p>
         </div>
         <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
