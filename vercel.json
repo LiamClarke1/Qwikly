@@ -51,6 +51,10 @@
     {
       "path": "/api/cron/ghosted-followup",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/pipeline/trickle",
+      "schedule": "0 6 * * 1-5"
     }
   ]
 }
