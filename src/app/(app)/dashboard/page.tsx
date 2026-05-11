@@ -13,7 +13,7 @@ import { useClient } from "@/lib/use-client";
 import { useUser } from "@/lib/use-user";
 import { timeAgo } from "@/lib/format";
 import { cn } from "@/lib/cn";
-import { resolvePlan, PLAN_CONFIG, topUpPricePerLeadZar, type PlanTier } from "@/lib/plan";
+import { resolvePlan, PLAN_CONFIG, topUpPricePerLeadZar, type InboundPlanTier } from "@/lib/plan";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -180,7 +180,7 @@ function StatusBar({
   trialEndsAt,
 }: {
   widgetLive: boolean;
-  tier: PlanTier;
+  tier: InboundPlanTier;
   leadsMonth: number;
   trialEndsAt: Date | null;
 }) {
@@ -321,7 +321,7 @@ export default function HomePage() {
   const [leadsMonth, setLeadsMonth] = useState(0);
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
   const [newLeadsToday, setNewLeadsToday] = useState(0);
-  const [tier, setTier] = useState<PlanTier>("pro");
+  const [tier, setTier] = useState<InboundPlanTier>("pro");
   const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null);
   // Compact usage snapshot for the home strip. Hits the same endpoint the
   // full /dashboard/usage page uses, just renders a one-row summary here so

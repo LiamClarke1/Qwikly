@@ -1,4 +1,24 @@
-export type PlanTier = 'trial' | 'starter' | 'pro' | 'business' | 'enterprise' | 'premium';
+/**
+ * Inbound product tiers — the "digital assistant on your website" line of
+ * Qwikly. These are the only tiers that flow through PLAN_CONFIG below,
+ * because pricing/caps for Inbound are denser (lead caps, conversation caps,
+ * branding flags, etc.) than for the Outbound Pipeline product.
+ */
+export type InboundPlanTier = 'trial' | 'starter' | 'pro' | 'business' | 'enterprise' | 'premium';
+
+/**
+ * Outbound Pipeline product tiers — the "hand-picked prospects every business
+ * day" line. Their wholesale-cost cap model lives in
+ * src/lib/pipeline/billing/cap-check.ts (built in a parallel task) and is
+ * intentionally NOT part of PLAN_CONFIG.
+ *
+ * TODO(pipeline): when cap-check.ts lands, expose a typed `PIPELINE_CONFIG`
+ * record alongside PLAN_CONFIG so the dashboard/admin pages can render
+ * pipeline-tier metadata the same way they do inbound metadata.
+ */
+export type PipelinePlanTier = 'pipeline_lite' | 'pipeline_pro';
+
+export type PlanTier = InboundPlanTier | PipelinePlanTier;
 
 interface PlanConfig {
   name: string;
@@ -51,7 +71,7 @@ interface PlanConfig {
 // Lead caps tightened from the original sketch (50/200/600 → 30/100/400) so
 // genuine growth nudges customers toward the next tier instead of letting
 // them sit at Starter forever.
-export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
+export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
   trial: {
     name: 'Trial',
     priceMonthly: 0,
@@ -210,7 +230,16 @@ export const PLAN_CONFIG: Record<PlanTier, PlanConfig> = {
   },
 };
 
-export function resolvePlan(raw: string | null | undefined): PlanTier {
+/**
+ * Resolves a raw plan string to the Inbound tier that drives PLAN_CONFIG.
+ *
+ * Pipeline tiers ('pipeline_lite' / 'pipeline_pro') intentionally fall through
+ * to 'trial' here: this function is the gateway to Inbound caps (lead limits,
+ * branding flags), and a Pipeline-only customer should not see Inbound caps
+ * applied to them. Callers that need to know the *true* plan should check
+ * the raw plan string or the clients.products array directly.
+ */
+export function resolvePlan(raw: string | null | undefined): InboundPlanTier {
   if (raw === 'trial') return 'trial';
   if (raw === 'starter' || raw === 'lite') return 'starter';
   if (raw === 'pro') return 'pro';
@@ -234,7 +263,7 @@ export function nextRenewalDate(): Date {
  * felt like a 100% surcharge). Tier-aware top-ups keep the per-lead rate
  * close to what the customer is already paying inside their plan.
  */
-export function topUpPricePerLeadZar(tier: PlanTier): number {
+export function topUpPricePerLeadZar(tier: InboundPlanTier): number {
   return PLAN_CONFIG[tier].topUpPricePerLeadZar;
 }
 
@@ -245,6 +274,8 @@ export function annualPrice(monthlyPrice: number): number {
   return Math.round(monthlyPrice * 12 * (1 - PLAN_ANNUAL_DISCOUNT_PCT));
 }
 
-// Tiers that appear on the public pricing page, in display order.
-// 'premium' is intentionally absent — it's a legacy tier only.
-export const PUBLIC_TIERS: PlanTier[] = ['starter', 'pro', 'business', 'enterprise'];
+// Tiers that appear on the public Inbound pricing page, in display order.
+// 'premium' is intentionally absent — it's a legacy tier only. Pipeline tiers
+// (pipeline_lite/pipeline_pro) have their own marketing page at /pipeline and
+// are intentionally excluded from this list.
+export const PUBLIC_TIERS: InboundPlanTier[] = ['starter', 'pro', 'business', 'enterprise'];

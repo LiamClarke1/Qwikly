@@ -8,6 +8,21 @@ import { resend, FROM, newSignupAdminNotificationHtml } from "@/lib/resend";
 
 export const dynamic = "force-dynamic";
 
+// Pipeline plans (Outbound product) get products=['outbound'] and a
+// per-tier daily prospect quota. Everything else stays inbound-only and
+// inherits the column defaults (products=['inbound'], pipeline_daily_quota=3,
+// the quota being irrelevant for inbound but harmless to set).
+function productsForPlan(plan: string): string[] {
+  if (plan === "pipeline_lite" || plan === "pipeline_pro") return ["outbound"];
+  return ["inbound"];
+}
+
+function pipelineDailyQuotaForPlan(plan: string): number {
+  if (plan === "pipeline_lite") return 3;
+  if (plan === "pipeline_pro") return 8;
+  return 3; // default for inbound, never read
+}
+
 export async function POST(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const allowed = await checkRateLimit(`signup:${ip}`, 5);
@@ -27,7 +42,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "email and password are required" }, { status: 400 });
   }
 
-  const validPlans = ["trial", "starter", "pro", "business", "enterprise", "premium"];
+  const validPlans = ["trial", "starter", "pro", "business", "enterprise", "premium", "pipeline_lite", "pipeline_pro"];
   const resolvedPlan = validPlans.includes(planParam ?? "") ? planParam! : "trial";
 
   const cookieStore = cookies();
@@ -118,6 +133,8 @@ export async function POST(req: NextRequest) {
         onboarding_step: 1,
         web_widget_enabled: true,
         plan: resolvedPlan,
+        products: productsForPlan(resolvedPlan),
+        pipeline_daily_quota: pipelineDailyQuotaForPlan(resolvedPlan),
         ...(trialEndsAt ? { trial_ends_at: trialEndsAt } : {}),
       });
     } else if (trialEndsAt) {

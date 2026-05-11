@@ -107,6 +107,36 @@ const PLANS: {
       "Multi-doctor or multi-agent practices",
     ],
   },
+  {
+    id: "pipeline_lite",
+    name: "Pipeline Lite",
+    price: "R7,500",
+    sub: "/month",
+    cta: "Start with Pipeline Lite",
+    noCard: false,
+    features: [
+      "3 hand-picked prospects per business day",
+      "Verified contact info on every prospect",
+      "Daily delivery to your dashboard",
+      "Email + WhatsApp + LinkedIn ready",
+      "POPIA compliant",
+    ],
+  },
+  {
+    id: "pipeline_pro",
+    name: "Pipeline Pro",
+    price: "R15,000",
+    sub: "/month",
+    cta: "Start with Pipeline Pro",
+    noCard: false,
+    features: [
+      "8 hand-picked prospects per business day",
+      "Multi-ICP support",
+      "Pull extra batches on demand",
+      "Priority support",
+      "POPIA compliant",
+    ],
+  },
 ];
 
 interface PlanSelectProps {
@@ -279,6 +309,8 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
     plan === "business" ? "Business — R3,999/mo" :
     plan === "enterprise" ? "Enterprise — from R7,999/mo" :
     plan === "premium" ? "Premium — R1,999/mo (legacy)" :
+    plan === "pipeline_lite" ? "Pipeline Lite — R7,500/mo" :
+    plan === "pipeline_pro" ? "Pipeline Pro — R15,000/mo" :
     "Free Trial — 7 days, no card required";
 
   return (
@@ -412,7 +444,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
 function SignupContent() {
   const searchParams = useSearchParams();
   const rawPlan = searchParams.get("plan");
-  const validPlans: PlanTier[] = ["trial", "starter", "pro", "business", "enterprise", "premium"];
+  const validPlans: PlanTier[] = ["trial", "starter", "pro", "business", "enterprise", "premium", "pipeline_lite", "pipeline_pro"];
   const initialPlan: PlanTier | null = validPlans.includes(rawPlan as PlanTier)
     ? (rawPlan as PlanTier)
     : null;
