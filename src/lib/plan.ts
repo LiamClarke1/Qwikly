@@ -4,20 +4,22 @@
  * because pricing/caps for Inbound are denser (lead caps, conversation caps,
  * branding flags, etc.) than for the Outbound Pipeline product.
  */
-export type InboundPlanTier = 'trial' | 'starter' | 'pro' | 'business' | 'enterprise' | 'premium';
+export type InboundPlanTier = 'trial' | 'starter' | 'pro' | 'founders' | 'business' | 'enterprise' | 'premium';
 
 /**
- * Outbound Pipeline product tiers — the "hand-picked prospects every business
- * day" line. Their wholesale-cost cap model lives in
- * src/lib/pipeline/billing/cap-check.ts (built in a parallel task) and is
- * intentionally NOT part of PLAN_CONFIG.
- *
- * TODO(pipeline): when cap-check.ts lands, expose a typed `PIPELINE_CONFIG`
- * record alongside PLAN_CONFIG so the dashboard/admin pages can render
- * pipeline-tier metadata the same way they do inbound metadata.
+ * Outbound (Pipeline) product tiers. Distinct from Inbound because they
+ * don't share the PLAN_CONFIG model — Pipeline caps live in
+ * src/lib/pipeline/billing/cap-check.ts (wholesale-cost ceilings) and the
+ * daily prospect quota lives on clients.pipeline_daily_quota.
  */
 export type PipelinePlanTier = 'pipeline_lite' | 'pipeline_pro';
 
+/**
+ * Union of every plan a signup can resolve to. Use this for UI surfaces
+ * that render any plan card (signup page, dashboard plan badge). Use
+ * InboundPlanTier directly when indexing into PLAN_CONFIG, since Pipeline
+ * plans intentionally aren't in that config.
+ */
 export type PlanTier = InboundPlanTier | PipelinePlanTier;
 
 interface PlanConfig {
@@ -157,6 +159,21 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     // feel punitive.
     topUpPricePerLeadZar: 20,
   },
+  founders: {
+    name: 'Founders Concierge',
+    priceMonthly: 2999,
+    leadLimit: 100,
+    removeBranding: true,
+    customGreeting: true,
+    csvExport: false,
+    apiAccess: false,
+    supportTier: 'priority',
+    teamSeats: 3,
+    responseSlaHours: 4,
+    conversationsIncluded: 2000,
+    overageCentsPerConversation: 750,
+    topUpPricePerLeadZar: 20,
+  },
   business: {
     name: 'Business',
     priceMonthly: 3999,
@@ -233,21 +250,32 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
 /**
  * Resolves a raw plan string to the Inbound tier that drives PLAN_CONFIG.
  *
- * Pipeline tiers ('pipeline_lite' / 'pipeline_pro') intentionally fall through
- * to 'trial' here: this function is the gateway to Inbound caps (lead limits,
- * branding flags), and a Pipeline-only customer should not see Inbound caps
- * applied to them. Callers that need to know the *true* plan should check
- * the raw plan string or the clients.products array directly.
+ * This function is the gateway to Inbound caps (lead limits, branding flags,
+ * conversation quotas). Outbound caps (daily prospect quotas, etc.) are
+ * resolved separately via dailyProspectQuotaForPlan and the clients.products
+ * array, so this resolver only needs to land on the correct Inbound row.
+ *
+ * Legacy raw values 'pipeline_lite' and 'pipeline_pro' map to their bundle
+ * equivalents — 'pro' and 'business' respectively — because the new pricing
+ * model bundles Outbound (Pipeline) into Pro and above. A grandfathered
+ * Pipeline customer therefore picks up the matching Inbound caps for the
+ * tier their old Pipeline price now sits inside.
+ *
+ * All other unrecognized values fall through to 'trial' as a defensive
+ * default, so an unknown or corrupted plan string can never accidentally
+ * unlock a paid tier's caps.
  */
 export function resolvePlan(raw: string | null | undefined): InboundPlanTier {
   if (raw === 'trial') return 'trial';
   if (raw === 'starter' || raw === 'lite') return 'starter';
   if (raw === 'pro') return 'pro';
+  if (raw === 'founders') return 'founders';
   if (raw === 'business') return 'business';
   if (raw === 'enterprise') return 'enterprise';
-  // Backward compat: existing 'premium' subscriptions resolve to the legacy
-  // tier (kept above) so billing + caps stay correct for grandfathered users.
   if (raw === 'premium') return 'premium';
+  // Legacy pipeline tiers resolve to their bundle equivalents.
+  if (raw === 'pipeline_lite') return 'pro';
+  if (raw === 'pipeline_pro') return 'business';
   return 'trial';
 }
 
@@ -274,8 +302,44 @@ export function annualPrice(monthlyPrice: number): number {
   return Math.round(monthlyPrice * 12 * (1 - PLAN_ANNUAL_DISCOUNT_PCT));
 }
 
+/**
+ * Returns true if the plan includes Outbound access. Outbound is bundled
+ * into Pro and every tier above it. Trial and Starter are Inbound-only.
+ */
+export function hasOutbound(plan: InboundPlanTier): boolean {
+  return plan === 'pro' || plan === 'founders' || plan === 'business' || plan === 'enterprise';
+}
+
+/**
+ * Returns the products array that should live on the `clients` row for a
+ * given plan. Used by the signup route, the PayFast ITN webhook (Phase 2),
+ * and the migration backfill.
+ */
+export function productsForPlan(plan: InboundPlanTier): ('inbound' | 'outbound')[] {
+  return hasOutbound(plan) ? ['inbound', 'outbound'] : ['inbound'];
+}
+
+/**
+ * Daily prospect quota for Outbound. Returns 0 for Inbound-only tiers, so
+ * callers can use a single numeric value instead of branching on the
+ * product flag.
+ */
+export function dailyProspectQuotaForPlan(plan: InboundPlanTier): number {
+  switch (plan) {
+    case 'pro':
+    case 'founders':
+      return 5;
+    case 'business':
+      return 10;
+    case 'enterprise':
+      return 20;
+    default:
+      return 0;
+  }
+}
+
 // Tiers that appear on the public Inbound pricing page, in display order.
 // 'premium' is intentionally absent — it's a legacy tier only. Pipeline tiers
 // (pipeline_lite/pipeline_pro) have their own marketing page at /pipeline and
 // are intentionally excluded from this list.
-export const PUBLIC_TIERS: InboundPlanTier[] = ['starter', 'pro', 'business', 'enterprise'];
+export const PUBLIC_TIERS: InboundPlanTier[] = ['starter', 'pro', 'founders', 'business', 'enterprise'];

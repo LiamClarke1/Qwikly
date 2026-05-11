@@ -4,6 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { runEnrichment } from "@/lib/pipeline/enrichment/run";
 import { checkCapForTenant } from "@/lib/pipeline/billing/cap-check";
+import { requireOutboundAccess } from "@/lib/auth/require-outbound";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,6 +36,14 @@ export async function POST(req: Request) {
   const { data: { user } } = await auth.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "unauthorised" }, { status: 401 });
+  }
+
+  const access = await requireOutboundAccess(user.id);
+  if (!access.ok) {
+    return NextResponse.json(
+      { error: "outbound_access_required", plan: access.plan },
+      { status: 403 },
+    );
   }
 
   const db = supabaseAdmin();

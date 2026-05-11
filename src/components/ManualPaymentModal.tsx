@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, FileText, CalendarDays, Mail, Check, ArrowRight, Building2 } from "lucide-react";
 
-export type ManualPaymentPlan = "starter" | "pro" | "business" | "enterprise";
+export type ManualPaymentPlan = "starter" | "pro" | "founders" | "business" | "enterprise";
 
 interface ManualPaymentModalProps {
   open: boolean;
@@ -17,6 +17,7 @@ interface ManualPaymentModalProps {
 const PLAN_PRICE: Record<ManualPaymentPlan, { monthly: number; annual: number; name: string }> = {
   starter:    { monthly: 699,  annual: 7128,  name: "Starter" },
   pro:        { monthly: 1799, annual: 18350, name: "Pro" },
+  founders:   { monthly: 2999, annual: 30590, name: "Founders Concierge" },
   business:   { monthly: 3999, annual: 40790, name: "Business" },
   enterprise: { monthly: 7999, annual: 81590, name: "Enterprise" },
 };

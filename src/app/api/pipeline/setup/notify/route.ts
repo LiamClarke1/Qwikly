@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { getSetupState } from "@/lib/pipeline/setup-state";
 import { getResend, FROM } from "@/lib/resend";
+import { requireOutboundAccess } from "@/lib/auth/require-outbound";
 
 export const dynamic = "force-dynamic";
 
@@ -40,6 +41,14 @@ export async function POST(_req: NextRequest) {
   } = await auth.auth.getUser();
   if (!user) {
     return NextResponse.json({ ok: false, error: "Not signed in" }, { status: 401 });
+  }
+
+  const access = await requireOutboundAccess(user.id);
+  if (!access.ok) {
+    return NextResponse.json(
+      { error: "outbound_access_required", plan: access.plan },
+      { status: 403 },
+    );
   }
 
   const db = supabaseAdmin();
