@@ -17,6 +17,7 @@ import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
 import { wrapUntrustedConfig, PROMPT_SAFETY_NOTE } from "@/lib/prompt-safety";
 import { assertTenantActive } from "@/lib/billing/tenant-gate";
 import { recordApiUsage } from "@/lib/billing/api-usage";
+import { isInternalClientId } from "@/lib/billing/internal-tenant";
 
 const QWIKLY_OWN_CLIENT_ID = "1";
 
@@ -672,7 +673,12 @@ export async function POST(req: NextRequest) {
     const tier = resolvePlan(clientRow?.plan);
     const cap = PLAN_CONFIG[tier].leadLimit;
     leadCap = cap;
-    if (!isTestMode && cap !== null) {
+    // Internal Qwikly tenants (admin / dogfooding) bypass the lead cap so
+    // Liam can run his own marketing site without 30-leads/month blocking
+    // real visitors. The is_internal flag on api_usage rows already keeps
+    // their wholesale costs out of any billing aggregation.
+    const isInternal = isInternalClientId(client_id);
+    if (!isTestMode && !isInternal && cap !== null) {
       const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
       const { count: monthLeads } = await supabaseAdmin
         .from("conversations")
@@ -701,8 +707,8 @@ export async function POST(req: NextRequest) {
     // to 'pause' (the default), stop calling Anthropic. Without this gate
     // we would keep racking up wholesale API charges that the tenant has
     // not authorised. Skip in test mode (owner preview) and for the
-    // Qwikly own-site sentinel.
-    if (!isTestMode) {
+    // Qwikly own-site sentinel (internal admin tenants).
+    if (!isTestMode && !isInternal) {
       const includedConversations = PLAN_CONFIG[tier].conversationsIncluded;
       const billingPeriod = new Date(
         Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth(), 1),

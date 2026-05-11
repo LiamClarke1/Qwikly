@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { isInternalClientId } from "@/lib/billing/internal-tenant";
 
 // Wholesale USD rates per request, sourced from each provider's published pricing.
 // Update when providers ship price changes.
@@ -17,7 +18,6 @@ const PRICE_USD_PER_REQUEST: Record<string, Record<string, number>> = {
 };
 
 const USD_ZAR_RATE = 18.5;
-const INTERNAL_CLIENT_IDS = new Set<string>(["1"]);
 
 export interface PipelineCallSpec {
   provider: "google_places" | "hunter";
@@ -51,8 +51,7 @@ export interface RecordPipelineUsageInput {
  */
 export async function recordPipelineUsage(input: RecordPipelineUsageInput): Promise<void> {
   if (input.clientId == null) return;
-  const clientIdStr = String(input.clientId);
-  const isInternal = INTERNAL_CLIENT_IDS.has(clientIdStr);
+  const isInternal = isInternalClientId(input.clientId);
 
   const { wholesaleCents } = computePipelineCallCost({
     provider: input.provider,

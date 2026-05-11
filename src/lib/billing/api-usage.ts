@@ -1,5 +1,6 @@
 import "server-only";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { isInternalClientId } from "@/lib/billing/internal-tenant";
 
 /**
  * Per-tenant API usage tracking. Every Anthropic messages.create call
@@ -45,10 +46,10 @@ const USD_ZAR_RATE = 18.5;
 // conversation overage rate the customer is billed at.
 const RETAIL_MARKUP = 4.0;
 
-// Conversations on Qwikly's own marketing site (client_id=1) are tracked
-// for visibility but never billed. Any other "internal" tenants we onboard
-// should be added here.
-const INTERNAL_CLIENT_IDS = new Set<string>(["1"]);
+// Internal-tenant IDs (Qwikly's own marketing site etc.) live in
+// @/lib/billing/internal-tenant. Conversations on those tenants are tracked
+// for visibility but never billed, and every monthly cap (leads,
+// conversations, pipeline wholesale) treats them as bypass.
 
 // ─── Types ───────────────────────────────────────────────────────────────
 
@@ -128,7 +129,7 @@ export async function recordApiUsage(input: RecordApiUsageInput): Promise<void> 
   // Guard against zero-token noise (e.g. SDK retries that returned a cached
   // response before metering kicked in). Insert anyway so we have a row,
   // but don't bother with cost columns.
-  const isInternal = INTERNAL_CLIENT_IDS.has(clientIdStr);
+  const isInternal = isInternalClientId(input.clientId);
 
   try {
     const db = supabaseAdmin();
