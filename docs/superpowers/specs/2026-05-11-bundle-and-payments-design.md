@@ -31,8 +31,11 @@ One tier ladder, no product picker. Outbound is a Pro and up feature, not a sepa
 | Trial (7 days) | Free | Yes | No | , |
 | Starter | R699/mo | Yes | No | , |
 | Pro | R1,799/mo | Yes | Yes | 5 |
+| Founders Concierge | R2,999/mo | Yes | Yes | 5 |
 | Business | R3,999/mo | Yes | Yes | 10 |
 | Enterprise | R7,999+/mo | Yes | Yes | Custom |
+
+Founders Concierge is Pro plus a human handling every Inbound lead. Outbound capability matches Pro (5 prospects/day), the differentiator is the human service, not extra volume.
 
 Annual billing retains the existing 15% discount.
 
