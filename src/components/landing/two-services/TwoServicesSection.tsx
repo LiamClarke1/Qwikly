@@ -24,12 +24,12 @@ const services: ServiceCard[] = [
     eyebrow: "Service 1, inbound",
     title: "Qwikly Digital Assistant",
     oneLiner:
-      "Every visitor enquiry on your website, captured and answered in under 60 seconds.",
+      "A digital assistant on your website that replies to every visitor in under 60 seconds, qualifies them, and emails you each new lead.",
     bullets: [
       "Live on your website in 24 hours",
-      "WhatsApp + SMS owner ping",
-      "Qualifies leads before you respond",
-      "POPIA compliant, hosted in SA",
+      "Replies to visitors in under 60 seconds",
+      "Qualifies the lead and captures their contact details",
+      "Emails you the moment a new lead comes in",
     ],
     priceLine: "From R699/mo",
     primaryCta: { label: "See pricing", href: "/pricing" },
@@ -40,14 +40,14 @@ const services: ServiceCard[] = [
     eyebrow: "Service 2, outbound",
     title: "Qwikly Pipeline",
     oneLiner:
-      "We find your ideal buyers, write each one a personal email, and book qualified sales calls on your calendar.",
+      "A daily list of hand-picked prospects that match your target client, delivered to your dashboard. You decide who to reach out to.",
     bullets: [
-      "15 to 30 booked meetings per month (industry estimate)",
-      "Hyper-personalised outreach, never spray and pray",
-      "Multiple sending domains, two-week warmup",
-      "60-day meeting guarantee",
+      "Hand-picked prospects matching your target client",
+      "Verified contact details, no scraped lists",
+      "Delivered to your dashboard daily",
+      "You decide who to reach out to, no autopilot outreach",
     ],
-    priceLine: "From R7,500 setup + R7,500/mo",
+    priceLine: "Flat monthly, no setup fee",
     primaryCta: { label: "See Pipeline", href: "/pipeline" },
     secondaryCta: { label: "How it works", href: "/how-it-works/lead-gen" },
     serviceTag: "Outbound",
@@ -107,9 +107,10 @@ export function TwoServicesSection() {
           </div>
           <div className="md:col-span-5 md:col-start-8 md:pt-2 reveal-up">
             <p className="text-lg text-ink-700 leading-relaxed">
-              Qwikly is the lead engine for South African service businesses.
-              Two complementary services, one mission. Pick one, run both, scale
-              either when you&rsquo;re ready.
+              Two simple products. A digital assistant that replies to visitors
+              on your website and emails you each new lead, and an outbound
+              prospect list delivered to your dashboard daily. Pick one, run
+              both.
             </p>
           </div>
         </div>
