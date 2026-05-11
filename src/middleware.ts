@@ -56,6 +56,8 @@ const PUBLIC_PREFIXES = [
   // Pipeline platform internal endpoints, gated by the route handlers themselves
   "/api/pipeline/generate",
   "/api/pipeline/setup/notify",
+  // Vercel cron, bearer-token gated by CRON_SECRET in the route handler
+  "/api/pipeline/trickle",
 ];
 
 export async function middleware(request: NextRequest) {
