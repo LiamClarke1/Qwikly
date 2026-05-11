@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
-import { Activity, Wallet, AlertTriangle, Pause, Zap, RefreshCw, Info } from "lucide-react";
+import { Activity, Wallet, AlertTriangle, Pause, Zap, RefreshCw, Info, Database } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +39,15 @@ type UsageResponse = {
     conversations_over_plan: number;
     raw_overage_cents: number;
     projected_overage_cents_after_credits: number;
+  };
+  pipeline?: {
+    enabled: boolean;
+    total_wholesale_cents: number;
+    cap_cents: number;
+    by_provider: {
+      google_places: number;
+      hunter: number;
+    };
   };
 };
 
@@ -201,6 +210,89 @@ export default function UsagePage() {
           </div>
         </Card>
       </div>
+
+      {/* Pipeline data spend - outbound-only tenants */}
+      {data.pipeline?.enabled && (
+        <Card className="p-5 mt-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Database className="size-4 text-[var(--accent)]" />
+              <span className="text-tiny font-semibold text-fg-subtle uppercase tracking-wider">
+                Pipeline data (Google Places + Hunter)
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-baseline gap-2 mb-3">
+            <span className="text-h1 num text-fg leading-none">
+              {fmtRand(data.pipeline.total_wholesale_cents)}
+            </span>
+            <span className="text-fg-muted text-small">
+              of {fmtRand(data.pipeline.cap_cents)} monthly cap
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full h-2.5 rounded-full bg-surface-input overflow-hidden mb-2">
+            <div
+              className={cn(
+                "h-full rounded-full transition-all",
+                (() => {
+                  const cap = data.pipeline.cap_cents;
+                  const used = data.pipeline.total_wholesale_cents;
+                  const pctPipeline = cap > 0 ? (used / cap) * 100 : 0;
+                  if (pctPipeline >= 100) return "bg-danger";
+                  if (pctPipeline > 80) return "bg-warning";
+                  return "bg-[var(--accent)]";
+                })(),
+              )}
+              style={{
+                width: `${Math.min(
+                  100,
+                  data.pipeline.cap_cents > 0
+                    ? (data.pipeline.total_wholesale_cents / data.pipeline.cap_cents) * 100
+                    : 0,
+                )}%`,
+              }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-tiny text-fg-muted mb-4">
+            <span>
+              {data.pipeline.cap_cents > 0
+                ? `${Math.min(
+                    100,
+                    Math.round(
+                      (data.pipeline.total_wholesale_cents / data.pipeline.cap_cents) * 100,
+                    ),
+                  )}% of cap used`
+                : "No cap set"}
+            </span>
+            <span>
+              {Math.max(0, data.pipeline.cap_cents - data.pipeline.total_wholesale_cents) > 0
+                ? `${fmtRand(
+                    data.pipeline.cap_cents - data.pipeline.total_wholesale_cents,
+                  )} left`
+                : `Cap reached`}
+            </span>
+          </div>
+
+          <div className="pt-4 border-t border-[var(--border)] grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-tiny text-fg-subtle font-medium mb-0.5">Google Places</p>
+              <p className="text-small font-medium text-fg num">
+                {fmtRand(data.pipeline.by_provider.google_places)}
+              </p>
+            </div>
+            <div>
+              <p className="text-tiny text-fg-subtle font-medium mb-0.5">Hunter</p>
+              <p className="text-small font-medium text-fg num">
+                {fmtRand(data.pipeline.by_provider.hunter)}
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Overage / pause callout */}
       {overCap && (

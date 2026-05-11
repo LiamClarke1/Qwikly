@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { PLAN_CONFIG, resolvePlan } from "@/lib/plan";
+import { wholesaleCapForPlan } from "@/lib/pipeline/billing/cap-check";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -41,7 +42,7 @@ export async function GET() {
 
   const { data: clientRow } = await db
     .from("clients")
-    .select("id, plan")
+    .select("id, plan, products")
     .eq("auth_user_id", user.id)
     .maybeSingle();
 
@@ -52,6 +53,8 @@ export async function GET() {
   const clientId = clientRow.id as number;
   const tier = resolvePlan(clientRow.plan as string | null);
   const planConfig = PLAN_CONFIG[tier];
+  const products = (clientRow.products as string[] | null) ?? [];
+  const planRaw = (clientRow.plan as string | null) ?? "";
 
   // First day of the current month, UTC. api_usage rows pre-bucket their
   // billing_period to date_trunc('month', occurred_at), so a simple equality
@@ -130,6 +133,27 @@ export async function GET() {
   );
   const daysRemaining = Math.max(0, lastDay.getUTCDate() - now.getUTCDate());
 
+  // Pipeline (Google Places + Hunter) wholesale spend for the current month.
+  // Only relevant for tenants whose products include "outbound" - we still
+  // return zeros for everyone so the client can decide whether to render.
+  const { data: pipelineRows } = await db
+    .from("pipeline_api_usage")
+    .select("provider, wholesale_cost_zar_cents")
+    .eq("client_id", clientId)
+    .eq("billing_period", billingPeriod);
+
+  const byProvider = (pipelineRows ?? []).reduce<Record<string, number>>(
+    (acc, r) => {
+      const row = r as { provider: string; wholesale_cost_zar_cents: number };
+      acc[row.provider] = (acc[row.provider] || 0) + row.wholesale_cost_zar_cents;
+      return acc;
+    },
+    {},
+  );
+  const pipelineTotalCents = Object.values(byProvider).reduce((a, b) => a + b, 0);
+  const pipelineCapCents = wholesaleCapForPlan(planRaw);
+  const hasOutbound = products.includes("outbound");
+
   return NextResponse.json({
     plan: {
       tier,
@@ -163,6 +187,17 @@ export async function GET() {
       conversations_over_plan: overageConversations,
       raw_overage_cents: overageCents,
       projected_overage_cents_after_credits: projectedOverageCents,
+    },
+    pipeline: {
+      // Only render the row when the tenant has the outbound product.
+      // `cap_cents` is 0 for inbound plans, in which case the UI also hides it.
+      enabled: hasOutbound && pipelineCapCents > 0,
+      total_wholesale_cents: pipelineTotalCents,
+      cap_cents: pipelineCapCents,
+      by_provider: {
+        google_places: byProvider.google_places ?? 0,
+        hunter: byProvider.hunter ?? 0,
+      },
     },
   });
 }
