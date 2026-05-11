@@ -40,11 +40,11 @@ export const metadata: Metadata = {
     google: "tczIM2WulV3rRXOHYYDCnONsEPUKckjx-U2WTu5xy2w",
   },
   title: {
-    default: "Qwikly, the lead engine for SA service businesses",
+    default: "Qwikly — Never miss a lead again",
     template: "%s | Qwikly",
   },
   description:
-    "Qwikly captures every enquiry from your website, qualifies it, and lands a paying job in your inbox in under 60 seconds. POPIA compliant, hosted in South Africa, ZAR pricing.",
+    "A digital assistant for your website that replies to every visitor in under 60 seconds, qualifies them, and emails you each new lead. Flat monthly plans, no setup fees. Built for South African service businesses.",
   applicationName: "Qwikly",
   authors: [{ name: "Clarke Agency", url: "https://www.qwikly.co.za/about" }],
   creator: "Clarke Agency",
@@ -56,28 +56,19 @@ export const metadata: Metadata = {
   },
   manifest: "/site.webmanifest",
   openGraph: {
-    title: "Qwikly, the lead engine for SA service businesses",
+    title: "Qwikly — Never miss a lead again",
     description:
-      "Qwikly captures every enquiry from your website, qualifies it, and lands a paying job in your inbox in under 60 seconds. POPIA compliant, hosted in South Africa, ZAR pricing.",
+      "A digital assistant for your website that replies to every visitor in under 60 seconds, qualifies them, and emails you each new lead. Flat monthly plans, no setup fees. Built for South African service businesses.",
     type: "website",
     url: "https://www.qwikly.co.za",
     siteName: "Qwikly",
     locale: "en_ZA",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Qwikly, the lead engine for SA service businesses",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Qwikly, the lead engine for SA service businesses",
+    title: "Qwikly — Never miss a lead again",
     description:
-      "Qwikly captures every enquiry from your website, qualifies it, and lands a paying job in your inbox in under 60 seconds. POPIA compliant, hosted in South Africa, ZAR pricing.",
-    images: ["/og-image.png"],
+      "A digital assistant for your website that replies to every visitor in under 60 seconds, qualifies them, and emails you each new lead. Flat monthly plans, no setup fees. Built for South African service businesses.",
   },
   robots: {
     index: true,

@@ -1,0 +1,162 @@
+import { ImageResponse } from "next/og";
+import { readFile } from "fs/promises";
+import path from "path";
+
+export const runtime = "nodejs";
+export const size = { width: 1200, height: 630 };
+export const contentType = "image/png";
+export const alt =
+  "Qwikly — Digital assistant for South African service businesses. Never miss a lead again.";
+
+export default async function Image() {
+  const [bold, regular] = await Promise.all([
+    readFile(path.join(process.cwd(), "src/app/fonts/Inter-Bold.ttf")),
+    readFile(path.join(process.cwd(), "src/app/fonts/Inter-Regular.ttf")),
+  ]);
+
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: 1200,
+          height: 630,
+          background: "#0E0E0C",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "72px 88px",
+          fontFamily: "Inter",
+          position: "relative",
+        }}
+      >
+        {/* Ember glow blob */}
+        <div
+          style={{
+            position: "absolute",
+            right: -60,
+            bottom: -80,
+            width: 500,
+            height: 500,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(232,90,44,0.22) 0%, transparent 70%)",
+          }}
+        />
+
+        {/* Top: wordmark + eyebrow */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: "#E85A2C",
+              }}
+            />
+            <span
+              style={{
+                fontFamily: "Inter",
+                fontWeight: 400,
+                fontSize: 18,
+                letterSpacing: "0.15em",
+                color: "rgba(244,238,228,0.5)",
+                textTransform: "uppercase",
+              }}
+            >
+              Digital Assistant for SA Service Businesses
+            </span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+            <span
+              style={{
+                fontFamily: "Inter",
+                fontWeight: 700,
+                fontSize: 56,
+                color: "#F4EEE4",
+                letterSpacing: "-1.5px",
+              }}
+            >
+              Qwikly
+            </span>
+            <span
+              style={{
+                fontFamily: "Inter",
+                fontWeight: 700,
+                fontSize: 56,
+                color: "#E85A2C",
+                letterSpacing: "-1.5px",
+              }}
+            >
+              .
+            </span>
+          </div>
+        </div>
+
+        {/* Middle: headline */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "Inter",
+              fontWeight: 700,
+              fontSize: 76,
+              color: "#F4EEE4",
+              letterSpacing: "-2.5px",
+              lineHeight: 1.05,
+            }}
+          >
+            Never miss a lead again.
+          </span>
+        </div>
+
+        {/* Bottom: descriptor + domain */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "Inter",
+              fontWeight: 400,
+              fontSize: 24,
+              color: "rgba(244,238,228,0.55)",
+              maxWidth: 700,
+              lineHeight: 1.4,
+            }}
+          >
+            Replies to every visitor in under 60 seconds. Qualifies them.
+            Books them in. Built for South Africa.
+          </span>
+          <span
+            style={{
+              fontFamily: "Inter",
+              fontWeight: 400,
+              fontSize: 20,
+              color: "rgba(244,238,228,0.35)",
+              letterSpacing: "0.05em",
+            }}
+          >
+            qwikly.co.za
+          </span>
+        </div>
+      </div>
+    ),
+    {
+      ...size,
+      fonts: [
+        { name: "Inter", data: bold, weight: 700, style: "normal" },
+        { name: "Inter", data: regular, weight: 400, style: "normal" },
+      ],
+    },
+  );
+}
