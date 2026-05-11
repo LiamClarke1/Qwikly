@@ -11,6 +11,8 @@
 //   logs a warning so callers degrade gracefully instead of throwing.
 // - Region biased to South Africa, English language.
 
+import { recordPipelineUsage } from "@/lib/pipeline/billing/pipeline-usage";
+
 import type {
   PlaceResult,
   PlaceSearchInput,
@@ -99,6 +101,7 @@ async function runTextSearch(
   industry: string,
   location: string,
   apiKey: string,
+  clientId: string | number,
 ): Promise<{ status: "ok"; placeIds: string[] } | { status: "quota" } | { status: "skip" }> {
   const query = `${industryToQueryTerm(industry)} ${locationToQuerySuffix(location)}`;
   const params = new URLSearchParams({
@@ -147,6 +150,13 @@ async function runTextSearch(
     return { status: "skip" };
   }
 
+  // Tag the successful call against the tenant for cost tracking.
+  void recordPipelineUsage({
+    clientId,
+    provider: "google_places",
+    endpoint: "text_search",
+  });
+
   const placeIds: string[] = [];
   for (const r of data.results ?? []) {
     if (typeof r.place_id === "string" && r.place_id.length > 0) {
@@ -159,6 +169,7 @@ async function runTextSearch(
 async function fetchPlaceDetails(
   placeId: string,
   apiKey: string,
+  clientId: string | number,
 ): Promise<
   | { status: "ok"; result: PlaceResult }
   | { status: "quota" }
@@ -216,6 +227,13 @@ async function fetchPlaceDetails(
     return { status: "skip" };
   }
 
+  // Tag the successful call against the tenant for cost tracking.
+  void recordPipelineUsage({
+    clientId,
+    provider: "google_places",
+    endpoint: "place_details",
+  });
+
   const lat = r.geometry?.location?.lat;
   const lng = r.geometry?.location?.lng;
   if (
@@ -252,6 +270,7 @@ async function fetchPlaceDetails(
 
 export async function searchBusinesses(
   input: PlaceSearchInput,
+  clientId: string | number,
 ): Promise<PlaceResult[]> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) {
@@ -287,6 +306,7 @@ export async function searchBusinesses(
       combo.industry,
       combo.location,
       apiKey,
+      clientId,
     );
     if (searchOutcome.status === "quota") {
       quotaHit = true;
@@ -319,7 +339,7 @@ export async function searchBusinesses(
     if (quotaHit) {
       break;
     }
-    const detailsOutcome = await fetchPlaceDetails(placeId, apiKey);
+    const detailsOutcome = await fetchPlaceDetails(placeId, apiKey, clientId);
     if (detailsOutcome.status === "quota") {
       quotaHit = true;
       break;
