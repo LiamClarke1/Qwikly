@@ -138,10 +138,10 @@ const tiers: {
     highlight: true,
   },
   {
-    id: "concierge",
-    name: "Founders Concierge",
+    id: "founders",
+    name: "Founders",
     price: "R2,999",
-    tagline: "We help you reply to leads by email when you cannot.",
+    tagline: "Pro features, double the daily Outbound prospects (10 per business day).",
     highlight: false,
   },
 ];
