@@ -9,12 +9,14 @@ import { Sidebar } from "@/components/shell/sidebar";
 import { Topbar } from "@/components/shell/topbar";
 import { MobileBottomNav } from "@/components/shell/mobile-bottom-nav";
 import { VerifyEmailBanner } from "@/components/shell/verify-email-banner";
+import { PipelineSetupBanner } from "@/components/dashboard/PipelineSetupBanner";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [authed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isDark, setIsDark] = useState(false);
+  const [showPipelineSetupNudge, setShowPipelineSetupNudge] = useState(false);
 
   // Read stored theme preference on mount
   useEffect(() => {
@@ -60,6 +62,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     });
   }, [router]);
 
+  // Resolve Pipeline setup status for outbound tenants. Inbound-only tenants
+  // never trigger the banner or nav dot, the endpoint returns hasOutbound=false.
+  useEffect(() => {
+    if (!authed) return;
+    let cancelled = false;
+    fetch("/api/pipeline/setup-status", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (cancelled || !json) return;
+        const incomplete = !!json.hasOutbound && json.status !== "generated";
+        setShowPipelineSetupNudge(incomplete);
+      })
+      .catch(() => {
+        // soft fail, leave nudge off
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authed]);
+
   if (loading) {
     return (
       <div className="min-h-screen [min-height:100dvh] flex items-center justify-center bg-paper">
@@ -76,7 +98,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className={`h-screen [height:100dvh] flex bg-surface${isDark ? " dark" : ""}`} style={{ overflow: "hidden" }}>
       {/* Desktop sidebar */}
       <div className="hidden md:flex h-full shrink-0">
-        <Sidebar />
+        <Sidebar showPipelineSetupNudge={showPipelineSetupNudge} />
       </div>
 
       <div className="flex-1 min-w-0 flex flex-col relative" style={{ minHeight: 0, overflow: "hidden" }}>
@@ -95,6 +117,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             overscrollBehavior: "contain",
           }}
         >
+          <PipelineSetupBanner show={showPipelineSetupNudge} />
           <Suspense fallback={null}>
             <VerifyEmailBanner />
           </Suspense>

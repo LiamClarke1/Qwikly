@@ -25,7 +25,13 @@ const NAV: NavItem[] = [
   { href: "/dashboard/setup",         label: "Setup",     icon: Rocket as NavIcon },
 ];
 
-export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+export function Sidebar({
+  onNavigate,
+  showPipelineSetupNudge = false,
+}: {
+  onNavigate?: () => void;
+  showPipelineSetupNudge?: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useUser();
@@ -74,6 +80,12 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               )}
               <Icon className={cn("w-[18px] h-[18px]", active ? "text-ember" : "text-ink-400 group-hover:text-ink-600")} />
               <span>{item.label}</span>
+              {item.href === "/dashboard/pipeline" && showPipelineSetupNudge && (
+                <span
+                  className="ml-1.5 inline-block w-2 h-2 rounded-full bg-amber-400"
+                  aria-label="Pipeline setup incomplete"
+                />
+              )}
             </Link>
           );
         })}
