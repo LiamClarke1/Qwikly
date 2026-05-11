@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, CalendarClock, ShieldCheck, Sparkles } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { timeAgo, formatDateTime } from "@/lib/format";
@@ -137,9 +138,44 @@ function computeStreak(activityDates: string[]): number {
   return count;
 }
 
+// Today's date in YYYY-MM-DD (UTC), used to filter pipeline_prospects by
+// delivery_batch_date for the "Today's N prospects" hero section.
+function todayBatchDate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export default function PipelineHubPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isFirstBatch = searchParams.get("firstBatch") === "1";
+
+  // Task 22: setup gate. If the tenant has outbound enrolled but no generated
+  // ICP, redirect to the wizard before rendering anything.
+  const [setupChecked, setSetupChecked] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/pipeline/setup-status", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (cancelled) return;
+        if (json && json.hasOutbound && json.status !== "generated") {
+          router.replace("/dashboard/pipeline/setup");
+          return;
+        }
+        setSetupChecked(true);
+      })
+      .catch(() => {
+        if (!cancelled) setSetupChecked(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
   const [loading, setLoading] = useState(true);
   const [prospects, setProspects] = useState<ProspectRow[]>([]);
+  const [todaysProspects, setTodaysProspects] = useState<ProspectRow[]>([]);
   const [replies, setReplies] = useState<ReplyRow[]>([]);
   const [meetings, setMeetings] = useState<MeetingRow[]>([]);
   const [contactFilter, setContactFilter] = useState<ContactFilter>("all");
@@ -163,7 +199,9 @@ export default function PipelineHubPage() {
       const todayISO = startOfTodayISO();
       const weekISO = startOfWeekISO();
 
-      const [pRes, rRes, mRes] = await Promise.all([
+      const today = todayBatchDate();
+
+      const [pRes, rRes, mRes, tRes] = await Promise.all([
         safeQuery<ProspectRow>(() =>
           supabase
             .from("pipeline_prospects")
@@ -188,11 +226,25 @@ export default function PipelineHubPage() {
             .order("scheduled_at", { ascending: true, nullsFirst: false })
             .limit(20),
         ),
+        // Task 23: today's batch hero. Reuses the same tenant-isolated
+        // pipeline_prospects table (RLS by business_id), filtered to rows
+        // whose delivery_batch_date is today.
+        safeQuery<ProspectRow>(() =>
+          supabase
+            .from("pipeline_prospects")
+            .select(
+              "id, first_name, last_name, company, industry, city, email, email_verified, linkedin_url, enrichment_score, status, created_at, updated_at",
+            )
+            .eq("delivery_batch_date", today)
+            .order("enrichment_score", { ascending: false, nullsFirst: false })
+            .limit(100),
+        ),
       ]);
       if (cancelled) return;
       setProspects(pRes.data);
       setReplies(rRes.data);
       setMeetings(mRes.data);
+      setTodaysProspects(tRes.data);
       setLoading(false);
       // Suppress "unused" warning on todayISO when KPIs derive it via filters.
       void todayISO;
@@ -347,6 +399,29 @@ export default function PipelineHubPage() {
   const recentReplies = replies.slice(0, 3);
   const upcomingCalls = meetings.slice(0, 3);
 
+  // Today's batch rendered as QueueRow data, score-ranked.
+  const todaysQueue: QueueRowData[] = useMemo(
+    () =>
+      todaysProspects.map((p) => ({
+        id: p.id,
+        name: prospectDisplayName(p),
+        industry: p.industry,
+        city: p.city,
+        enrichment_score: p.enrichment_score,
+        email_verified: p.email_verified,
+        status: p.status,
+      })),
+    [todaysProspects],
+  );
+
+  // -------------------------------------------------------------------------
+  // Task 22 gate, show a loading shell until the setup check resolves so we
+  // never flash an empty dashboard at a tenant who needs the wizard.
+  // -------------------------------------------------------------------------
+  if (!setupChecked) {
+    return <div className="p-8 text-ink-500">Loading...</div>;
+  }
+
   // -------------------------------------------------------------------------
   // Empty state: no prospects in the table at all.
   // -------------------------------------------------------------------------
@@ -414,6 +489,31 @@ export default function PipelineHubPage() {
           </Link>
         </div>
       </header>
+
+      {/* TASK 23: TODAY'S BATCH HERO
+          Shows prospects whose delivery_batch_date == today. If the user
+          arrived via ?firstBatch=1 (right after the wizard fired the first
+          generation), the heading switches to a welcome variant. */}
+      {todaysQueue.length > 0 && (
+        <section className="rounded-lg border border-ember/30 bg-ember/5 p-6">
+          <h2 className="font-display text-[24px] md:text-[28px] leading-tight tracking-tight text-ink">
+            {isFirstBatch ? "Your first" : "Today's"} {todaysQueue.length}{" "}
+            best-fit {todaysQueue.length === 1 ? "prospect" : "prospects"}
+          </h2>
+          {isFirstBatch && (
+            <p className="text-ink-600 mt-1 text-[14px]">
+              Welcome, here&apos;s what we built for you.
+            </p>
+          )}
+          <div className="mt-4 ed-card !p-0 overflow-hidden">
+            <div className="flex flex-col">
+              {todaysQueue.map((q) => (
+                <QueueRow key={q.id} prospect={q} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 2. SPRINT KPI ROW */}
       <section
