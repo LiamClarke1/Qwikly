@@ -170,12 +170,82 @@ export async function POST(req: Request) {
       break;
     }
 
-    case 'topup_ai_credit':
-    case 'topup_leads':
-    case 'card_update':
-      // Phase 2: wire up wallet credit / lead_topups insert / token swap when
-      // those routes ship. For now the row is captured and the flow stops here.
+    case 'topup_ai_credit': {
+      // The route puts the pack key in custom_str4 so we can apply the
+      // bonus-inclusive credit, not the raw payment amount.
+      const pack = (payload.custom_str4 ?? 'small') as 'small' | 'medium' | 'large';
+      const creditCents =
+        pack === 'large' ? 60000 : pack === 'medium' ? 28000 : 10000;
+      const { data: wallet } = await db
+        .from('conversation_credits')
+        .select('purchased_balance_zar_cents')
+        .eq('client_id', row.client_id)
+        .maybeSingle();
+      const newPurchased =
+        (wallet?.purchased_balance_zar_cents ?? 0) + creditCents;
+      await db.from('conversation_credits').upsert(
+        {
+          client_id: row.client_id,
+          purchased_balance_zar_cents: newPurchased,
+          updated_at: now,
+        },
+        { onConflict: 'client_id' },
+      );
       break;
+    }
+
+    case 'topup_leads': {
+      const size = parseInt(payload.custom_str4 ?? '0', 10);
+      if (size <= 0) {
+        console.error('[payfast/itn] topup_leads missing size in custom_str4');
+        break;
+      }
+      // Pack expires at the end of the current billing period.
+      let expiresAt: string | null = null;
+      if (row.subscription_id) {
+        const { data: sub } = await db
+          .from('subscriptions')
+          .select('current_period_end')
+          .eq('id', row.subscription_id)
+          .maybeSingle();
+        expiresAt = sub?.current_period_end ?? null;
+      }
+      if (!expiresAt) {
+        // Fallback: 30 days from now.
+        expiresAt = new Date(Date.now() + 30 * 86400_000).toISOString();
+      }
+      await db.from('lead_topups').insert({
+        client_id: row.client_id,
+        subscription_id: row.subscription_id,
+        leads_purchased: size,
+        zar_cents_paid: row.amount_zar_cents,
+        leads_remaining: size,
+        expires_at: expiresAt,
+        payfast_payment_id: row.id,
+      });
+      break;
+    }
+
+    case 'card_update': {
+      // Replace the stored PayFast token with the new one from this R1
+      // verification charge. The R1 refund is queued out-of-band (ops or a
+      // follow-up sweep), since PayFast's refund endpoint is async anyway.
+      if (row.subscription_id && payload.token) {
+        await db
+          .from('subscriptions')
+          .update({ payfast_token: payload.token })
+          .eq('id', row.subscription_id);
+
+        // If the subscription was past_due, mark unresolved payment_failures
+        // so the next renewal attempt (or admin retry) lifts the pause.
+        await db
+          .from('payment_failures')
+          .update({ resolved_at: now })
+          .is('resolved_at', null)
+          .eq('subscription_id', row.subscription_id);
+      }
+      break;
+    }
   }
 
   return NextResponse.json({ ok: true });
