@@ -75,7 +75,22 @@ export async function generateProspects(
     return { ok: false, reason: "no_tenant" };
   }
 
-  return persistProspects({ input, tenantId });
+  // Resolve clients.id (BIGINT) for usage tagging. Different table key than
+  // businesses.id, linked via auth_user_id ↔ auth.uid(). Soft-fail to null so
+  // a missing clients row does not block the legacy generate flow.
+  let clientId: number | string | null = null;
+  try {
+    const { data: clientRow } = await db
+      .from("clients")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+    clientId = (clientRow as { id?: number | string } | null)?.id ?? null;
+  } catch {
+    clientId = null;
+  }
+
+  return persistProspects({ input, tenantId, clientId });
 }
 
 // Shared between the server action and the API route, so behaviour stays in
@@ -91,9 +106,14 @@ export async function generateProspects(
 export async function persistProspects(args: {
   input: GenerateProspectInput;
   tenantId: number | string;
+  clientId?: number | string | null;
 }): Promise<GeneratorResult> {
-  const { input, tenantId } = args;
-  const prospects: MockProspect[] = await runGenerator(input);
+  const { input, tenantId, clientId } = args;
+  // Pass clientId so the wrapped Google Places + Hunter calls tag the right
+  // billing tenant in pipeline_api_usage. Falls back to "0" (no tenant) when
+  // the caller does not have one, preserving the legacy behaviour for any
+  // test harnesses or internal callers that have not been updated yet.
+  const prospects: MockProspect[] = await runGenerator(input, clientId ?? "0");
   const runId = nanoid();
 
   const db = supabaseAdmin();

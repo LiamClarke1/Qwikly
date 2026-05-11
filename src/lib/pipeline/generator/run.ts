@@ -30,6 +30,22 @@ import { readSite } from "../scraper/site-reader";
 import type { SiteRecon as ScraperSiteRecon } from "../scraper/site-reader.types";
 import { findEmailForDomain } from "../scraper/hunter";
 import type { HunterEmailResult } from "../scraper/hunter.types";
+import { checkCapForTenant } from "../billing/cap-check";
+import { getSetupState } from "../setup-state";
+import { supabaseAdmin } from "@/lib/supabase-server";
+
+// Per-prospect projected wholesale cost in ZAR cents. Sum of:
+//   - 1 Google Places text_search ~ 60c (shared across multiple prospects in a
+//     single search, but conservative to count once per prospect)
+//   - 1 Google Places place_details ~ 32c
+//   - 1 Hunter email_finder ~ 182c
+// Total = 274 cents per prospect. Used for the up-front cap projection so we
+// never start an expensive run we cannot afford to finish.
+const PROJECTED_CENTS_PER_PROSPECT = 274;
+
+// Quality bar for the new outbound v1 flow. Scores are 1 to 10 (see
+// ../scoring.ts). 9+ is the top decile and corresponds to ~85% high-fit.
+const QUALITY_SCORE_FLOOR = 9;
 
 const SCORE_FLOOR = 7;
 const SITE_BATCH_SIZE = 5;
@@ -191,8 +207,14 @@ function buildCandidate(args: {
 // `effectiveQuantity` prospects, where `effectiveQuantity = min(input.quantity,
 // TEST_MODE_CAP)`. The TEST_MODE_CAP is a temporary safety rail while we are
 // still burning in the integration, see the constant declaration above.
+//
+// `clientId` is the billing tenant id used by the scraper wrappers to record
+// wholesale spend in pipeline_api_usage. It is optional so the legacy mock
+// flow (no API key, no spend) still works without a tenant in hand. When the
+// caller has a real tenant the scrapers will tag usage to it.
 export async function runGenerator(
   input: GenerateProspectInput,
+  clientId: string | number = "0",
 ): Promise<MockProspect[]> {
   const effectiveQuantity = Math.min(input.quantity, TEST_MODE_CAP);
   if (effectiveQuantity < input.quantity) {
@@ -216,11 +238,14 @@ export async function runGenerator(
 
   let places: PlaceResult[] = [];
   try {
-    places = await searchBusinesses({
-      industries: input.industries,
-      locations: input.locations,
-      quantity: oversampleTarget,
-    });
+    places = await searchBusinesses(
+      {
+        industries: input.industries,
+        locations: input.locations,
+        quantity: oversampleTarget,
+      },
+      clientId,
+    );
   } catch (err) {
     console.error("[pipeline/runGenerator] searchBusinesses threw, returning empty list", err);
     return [];
@@ -244,7 +269,7 @@ export async function runGenerator(
           let hunter: HunterEmailResult | null = null;
           if (domain) {
             try {
-              hunter = await findEmailForDomain(domain);
+              hunter = await findEmailForDomain(domain, clientId);
             } catch (err) {
               console.error(
                 `[pipeline/runGenerator] hunter failed for ${domain}`,
@@ -576,4 +601,236 @@ export function estimateMatches(
   const jitter = 0.85 + rnd() * 0.3;
   const estimate = Math.round((base / intentPenalty) * jitter);
   return Math.max(50, estimate);
+}
+
+// -----------------------------------------------------------------------
+// Outbound v1 entry point (Task 18)
+//
+// runGeneratorAndInsert wraps runGenerator with the production safeguards
+// the new outbound flow requires:
+//
+//   1. Cap-check against the tenant's plan ceiling before any expensive work.
+//   2. Look up the saved ICP from setup state (pipeline tenant = businessId).
+//   3. Run the full scraper + enrich pipeline (threading clientId for cost
+//      tracking).
+//   4. Score and filter to score >= QUALITY_SCORE_FLOOR (9 of 10) AND a
+//      Hunter "valid" email verification status.
+//   5. Dedupe against existing pipeline_prospects rows for this business by
+//      lowercased email.
+//   6. Insert the survivors with delivery_batch_date = today and
+//      delivery_batch_kind set to the caller's batch label.
+//
+// The function never throws on cap-reached: it returns
+// { created: 0, capReached: true } so the caller can surface a friendly
+// 402-style "top up to continue" message. If the scraper yields fewer than
+// `count` qualifying prospects (small pool, weak ICP fit, etc.) the function
+// inserts whatever it found and returns that count. We never lower the bar.
+// -----------------------------------------------------------------------
+
+export type DeliveryBatchKind = "first_batch" | "daily_trickle";
+
+export interface RunGeneratorInput {
+  /** Billing tenant id, BIGINT clients.id. Used for cap-check + usage tagging. */
+  clientId: string | number;
+  /** Pipeline tenant id, UUID businesses.id. Used for ICP lookup + inserts. */
+  businessId: string;
+  /** Plan slug (e.g. pipeline_lite, pipeline_pro). Drives the cap. */
+  plan: string;
+  /** Desired number of prospects to insert. */
+  count: number;
+  /** Batch label written to pipeline_prospects.delivery_batch_kind. */
+  batchKind: DeliveryBatchKind;
+}
+
+export interface RunGeneratorResult {
+  created: number;
+  capReached: boolean;
+}
+
+// Local copy of the actions.ts undefined-stripper. Postgrest rejects undefined
+// values; nulls are kept because they're meaningful column writes.
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const k of Object.keys(obj) as (keyof T)[]) {
+    if (obj[k] !== undefined) {
+      out[k] = obj[k];
+    }
+  }
+  return out;
+}
+
+function todayIsoDate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export async function runGeneratorAndInsert(
+  input: RunGeneratorInput,
+): Promise<RunGeneratorResult> {
+  // 1. Project cost and gate on the plan cap up front. We do this BEFORE any
+  // Places or Hunter call so a tenant who is already over the line never
+  // burns another cent.
+  const projectedCents = input.count * PROJECTED_CENTS_PER_PROSPECT;
+  const cap = await checkCapForTenant({
+    clientId: input.clientId,
+    plan: input.plan,
+    projectedCents,
+  });
+  if (cap.over) {
+    console.log(
+      `[pipeline/runGeneratorAndInsert] cap reached for client ${input.clientId} (spent ${cap.spentCents}c, projected ${projectedCents}c, cap ${cap.capCents}c)`,
+    );
+    return { created: 0, capReached: true };
+  }
+
+  // 2. Read the saved ICP. getSetupState fail-softs to a default-empty ICP, so
+  // a fresh tenant with no setup will still return a usable shape, the
+  // scraper just will not match anything and we will insert zero rows.
+  const setup = await getSetupState(input.businessId);
+  const icp = setup.icp;
+
+  const generatorInput: GenerateProspectInput = {
+    industries: icp.industries,
+    jobTitles: icp.titles,
+    companySize: { min: icp.sizeMin, max: icp.sizeMax },
+    locations: icp.locations,
+    intentSignals: icp.intentSignals,
+    quantity: input.count,
+    offer: icp.offer,
+    dealValueZar: icp.dealValueZar,
+  };
+
+  // 3. Run the existing pipeline with clientId threaded through.
+  let candidates: MockProspect[] = [];
+  try {
+    candidates = await runGenerator(generatorInput, input.clientId);
+  } catch (err) {
+    console.error(
+      "[pipeline/runGeneratorAndInsert] runGenerator threw, returning zero",
+      err,
+    );
+    return { created: 0, capReached: false };
+  }
+
+  // 4. Filter on quality bar AND verified email. The MockProspect shape
+  // exposes email_verification_status at the top level; we will write it
+  // into icp_match JSONB on insert per the existing actions.ts column map.
+  const qualified = candidates.filter(
+    (c) =>
+      typeof c.score === "number" &&
+      c.score >= QUALITY_SCORE_FLOOR &&
+      c.email_verification_status === "valid" &&
+      typeof c.email === "string" &&
+      c.email.trim().length > 0,
+  );
+
+  if (qualified.length === 0) {
+    return { created: 0, capReached: false };
+  }
+
+  // 5. Dedupe against existing pipeline_prospects for this business. We
+  // compare on lowercased email which is the natural human-stable key.
+  // Doing this before insert avoids relying on a partial unique index and
+  // gives us deterministic "created" counts.
+  const db = supabaseAdmin();
+  const emailKeys = Array.from(
+    new Set(
+      qualified
+        .map((c) => c.email.trim().toLowerCase())
+        .filter((e) => e.length > 0),
+    ),
+  );
+
+  const existingEmails = new Set<string>();
+  try {
+    const { data: existing, error: existingErr } = await db
+      .from("pipeline_prospects")
+      .select("email")
+      .eq("business_id", input.businessId)
+      .in("email", emailKeys);
+    if (existingErr) {
+      console.warn(
+        "[pipeline/runGeneratorAndInsert] dedupe select failed, proceeding without it",
+        existingErr,
+      );
+    } else if (existing) {
+      for (const row of existing as Array<{ email: string | null }>) {
+        if (row.email) existingEmails.add(row.email.trim().toLowerCase());
+      }
+    }
+  } catch (err) {
+    console.warn(
+      "[pipeline/runGeneratorAndInsert] dedupe select threw, proceeding without it",
+      err,
+    );
+  }
+
+  // Also dedupe within the qualified batch itself, first occurrence wins.
+  const seenInBatch = new Set<string>();
+  const toInsert: MockProspect[] = [];
+  for (const c of qualified) {
+    const key = c.email.trim().toLowerCase();
+    if (existingEmails.has(key)) continue;
+    if (seenInBatch.has(key)) continue;
+    seenInBatch.add(key);
+    toInsert.push(c);
+    if (toInsert.length >= input.count) break;
+  }
+
+  if (toInsert.length === 0) {
+    return { created: 0, capReached: false };
+  }
+
+  // 6. Insert with batch tags. Column mapping mirrors persistProspects in
+  // src/app/(app)/dashboard/pipeline/generate/actions.ts, keep these in sync.
+  const batchDate = todayIsoDate();
+  const rows = toInsert.map((p) => {
+    const enrichmentScoreRaw = Math.round((p.score ?? 0) * 10);
+    const enrichmentScore = Math.max(0, Math.min(100, enrichmentScoreRaw));
+    const row = {
+      business_id: input.businessId,
+      campaign_id: null,
+      first_name: p.first_name,
+      last_name: p.last_name,
+      title: p.title,
+      company: p.company,
+      industry: p.industry,
+      employees: p.employees,
+      city: p.city,
+      country: "ZA",
+      email: p.email,
+      email_verified: p.email_verified,
+      linkedin_url: p.linkedin_url,
+      intent_signals: p.intent_signals,
+      enrichment_score: enrichmentScore,
+      status: "new",
+      source: "google_places",
+      delivery_batch_date: batchDate,
+      delivery_batch_kind: input.batchKind,
+      icp_match: {
+        phone: p.phone ?? null,
+        website: p.website ?? null,
+        rating: p.rating ?? null,
+        reviews_count: p.reviews_count ?? null,
+        business_status: p.business_status ?? null,
+        place_types: p.place_types ?? null,
+        email_verification_status: p.email_verification_status ?? null,
+        site_recon: p.site_recon ?? null,
+        score_breakdown: p.score_breakdown ?? null,
+        unique_hook: p.unique_hook ?? null,
+        suburb: p.city ?? null,
+      },
+    };
+    return stripUndefined(row);
+  });
+
+  const { error: insertErr } = await db.from("pipeline_prospects").insert(rows);
+  if (insertErr) {
+    console.error(
+      "[pipeline/runGeneratorAndInsert] insert failed",
+      insertErr,
+    );
+    return { created: 0, capReached: false };
+  }
+
+  return { created: rows.length, capReached: false };
 }
