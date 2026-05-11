@@ -34,9 +34,13 @@ import {
 // ---------------------------------------------------------------------------
 
 // Minimal row shape we read from pipeline_prospects.
+// NOTE: schema has first_name + last_name + company, no `name` column.
+// We compose the display name on the client from company or first/last.
 interface ProspectRow {
   id: string;
-  name: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  company: string | null;
   industry: string | null;
   city: string | null;
   email: string | null;
@@ -45,20 +49,31 @@ interface ProspectRow {
   enrichment_score: number | null;
   status: string | null;
   created_at: string;
-  last_activity_at: string | null;
+  updated_at: string | null;
+}
+
+// Compose the display name for a prospect, prefer company, fall back to person.
+function prospectDisplayName(p: {
+  company: string | null;
+  first_name: string | null;
+  last_name: string | null;
+}): string {
+  if (p.company && p.company.trim()) return p.company.trim();
+  const parts = [p.first_name, p.last_name].filter(Boolean).join(" ").trim();
+  return parts || "Untitled prospect";
 }
 
 interface ReplyRow {
   id: string;
-  prospect_name: string | null;
+  prospect_id: string | null;
   classification: string | null;
-  snippet: string | null;
+  body: string | null;
   received_at: string | null;
 }
 
 interface MeetingRow {
   id: string;
-  prospect_name: string | null;
+  prospect_id: string | null;
   scheduled_at: string | null;
   created_at: string;
 }
@@ -153,7 +168,7 @@ export default function PipelineHubPage() {
           supabase
             .from("pipeline_prospects")
             .select(
-              "id, name, industry, city, email, email_verified, linkedin_url, enrichment_score, status, created_at, last_activity_at",
+              "id, first_name, last_name, company, industry, city, email, email_verified, linkedin_url, enrichment_score, status, created_at, updated_at",
             )
             .order("enrichment_score", { ascending: false, nullsFirst: false })
             .limit(500),
@@ -161,14 +176,14 @@ export default function PipelineHubPage() {
         safeQuery<ReplyRow>(() =>
           supabase
             .from("pipeline_replies")
-            .select("id, prospect_name, classification, snippet, received_at")
+            .select("id, prospect_id, classification, body, received_at")
             .order("received_at", { ascending: false, nullsFirst: false })
             .limit(10),
         ),
         safeQuery<MeetingRow>(() =>
           supabase
             .from("pipeline_meetings")
-            .select("id, prospect_name, scheduled_at, created_at")
+            .select("id, prospect_id, scheduled_at, created_at")
             .gte("scheduled_at", weekISO)
             .order("scheduled_at", { ascending: true, nullsFirst: false })
             .limit(20),
@@ -209,7 +224,7 @@ export default function PipelineHubPage() {
       if (!["contacted", "replied", "qualified", "booked"].includes(s)) {
         return false;
       }
-      const t = p.last_activity_at ? new Date(p.last_activity_at).getTime() : 0;
+      const t = p.updated_at ? new Date(p.updated_at).getTime() : 0;
       return t >= startMs;
     }).length;
   }, [prospects]);
@@ -239,7 +254,7 @@ export default function PipelineHubPage() {
     () =>
       computeStreak(
         prospects
-          .map((p) => p.last_activity_at)
+          .map((p) => p.updated_at)
           .filter((x): x is string => !!x),
       ),
     [prospects],
@@ -248,7 +263,7 @@ export default function PipelineHubPage() {
   const lastSentHoursAgo = useMemo(() => {
     const stamps = prospects
       .map((p) =>
-        p.last_activity_at ? new Date(p.last_activity_at).getTime() : 0,
+        p.updated_at ? new Date(p.updated_at).getTime() : 0,
       )
       .filter((n) => n > 0);
     if (stamps.length === 0) return null;
@@ -313,7 +328,7 @@ export default function PipelineHubPage() {
     });
     return filtered.slice(0, 6).map((p) => ({
       id: p.id,
-      name: p.name,
+      name: prospectDisplayName(p),
       industry: p.industry,
       city: p.city,
       enrichment_score: p.enrichment_score,
@@ -537,7 +552,7 @@ export default function PipelineHubPage() {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-[13.5px] font-medium text-ink truncate">
-                        {r.prospect_name || "Unknown sender"}
+                        {r.prospect_id ? "Reply" : "Unknown sender"}
                       </span>
                       <span className="font-mono text-[11px] text-ink-500 shrink-0">
                         {r.received_at ? timeAgo(r.received_at) : ""}
@@ -545,7 +560,7 @@ export default function PipelineHubPage() {
                     </div>
                     <div className="flex items-start gap-2">
                       <p className="text-[12.5px] text-ink-500 leading-relaxed line-clamp-1 flex-1">
-                        {(r.snippet || "(no preview)").slice(0, 100)}
+                        {(r.body || "(no preview)").slice(0, 100)}
                       </p>
                       {r.classification ? (
                         <StatusPill tone={replyClassTone(r.classification)}>
@@ -587,7 +602,7 @@ export default function PipelineHubPage() {
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="text-[13.5px] font-medium text-ink truncate">
-                        {m.prospect_name || "Booking"}
+                        Booking
                       </div>
                       <div className="font-mono text-[11.5px] text-ink-500">
                         {m.scheduled_at

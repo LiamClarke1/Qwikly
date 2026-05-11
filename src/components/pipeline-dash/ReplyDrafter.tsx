@@ -254,7 +254,7 @@ export function ReplyDrafter() {
       try {
         const { data, error } = await supabase
           .from("pipeline_prospects")
-          .select("id, name, company, first_name, email")
+          .select("id, first_name, last_name, company, email")
           .order("created_at", { ascending: false })
           .limit(500);
         if (cancelled) return;
@@ -262,20 +262,21 @@ export function ReplyDrafter() {
           setProspects([]);
           return;
         }
-        // Map flexible row shape into the local option, name often is the contact name,
-        // company is the business. Fallback to whichever exists.
+        // Schema columns: first_name + last_name + company. Compose business
+        // label from company (preferred) or person name as fallback.
         const rows: ProspectOption[] = (data as unknown[]).map((r) => {
           const row = r as unknown as {
             id: string;
-            name: string | null;
-            company: string | null;
             first_name: string | null;
+            last_name: string | null;
+            company: string | null;
             email: string | null;
           };
+          const personName = [row.first_name, row.last_name].filter(Boolean).join(" ").trim();
           return {
             id: row.id,
-            business: row.company || row.name || "Unknown",
-            first_name: row.first_name || (row.name ? row.name.split(" ")[0] : null),
+            business: row.company || personName || "Unknown",
+            first_name: row.first_name,
             email: row.email,
           };
         });

@@ -24,13 +24,13 @@ import {
 
 interface FullProspectRow {
   id: string;
-  name: string | null;
+  first_name: string | null;
+  last_name: string | null;
   company: string | null;
   industry: string | null;
   status: string | null;
   updated_at: string | null;
   created_at: string | null;
-  status_history?: Array<{ at: string; status: string; note?: string | null }> | null;
 }
 
 async function safeQuery<T>(
@@ -60,7 +60,7 @@ export default function AnalyticsPage() {
           supabase
             .from("pipeline_prospects")
             .select(
-              "id, name, company, industry, status, updated_at, created_at, status_history"
+              "id, first_name, last_name, company, industry, status, updated_at, created_at",
             )
             .order("updated_at", { ascending: false, nullsFirst: false })
             .limit(2000)
@@ -115,23 +115,13 @@ export default function AnalyticsPage() {
   );
 
   const activity = useMemo<ActivityRow[]>(() => {
-    // Pull the most recent status change per prospect from status_history,
-    // fall back to updated_at + current status if history is missing.
+    // Schema has no status_history column. We render the current status keyed
+    // off updated_at as the latest known activity.
     const items: ActivityRow[] = [];
     for (const p of prospects) {
-      const business = p.company || p.name || "Unknown";
-      if (Array.isArray(p.status_history) && p.status_history.length > 0) {
-        const sorted = [...p.status_history].sort(
-          (a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()
-        );
-        const latest = sorted[0];
-        items.push({
-          id: `h-${p.id}-${latest.at}`,
-          business,
-          description: `Status moved to ${latest.status.replace(/_/g, " ")}${latest.note ? `, ${latest.note}` : ""}`,
-          at: latest.at,
-        });
-      } else if (p.updated_at && p.status) {
+      const personName = [p.first_name, p.last_name].filter(Boolean).join(" ").trim();
+      const business = p.company || personName || "Unknown";
+      if (p.updated_at && p.status) {
         items.push({
           id: `u-${p.id}`,
           business,

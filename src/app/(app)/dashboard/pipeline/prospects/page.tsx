@@ -139,20 +139,51 @@ export default function ProspectsPage() {
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const data = await safeQuery<ProspectDetail>(() =>
+      // Schema columns: first_name + last_name + company. We compose
+      // ProspectDetail.name from these on the client.
+      const raw = await safeQuery<{
+        id: string;
+        first_name: string | null;
+        last_name: string | null;
+        title: string | null;
+        company: string | null;
+        industry: string | null;
+        email: string | null;
+        email_verified: boolean | null;
+        status: string | null;
+        source: string | null;
+      }>(() =>
         supabase
           .from("pipeline_prospects")
           .select(
-            "id, name, title, company, industry, email, email_verified, status, source, enrichment, recent_emails, status_history"
+            "id, first_name, last_name, title, company, industry, email, email_verified, status, source",
           )
-          .order("created_at", { ascending: false })
-          .limit(500)
+          .order("enrichment_score", { ascending: false, nullsFirst: false })
+          .limit(500),
       );
       if (cancelled) return;
-      if (data.length === 0 && demoFlag) {
+      const composed: ProspectDetail[] = raw.map((r) => {
+        const fullName = [r.first_name, r.last_name].filter(Boolean).join(" ").trim();
+        const display = r.company?.trim() || fullName || "Untitled prospect";
+        return {
+          id: r.id,
+          name: display,
+          title: r.title,
+          company: r.company,
+          industry: r.industry,
+          email: r.email,
+          email_verified: r.email_verified,
+          status: r.status,
+          source: r.source,
+          enrichment: null,
+          recent_emails: [],
+          status_history: [],
+        } as ProspectDetail;
+      });
+      if (composed.length === 0 && demoFlag) {
         setRows(DEMO_PROSPECTS);
       } else {
-        setRows(data);
+        setRows(composed);
       }
       setLoading(false);
     }
