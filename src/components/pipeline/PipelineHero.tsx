@@ -6,21 +6,21 @@ export default function PipelineHero() {
     <section className="relative pt-36 pb-20 md:pt-44 md:pb-28 grain overflow-hidden">
       <div className="ember-blob w-[700px] h-[460px] -top-20 -right-40 opacity-60" aria-hidden="true" />
       <div className="relative mx-auto max-w-site px-6 lg:px-10">
-        <p className="eyebrow text-ember mb-6">Qwikly Pipeline</p>
-        <h1 className="display-xl text-ink max-w-[20ch]">
-          Booked sales calls on your calendar,{" "}
-          <em className="italic font-light">every week.</em>
+        <p className="eyebrow text-ember mb-6">Qwikly Outbound</p>
+        <h1 className="display-xl text-ink max-w-[22ch]">
+          Your next client,{" "}
+          <em className="italic font-light">delivered daily.</em>
         </h1>
         <p className="mt-8 text-lg text-ink-700 max-w-2xl leading-relaxed">
-          We find your ideal buyers, write a personal email to each one, and book qualified meetings on your calendar. Built for SA agencies, consultants, SaaS, and high-ticket service firms.
+          Outbound finds your next client. You decide who to reach out to. We don&apos;t book anything. We deliver a daily, hand-picked, verified prospect list to your dashboard, with suggested outreach copy you can adapt.
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row gap-4">
-          <CTAButton href="/contact?subject=pipeline-strategy-call" variant="solid" size="lg">
-            Book a strategy call
+          <CTAButton href="/pricing" variant="solid" size="lg">
+            See pricing
           </CTAButton>
-          <CTAButton href="#system" variant="outline" size="lg" withArrow={false}>
-            See the system
+          <CTAButton href="#how-it-works" variant="outline" size="lg" withArrow={false}>
+            How it works
           </CTAButton>
         </div>
 
