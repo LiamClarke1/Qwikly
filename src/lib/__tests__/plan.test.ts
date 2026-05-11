@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { hasOutbound, productsForPlan, dailyProspectQuotaForPlan, PLAN_CONFIG, resolvePlan } from '../plan';
+import { hasOutbound, productsForPlan, dailyProspectQuotaForPlan, PLAN_CONFIG, resolvePlan, startingGrantZarCents } from '../plan';
 
 describe('hasOutbound', () => {
   it.each(['pro', 'founders', 'business', 'enterprise'] as const)(
@@ -73,5 +73,18 @@ describe('resolvePlan', () => {
     expect(resolvePlan('garbage')).toBe('trial');
     expect(resolvePlan(null)).toBe('trial');
     expect(resolvePlan(undefined)).toBe('trial');
+  });
+});
+
+describe('startingGrantZarCents', () => {
+  it.each([
+    ['trial',      3000],
+    ['starter',    10000],
+    ['pro',        28000],
+    ['founders',   45000],
+    ['business',   65000],
+    ['enterprise', 150000],
+  ] as const)('returns %s grant = %i cents', (plan, expected) => {
+    expect(startingGrantZarCents(plan)).toBe(expected);
   });
 });
