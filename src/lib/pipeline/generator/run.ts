@@ -28,8 +28,7 @@ import { searchBusinesses } from "../scraper/google-places";
 import type { PlaceResult } from "../scraper/google-places.types";
 import { readSite } from "../scraper/site-reader";
 import type { SiteRecon as ScraperSiteRecon } from "../scraper/site-reader.types";
-import { findEmailForDomain } from "../scraper/hunter";
-import type { HunterEmailResult } from "../scraper/hunter.types";
+import { scrapeEmailFromWebsite, type ScrapedEmail } from "../scraper/website-email";
 import { checkCapForTenant } from "../billing/cap-check";
 import { getSetupState } from "../setup-state";
 import { supabaseAdmin } from "@/lib/supabase-server";
@@ -148,16 +147,15 @@ function bridgeSiteRecon(
 function buildCandidate(args: {
   place: PlaceResult;
   recon: ScraperSiteRecon | null;
-  hunter: HunterEmailResult | null;
+  scrapedEmail: ScrapedEmail;
   icpIndustries: SaIndustry[];
   icpIntents: string[];
 }): MockProspect {
-  const { place, recon, hunter, icpIndustries, icpIntents } = args;
+  const { place, recon, scrapedEmail, icpIndustries, icpIntents } = args;
 
-  const firstName = hunter?.first_name ?? "";
-  const lastName = hunter?.last_name ?? "";
-  const fullName = [firstName, lastName].filter(Boolean).join(" ").trim();
-  const title = hunter?.position ?? "";
+  // We dropped Hunter — no longer have first/last/title on the prospect.
+  // The client gets company + email + phone + LinkedIn search and finds the
+  // right person themselves. Names left blank by design.
   const city = extractCity(place.formatted_address);
   const industry = pickIndustryForPlace(place, icpIndustries);
   const reconBridged = bridgeSiteRecon(recon, place.website ?? "");
@@ -168,20 +166,29 @@ function buildCandidate(args: {
   const reviews = place.user_ratings_total ?? 0;
   const employeesEstimate = reviews >= 100 ? 50 : reviews >= 20 ? 20 : 5;
 
+  // Treat any email we scraped off the prospect's own website as "valid" for
+  // scoring purposes — it's an address the business actively publishes, which
+  // is at least as authoritative as Hunter's verification was. The richer
+  // `email_source` ("website_mailto" / "website_text" / "not_found") flows
+  // through icp_match JSONB so the dashboard can show the client where the
+  // email came from.
+  const hasEmail = scrapedEmail.email.length > 0;
+  const emailVerificationStatus = hasEmail ? "valid" : "not_found";
+
   return {
-    first_name: firstName,
-    last_name: lastName,
-    full_name: fullName || place.name,
-    title,
+    first_name: "",
+    last_name: "",
+    full_name: place.name,
+    title: "",
     company: place.name,
     industry,
     employees: employeesEstimate,
     city,
-    email: hunter?.email ?? "",
-    email_verified: hunter?.verification_status === "valid",
+    email: scrapedEmail.email,
+    email_verified: hasEmail,
     linkedin_url: "",
     intent_signals: intentSignals,
-    enrichment_score: hunter?.confidence ?? 0,
+    enrichment_score: 0,
     site_recon: reconBridged,
     score: 0,
     score_breakdown: {
@@ -197,7 +204,8 @@ function buildCandidate(args: {
     reviews_count: place.user_ratings_total ?? null,
     business_status: place.business_status ?? null,
     place_types: place.types,
-    email_verification_status: hunter?.verification_status ?? "unknown",
+    email_verification_status: emailVerificationStatus,
+    email_source: scrapedEmail.source,
   };
 }
 
@@ -265,23 +273,17 @@ export async function runGenerator(
       batch.map(async (place): Promise<MockProspect | null> => {
         try {
           const recon = place.website ? await readSite(place.website) : null;
-          const domain = extractDomain(place.website);
-          let hunter: HunterEmailResult | null = null;
-          if (domain) {
-            try {
-              hunter = await findEmailForDomain(domain, clientId);
-            } catch (err) {
-              console.error(
-                `[pipeline/runGenerator] hunter failed for ${domain}`,
-                err,
-              );
-              hunter = null;
-            }
-          }
+          // Scrape the prospect's own website for an email. Soft-fails to
+          // { email: "", source: "not_found" }; we still deliver the prospect
+          // so the client can find an email via LinkedIn or by visiting
+          // the site.
+          const scrapedEmail = place.website
+            ? await scrapeEmailFromWebsite(place.website)
+            : { email: "", source: "not_found" as const };
           return buildCandidate({
             place,
             recon,
-            hunter,
+            scrapedEmail,
             icpIndustries: input.industries as SaIndustry[],
             icpIntents: input.intentSignals,
           });
@@ -711,50 +713,67 @@ export async function runGeneratorAndInsert(
     return { created: 0, capReached: false };
   }
 
-  // 4. Filter on quality bar AND verified email. The MockProspect shape
-  // exposes email_verification_status at the top level; we will write it
-  // into icp_match JSONB on insert per the existing actions.ts column map.
+  // 4. Filter on quality bar only. We dropped Hunter on 2026-05-11; emails
+  // now come from scraping the prospect's own website. Scoring already
+  // rewards email + verification (contact_completeness, up to 7 of 10),
+  // so a no-email prospect rarely beats the score>=9 bar unless every
+  // other dimension is exceptional. We deliver whatever passes, with or
+  // without an email; the dashboard labels email_source clearly so the
+  // client knows when to find one via LinkedIn.
   const qualified = candidates.filter(
-    (c) =>
-      typeof c.score === "number" &&
-      c.score >= QUALITY_SCORE_FLOOR &&
-      c.email_verification_status === "valid" &&
-      typeof c.email === "string" &&
-      c.email.trim().length > 0,
+    (c) => typeof c.score === "number" && c.score >= QUALITY_SCORE_FLOOR,
   );
 
   if (qualified.length === 0) {
     return { created: 0, capReached: false };
   }
 
-  // 5. Dedupe against existing pipeline_prospects for this business. We
-  // compare on lowercased email which is the natural human-stable key.
-  // Doing this before insert avoids relying on a partial unique index and
-  // gives us deterministic "created" counts.
-  const db = supabaseAdmin();
-  const emailKeys = Array.from(
-    new Set(
-      qualified
-        .map((c) => c.email.trim().toLowerCase())
-        .filter((e) => e.length > 0),
-    ),
-  );
+  // 5. Dedupe against existing pipeline_prospects for this business. The
+  // stable key prefers email, falls back to website host, and finally to
+  // lowercased company name — required since dropping Hunter means many
+  // prospects ship without an email and we still need a deterministic
+  // dedupe key. We fetch existing email + website + company for this
+  // tenant and build a combined seen-set.
+  function dedupeKey(c: {
+    email?: string | null;
+    website?: string | null;
+    company?: string | null;
+  }): string {
+    const email = (c.email ?? "").trim().toLowerCase();
+    if (email) return `email:${email}`;
+    const site = (c.website ?? "").trim().toLowerCase();
+    if (site) {
+      try {
+        return `host:${new URL(site).hostname.replace(/^www\./, "")}`;
+      } catch {
+        return `host:${site}`;
+      }
+    }
+    const company = (c.company ?? "").trim().toLowerCase();
+    if (company) return `company:${company}`;
+    return "";
+  }
 
-  const existingEmails = new Set<string>();
+  const db = supabaseAdmin();
+  const existingKeys = new Set<string>();
   try {
     const { data: existing, error: existingErr } = await db
       .from("pipeline_prospects")
-      .select("email")
-      .eq("business_id", input.businessId)
-      .in("email", emailKeys);
+      .select("email, website, company")
+      .eq("business_id", input.businessId);
     if (existingErr) {
       console.warn(
         "[pipeline/runGeneratorAndInsert] dedupe select failed, proceeding without it",
         existingErr,
       );
     } else if (existing) {
-      for (const row of existing as Array<{ email: string | null }>) {
-        if (row.email) existingEmails.add(row.email.trim().toLowerCase());
+      for (const row of existing as Array<{
+        email: string | null;
+        website: string | null;
+        company: string | null;
+      }>) {
+        const k = dedupeKey(row);
+        if (k) existingKeys.add(k);
       }
     }
   } catch (err) {
@@ -768,10 +787,14 @@ export async function runGeneratorAndInsert(
   const seenInBatch = new Set<string>();
   const toInsert: MockProspect[] = [];
   for (const c of qualified) {
-    const key = c.email.trim().toLowerCase();
-    if (existingEmails.has(key)) continue;
-    if (seenInBatch.has(key)) continue;
-    seenInBatch.add(key);
+    const key = dedupeKey({
+      email: c.email,
+      website: c.website ?? null,
+      company: c.company,
+    });
+    if (key && existingKeys.has(key)) continue;
+    if (key && seenInBatch.has(key)) continue;
+    if (key) seenInBatch.add(key);
     toInsert.push(c);
     if (toInsert.length >= input.count) break;
   }
@@ -814,6 +837,7 @@ export async function runGeneratorAndInsert(
         business_status: p.business_status ?? null,
         place_types: p.place_types ?? null,
         email_verification_status: p.email_verification_status ?? null,
+        email_source: p.email_source ?? null,
         site_recon: p.site_recon ?? null,
         score_breakdown: p.score_breakdown ?? null,
         unique_hook: p.unique_hook ?? null,

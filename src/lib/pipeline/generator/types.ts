@@ -142,7 +142,15 @@ export interface MockProspect {
   reviews_count?: number | null;
   business_status?: string | null;
   place_types?: string[];
-  email_verification_status?: "valid" | "accept_all" | "invalid" | "unknown";
+  // "valid" when we found an email on the prospect's website (any source),
+  // "not_found" when nothing usable was on the site. Legacy values ("accept_all",
+  // "invalid", "unknown") are kept for backward compatibility with rows
+  // written before the Hunter -> website-scrape migration on 2026-05-11.
+  email_verification_status?: "valid" | "not_found" | "accept_all" | "invalid" | "unknown";
+  // Tells the dashboard where the email came from so it can render an honest
+  // label ("Found via mailto link" vs "Pulled from website text" vs "No email
+  // on site, find via LinkedIn").
+  email_source?: "website_mailto" | "website_text" | "not_found";
 }
 
 export type GeneratorResult =

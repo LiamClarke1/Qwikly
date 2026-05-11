@@ -1,10 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { PlaceResult } from "@/lib/pipeline/scraper/google-places.types";
 import type { SiteRecon as ScraperSiteRecon } from "@/lib/pipeline/scraper/site-reader.types";
-import type {
-  HunterEmailResult,
-  HunterVerificationStatus,
-} from "@/lib/pipeline/scraper/hunter.types";
+import type { ScrapedEmail } from "@/lib/pipeline/scraper/website-email";
 
 // --- shared mock state -------------------------------------------------
 // vi.mock factories below read these; tests mutate per case before
@@ -13,11 +10,7 @@ import type {
 interface CandidateSpec {
   placeName: string;
   domain: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  position: string;
-  verification: HunterVerificationStatus;
+  scrapedEmail: ScrapedEmail;
   city: string;
   industryTypes: string[];
   rating: number;
@@ -38,11 +31,11 @@ const state: {
     dealValueZar: number;
   };
   candidates: CandidateSpec[];
-  existingEmails: string[];
-  insertedRows: unknown[];
+  existingProspects: Array<{ email: string | null; website: string | null; company: string | null }>;
+  insertedRows: Array<Record<string, unknown>>;
   capCalls: Array<{ clientId: string | number; plan: string; projectedCents: number }>;
   placesCalls: number;
-  hunterCalls: Array<{ domain: string; clientId: string | number }>;
+  scrapeEmailCalls: Array<string>;
 } = {
   capResult: { over: false, spentCents: 0, capCents: 25000 },
   setupIcp: {
@@ -56,22 +49,17 @@ const state: {
     dealValueZar: 20000,
   },
   candidates: [],
-  existingEmails: [],
+  existingProspects: [],
   insertedRows: [],
   capCalls: [],
   placesCalls: 0,
-  hunterCalls: [],
+  scrapeEmailCalls: [],
 };
 
-function makeCandidate(overrides: Partial<CandidateSpec> & { email: string }): CandidateSpec {
+function makeCandidate(overrides: Partial<CandidateSpec> & { scrapedEmail: ScrapedEmail }): CandidateSpec {
   return {
     placeName: "Test Co",
     domain: "example.com",
-    email: overrides.email,
-    firstName: "Test",
-    lastName: "Person",
-    position: "CEO",
-    verification: "valid",
     city: "Cape Town",
     industryTypes: ["marketing_agency"],
     rating: 4.7,
@@ -133,54 +121,53 @@ vi.mock("../../scraper/site-reader", () => ({
   })),
 }));
 
-vi.mock("../../scraper/hunter", () => ({
-  findEmailForDomain: vi.fn(
-    async (
-      domain: string,
-      clientId: string | number,
-    ): Promise<HunterEmailResult | null> => {
-      state.hunterCalls.push({ domain, clientId });
-      const match = state.candidates.find((c) => c.domain === domain);
-      if (!match) return null;
-      return {
-        email: match.email,
-        first_name: match.firstName,
-        last_name: match.lastName,
-        position: match.position,
-        confidence: 90,
-        verification_status: match.verification,
-        source: "email_finder",
-      };
-    },
-  ),
+vi.mock("../../scraper/website-email", () => ({
+  scrapeEmailFromWebsite: vi.fn(async (websiteUrl: string): Promise<ScrapedEmail> => {
+    state.scrapeEmailCalls.push(websiteUrl);
+    const host = (() => {
+      try {
+        return new URL(websiteUrl).hostname.replace(/^www\./, "");
+      } catch {
+        return "";
+      }
+    })();
+    const match = state.candidates.find((c) => c.domain === host);
+    if (!match) return { email: "", source: "not_found" };
+    return match.scrapedEmail;
+  }),
 }));
 
-// Hook generator does a real LLM call. Stub it so tests stay offline.
 vi.mock("../../hook-generator", () => ({
   generateHook: vi.fn(async () => ""),
 }));
 
-// In-memory supabaseAdmin stub. select(...).eq(...).in(...) yields the
-// existing-emails fixture; insert(rows) records the rows.
+// In-memory supabaseAdmin stub. select(...).eq(...) resolves to the
+// existingProspects fixture; insert(rows) records the rows.
 vi.mock("@/lib/supabase-server", () => ({
   supabaseAdmin: () => ({
     from: (_table: string) => {
+      const resolvedReadResult = {
+        data: state.existingProspects,
+        error: null,
+      };
       const builder = {
         select(_cols: string) {
           return this;
         },
         eq(_col: string, _val: unknown) {
+          // Read paths resolve here; both then-chained and awaited cases
+          // are covered because this object is thenable below.
           return this;
         },
         in(_col: string, _vals: unknown[]) {
-          return Promise.resolve({
-            data: state.existingEmails.map((e) => ({ email: e })),
-            error: null,
-          });
+          return Promise.resolve(resolvedReadResult);
         },
         insert(rows: unknown[]) {
-          state.insertedRows.push(...rows);
+          state.insertedRows.push(...(rows as Array<Record<string, unknown>>));
           return Promise.resolve({ data: rows, error: null });
+        },
+        then(onFulfilled: (v: typeof resolvedReadResult) => unknown) {
+          return Promise.resolve(resolvedReadResult).then(onFulfilled);
         },
       };
       return builder;
@@ -203,11 +190,11 @@ beforeEach(() => {
     dealValueZar: 20000,
   };
   state.candidates = [];
-  state.existingEmails = [];
+  state.existingProspects = [];
   state.insertedRows = [];
   state.capCalls = [];
   state.placesCalls = 0;
-  state.hunterCalls = [];
+  state.scrapeEmailCalls = [];
 });
 
 import { runGeneratorAndInsert } from "../run";
@@ -215,7 +202,9 @@ import { runGeneratorAndInsert } from "../run";
 describe("runGeneratorAndInsert", () => {
   it("returns capReached:true and inserts nothing when the cap-check is over", async () => {
     state.capResult = { over: true, spentCents: 26000, capCents: 25000 };
-    state.candidates = [makeCandidate({ email: "a@example.com" })];
+    state.candidates = [
+      makeCandidate({ scrapedEmail: { email: "a@example.com", source: "website_mailto" } }),
+    ];
 
     const r = await runGeneratorAndInsert({
       clientId: 1,
@@ -227,34 +216,39 @@ describe("runGeneratorAndInsert", () => {
 
     expect(r).toEqual({ created: 0, capReached: true });
     expect(state.placesCalls).toBe(0);
-    expect(state.hunterCalls).toHaveLength(0);
+    expect(state.scrapeEmailCalls).toHaveLength(0);
     expect(state.insertedRows).toHaveLength(0);
     expect(state.capCalls).toHaveLength(1);
-    // Projected cost should be count * 274 cents = 5 * 274 = 1370.
+    // Projected cost is count * 274 cents = 5 * 274 = 1370. (Hunter cost
+    // line is still in the projection — overestimate is fine, the floor
+    // is the real spending guard.)
     expect(state.capCalls[0].projectedCents).toBe(5 * 274);
   });
 
-  it("filters out candidates whose email is not verified as 'valid'", async () => {
-    // Five strong candidates (high score) with varying verification statuses.
-    // Only the two "valid" ones should be inserted.
+  it("delivers top-scoring prospects regardless of email presence (Hunter dropped)", async () => {
+    // After dropping Hunter (2026-05-11), prospects without an email are
+    // still delivered. Scoring already weights email + verification into
+    // contact_completeness, so prospects with emails tend to score
+    // higher, but the hard email filter is gone. We don't assert which
+    // exact prospects get picked because that depends on scoring weights;
+    // we assert (a) the call goes through, (b) returned rows carry
+    // delivery batch metadata, and (c) email_source flows into icp_match.
     state.candidates = [
-      makeCandidate({ domain: "good1.com", email: "good1@good1.com", verification: "valid" }),
       makeCandidate({
-        domain: "accept.com",
-        email: "accept@accept.com",
-        verification: "accept_all",
+        placeName: "Mailto Co",
+        domain: "mailto-co.com",
+        scrapedEmail: { email: "info@mailto-co.com", source: "website_mailto" },
       }),
       makeCandidate({
-        domain: "invalid.com",
-        email: "invalid@invalid.com",
-        verification: "invalid",
+        placeName: "Text Co",
+        domain: "text-co.com",
+        scrapedEmail: { email: "hello@text-co.com", source: "website_text" },
       }),
       makeCandidate({
-        domain: "unknown.com",
-        email: "unknown@unknown.com",
-        verification: "unknown",
+        placeName: "Form Only Co",
+        domain: "form-co.com",
+        scrapedEmail: { email: "", source: "not_found" },
       }),
-      makeCandidate({ domain: "good2.com", email: "good2@good2.com", verification: "valid" }),
     ];
 
     const r = await runGeneratorAndInsert({
@@ -266,47 +260,57 @@ describe("runGeneratorAndInsert", () => {
     });
 
     expect(r.capReached).toBe(false);
-    // We expect 2 valid + verified survivors. They must also reach score >= 9
-    // given the strong fixture (industry match, location match, full recon,
-    // good rating, full contact). The scorer is deterministic.
-    expect(r.created).toBe(2);
-    expect(state.insertedRows).toHaveLength(2);
+    expect(state.scrapeEmailCalls.length).toBe(3);
+    expect(state.insertedRows.length).toBeGreaterThanOrEqual(1);
 
-    const insertedEmails = (state.insertedRows as Array<{ email: string }>).map(
-      (row) => row.email,
-    );
-    expect(insertedEmails.sort()).toEqual(
-      ["good1@good1.com", "good2@good2.com"].sort(),
-    );
-
-    // Inserted rows should carry batch tags + the right business id.
-    for (const row of state.insertedRows as Array<{
-      business_id: string;
-      delivery_batch_kind: string;
-      delivery_batch_date: string;
-      enrichment_score: number;
-    }>) {
+    // Every inserted row carries batch metadata and an icp_match block
+    // with email_source so the dashboard can render an honest label.
+    for (const row of state.insertedRows) {
       expect(row.business_id).toBe("biz-uuid");
       expect(row.delivery_batch_kind).toBe("daily_trickle");
       expect(row.delivery_batch_date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-      // enrichment_score is score * 10, clamped 0..100.
-      expect(row.enrichment_score).toBeGreaterThanOrEqual(90);
+      const icpMatch = row.icp_match as Record<string, unknown>;
+      expect(icpMatch).toBeDefined();
+      expect(
+        ["website_mailto", "website_text", "not_found"].includes(
+          icpMatch.email_source as string,
+        ),
+      ).toBe(true);
     }
   });
 
-  it("dedupes against existing pipeline_prospects rows by lowercased email", async () => {
-    state.existingEmails = ["already@example.com"];
+  it("dedupes against existing prospects using a composite key (email > website > company)", async () => {
+    // Existing rows for this tenant: one with an email, one only-website,
+    // one only-company. New candidates should be filtered against all three.
+    state.existingProspects = [
+      { email: "already@example.com", website: "https://already.com", company: "Already Co" },
+      { email: null, website: "https://no-email.com", company: "No Email Co" },
+      { email: null, website: null, company: "Phone Only Co" },
+    ];
     state.candidates = [
-      // Same email as the existing row but different case: should be skipped.
+      // Same email as existing row, different case: should be deduped.
       makeCandidate({
-        domain: "example.com",
-        email: "Already@Example.com",
-        verification: "valid",
+        placeName: "Dup Email Co",
+        domain: "dup-email.com",
+        scrapedEmail: { email: "Already@Example.com", source: "website_mailto" },
       }),
+      // No email, same host as existing no-email row: should be deduped.
       makeCandidate({
+        placeName: "Dup Host Co",
+        domain: "no-email.com",
+        scrapedEmail: { email: "", source: "not_found" },
+      }),
+      // No email, no website, same company as existing: should be deduped.
+      makeCandidate({
+        placeName: "Phone Only Co",
+        domain: "",
+        scrapedEmail: { email: "", source: "not_found" },
+      }),
+      // Genuinely fresh.
+      makeCandidate({
+        placeName: "Fresh Co",
         domain: "fresh.com",
-        email: "fresh@fresh.com",
-        verification: "valid",
+        scrapedEmail: { email: "hello@fresh.com", source: "website_mailto" },
       }),
     ];
 
@@ -314,34 +318,17 @@ describe("runGeneratorAndInsert", () => {
       clientId: 1,
       businessId: "biz-uuid",
       plan: "pipeline_pro",
-      count: 5,
+      count: 10,
       batchKind: "first_batch",
     });
 
     expect(r.capReached).toBe(false);
-    expect(r.created).toBe(1);
-    const insertedEmails = (state.insertedRows as Array<{ email: string }>).map(
-      (row) => row.email,
-    );
-    expect(insertedEmails).toEqual(["fresh@fresh.com"]);
-  });
-
-  it("threads clientId into every hunter call so spend is tagged correctly", async () => {
-    state.candidates = [
-      makeCandidate({ domain: "good.com", email: "good@good.com", verification: "valid" }),
-    ];
-
-    await runGeneratorAndInsert({
-      clientId: 42,
-      businessId: "biz-uuid",
-      plan: "pipeline_lite",
-      count: 5,
-      batchKind: "first_batch",
-    });
-
-    expect(state.hunterCalls.length).toBeGreaterThanOrEqual(1);
-    for (const call of state.hunterCalls) {
-      expect(call.clientId).toBe(42);
-    }
+    // Only the fresh row should land. Dedupe filters out the three dups
+    // regardless of whether they have an email.
+    const insertedCompanies = state.insertedRows.map((row) => row.company);
+    expect(insertedCompanies).toContain("Fresh Co");
+    expect(insertedCompanies).not.toContain("Dup Email Co");
+    expect(insertedCompanies).not.toContain("Dup Host Co");
+    expect(insertedCompanies).not.toContain("Phone Only Co");
   });
 });
