@@ -22,6 +22,7 @@ const companyLinks = [
 const legalLinks = [
   { label: "Trust", href: "/trust" },
   { label: "Terms of Service", href: "/legal/terms" },
+  { label: "Refund Policy", href: "/legal/refund-policy" },
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Delete my data", href: "/privacy/delete-my-data" },
 ];
