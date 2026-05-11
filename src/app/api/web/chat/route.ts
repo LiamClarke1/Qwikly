@@ -730,12 +730,22 @@ export async function POST(req: NextRequest) {
       if (distinctConversations >= includedConversations) {
         const { data: creditsRow } = await supabaseAdmin
           .from("conversation_credits")
-          .select("balance_zar_cents, zero_balance_behaviour")
+          .select(
+            "balance_zar_cents, granted_balance_zar_cents, purchased_balance_zar_cents, zero_balance_behaviour, granted_expires_at",
+          )
           .eq("client_id", Number(client_id))
           .maybeSingle();
 
         const zeroBalanceBehaviour = creditsRow?.zero_balance_behaviour ?? "pause";
-        const balance = creditsRow?.balance_zar_cents ?? 0;
+        // Granted credit only counts if not expired. Purchased credit never expires.
+        // balance_zar_cents (legacy) is kept as a fallback for unmigrated rows.
+        const grantedActive =
+          creditsRow?.granted_expires_at &&
+          new Date(creditsRow.granted_expires_at).getTime() > Date.now();
+        const granted = grantedActive ? (creditsRow?.granted_balance_zar_cents ?? 0) : 0;
+        const purchased = creditsRow?.purchased_balance_zar_cents ?? 0;
+        const legacy = creditsRow?.balance_zar_cents ?? 0;
+        const balance = granted + purchased + (granted + purchased === 0 ? legacy : 0);
 
         if (zeroBalanceBehaviour === "pause" && balance <= 0) {
           // Hard stop. Polite reply to the visitor; the owner is notified
