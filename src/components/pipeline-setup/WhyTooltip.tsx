@@ -6,9 +6,14 @@ import type { FieldProvenance } from "@/lib/pipeline/enrichment/types";
 const SOURCE_LABEL: Record<FieldProvenance["source"], string> = {
   site_hero: "Pulled from your homepage hero",
   site_services: "Pulled from your services list",
+  site_about: "From your About page",
+  site_pricing: "From your Pricing page",
+  site_case_studies: "From your case-studies / customers page",
   gbp_category: "From your Google Business Profile category",
   gbp_location: "From your Google Business Profile location",
   gbp_size: "From your Google Business Profile",
+  inbound_bookings: "From your recent inbound bookings",
+  inbound_chat: "From your recent inbound chat history",
   offer: "From the offer you described",
   synthesis: "Inferred from your offer and website",
 };

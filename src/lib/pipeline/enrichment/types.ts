@@ -9,9 +9,14 @@ import type { IcpDefinition } from "@/lib/pipeline/setup-state";
 export type ProvenanceSource =
   | "site_hero"
   | "site_services"
+  | "site_about"
+  | "site_pricing"
+  | "site_case_studies"
   | "gbp_category"
   | "gbp_location"
   | "gbp_size"
+  | "inbound_bookings"
+  | "inbound_chat"
   | "offer"
   | "synthesis";
 
