@@ -39,18 +39,18 @@ describe('dailyProspectQuotaForPlan', () => {
 
   it('returns the bundle quotas', () => {
     expect(dailyProspectQuotaForPlan('pro')).toBe(5);
-    expect(dailyProspectQuotaForPlan('founders')).toBe(5);
-    expect(dailyProspectQuotaForPlan('business')).toBe(10);
+    expect(dailyProspectQuotaForPlan('founders')).toBe(10);
+    expect(dailyProspectQuotaForPlan('business')).toBe(15);
   });
 
-  it('returns 20 for enterprise', () => {
-    expect(dailyProspectQuotaForPlan('enterprise')).toBe(20);
+  it('returns 25 for enterprise', () => {
+    expect(dailyProspectQuotaForPlan('enterprise')).toBe(25);
   });
 });
 
 describe('PLAN_CONFIG', () => {
   it('includes founders between pro and business', () => {
-    expect(PLAN_CONFIG.founders.name).toBe('Founders Concierge');
+    expect(PLAN_CONFIG.founders.name).toBe('Founders');
     expect(PLAN_CONFIG.founders.priceMonthly).toBe(2999);
     expect(PLAN_CONFIG.founders.leadLimit).toBe(100);
   });
