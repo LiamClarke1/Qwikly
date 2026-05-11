@@ -57,6 +57,18 @@ This codebase uses an `e2e/` folder for Playwright tests, but unit tests live ne
 
 Where the codebase uses fail-soft patterns (returning empty arrays instead of throwing), match that pattern. Where it uses RLS, match that. Don't introduce a new test framework or style.
 
+## Critical schema note (read before implementing any task)
+
+The Pipeline data model has **two distinct tenant keys** and you must use the right one for the right table:
+
+- **`pipeline_prospects.business_id`** — UUID FK to `businesses(id)`. All reads/writes of pipeline_prospects use `business_id`, NOT `client_id`. The existing generator at [src/app/(app)/dashboard/pipeline/generate/actions.ts:66](qwikly-site/src/app/(app)/dashboard/pipeline/generate/actions.ts#L66) already comments this.
+- **`api_usage.client_id`** — BIGINT FK to `clients(id)`. Billing/usage tracking is per-client. Same for the new `pipeline_api_usage.client_id`.
+- **`clients` vs `businesses`** — `clients` is the billing tenant (one per signup, BIGINT id, has `auth_user_id` TEXT). `businesses` is the Pipeline-side tenant (UUID id, has `user_id` UUID → `auth.users`). The two are NOT the same row, even when they belong to the same user.
+
+When a Pipeline task needs both keys (e.g. record a Google Places call against billing + write a prospect tagged with business_id), resolve them via the user session: look up `clients.id` by `auth.uid()` and `businesses.id` by `auth.uid()` separately, or via whatever resolver pattern the existing generator already uses (read it before inventing a new one).
+
+**If a task in this plan says `pipeline_prospects.client_id`, it's a plan bug — use `business_id` instead.**
+
 ---
 
 ## Task 1: Database migration
@@ -123,8 +135,9 @@ ALTER TABLE pipeline_prospects
   ADD COLUMN IF NOT EXISTS delivery_batch_date date,
   ADD COLUMN IF NOT EXISTS delivery_batch_kind text;  -- 'first_batch' | 'daily_trickle'
 
-CREATE INDEX IF NOT EXISTS idx_pipeline_prospects_client_batch
-  ON pipeline_prospects (client_id, delivery_batch_date);
+-- pipeline_prospects is keyed by business_id (UUID), not client_id.
+CREATE INDEX IF NOT EXISTS idx_pipeline_prospects_business_batch
+  ON pipeline_prospects (business_id, delivery_batch_date);
 
 COMMENT ON COLUMN pipeline_prospects.delivery_batch_date IS
   'The date this prospect was delivered to the tenant. Drives the dashboard "Today''s N prospects" view.';

@@ -62,8 +62,11 @@ ALTER TABLE pipeline_prospects
   ADD COLUMN IF NOT EXISTS delivery_batch_date date,
   ADD COLUMN IF NOT EXISTS delivery_batch_kind text;
 
-CREATE INDEX IF NOT EXISTS idx_pipeline_prospects_client_batch
-  ON pipeline_prospects (client_id, delivery_batch_date);
+-- pipeline_prospects is tenant-keyed by business_id (UUID FK to businesses),
+-- not client_id — see 20260510_pipeline_platform.sql. Subsequent tasks query
+-- by business_id and resolve to client_id for billing where needed.
+CREATE INDEX IF NOT EXISTS idx_pipeline_prospects_business_batch
+  ON pipeline_prospects (business_id, delivery_batch_date);
 
 COMMENT ON COLUMN pipeline_prospects.delivery_batch_date IS
   'The date this prospect was delivered to the tenant. Drives the dashboard "Today''s N prospects" view.';
