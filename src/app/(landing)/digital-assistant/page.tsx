@@ -117,7 +117,7 @@ const youGet: { Icon: LucideIcon; stat: string; label: string; estimate: boolean
 ];
 
 const tiers: {
-  id: "starter" | "pro" | "concierge";
+  id: "starter" | "pro" | "founders";
   name: string;
   price: string;
   tagline: string;
