@@ -55,9 +55,15 @@ A second column `pipeline_daily_quota` int stores the per-day prospect cap (3 fo
 
 ### Routing into the wizard
 
-Middleware checks, on every dashboard request, whether the tenant has `outbound` in `products` and an ICP saved (`pipeline_setup_state.status === 'generated'`). If outbound is in scope and no ICP exists, redirect to `/dashboard/pipeline/setup` regardless of which dashboard URL they were trying to reach. Once ICP exists, normal navigation resumes.
+The wizard is **optional, not forced** — paying clients are not blocked from the dashboard. Instead, three soft signals make it impossible to miss:
 
-A combo client (`['inbound','outbound']`) is routed to Inbound setup first if that's also incomplete (existing logic), then Pipeline setup. The two are sequential, never simultaneous.
+1. **Persistent banner at the top of every dashboard page** (for tenants with `outbound` in `products` and no ICP saved): "Your lead engine isn't set up yet. Finish setup to start receiving prospects — takes 3 minutes." The banner has a prominent "Finish setup" CTA that opens the wizard at `/dashboard/pipeline/setup`. The banner is dismissable for the current session but reappears on next login until setup completes.
+2. **Yellow status dot on the Pipeline nav item** until ICP is saved. Disappears the moment the first batch lands.
+3. **The Pipeline tab itself stays gated** — clicking it routes to the wizard, not an empty dashboard. We don't want to show a confusing zero-state to a paying customer.
+
+The rest of the dashboard (Settings, Billing, Inbound widget for combo clients) is fully accessible. The user can choose to do everything else first and run the wizard later, but cannot use the Pipeline product itself until it's set up — which is the honest behaviour.
+
+A combo client (`['inbound','outbound']`) sees the Pipeline banner only after Inbound is complete (so they're not staring at two setup banners simultaneously). The two flows are independent but Inbound is shown first by convention.
 
 ### Wizard flow (3 screens, single session)
 
@@ -89,7 +95,7 @@ A Vercel cron at `0 6 * * 1-5` (06:00 UTC, Mon-Fri) iterates every tenant with `
 The generator must:
 1. Query the existing `pipeline_prospects` for this tenant to dedupe (no prospect delivered twice)
 2. Score the candidate pool with the existing `scoring.ts`
-3. Filter to score ≥ a "high-fit" threshold (target: ≥ 80 if existing scoring tops out at 100; threshold to be confirmed at plan stage by reading `src/lib/pipeline/scoring.ts`) AND email_verified = true (quality bar)
+3. Filter to score ≥ a "high-fit" threshold (target: ≥ 85 if existing scoring tops out at 100; threshold to be confirmed at plan stage by reading `src/lib/pipeline/scoring.ts`) AND email_verified = true (quality bar)
 4. Take top N
 5. If pool exhausted (no prospects above bar), surface a "We need to widen your ICP" prompt on the dashboard rather than dropping quality
 
@@ -166,7 +172,9 @@ This satisfies the saved rule: "Every chat-pipeline change must verify the tenan
 
 ### Existing files modified
 
-- `src/middleware.ts` — add the `outbound + no ICP → /dashboard/pipeline/setup` redirect
+- `src/components/dashboard/PipelineSetupBanner.tsx` (new) — the persistent setup banner shown on dashboard pages for outbound tenants without an ICP
+- `src/components/dashboard/Nav.tsx` (or equivalent) — add the yellow status dot to the Pipeline nav item when setup is incomplete
+- `src/app/(app)/dashboard/pipeline/page.tsx` — if no ICP saved, redirect to `/dashboard/pipeline/setup` instead of rendering an empty dashboard (Pipeline tab gating; rest of dashboard untouched)
 - `src/app/(app)/signup/page.tsx` — route Pipeline plan IDs to `products=['outbound']`
 - `src/app/(app)/dashboard/pipeline/setup/page.tsx` — render the new 3-screen wizard instead of bare IcpForm
 - `src/app/api/pipeline/generate/route.ts` — accept `firstBatch: true, count: N`, hard-stop on cap, write `delivery_batch_date`
