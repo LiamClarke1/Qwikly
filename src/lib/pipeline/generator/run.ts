@@ -235,11 +235,17 @@ export async function runGenerator(
     quantity: effectiveQuantity,
   };
 
+  // No mock fallback. If the real API can't deliver (missing key, zero results,
+  // network error), return an empty list. The dashboard will surface an empty
+  // state and the client will see "no prospects yet" rather than fake
+  // companies with dead-link websites. This was a real production incident on
+  // 2026-05-11 where mock rows from a previous deploy were showing on a real
+  // customer's dashboard with non-resolving emails like @campsbaygroup.io.
   if (!process.env.GOOGLE_PLACES_API_KEY) {
-    console.warn(
-      "[pipeline/runGenerator] GOOGLE_PLACES_API_KEY missing, falling back to deterministic mock generator",
+    console.error(
+      "[pipeline/runGenerator] GOOGLE_PLACES_API_KEY missing, returning empty list",
     );
-    return runMockGenerator(cappedInput);
+    return [];
   }
 
   const oversampleTarget = Math.min(cappedInput.quantity * OVERSAMPLE_FACTOR, HARD_CAP);
@@ -261,9 +267,9 @@ export async function runGenerator(
 
   if (places.length === 0) {
     console.warn(
-      "[pipeline/runGenerator] Places returned zero results, falling back to deterministic mock so the test flow is not blocked",
+      "[pipeline/runGenerator] Places returned zero results, returning empty list (no mock fallback)",
     );
-    return runMockGenerator(cappedInput);
+    return [];
   }
 
   // Step 2 + 3: enrich each place in parallel batches.
@@ -498,6 +504,18 @@ function pickCity(locations: string[], rnd: () => number): string {
 async function runMockGenerator(
   input: GenerateProspectInput,
 ): Promise<MockProspect[]> {
+  // PRODUCTION GUARD: never produce mock prospects on a live server. This
+  // function is kept as dead code only because removing 280+ lines of mock
+  // data (SA name lists, company suffixes, hash helpers) is a much bigger
+  // diff than necessary. Throwing here ensures that if any future code path
+  // accidentally re-introduces the fallback, the test for that code path
+  // fails loudly instead of silently injecting fake businesses into a real
+  // tenant's pipeline (as happened on 2026-05-11 — see git blame).
+  throw new Error(
+    "[pipeline/runMockGenerator] called in production. The mock fallback was removed on 2026-05-11. Use the live Places API or surface an empty result.",
+  );
+  // Original mock-generation logic preserved below as unreachable code for
+  // reference. Do not re-enable.
   const seed = buildSeedFromInput(input);
   const rnd = mulberry32(seed);
 
