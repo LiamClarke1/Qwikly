@@ -55,6 +55,22 @@
     {
       "path": "/api/pipeline/trickle",
       "schedule": "0 6 * * 1-5"
+    },
+    {
+      "path": "/api/cron/payfast-reconcile",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/renewal-sweep",
+      "schedule": "15 * * * *"
+    },
+    {
+      "path": "/api/cron/trial-sweep",
+      "schedule": "30 * * * *"
+    },
+    {
+      "path": "/api/cron/dunning-sweep",
+      "schedule": "45 * * * *"
     }
   ]
 }
