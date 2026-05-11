@@ -110,47 +110,6 @@ const steps = [
   },
 ];
 
-const underTheHood = [
-  {
-    title: "Customisable qualifying questions",
-    body:
-      "Tell Qwikly what to ask: service type, location, budget, timeline. You define the questions, and the assistant works through them naturally in conversation.",
-  },
-  {
-    title: "Instant email notifications",
-    body:
-      "Every qualified lead hits your inbox immediately with all the context you need: name, contact, what they want, and any preferred time they mentioned. You follow up directly. No dashboard login required.",
-  },
-  {
-    title: "Full conversation log",
-    body:
-      "Every exchange is recorded and available in your dashboard. See exactly what the assistant said, how the visitor responded, and whether the lead was qualified or not.",
-  },
-];
-
-const responseStats = [
-  {
-    figure: "78%",
-    label: "of customers book the first business that responds",
-    source: "Salesforce, State of the Connected Customer",
-  },
-  {
-    figure: "21×",
-    label: "more likely to convert when contacted within 5 minutes vs 30 minutes",
-    source: "Harvard Business Review / InsideSales.com",
-  },
-  {
-    figure: "47 hrs",
-    label: "average response time for a South African service business",
-    source: "Independent SA SME survey, 2024",
-  },
-  {
-    figure: "62%",
-    label: "of website enquiries are never followed up at all",
-    source: "Salesforce Research, 2024",
-  },
-];
-
 export default function HowItWorksPage() {
   const faqSchema = buildFAQSchema(FAQ_DATA);
   return (
@@ -164,166 +123,59 @@ export default function HowItWorksPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
       />
 
-      {/* ═══════ HERO ═══════════════════════════════════════════ */}
-      <section className="relative pt-40 pb-20 grain overflow-hidden">
+      {/* ═══════ OPENER ═════════════════════════════════════════ */}
+      <section className="relative pt-36 md:pt-44 pb-16 md:pb-24 grain overflow-hidden">
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <p className="eyebrow text-ink-500 mb-6">How it works</p>
-          <h1 className="display-xl text-ink max-w-[20ch]">
-            Two things,{" "}
-            <em className="italic font-light">done well</em>.
+          <h1 className="display-xl text-ink max-w-[18ch]">
+            Two things.{" "}
+            <em className="italic font-light">Done well.</em>
           </h1>
-          <p className="mt-8 text-lg text-ink-700 max-w-xl leading-relaxed">
-            One, we plug a digital assistant onto your site that replies in under 60 seconds, qualifies the visitor, and emails their contact details to you. Two, on Pro and up, we deliver hand-picked Outbound prospects every business day, you decide who to reach out to.
+          <p className="mt-8 text-lg md:text-xl text-ink-700 max-w-prose leading-relaxed">
+            One digital assistant on your site, replying in under sixty seconds. One stream of hand-picked Outbound prospects landing in your inbox every business day. Here is how it comes together.
           </p>
-          <div className="mt-6 flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-ember/10 border border-ember/20">
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 text-ember" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-              </svg>
-              <span className="text-xs font-semibold text-ember">Digital Assistant Platform</span>
-            </div>
-            <svg viewBox="0 0 16 16" className="w-3 h-3 text-ink-300" fill="none"><path d="M6 8h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20">
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 flex-shrink-0 text-blue-500" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                <polyline points="22,6 12,13 2,6" />
-              </svg>
-              <span className="text-xs font-semibold text-blue-500">Email Lead Delivery</span>
-            </div>
-            <span className="text-xs text-ink-400 pl-1">One platform. One script tag.</span>
-          </div>
         </div>
       </section>
 
-      {/* ═══════ STEPS ══════════════════════════════════════════ */}
-      <section className="py-28 md:py-36 grain">
+      {/* ═══════ NARRATIVE TIMELINE ═════════════════════════════ */}
+      <section className="pb-16 md:pb-24">
         <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="text-center mb-16">
-            <p className="eyebrow text-ink-500 mb-4">Six steps to live</p>
-            <h2 className="display-lg text-ink max-w-[22ch] mx-auto">
-              Simple by design.{" "}
-              <em className="italic font-light">Powerful by default.</em>
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            {steps.map((s) => (
-              <div key={s.stamp} className="ed-card group">
-                <div className="flex items-start justify-between mb-6">
-                  <span className="step-stamp">{s.stamp}</span>
-                  <span className="eyebrow text-ink-500 group-hover:text-ember transition-colors">Step</span>
+          {steps.map((s, idx) => (
+            <div key={s.stamp} id={`step-${idx + 1}`}>
+              {idx > 0 && (
+                <div className="border-t border-ink/10" />
+              )}
+              <div className="grid grid-cols-12 gap-6 md:gap-10 py-12 md:py-20">
+                <div className="col-span-12 md:col-span-2">
+                  <span className="font-display italic font-light text-ink/40 text-5xl md:text-6xl lg:text-7xl leading-none block">
+                    {s.stamp}
+                  </span>
                 </div>
-                <h2 className="font-display text-xl md:text-2xl text-ink leading-tight">
-                  {s.title}
-                </h2>
-                <p className="mt-4 text-ink-700 text-sm leading-relaxed">{s.body}</p>
+                <div className="col-span-12 md:col-span-9 md:col-start-4">
+                  <h2 className="font-display text-2xl md:text-3xl text-ink leading-tight max-w-prose">
+                    {s.title}
+                  </h2>
+                  <p className="mt-5 text-ink-700 text-base md:text-lg leading-relaxed max-w-prose">
+                    {s.body}
+                  </p>
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* ═══════ INDUSTRY STATS ═════════════════════════════════ */}
-      <section className="py-28 md:py-36 bg-ink grain-dark overflow-hidden">
-        <div className="ember-blob w-[500px] h-[400px] top-0 right-0 opacity-20" />
-        <div className="dot-grid absolute inset-0 opacity-50" />
-
-        <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-16">
-            <div className="lg:col-span-5">
-              <p className="eyebrow text-paper/50 mb-5">Why speed matters</p>
-              <h2 className="display-lg text-paper">
-                If you don&rsquo;t reply in{" "}
-                <em className="italic font-light text-ember">5 minutes</em>,
-                the lead is gone.
-              </h2>
-            </div>
-            <div className="lg:col-span-6 lg:col-start-7 lg:pt-4">
-              <p className="text-paper/60 text-lg leading-relaxed">
-                These aren&rsquo;t Qwikly&rsquo;s numbers. They&rsquo;re what independent research says about
-                every business that takes too long to respond to website enquiries.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {responseStats.map((s) => (
-              <div
-                key={s.figure}
-                className="bg-paper/[0.05] border border-paper/10 rounded-2xl p-7 hover:bg-paper/[0.08] hover:border-paper/[0.16] transition-colors duration-300"
-              >
-                <p className="font-display text-[clamp(2.5rem,5vw,3.5rem)] leading-none text-ember tracking-tight">
-                  {s.figure}
-                </p>
-                <p className="mt-4 text-paper/80 text-sm leading-relaxed">{s.label}</p>
-                <p className="mt-3 text-paper/30 text-[11px] leading-relaxed">{s.source}</p>
-              </div>
-            ))}
-          </div>
-
-          <p className="mt-10 text-paper/30 text-xs">
-            Statistics are industry averages from the sources cited. Individual results will vary.
-          </p>
-        </div>
-      </section>
-
-      {/* ═══════ UNDER THE HOOD ═════════════════════════════════ */}
-      <section className="py-28 md:py-36 bg-paper-deep grain">
-        <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-14">
-            <div className="md:col-span-5">
-              <p className="eyebrow text-ink-500 mb-5">Under the hood</p>
-              <h2 className="display-lg text-ink">
-                Quiet power,
-                <br />
-                <em className="italic font-light">running in the background</em>.
-              </h2>
-            </div>
-            <div className="md:col-span-6 md:col-start-7 md:pt-4">
-              <p className="text-ink-700 text-lg leading-relaxed">
-                Everything you&rsquo;d expect from a full-time front office: triage, qualification,
-                logging, and notifications. Working silently while you focus on the work.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {underTheHood.map((f) => (
-              <div key={f.title} className="ed-card">
-                <h3 className="font-display text-xl text-ink leading-tight mb-3">
-                  {f.title}
-                </h3>
-                <p className="text-ink-700 text-sm leading-relaxed">{f.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════ FINAL CTA ══════════════════════════════════════ */}
-      <section className="relative py-36 md:py-44 bg-ink text-paper overflow-hidden grain-dark">
-        <div className="ember-blob w-[900px] h-[500px] top-0 left-1/2 -translate-x-1/2 opacity-40" />
-        <div className="dot-grid absolute inset-0 opacity-50" />
+      {/* ═══════ CLOSER ═════════════════════════════════════════ */}
+      <section className="relative py-28 md:py-36 border-t border-ink/10 grain overflow-hidden">
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
-          <p className="eyebrow text-paper/50 mb-10">Your move</p>
-          <h2 className="display-xl text-paper max-w-[18ch] mx-auto">
-            Live on your site in{" "}
-            <em className="italic font-light text-ember">5 minutes</em>.
+          <h2 className="display-lg text-ink max-w-[20ch] mx-auto">
+            Plug it in.{" "}
+            <em className="italic font-light text-ember">It just works.</em>
           </h2>
-          <p className="text-paper/70 text-lg md:text-xl mt-8 max-w-xl mx-auto leading-relaxed">
-            Free to start. No card required. Upgrade when you need more leads.
-          </p>
-          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="mt-12 flex justify-center">
             <CTAButton size="lg" variant="solid" href="/signup">
               Start Free
             </CTAButton>
-            <CTAButton size="lg" variant="outline-light" href="/pricing" withArrow={false}>
-              See all plans
-            </CTAButton>
           </div>
-          <p className="mt-8 text-sm text-paper/35">
-            POPIA compliant · Hosted in South Africa · hello@qwikly.co.za
-          </p>
         </div>
       </section>
     </div>

@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Minus, Plus, Shield, MapPin, Zap, MessageSquare, Phone, X, Sparkles } from "lucide-react";
+import { Check, X, Sparkles } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
 import ManualPaymentModal, { type ManualPaymentPlan } from "@/components/ManualPaymentModal";
-import { LiveCounter } from "@/components/landing/LiveCounter";
-import { NicheChips } from "@/components/pricing/NicheChips";
 
 // Tier pricing. Annual = monthly x 12 x 0.85 (15% off, rounded).
 const MONTHLY = { starter: 699, pro: 1799, founders: 2999, business: 3999, enterprise: 7999 } as const;
@@ -106,23 +104,65 @@ const tiers: {
   },
 ];
 
+// The 4 most important features per card (compressed summary list)
+const cardHighlights: Record<TierId, string[]> = {
+  starter: [
+    "Digital assistant on your website",
+    "30 qualified leads/month",
+    "Email lead delivery",
+    "Email support, 24h response",
+  ],
+  pro: [
+    "Everything in Starter",
+    "Outbound, 5 prospects per business day",
+    "100 qualified leads/month",
+    "Custom branding and questions",
+  ],
+  founders: [
+    "Everything in Pro",
+    "Outbound, 10 prospects per business day",
+    "Same 100 qualified leads/month",
+    "Priority email support",
+  ],
+  business: [
+    "Everything in Pro",
+    "Outbound, 15 prospects per business day",
+    "400 qualified leads/month",
+    "Unlimited dashboard users",
+  ],
+  enterprise: [
+    "Everything in Business",
+    "Custom Outbound volume",
+    "1,500+ qualified leads/month",
+    "API access, dedicated support",
+  ],
+};
+
 type FeatureCell = boolean | string;
 
-const featureRows: { label: string; starter: FeatureCell; pro: FeatureCell; business: FeatureCell; enterprise: FeatureCell }[] = [
-  { label: "Digital assistant on your website",   starter: true,    pro: true,    business: true,     enterprise: true     },
-  { label: "Reply under 60 seconds",               starter: true,    pro: true,    business: true,     enterprise: true     },
-  { label: "Email lead delivery",                  starter: true,    pro: true,    business: true,     enterprise: true     },
-  { label: "POPIA compliant",                      starter: true,    pro: true,    business: true,     enterprise: true     },
-  { label: "Qualified leads / month",              starter: "30",    pro: "100",   business: "400",    enterprise: "1,500+" },
-  { label: "Outbound prospects / business day",    starter: false,   pro: "5",     business: "15",     enterprise: "Custom" },
-  { label: "Top-up rate beyond plan",              starter: "R23 / lead", pro: "R20 / lead", business: "R12 / lead", enterprise: "Volume" },
-  { label: "Dashboard users",                      starter: "1",     pro: "3",     business: "Unlimited", enterprise: "Unlimited" },
-  { label: "Custom greeting and questions",        starter: false,   pro: true,    business: true,     enterprise: true     },
-  { label: '"Powered by Qwikly" branding',         starter: true,    pro: false,   business: false,    enterprise: false    },
-  { label: "Custom branding, your logo",           starter: false,   pro: true,    business: true,     enterprise: true     },
-  { label: "Lead exports, CSV",                    starter: false,   pro: false,   business: true,     enterprise: true     },
-  { label: "API access",                           starter: false,   pro: false,   business: false,    enterprise: true     },
-  { label: "Support response",                     starter: "24h",   pro: "12h",   business: "4h",     enterprise: "1h"     },
+// Comparison matrix rows, all 5 tiers, derived from the tier feature lists above.
+const featureRows: {
+  label: string;
+  starter: FeatureCell;
+  pro: FeatureCell;
+  founders: FeatureCell;
+  business: FeatureCell;
+  enterprise: FeatureCell;
+}[] = [
+  { label: "Digital assistant on your website",  starter: true,         pro: true,         founders: true,        business: true,           enterprise: true            },
+  { label: "Reply under 60 seconds",              starter: true,         pro: true,         founders: true,        business: true,           enterprise: true            },
+  { label: "Email lead delivery",                 starter: true,         pro: true,         founders: true,        business: true,           enterprise: true            },
+  { label: "POPIA compliant",                     starter: true,         pro: true,         founders: true,        business: true,           enterprise: true            },
+  { label: "Qualified leads / month",             starter: "30",         pro: "100",        founders: "100",       business: "400",          enterprise: "1,500+"        },
+  { label: "Outbound prospects / business day",   starter: false,        pro: "5",          founders: "10",        business: "15",           enterprise: "Custom"        },
+  { label: "Top-up rate beyond plan",             starter: "R23 / lead", pro: "R20 / lead", founders: "R20 / lead", business: "R12 / lead",  enterprise: "Volume"        },
+  { label: "Dashboard users",                     starter: "1",          pro: "3",          founders: "3",         business: "Unlimited",    enterprise: "Unlimited"     },
+  { label: "Custom greeting and questions",       starter: false,        pro: true,         founders: true,        business: true,           enterprise: true            },
+  { label: '"Powered by Qwikly" branding',        starter: true,         pro: false,        founders: false,       business: false,          enterprise: false           },
+  { label: "Custom branding, your logo",          starter: false,        pro: true,         founders: true,        business: true,           enterprise: true            },
+  { label: "Lead exports, CSV",                   starter: false,        pro: false,        founders: false,       business: true,           enterprise: true            },
+  { label: "API access",                          starter: false,        pro: false,        founders: false,       business: false,          enterprise: true            },
+  { label: "Support response",                    starter: "24h",        pro: "12h",        founders: "Priority",  business: "4h",           enterprise: "1h"            },
 ];
 
 const pricingFAQs = [
@@ -173,10 +213,10 @@ const pricingFAQs = [
   },
 ];
 
-function TableCell({ value, isPremiumCol }: { value: FeatureCell; isPremiumCol?: boolean }) {
+function MatrixCell({ value, isPremiumCol }: { value: FeatureCell; isPremiumCol?: boolean }) {
   if (typeof value === "string") {
     return (
-      <span className={`font-display text-lg leading-none ${isPremiumCol ? "text-ember" : "text-ink"}`}>
+      <span className={`font-display text-base md:text-lg leading-none ${isPremiumCol ? "text-ember" : "text-ink"}`}>
         {value}
       </span>
     );
@@ -192,89 +232,44 @@ function TableCell({ value, isPremiumCol }: { value: FeatureCell; isPremiumCol?:
   }
   return (
     <span className="flex items-center justify-center">
-      <Minus className="w-4 h-4 text-ink/20" strokeWidth={2} />
+      <span className="text-[11px] tracking-wide uppercase text-ink-300">Not included</span>
     </span>
   );
 }
 
-type CompareTab = Exclude<TierId, "founders">;
-
 export default function PricingPage() {
   const [annual, setAnnual] = useState(false);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
-  const [compareTab, setCompareTab] = useState<CompareTab>("pro");
   const [paymentPlan, setPaymentPlan] = useState<ManualPaymentPlan | null>(null);
 
   function displayPrice(id: TierId) {
     return annual ? Math.round(ANNUAL[id] / 12) : MONTHLY[id];
   }
 
+  function handleTierCTA(id: TierId) {
+    if (id === "enterprise") {
+      window.location.href = "/contact?subject=enterprise";
+      return;
+    }
+    setPaymentPlan(id as ManualPaymentPlan);
+  }
+
   return (
     <div className="bg-paper">
 
-      {/* HERO */}
-      <section className="relative pt-32 md:pt-36 pb-12 grain overflow-hidden">
-        <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <p className="eyebrow text-ink-500 mb-6">Pricing</p>
-          <h1 className="display-xl text-ink max-w-[22ch]">
-            Two things.{" "}
-            <em className="italic font-light">Honestly priced.</em>
+      {/* HERO, single headline + paragraph + toggle */}
+      <section className="relative pt-36 md:pt-44 pb-12 grain overflow-hidden">
+        <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
+          <h1 className="display-huge text-ink mx-auto max-w-[18ch] reveal-up">
+            Compare every plan,{" "}
+            <em className="italic font-light">side by side</em>.
           </h1>
-          <p className="mt-8 text-lg text-ink-700 max-w-2xl leading-relaxed">
-            Qwikly does two things. A digital assistant on your website that replies to visitors in under 60 seconds and emails you the lead. And, on Pro and above, an Outbound system that hand-picks prospects that match your ideal client and drops them in your dashboard daily. That is the whole product. No setup fees, no surprises.
+          <p className="mt-8 text-lg text-ink-700 max-w-2xl mx-auto leading-relaxed">
+            One flat monthly fee, no setup costs, no commissions. Pick the row that matters to you and read across. The full matrix is right below.
           </p>
-          <LiveCounter />
-        </div>
-      </section>
-
-      {/* WHAT WE DO, WHAT WE DON'T */}
-      <section className="relative pb-20 grain overflow-hidden">
-        <div className="relative mx-auto max-w-site px-6 lg:px-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl">
-            <div className="ed-card">
-              <p className="eyebrow text-ember mb-4">What Qwikly does</p>
-              <ul className="space-y-3">
-                {[
-                  "Replies to website visitors in under 60 seconds",
-                  "Asks the qualifying questions you choose",
-                  "Captures phone number or email",
-                  "Emails you the lead when it comes in",
-                  "On Pro and up, delivers daily hand-picked outbound prospects to your dashboard",
-                ].map((text, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-ink-700 leading-relaxed">
-                    <Check className="w-4 h-4 mt-0.5 flex-shrink-0 text-ember" strokeWidth={2.5} />
-                    <span>{text}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="ed-card">
-              <p className="eyebrow text-ink-500 mb-4">What Qwikly does not do</p>
-              <ul className="space-y-3">
-                {[
-                  "Book leads into your calendar",
-                  "Send calendar invites to your customers",
-                  "Notify you by SMS or WhatsApp",
-                  "Reach out to prospects on your behalf",
-                  "Charge per job, take commissions, or add setup fees",
-                ].map((text, i) => (
-                  <li key={i} className="flex items-start gap-3 text-sm text-ink-700 leading-relaxed">
-                    <X className="w-4 h-4 mt-0.5 flex-shrink-0 text-ink-400" strokeWidth={2.5} />
-                    <span>{text}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* TOGGLE + TIER CARDS */}
-      <section className="relative pb-28 grain overflow-hidden">
-        <div className="relative mx-auto max-w-site px-6 lg:px-10">
 
           {/* Monthly / Annual toggle */}
-          <div className="flex items-center justify-center gap-4 mb-14 flex-wrap">
+          <div className="mt-12 flex items-center justify-center gap-4 flex-wrap">
             <span
               onClick={() => setAnnual(false)}
               className={`eyebrow cursor-pointer transition-colors duration-200 select-none ${!annual ? "text-ink" : "text-ink-500 hover:text-ink"}`}
@@ -307,38 +302,149 @@ export default function PricingPage() {
               Save 15%
             </span>
           </div>
+        </div>
+      </section>
 
-          {/* Free trial banner */}
-          <div className="mb-10 flex justify-center">
-            <a
-              href="/signup?plan=trial"
-              className="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-ember/10 border border-ember/20 hover:bg-ember/15 transition-colors"
-            >
-              <span className="w-2 h-2 rounded-full bg-ember" />
-              <span className="text-sm text-ink-700">
-                <strong className="text-ink">7-day free trial of Starter</strong>, no card required
-              </span>
-            </a>
+      {/* SECTION 1, THE MATRIX (lead element) */}
+      <section className="pb-24 grain">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+
+          <div className="mb-10 flex items-end justify-between flex-wrap gap-4">
+            <div>
+              <p className="eyebrow text-ink-500 mb-3">The matrix</p>
+              <h2 className="display-lg text-ink max-w-[18ch]">
+                Compare every plan.
+              </h2>
+            </div>
+            <p className="text-ink-500 text-sm max-w-md">
+              Pro is the most popular plan. Founders sits between Pro and Business, same Inbound limits as Pro with double the daily Outbound.
+            </p>
           </div>
 
-          {/* Tier cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 items-stretch max-w-7xl mx-auto">
+          <div className="rounded-2xl bg-white shadow-pop border border-ink/10 overflow-hidden">
+            <div className="max-h-[85vh] overflow-y-auto overflow-x-auto">
+              <table className="w-full border-collapse min-w-[960px]">
+                <thead className="sticky top-0 z-20">
+                  <tr className="bg-paper-deep">
+                    <th className="text-left p-6 align-bottom w-[26%] border-b border-ink/10">
+                      <span className="eyebrow text-ink-500">Feature</span>
+                    </th>
+                    {tiers.map((tier) => {
+                      const isPro = tier.id === "pro";
+                      const price = displayPrice(tier.id);
+                      return (
+                        <th
+                          key={tier.id}
+                          className={`p-5 align-bottom text-left border-b border-ink/10 ${isPro ? "bg-ember/5" : ""}`}
+                        >
+                          <div className="flex flex-col gap-3 min-w-[140px]">
+                            {isPro && (
+                              <span className="eyebrow self-start px-2 py-0.5 rounded-full bg-ember text-paper text-[10px]">
+                                Most Popular
+                              </span>
+                            )}
+                            <div>
+                              <p className={`font-display text-xl leading-tight ${isPro ? "text-ember" : "text-ink"}`}>
+                                {tier.name}
+                              </p>
+                              <p className="font-sans text-[11px] text-ink-500 leading-snug mt-1 max-w-[18ch]">
+                                {tier.tagline}
+                              </p>
+                            </div>
+                            <div>
+                              <p className={`font-display font-medium leading-none ${isPro ? "text-ember" : "text-ink"}`} style={{ fontSize: "1.6rem" }}>
+                                {tier.id === "enterprise" ? `R${price.toLocaleString()}+` : `R${price.toLocaleString()}`}
+                              </p>
+                              <p className="font-sans text-[10px] text-ink-500 mt-1">
+                                {tier.id === "enterprise"
+                                  ? "Custom volume"
+                                  : annual
+                                    ? `R${ANNUAL[tier.id].toLocaleString()}/yr`
+                                    : "/month"}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleTierCTA(tier.id)}
+                              className={`w-full text-center text-[11px] font-medium py-2 rounded-full cursor-pointer transition-colors ${
+                                isPro
+                                  ? "bg-ember text-paper hover:bg-ember/90"
+                                  : "border border-ink/15 text-ink hover:border-ink hover:bg-ink hover:text-paper"
+                              }`}
+                            >
+                              {tier.id === "enterprise" ? "Talk to us" : "Choose"}
+                            </button>
+                          </div>
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-ink/[0.06]">
+                  {featureRows.map((row) => (
+                    <tr key={row.label} className="hover:bg-ink/[0.015] transition-colors">
+                      <td className="py-4 px-6 text-sm text-ink-700 leading-snug font-sans">
+                        {row.label}
+                      </td>
+                      <td className="py-4 px-5 text-left">
+                        <MatrixCell value={row.starter} />
+                      </td>
+                      <td className="py-4 px-5 text-left bg-ember/5">
+                        <MatrixCell value={row.pro} isPremiumCol />
+                      </td>
+                      <td className="py-4 px-5 text-left">
+                        <MatrixCell value={row.founders} />
+                      </td>
+                      <td className="py-4 px-5 text-left">
+                        <MatrixCell value={row.business} />
+                      </td>
+                      <td className="py-4 px-5 text-left">
+                        <MatrixCell value={row.enterprise} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <p className="text-center eyebrow text-ink-500 mt-8">
+            No setup fee. Cancel anytime. All prices excl. VAT.
+          </p>
+        </div>
+      </section>
+
+      {/* SECTION 2, TIER CARDS (compressed quick summary) */}
+      <section className="py-24 bg-paper-deep grain border-t border-ink/[0.06]">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+
+          <div className="mb-12">
+            <p className="eyebrow text-ink-500 mb-3">At a glance</p>
+            <h2 className="display-lg text-ink max-w-[20ch]">
+              The plans,{" "}
+              <em className="italic font-light">in short</em>.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-stretch">
             {tiers.map((tier) => {
               const price = displayPrice(tier.id);
               const isContact = tier.id === "enterprise";
+              const isPro = tier.id === "pro";
 
               return (
                 <div
                   key={tier.id}
-                  className={`relative flex flex-col ${
-                    tier.highlight ? "ed-card-ink" : "ed-card-ghost"
-                  } ${tier.pill ? "pt-10" : ""}`}
+                  className={`relative flex flex-col rounded-2xl p-5 border ${
+                    isPro
+                      ? "bg-ink text-paper border-ink"
+                      : "bg-white border-ink/10"
+                  } ${tier.pill ? "pt-8" : ""}`}
                 >
-                  {/* Pill */}
                   {tier.pill && (
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
                       <span
-                        className={`eyebrow px-4 py-1.5 rounded-full whitespace-nowrap ${
+                        className={`eyebrow px-3 py-1 rounded-full whitespace-nowrap text-[10px] ${
                           tier.pill.variant === "popular"
                             ? "bg-ember text-paper"
                             : "bg-ink text-paper"
@@ -349,34 +455,35 @@ export default function PricingPage() {
                     </div>
                   )}
 
-                  {/* Tier name + tagline */}
-                  <p className={`eyebrow mb-1 ${tier.highlight ? "text-ember" : "text-ink-500"}`}>
+                  <p className={`eyebrow mb-1 ${isPro ? "text-ember" : "text-ink-500"}`}>
                     {tier.name}
                   </p>
-                  <p className={`text-sm leading-snug ${tier.bundleBadge ? "mb-2" : "mb-6"} ${tier.highlight ? "text-paper/65" : "text-ink-700"}`}>
+                  <p className={`text-xs leading-snug mb-3 ${isPro ? "text-paper/65" : "text-ink-700"}`}>
                     {tier.tagline}
                   </p>
+
                   {tier.bundleBadge && (
-                    <div className="mb-6">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-ink-50 text-tiny text-ink-700">
+                    <div className="mb-3">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] ${
+                        isPro ? "bg-paper/10 text-paper/80" : "bg-ink-50 text-ink-700"
+                      }`}>
                         <Sparkles className="w-3 h-3" aria-hidden />
                         {tier.bundleBadge}
                       </span>
                     </div>
                   )}
 
-                  {/* Price */}
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <div className="flex items-baseline gap-1">
                       <span
-                        className={`font-display font-medium leading-none ${tier.highlight ? "text-paper" : "text-ink"}`}
-                        style={{ fontSize: "clamp(1.8rem, 3vw, 2.4rem)" }}
+                        className={`font-display font-medium leading-none ${isPro ? "text-paper" : "text-ink"}`}
+                        style={{ fontSize: "1.7rem" }}
                       >
                         {tier.id === "enterprise" ? `R${price.toLocaleString()}+` : `R${price.toLocaleString()}`}
                       </span>
-                      <span className={`text-sm ${tier.highlight ? "text-paper/50" : "text-ink-500"}`}>/mo</span>
+                      <span className={`text-xs ${isPro ? "text-paper/50" : "text-ink-500"}`}>/mo</span>
                     </div>
-                    <p className={`text-xs mt-2 ${tier.highlight ? "text-paper/45" : "text-ink-400"}`}>
+                    <p className={`text-[10px] mt-1 ${isPro ? "text-paper/45" : "text-ink-400"}`}>
                       {tier.id === "enterprise"
                         ? "Custom volume pricing"
                         : annual
@@ -385,17 +492,16 @@ export default function PricingPage() {
                     </p>
                   </div>
 
-                  {/* Feature list */}
-                  <ul className="flex-1 space-y-3 mb-6">
-                    {tier.features.map((feature, i) => (
+                  <ul className="flex-1 space-y-2 mb-5">
+                    {cardHighlights[tier.id].map((feature, i) => (
                       <li
                         key={i}
-                        className={`flex items-start gap-3 text-sm leading-relaxed ${
-                          tier.highlight ? "text-paper/85" : "text-ink-700"
+                        className={`flex items-start gap-2 text-xs leading-relaxed ${
+                          isPro ? "text-paper/85" : "text-ink-700"
                         }`}
                       >
                         <Check
-                          className="w-4 h-4 mt-0.5 flex-shrink-0 text-ember"
+                          className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-ember"
                           strokeWidth={2.5}
                         />
                         <span>{feature}</span>
@@ -406,9 +512,9 @@ export default function PricingPage() {
                   {isContact ? (
                     <CTAButton
                       href="/contact?subject=enterprise"
-                      variant="primary"
+                      variant="outline"
                       size="md"
-                      className="w-full justify-center"
+                      className="w-full justify-center text-xs"
                     >
                       {tier.cta}
                     </CTAButton>
@@ -416,22 +522,13 @@ export default function PricingPage() {
                     <button
                       type="button"
                       onClick={() => setPaymentPlan(tier.id as ManualPaymentPlan)}
-                      className={`btn-ember ${tier.highlight ? "btn-ember-solid" : ""} px-6 py-3 text-[0.95rem] w-full justify-center cursor-pointer`}
+                      className={`w-full text-center text-xs font-medium py-2.5 rounded-full cursor-pointer transition-colors ${
+                        isPro
+                          ? "bg-ember text-paper hover:bg-ember/90"
+                          : "border border-ink/15 text-ink hover:bg-ink hover:text-paper hover:border-ink"
+                      }`}
                     >
-                      <span className="relative z-10">{tier.cta}</span>
-                      <svg
-                        className="btn-arrow w-4 h-4 relative z-10"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.25"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <path d="M5 12h14" />
-                        <path d="m12 5 7 7-7 7" />
-                      </svg>
+                      {tier.cta}
                     </button>
                   )}
                 </div>
@@ -439,243 +536,51 @@ export default function PricingPage() {
             })}
           </div>
 
-          <p className="text-center eyebrow text-ink-500 mt-10">
-            No setup fee. Top-ups at your plan&rsquo;s per-lead rate. Cancel anytime. All prices excl. VAT.
-          </p>
-        </div>
-      </section>
-
-      {/* COMPARISON TABLE */}
-      <section className="py-28 bg-paper-deep grain">
-        <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="mb-14">
-            <p className="eyebrow text-ink-500 mb-6">Compare plans</p>
-            <h2 className="display-lg text-ink max-w-[20ch]">
-              Everything,
-              <br />
-              <em className="italic font-light">side by side</em>.
-            </h2>
-            <p className="mt-4 text-ink-700 text-sm">
-              Founders sits between Pro and Business, same Inbound limits as Pro with double the daily Outbound prospects.
-            </p>
-          </div>
-
-          {/* Mobile: tabbed comparison */}
-          <div className="sm:hidden">
-            <div className="flex rounded-xl border border-ink/10 overflow-hidden mb-8">
-              {(["starter", "pro", "business", "enterprise"] as CompareTab[]).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setCompareTab(tab)}
-                  className={`flex-1 py-3 text-center transition-colors duration-200 cursor-pointer ${
-                    compareTab === tab
-                      ? "bg-ink text-paper"
-                      : "text-ink-500 hover:text-ink"
-                  }`}
-                >
-                  <span className={`eyebrow text-[9px] ${compareTab === tab && tab === "pro" ? "text-ember" : tab === "pro" ? "text-ember/70" : ""}`}>
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <div className="divide-y divide-ink/[0.06] border-t border-ink/[0.06]">
-              {featureRows.map((row) => (
-                <div key={row.label} className="flex items-center justify-between py-4 gap-4">
-                  <span className="text-sm text-ink-700 leading-snug">{row.label}</span>
-                  <div className="flex-shrink-0">
-                    <TableCell value={row[compareTab]} isPremiumCol={compareTab === "pro"} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Desktop: full side-by-side table */}
-          <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full border-collapse min-w-[720px]">
-              <thead>
-                <tr className="border-b border-ink/10">
-                  <th className="text-left pb-5 pr-6 font-normal eyebrow text-ink-500 w-[36%]">
-                    Feature
-                  </th>
-                  <th className="pb-5 px-3 text-center font-normal eyebrow text-ink-500">
-                    Starter
-                  </th>
-                  <th className="pb-5 px-3 text-center font-normal">
-                    <span className="eyebrow text-ember">Pro</span>
-                  </th>
-                  <th className="pb-5 px-3 text-center font-normal eyebrow text-ink-500">
-                    Business
-                  </th>
-                  <th className="pb-5 px-3 text-center font-normal eyebrow text-ink-500">
-                    Enterprise
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ink/[0.06]">
-                {featureRows.map((row) => (
-                  <tr key={row.label} className="hover:bg-ink/[0.015] transition-colors">
-                    <td className="py-4 pr-6 text-sm text-ink-700 leading-snug">
-                      {row.label}
-                    </td>
-                    <td className="py-4 px-3 text-center">
-                      <TableCell value={row.starter} />
-                    </td>
-                    <td className="py-4 px-3 text-center">
-                      <TableCell value={row.pro} isPremiumCol />
-                    </td>
-                    <td className="py-4 px-3 text-center">
-                      <TableCell value={row.business} />
-                    </td>
-                    <td className="py-4 px-3 text-center">
-                      <TableCell value={row.enterprise} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mt-10 flex justify-center">
+            <a
+              href="/signup?plan=trial"
+              className="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-ember/10 border border-ember/20 hover:bg-ember/15 transition-colors"
+            >
+              <span className="w-2 h-2 rounded-full bg-ember" />
+              <span className="text-sm text-ink-700">
+                <strong className="text-ink">7-day free trial of Starter</strong>, no card required
+              </span>
+            </a>
           </div>
         </div>
       </section>
 
-      {/* TOP-UPS EXPLAINER */}
-      <section className="py-16 bg-paper-deep grain border-t border-b border-ink/[0.06]">
+      {/* SECTION 3, EXTRAS (quiet prose, no boxes) */}
+      <section className="py-24 bg-paper grain">
         <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="max-w-lg">
-              <p className="eyebrow text-ember mb-3">Need more leads?</p>
-              <h3 className="font-display text-2xl text-ink mb-2">Top-ups at your plan&rsquo;s per-lead rate.</h3>
-              <p className="text-ink-700 text-sm leading-relaxed">
-                Hit your monthly cap? Top up at the same per-lead rate you are already paying inside your
-                plan, R23 on Starter, R20 on Pro, R12 on Business. No flat overage, no plan change required,
-                no automatic billing. You approve every top-up.
-              </p>
-            </div>
-            <div className="flex-shrink-0">
-              <CTAButton variant="outline" size="md" href="/signup">
-                Start free
-              </CTAButton>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* WHAT IS A LEAD */}
-      <section className="py-28 bg-paper grain">
-        <div className="mx-auto max-w-site px-6 lg:px-10">
-
-          <div className="mb-16">
-            <p className="eyebrow text-ink-500 mb-6">Lead definition</p>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
+            <div className="md:col-span-4">
+              <p className="eyebrow text-ink-500 mb-3">Extras</p>
               <h2 className="display-lg text-ink">
-                Not every chat<br />
-                <em className="italic font-light">counts as a lead</em>.
+                What about{" "}
+                <em className="italic font-light">extras</em>.
               </h2>
-              <p className="text-ink-700 text-base leading-relaxed">
-                Your plan includes a monthly lead limit. We only count a conversation as a lead
-                once a visitor shares their phone number or email. Curiosity is free.
-                You only pay for people you can actually reach.
+            </div>
+            <div className="md:col-span-8 md:col-start-5 space-y-6 text-ink-700 text-base leading-relaxed">
+              <p>
+                If you hit your monthly lead cap, you can top up at the same per-lead rate you are already paying inside your plan. That is R23 per lead on Starter, R20 on Pro and Founders, R12 on Business. Enterprise tops up at volume pricing. There is no flat overage charge, no plan change required, and no automatic billing. You approve every top-up.
+              </p>
+              <p>
+                Outbound prospect volume is fixed per tier, 5 per business day on Pro, 10 on Founders, 15 on Business, custom on Enterprise. If you need more, the cleanest path is moving up a tier rather than buying ad-hoc add-ons. That keeps your monthly bill predictable.
+              </p>
+              <p>
+                A lead is only counted when a visitor shares a phone number or email. Bounced chats, bots, name-only conversations, and your own test messages never come out of your monthly allowance. You only pay for people you can actually reach.
+              </p>
+              <p>
+                Every paid plan is flat monthly with no setup fee, no onboarding charge, and no commission on jobs you win. If you upgrade or downgrade mid-cycle, upgrades take effect immediately and downgrades apply at the start of the next billing period.
               </p>
             </div>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-
-            <div className="rounded-2xl border border-ink/[0.08] bg-white p-8">
-              <div className="w-10 h-10 rounded-xl bg-ink/[0.05] flex items-center justify-center mb-6">
-                <MessageSquare className="w-5 h-5 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
-              </div>
-              <p className="eyebrow text-ink-400 mb-3">Stage 1</p>
-              <h3 className="font-display text-2xl text-ink mb-3">Conversation</h3>
-              <p className="text-ink-600 text-sm leading-relaxed mb-6">
-                Visitor opens the chat and asks a question or says hello. The assistant responds naturally.
-                No contact info has been shared yet.
-              </p>
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ink/[0.05] border border-ink/[0.08]">
-                <span className="w-2 h-2 rounded-full bg-ink/25 flex-shrink-0" />
-                <span className="eyebrow text-xs text-ink-500">Not a lead</span>
-              </span>
-            </div>
-
-            <div className="rounded-2xl border border-ember/25 bg-ember/[0.04] p-8">
-              <div className="w-10 h-10 rounded-xl bg-ember/15 flex items-center justify-center mb-6">
-                <Phone className="w-5 h-5 text-ember" strokeWidth={1.75} aria-hidden="true" />
-              </div>
-              <p className="eyebrow text-ember mb-3">Stage 2</p>
-              <h3 className="font-display text-2xl text-ink mb-3">Lead captured</h3>
-              <p className="text-ink-600 text-sm leading-relaxed mb-6">
-                Visitor shares their phone number or email address. The assistant saves it and emails
-                it to you. This is when one lead counts against your monthly limit.
-              </p>
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-ember/10 border border-ember/20">
-                <span className="w-2 h-2 rounded-full bg-ember flex-shrink-0" />
-                <span className="eyebrow text-xs text-ember">Counts as 1 lead</span>
-              </span>
-            </div>
-
-            <div className="rounded-2xl border border-ink/[0.08] bg-white p-8">
-              <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center mb-6">
-                <Zap className="w-5 h-5 text-green-600" strokeWidth={1.75} aria-hidden="true" />
-              </div>
-              <p className="eyebrow text-ink-400 mb-3">Stage 3</p>
-              <h3 className="font-display text-2xl text-ink mb-3">Booking intent</h3>
-              <p className="text-ink-600 text-sm leading-relaxed mb-6">
-                Visitor confirms they want a callback or is ready to sign up. Flagged as
-                &ldquo;Hot&rdquo; in your dashboard so you know who to call first. Still only 1 lead, no extra charge.
-              </p>
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 border border-green-500/20">
-                <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
-                <span className="eyebrow text-xs text-green-700">Hot, still 1 lead</span>
-              </span>
-            </div>
-
-          </div>
-
-          <div className="rounded-2xl border border-ink/[0.08] bg-ink/[0.02] p-8 md:p-12">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-              <div>
-                <p className="eyebrow text-ink-500 mb-4">What never counts</p>
-                <h3 className="font-display text-2xl text-ink mb-4">
-                  Bounced chats don&rsquo;t touch your limit.
-                </h3>
-                <p className="text-ink-700 text-sm leading-relaxed">
-                  If a visitor opens the chat and leaves without sharing contact details, we don&rsquo;t count it.
-                  Spam, bots, test messages, and visitors who only give their name, none of these
-                  come out of your monthly allowance. Your plan only goes down when a real,
-                  reachable person comes through.
-                </p>
-              </div>
-              <div className="space-y-4">
-                {[
-                  "Visitor opens the chat but doesn't reply",
-                  "Gives only their name, no phone or email",
-                  "Leaves before sharing contact details",
-                  "Spam or automated bot traffic",
-                  "Your own test conversations",
-                ].map((text, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full border border-ink/20 flex items-center justify-center flex-shrink-0">
-                      <X className="w-3 h-3 text-ink-400" strokeWidth={2.5} aria-hidden="true" />
-                    </span>
-                    <p className="text-ink-600 text-sm">{text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
         </div>
       </section>
 
-      {/* NICHE CHIPS */}
-      <section className="bg-paper grain border-t border-ink/[0.06]">
-        <NicheChips />
-      </section>
-
-      {/* PRICING FAQ */}
-      <section className="py-28 grain">
+      {/* SECTION 4, FAQ */}
+      <section className="py-28 grain border-t border-ink/[0.06]">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
             <div className="md:col-span-4">
@@ -712,9 +617,9 @@ export default function PricingPage() {
                           }`}
                         >
                           {isOpen ? (
-                            <Minus className="w-4 h-4" strokeWidth={2} />
+                            <X className="w-4 h-4" strokeWidth={2} />
                           ) : (
-                            <Plus className="w-4 h-4" strokeWidth={2} />
+                            <span className="text-xl leading-none" aria-hidden>+</span>
                           )}
                         </span>
                       </button>
@@ -736,34 +641,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* TRUST STRIP */}
-      <section className="py-12 border-t border-ink/[0.06]">
-        <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16">
-            <div className="flex items-center gap-2.5">
-              <Shield className="w-5 h-5 text-ember" strokeWidth={1.5} aria-hidden="true" />
-              <span className="eyebrow text-ink-600">POPIA Compliant</span>
-            </div>
-            <div className="hidden md:block w-px h-5 bg-ink/10" />
-            <div className="flex items-center gap-2.5">
-              <MapPin className="w-5 h-5 text-ember" strokeWidth={1.5} aria-hidden="true" />
-              <span className="eyebrow text-ink-600">Hosted in South Africa</span>
-            </div>
-            <div className="hidden md:block w-px h-5 bg-ink/10" />
-            <div className="flex items-center gap-2.5">
-              <svg viewBox="0 0 24 24" className="w-5 h-5 text-ember" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-              <span className="eyebrow text-ink-600">ZAR Pricing</span>
-            </div>
-          </div>
-          <div className="mt-8 flex justify-center">
-            <LiveCounter />
-          </div>
-        </div>
-      </section>
-
-      {/* FINAL CTA */}
+      {/* BOTTOM CTA */}
       <section className="relative py-32 bg-ink text-paper overflow-hidden grain-dark">
         <div className="ember-blob w-[800px] h-[500px] top-0 left-1/2 -translate-x-1/2" />
         <div className="dot-grid absolute inset-0 opacity-50" />
@@ -772,15 +650,9 @@ export default function PricingPage() {
             Two things, done well.{" "}
             <em className="italic font-light text-ember">Try it for 7 days.</em>
           </h2>
-          <p className="text-paper/70 text-lg mt-8 max-w-xl mx-auto leading-relaxed">
-            7 days free. No card required. Cancel anytime.
-          </p>
-          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="mt-12 flex justify-center">
             <CTAButton size="lg" variant="solid" href="/signup?plan=trial">
               Start free trial
-            </CTAButton>
-            <CTAButton size="lg" variant="outline-light" href="/contact" withArrow={false}>
-              Talk to us
             </CTAButton>
           </div>
         </div>

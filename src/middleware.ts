@@ -49,9 +49,10 @@ const PUBLIC_PREFIXES = [
   "/api/leads/instant-reply",
   // Public scoreboard data for landing pages
   "/api/scoreboard",
-  // Niche, pipeline, case studies, all public landing routes
+  // Niche, pipeline, digital assistant, case studies, all public landing routes
   "/niche",
   "/pipeline",
+  "/digital-assistant",
   "/case-studies",
   // Pipeline platform internal endpoints, gated by the route handlers themselves
   "/api/pipeline/generate",

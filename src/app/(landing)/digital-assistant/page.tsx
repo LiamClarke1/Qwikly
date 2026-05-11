@@ -1,21 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Check,
-  MessageSquare,
-  Filter,
-  Mail,
-  LayoutDashboard,
-  Zap,
-  ShieldCheck,
-  Globe2,
-  Rocket,
-  PhoneOff,
-  Hourglass,
-  MessagesSquare,
-  type LucideIcon,
-} from "lucide-react";
 import CTAButton from "@/components/CTAButton";
-import DigitalAssistantHero from "@/components/digital-assistant/DigitalAssistantHero";
 import DigitalAssistantFAQ, { type FAQItem } from "@/components/digital-assistant/DigitalAssistantFAQ";
 
 export const metadata: Metadata = {
@@ -24,125 +8,37 @@ export const metadata: Metadata = {
     "A chat widget on your website that replies to visitors in under 60 seconds, qualifies them, and emails you the contact info and transcript. Built for SA service businesses.",
 };
 
-const problems: { Icon: LucideIcon; title: string; body: string }[] = [
+const problems: { title: string; body: string }[] = [
   {
-    Icon: PhoneOff,
     title: "After-hours leads vanish",
     body: "Visitor lands on your site at 9pm with a burst geyser. Your phone is on silent. Lead lost.",
   },
   {
-    Icon: Hourglass,
     title: "On-site, off-comms",
     body: "Owner is on a job. The enquiry sits unread for hours. Lead has called the next plumber by then.",
   },
   {
-    Icon: MessagesSquare,
     title: "Chats, not contact details",
     body: "Generic chat tools collect chit-chat, not qualified leads with real contact info. You still chase manually.",
   },
 ];
 
-const steps: { Icon: LucideIcon; title: string; body: string; bullets: string[] }[] = [
+const steps: { title: string; body: string }[] = [
   {
-    Icon: MessageSquare,
     title: "Replies on your website in under 60 seconds",
     body: "A chat widget sits on your site and greets every visitor instantly, day or night.",
-    bullets: [
-      "24/7 availability",
-      "Lives on your website",
-      "Works on mobile and desktop",
-      "No app to install",
-    ],
   },
   {
-    Icon: Filter,
     title: "Qualifies the lead",
     body: "Asks the qualifying questions you set during onboarding, suburb, urgency, type of job, so you only hear about leads worth your time.",
-    bullets: [
-      "Your qualifying questions",
-      "Set during onboarding",
-      "Captures the problem in their words",
-      "Filters out time-wasters",
-    ],
   },
   {
-    Icon: Mail,
     title: "Captures their contact info",
     body: "Gets the visitor's name, email, and phone number before the conversation ends.",
-    bullets: [
-      "Name",
-      "Email",
-      "Phone number",
-      "Logged in your dashboard",
-    ],
   },
   {
-    Icon: LayoutDashboard,
     title: "Emails you the lead and the transcript",
     body: "When a new qualified lead comes in, you get an email with their contact info and the full chat transcript. You take it from there.",
-    bullets: [
-      "Email to the business owner",
-      "Contact info included",
-      "Full chat transcript attached",
-      "Lead history in your dashboard",
-    ],
-  },
-];
-
-const youGet: { Icon: LucideIcon; stat: string; label: string; estimate: boolean }[] = [
-  {
-    Icon: Zap,
-    stat: "Under 60s",
-    label: "first reply to your website visitor",
-    estimate: false,
-  },
-  {
-    Icon: Mail,
-    stat: "Email",
-    label: "lead alert with contact info and transcript",
-    estimate: false,
-  },
-  {
-    Icon: ShieldCheck,
-    stat: "POPIA",
-    label: "compliant, hosted in South Africa, ZAR billing",
-    estimate: false,
-  },
-  {
-    Icon: Rocket,
-    stat: "24 hrs",
-    label: "live on your website",
-    estimate: false,
-  },
-];
-
-const tiers: {
-  id: "starter" | "pro" | "founders";
-  name: string;
-  price: string;
-  tagline: string;
-  highlight: boolean;
-}[] = [
-  {
-    id: "starter",
-    name: "Starter",
-    price: "R699",
-    tagline: "For solo operators getting their first inbound capture live.",
-    highlight: false,
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "R1,799",
-    tagline: "For growing teams that want every website enquiry qualified and emailed in.",
-    highlight: true,
-  },
-  {
-    id: "founders",
-    name: "Founders",
-    price: "R2,999",
-    tagline: "Pro features, double the daily Outbound prospects (10 per business day).",
-    highlight: false,
   },
 ];
 
@@ -174,206 +70,200 @@ const faqs: FAQItem[] = [
   },
 ];
 
+function ChatWidgetMockup() {
+  return (
+    <div className="relative w-full max-w-md mx-auto">
+      <div
+        className="relative rounded-2xl bg-white border border-ink/[0.06] overflow-hidden"
+        style={{ boxShadow: "0 30px 60px -20px rgba(28, 24, 22, 0.25), 0 18px 36px -18px rgba(232, 90, 44, 0.18)" }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-ink/[0.06]">
+          <div className="flex items-center gap-2.5">
+            <span className="relative inline-flex w-2.5 h-2.5">
+              <span className="absolute inset-0 rounded-full bg-ember animate-ping opacity-60" aria-hidden="true" />
+              <span className="relative inline-block w-2.5 h-2.5 rounded-full bg-ember" />
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-ember/10 text-ember text-[11px] font-medium tracking-wide">
+              Online
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-ink/15" aria-hidden="true" />
+            <span className="w-1.5 h-1.5 rounded-full bg-ink/15" aria-hidden="true" />
+            <span className="w-1.5 h-1.5 rounded-full bg-ink/15" aria-hidden="true" />
+          </div>
+        </div>
+
+        {/* Conversation */}
+        <div className="px-5 py-6 space-y-4 bg-paper/40">
+          {/* Assistant */}
+          <div className="flex justify-start">
+            <div className="max-w-[78%] rounded-2xl rounded-tl-md bg-paper-deep px-4 py-3 text-sm text-ink leading-relaxed">
+              Hi, thanks for stopping by. What can we help you sort out today?
+            </div>
+          </div>
+
+          {/* Visitor */}
+          <div className="flex justify-end">
+            <div className="max-w-[78%] rounded-2xl rounded-tr-md bg-ember/10 px-4 py-3 text-sm text-ink leading-relaxed">
+              Burst geyser in Rondebosch, need someone tonight.
+            </div>
+          </div>
+
+          {/* Assistant */}
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-2xl rounded-tl-md bg-paper-deep px-4 py-3 text-sm text-ink leading-relaxed">
+              Got it, after-hours geyser callout in Rondebosch. We can have someone with you within the hour.
+            </div>
+          </div>
+
+          {/* Assistant closing CTA (bold) */}
+          <div className="flex justify-start">
+            <div className="max-w-[80%] rounded-2xl rounded-tl-md bg-paper-deep px-4 py-3 text-sm text-ink leading-relaxed">
+              <strong className="font-semibold">What email should we send the booking confirmation to?</strong>
+            </div>
+          </div>
+        </div>
+
+        {/* Input row */}
+        <div className="px-5 py-4 border-t border-ink/[0.06] bg-white">
+          <div className="flex items-center gap-3 rounded-xl bg-paper/60 border border-ink/[0.06] px-4 py-3">
+            <span className="text-sm text-ink-500 flex-1">Type your reply…</span>
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-ember text-paper">
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Soft floating tag */}
+      <div className="absolute -bottom-4 -left-4 hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-ink text-paper text-[11px] font-medium tracking-wide shadow-lg">
+        <span className="w-1.5 h-1.5 rounded-full bg-ember" aria-hidden="true" />
+        Reply in under 60 seconds
+      </div>
+    </div>
+  );
+}
+
 export default function DigitalAssistantPage() {
   return (
     <div className="bg-paper">
 
-      {/* HERO */}
-      <DigitalAssistantHero />
+      {/* HERO, split */}
+      <section className="relative pt-36 md:pt-44 pb-20 grain overflow-hidden">
+        <div className="ember-blob w-[640px] h-[420px] -top-24 -right-32 opacity-50" aria-hidden="true" />
+        <div className="relative mx-auto max-w-site px-6 lg:px-10">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-10 items-center">
+            {/* Left, copy */}
+            <div className="md:col-span-6">
+              <h1 className="font-display text-ink leading-[1.02] tracking-tight" style={{ fontSize: "clamp(2.75rem, 6vw, 4.5rem)" }}>
+                Replies in under{" "}
+                <em className="italic font-light text-ember">sixty seconds.</em>
+              </h1>
+              <p className="mt-8 text-lg text-ink-700 max-w-xl leading-relaxed">
+                A digital assistant lives on your website, greets every visitor, qualifies the job, and emails you the lead with the full transcript. Built for South African service businesses.
+              </p>
 
-      {/* PROBLEM */}
-      <section className="py-28 bg-paper-deep grain overflow-hidden border-t border-ink/[0.06]">
-        <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="mb-14 max-w-2xl">
-            <p className="eyebrow text-ink-500 mb-6">The problem</p>
-            <h2 className="display-lg text-ink">
-              Inbound is leaking,
-              <br />
-              <em className="italic font-light">and you are paying for it.</em>
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {problems.map(({ Icon, title, body }) => (
-              <div key={title} className="ed-card-ghost">
-                <div className="w-10 h-10 rounded-xl bg-ember/12 flex items-center justify-center mb-6">
-                  <Icon className="w-5 h-5 text-ember" strokeWidth={1.75} aria-hidden />
-                </div>
-                <h3 className="font-display text-xl text-ink leading-snug mb-3">{title}</h3>
-                <p className="text-ink-700 text-sm leading-relaxed">{body}</p>
+              <div className="mt-10 flex flex-col sm:flex-row sm:items-center gap-4">
+                <CTAButton href="/signup" variant="solid" size="lg">
+                  Get started
+                </CTAButton>
+                <a
+                  href="/pricing"
+                  className="inline-flex items-center gap-2 text-ink font-medium text-base group"
+                >
+                  <span className="border-b border-ink/30 group-hover:border-ember group-hover:text-ember transition-colors">
+                    See pricing
+                  </span>
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-ink-700 group-hover:text-ember transition-colors" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </a>
               </div>
-            ))}
+            </div>
+
+            {/* Right, chat widget mockup */}
+            <div className="md:col-span-6">
+              <ChatWidgetMockup />
+            </div>
           </div>
         </div>
       </section>
 
-      {/* WHAT QWIKLY DOES */}
-      <section id="how" className="py-28 grain overflow-hidden">
+      {/* WHAT IT DOES, numbered text rows */}
+      <section id="how" className="py-28 grain border-t border-ink/[0.06]">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="mb-16 max-w-2xl">
-            <p className="eyebrow text-ember mb-6">What Qwikly does</p>
             <h2 className="display-lg text-ink">
-              A chat widget on your site,
+              What it does,
               <br />
-              <em className="italic font-light">that emails you the lead.</em>
+              <em className="italic font-light">in four steps.</em>
             </h2>
             <p className="mt-6 text-lg text-ink-700 leading-relaxed max-w-xl">
-              Qwikly is a chat widget on your website that replies in under 60 seconds, qualifies the visitor with your questions, captures their contact info, and emails you the lead with the full transcript.
+              A chat widget on your website that replies in under 60 seconds, qualifies the visitor with your questions, captures their contact info, and emails you the lead with the full transcript.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {steps.map(({ Icon, title, body, bullets }, i) => (
-              <div key={title} className="ed-card flex flex-col relative">
-                <span className="absolute -top-3 left-6 inline-flex items-center justify-center w-8 h-8 rounded-full bg-ink text-paper font-display text-sm">
-                  {i + 1}
-                </span>
-                <div className="w-11 h-11 rounded-xl bg-ink/[0.05] flex items-center justify-center mb-6 mt-3">
-                  <Icon className="w-5 h-5 text-ink" strokeWidth={1.75} aria-hidden />
+          <div>
+            {steps.map((step, i) => (
+              <div
+                key={step.title}
+                className="grid grid-cols-12 gap-6 md:gap-10 py-10 md:py-12 border-t border-ink/10"
+              >
+                <div className="col-span-12 md:col-span-3">
+                  <span
+                    className="font-display font-medium text-ember leading-none"
+                    style={{ fontSize: "clamp(2.5rem, 5vw, 4rem)" }}
+                  >
+                    0{i + 1}
+                  </span>
                 </div>
-                <h3 className="font-display text-2xl text-ink leading-snug mb-3">{title}</h3>
-                <p className="text-ink-700 text-sm leading-relaxed mb-6">{body}</p>
-                <ul className="space-y-2.5 mt-auto">
-                  {bullets.map((b) => (
-                    <li key={b} className="flex items-start gap-2.5 text-sm text-ink-700">
-                      <Check className="w-4 h-4 mt-0.5 text-ember flex-shrink-0" strokeWidth={2.5} aria-hidden />
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="col-span-12 md:col-span-9">
+                  <h3 className="font-display text-ink leading-snug" style={{ fontSize: "clamp(1.5rem, 2.4vw, 2rem)" }}>
+                    {step.title}
+                  </h3>
+                  <p className="mt-4 text-ink-700 leading-relaxed max-w-2xl">
+                    {step.body}
+                  </p>
+                </div>
               </div>
             ))}
+            <div className="border-t border-ink/10" aria-hidden="true" />
           </div>
         </div>
       </section>
 
-      {/* WHAT YOU GET */}
+      {/* PROBLEM, dark text-only */}
       <section className="py-28 bg-ink text-paper grain-dark relative overflow-hidden">
-        <div className="ember-blob w-[700px] h-[400px] top-0 left-1/2 -translate-x-1/2 opacity-50" aria-hidden="true" />
+        <div className="ember-blob w-[700px] h-[400px] top-0 left-1/2 -translate-x-1/2 opacity-40" aria-hidden="true" />
         <div className="relative mx-auto max-w-site px-6 lg:px-10">
           <div className="mb-16 max-w-2xl">
-            <p className="eyebrow text-ember mb-6">What you get</p>
             <h2 className="display-lg text-paper">
-              The basics,
+              Built for South African
               <br />
-              <em className="italic font-light text-ember">in plain ZAR terms.</em>
+              <em className="italic font-light text-ember">service businesses.</em>
             </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {youGet.map(({ Icon, stat, label, estimate }) => (
-              <div key={label} className="rounded-2xl border border-paper/10 bg-paper/[0.03] p-8">
-                <div className="w-11 h-11 rounded-xl bg-ember/15 flex items-center justify-center mb-6">
-                  <Icon className="w-5 h-5 text-ember" strokeWidth={1.75} aria-hidden />
-                </div>
-                <p
-                  className="font-display font-medium text-ember leading-none mb-4"
-                  style={{ fontSize: "clamp(1.75rem, 3.5vw, 2.5rem)" }}
-                >
-                  {stat}
-                </p>
-                <p className="text-paper/80 text-sm leading-relaxed mb-4">{label}</p>
-                {estimate && (
-                  <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-paper/[0.06] border border-paper/15">
-                    <span className="w-1.5 h-1.5 rounded-full bg-ember" aria-hidden="true" />
-                    <span className="eyebrow text-[9px] tracking-widest text-paper/70">industry estimate</span>
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-10 flex items-center gap-3 text-paper/60 text-sm">
-            <Globe2 className="w-4 h-4 text-ember" strokeWidth={1.75} aria-hidden />
-            <span>POPIA compliant, hosted in South Africa, billed in ZAR.</span>
-          </div>
-        </div>
-      </section>
-
-      {/* PROOF */}
-      <section className="py-28 grain">
-        <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="mb-12 max-w-2xl">
-            <p className="eyebrow text-ink-500 mb-6">Proof</p>
-            <h2 className="display-lg text-ink">
-              Real case studies,
-              <br />
-              <em className="italic font-light">coming soon.</em>
-            </h2>
-          </div>
-
-          <div className="rounded-2xl border-2 border-dashed border-ink/15 bg-ink/[0.02] p-10 md:p-14 text-center max-w-3xl mx-auto">
-            <p className="eyebrow text-ember mb-4">TODO, swap in first case study</p>
-            <h3 className="font-display text-2xl md:text-3xl text-ink leading-snug mb-4">
-              First inbound case study, in flight.
-            </h3>
-            <p className="text-ink-700 leading-relaxed max-w-xl mx-auto mb-8">
-              Pilot service businesses are running Qwikly on their sites now. We will publish the first end-to-end case study, leads captured, qualifying questions answered, contact info delivered, once the pilot completes its first 90 days.
-            </p>
-            <CTAButton href="/case-studies" variant="primary" size="md">
-              See case studies
-            </CTAButton>
-          </div>
-        </div>
-      </section>
-
-      {/* PRICING SUMMARY */}
-      <section className="py-28 bg-paper-deep grain border-t border-b border-ink/[0.06]">
-        <div className="mx-auto max-w-site px-6 lg:px-10">
-          <div className="mb-14 max-w-2xl">
-            <p className="eyebrow text-ink-500 mb-6">Pricing</p>
-            <h2 className="display-lg text-ink">
-              Three tiers,
-              <br />
-              <em className="italic font-light">flat ZAR pricing.</em>
-            </h2>
-            <p className="mt-6 text-lg text-ink-700 leading-relaxed max-w-xl">
-              Pick a tier, go live in 24 hours, cancel anytime. The under-60-second reply is included with every tier. Full feature breakdown lives on the pricing page.
+            <p className="mt-6 text-lg text-paper/70 leading-relaxed max-w-xl">
+              Three patterns we see every week, and exactly what the digital assistant fixes.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto items-stretch">
-            {tiers.map((tier) => (
-              <div
-                key={tier.id}
-                className={`relative flex flex-col ${tier.highlight ? "ed-card-ink pt-10" : "ed-card-ghost"}`}
-              >
-                {tier.highlight && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                    <span className="eyebrow bg-ember text-paper px-4 py-1.5 rounded-full whitespace-nowrap">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-
-                <p className={`eyebrow mb-1 ${tier.highlight ? "text-ember" : "text-ink-500"}`}>
-                  {tier.name}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
+            {problems.map((p) => (
+              <div key={p.title}>
+                <h3 className="font-display text-paper leading-snug" style={{ fontSize: "clamp(1.4rem, 2vw, 1.75rem)" }}>
+                  {p.title}
+                </h3>
+                <p className="mt-4 text-paper/70 leading-relaxed">
+                  {p.body}
                 </p>
-                <p className={`text-sm leading-snug mb-8 ${tier.highlight ? "text-paper/65" : "text-ink-700"}`}>
-                  {tier.tagline}
-                </p>
-
-                <div className="mb-8">
-                  <div className="flex items-baseline gap-2 flex-wrap">
-                    <span
-                      className={`font-display font-medium leading-none ${tier.highlight ? "text-paper" : "text-ink"}`}
-                      style={{ fontSize: "clamp(2rem, 3.5vw, 2.6rem)" }}
-                    >
-                      {tier.price}
-                    </span>
-                    <span className={`text-sm ${tier.highlight ? "text-paper/50" : "text-ink-500"}`}>
-                      per month
-                    </span>
-                  </div>
-                </div>
               </div>
             ))}
-          </div>
-
-          <div className="mt-12 flex justify-center">
-            <CTAButton href="/pricing" variant="solid" size="lg">
-              See full pricing
-            </CTAButton>
           </div>
         </div>
       </section>
@@ -398,24 +288,16 @@ export default function DigitalAssistantPage() {
         </div>
       </section>
 
-      {/* FINAL CTA */}
-      <section className="relative py-32 bg-ink text-paper overflow-hidden grain-dark">
-        <div className="ember-blob w-[800px] h-[500px] top-0 left-1/2 -translate-x-1/2" aria-hidden="true" />
-        <div className="dot-grid absolute inset-0 opacity-50" aria-hidden="true" />
-        <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
-          <h2 className="display-xl text-paper max-w-[20ch] mx-auto">
-            Try Qwikly{" "}
-            <em className="italic font-light text-ember">free for 7 days.</em>
-          </h2>
-          <p className="text-paper/70 text-lg mt-8 max-w-2xl mx-auto leading-relaxed">
-            Live on your website in 24 hours. No card-on-file, no lock-in. If it does not produce real, emailed leads, walk away.
-          </p>
-          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <CTAButton href="/get-started" variant="solid" size="lg">
-              Try Qwikly free for 7 days
-            </CTAButton>
-            <CTAButton href="/pipeline" variant="outline-light" size="lg" withArrow={false}>
-              See Pipeline if you also want outbound
+      {/* BOTTOM CTA */}
+      <section className="py-24 bg-paper-deep grain border-t border-ink/[0.06]">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
+            <p className="font-display text-ink leading-snug max-w-2xl" style={{ fontSize: "clamp(1.6rem, 2.6vw, 2.25rem)" }}>
+              Live on your website in 24 hours,{" "}
+              <em className="italic font-light text-ember">no lock-in.</em>
+            </p>
+            <CTAButton href="/signup" variant="solid" size="lg">
+              Get started
             </CTAButton>
           </div>
         </div>

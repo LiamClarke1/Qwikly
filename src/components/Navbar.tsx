@@ -12,7 +12,7 @@ type NavLink =
 
 const navLinks: NavLink[] = [
   { label: "Outcomes", anchor: "#outcomes" },
-  { label: "How it works", anchor: "#how-it-works" },
+  { label: "How it works", href: "/how-it-works" },
   { label: "Digital Assistant", href: "/digital-assistant" },
   { label: "Pipeline", href: "/pipeline" },
   { label: "Pricing", href: "/pricing" },
