@@ -59,22 +59,23 @@ export default function TermsPage() {
               </h2>
               <div className="space-y-4 text-ink-700 leading-relaxed text-base">
                 <p>
-                  Qwikly is an automated WhatsApp response and booking management platform designed for
-                  South African service businesses. The Service enables businesses to respond to inbound
-                  WhatsApp and email enquiries automatically, qualify leads, manage bookings, and send
-                  follow-up communications, without manual intervention.
+                  Qwikly is a digital assistant platform designed for South African service businesses.
+                  The Service consists of two core offerings: (a) a website-embedded digital assistant
+                  that captures and qualifies inbound leads from visitors and emails them to the business
+                  owner, and (b) Outbound, a daily hand-picked list of prospective customers delivered to
+                  the subscriber.
                 </p>
                 <p>
-                  Features include, but are not limited to: 30-second WhatsApp response, automated
-                  follow-up sequences, no-show rebooking, quote follow-up, dormant-lead revival, appointment
-                  reminders, and a client dashboard with conversation transcripts.
+                  Features include, but are not limited to: a website chat widget, lead qualification,
+                  email lead notifications to the business owner, a client dashboard with conversation
+                  transcripts, and the Outbound daily prospect list.
                 </p>
                 <p>
-                  Qwikly uses third-party infrastructure including Twilio (messaging delivery), Claude by
-                  Anthropic (AI response generation), and Supabase (data storage). Service availability
-                  is provided on a best-efforts basis. We do not guarantee 100% uptime and are not liable
-                  for downtime caused by third-party service providers, force majeure, or factors outside
-                  our reasonable control.
+                  Qwikly uses third-party infrastructure including Claude by Anthropic (digital assistant
+                  response generation) and Supabase (data storage). Service availability is provided on a
+                  best-efforts basis. We do not guarantee 100% uptime and are not liable for downtime
+                  caused by third-party service providers, force majeure, or factors outside our
+                  reasonable control.
                 </p>
                 <p>
                   The Service is intended for use by businesses registered or operating in the Republic
@@ -218,8 +219,8 @@ export default function TermsPage() {
                 </p>
                 <p>
                   You warrant that you have obtained all necessary consents from your customers to allow
-                  their personal information (including WhatsApp messages, contact details, and booking
-                  information) to be processed by Qwikly and its sub-processors (Twilio, Anthropic, Supabase)
+                  their personal information (including chat transcripts, contact details, and lead
+                  information) to be processed by Qwikly and its sub-processors (Anthropic, Supabase)
                   for the purposes of delivering the Service.
                 </p>
                 <p>

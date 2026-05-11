@@ -120,15 +120,14 @@ const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean;
     ],
   },
   founders: {
-    name: "Founders Concierge",
-    tagline: "Pro plan, plus a real person handling every lead",
+    name: "Founders",
+    tagline: "Pro features, double the daily prospects",
     highlight: false,
     features: [
       "Everything in Pro",
-      "Real human responding to every lead",
-      "We book calls into your calendar",
-      "5 hand-picked prospects/day (Outbound)",
-      "Limited spots, capacity capped per region",
+      "10 hand-picked prospects per business day (Outbound)",
+      "100 qualified leads/month",
+      "Priority support, 4h response",
     ],
   },
   business: {
@@ -137,6 +136,7 @@ const PLANS: Record<PlanId, { name: string; tagline: string; highlight: boolean;
     highlight: false,
     features: [
       "400 qualified leads/month",
+      "15 hand-picked prospects per business day (Outbound)",
       "Unlimited dashboard users",
       "Custom branding (your logo)",
       "Lead exports (CSV)",

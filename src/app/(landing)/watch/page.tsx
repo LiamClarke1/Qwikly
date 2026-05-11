@@ -6,7 +6,7 @@ import VideoEmbed from "@/components/watch/VideoEmbed";
 export const metadata: Metadata = {
   title: "Qwikly walkthrough, the lead engine for SA service businesses",
   description:
-    "A 4 minute walkthrough of Qwikly, the digital assistant that captures leads on your website at any hour and books them into your calendar. Built for South African service businesses, POPIA compliant, ZAR pricing.",
+    "A 4 minute walkthrough of Qwikly, the digital assistant that captures leads on your website at any hour and emails them to you instantly. Built for South African service businesses, POPIA compliant, ZAR pricing.",
   robots: {
     index: true,
     follow: true,
@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 
 const bullets: string[] = [
   "Visitor lands on your site at 9pm with a burst geyser. Qwikly captures their name and number in under 60 seconds.",
-  "WhatsApp pings the owner with a one tap reply that sends the booking link.",
-  "Owner wakes up to a paying job on the calendar.",
+  "The owner gets an email with the lead, the full conversation, and a one-click confirmation.",
+  "Owner wakes up to a paying job in the inbox, ready to confirm.",
 ];
 
 const trustPills: { Icon: typeof ShieldCheck; label: string }[] = [

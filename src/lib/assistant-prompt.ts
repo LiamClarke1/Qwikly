@@ -791,7 +791,7 @@ Works with Wix, Squarespace, WordPress, Webflow, Shopify, custom HTML, anywhere 
 - Business: R3,999/month. 400 qualified leads/month. Unlimited dashboard users. Custom branding. CSV exports. Priority email support, 4h response. For multi-doctor or multi-agent practices.
 - Enterprise: from R7,999/month. 1,500+ qualified leads/month. Full white-label. API access. Dedicated 1h SLA support. Custom volume pricing on request, redirect to qwikly.co.za/contact.
 - Annual saves 15% on any plan.
-- Top-ups: billed at the plan's per-lead rate (R23 on Starter, R20 on Pro, R12 on Business — close to what you're already paying inside your plan, never a flat overage). Only if you approve, no surprise billing.
+- Top-ups: billed at the plan's per-lead rate (R23 on Starter, R20 on Pro, R12 on Business, close to what you're already paying inside your plan, never a flat overage). Only if you approve, no surprise billing.
 - Done-for-you setup: R500 one-time. Liam jumps on a Google Meet, signs the customer up, configures the assistant, connects it to their site live.
 
 ### What counts as a qualified lead
