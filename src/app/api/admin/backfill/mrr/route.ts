@@ -17,15 +17,16 @@ export async function POST() {
   const db = supabaseAdmin();
   const { data: clients, error } = await db
     .from("clients")
-    .select("id, plan, billing_cycle, mrr_zar")
+    .select("id, plan, mrr_zar, subscriptions(billing_cycle)")
     .or("mrr_zar.is.null,mrr_zar.eq.0");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   let updated = 0;
   for (const c of clients ?? []) {
+    const sub = Array.isArray(c.subscriptions) ? c.subscriptions[0] : c.subscriptions;
     const tier = resolvePlan(c.plan) as InboundPlanTier;
-    const mrr = mrrZarCents(tier, c.billing_cycle);
+    const mrr = mrrZarCents(tier, (sub as { billing_cycle?: string } | null)?.billing_cycle);
     if (mrr === 0) continue; // trial — leave as 0
     await db.from("clients").update({ mrr_zar: mrr }).eq("id", c.id);
     updated++;

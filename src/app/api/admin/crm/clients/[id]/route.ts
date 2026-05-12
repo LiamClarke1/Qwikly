@@ -47,7 +47,7 @@ export async function GET(
   const sastNow = new Date(now.toLocaleString("en-US", { timeZone: "Africa/Johannesburg" }));
   const monthStart = new Date(Date.UTC(sastNow.getFullYear(), sastNow.getMonth(), 1)).toISOString();
 
-  const [clientRes, tagsRes, convosRes, notesCountRes, tasksOpenRes, bookingsRes, leadsMtdRes, creditsRes] = await Promise.all([
+  const [clientRes, tagsRes, convosRes, notesCountRes, tasksOpenRes, bookingsRes, leadsMtdRes, creditsRes, subRes] = await Promise.all([
     db.from("clients").select("*").eq("id", id).maybeSingle(),
     db.from("crm_client_tags").select("crm_tags(id,name,color)").eq("client_id", id),
     db.from("conversations").select("channel, created_at").eq("client_id", id).order("created_at", { ascending: false }).limit(5000),
@@ -57,6 +57,7 @@ export async function GET(
     db.from("conversations").select("id", { count: "exact", head: true })
       .eq("client_id", id).eq("is_lead", true).gte("created_at", monthStart),
     db.from("conversation_credits").select("purchased_balance_zar_cents").eq("client_id", id).maybeSingle(),
+    db.from("subscriptions").select("billing_cycle").eq("client_id", id).maybeSingle(),
   ]);
 
   if (!clientRes.data) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -86,6 +87,7 @@ export async function GET(
       // Computed on demand rather than stored, so it never goes stale.
       leads_used_mtd: leadsMtdRes.count ?? 0,
       credits_balance_zar_cents: creditsRes.data?.purchased_balance_zar_cents ?? 0,
+      billing_cycle: subRes.data?.billing_cycle ?? null,
     },
   });
 }
@@ -105,9 +107,14 @@ export async function PATCH(
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const db = supabaseAdmin();
+
+  // billing_cycle lives on subscriptions, not clients — strip it from the
+  // clients update and handle separately below.
+  const { billing_cycle: newBillingCycle, ...clientUpdates } = parsed.data;
+
   const { data, error } = await db
     .from("clients")
-    .update(parsed.data)
+    .update(clientUpdates)
     .eq("id", id)
     .select("id")
     .maybeSingle();
@@ -115,17 +122,28 @@ export async function PATCH(
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data)  return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // When the plan or billing cycle changes, sync all derived entitlement
-  // columns — products, quota, and MRR. Fetch the current row first so we
-  // have both values even when only one is being changed.
-  if (parsed.data.plan || parsed.data.billing_cycle !== undefined) {
+  // Update billing_cycle on the subscription row if provided.
+  if (newBillingCycle !== undefined) {
+    await db.from("subscriptions")
+      .update({ billing_cycle: newBillingCycle })
+      .eq("client_id", id);
+  }
+
+  // When the plan or billing cycle changes, sync products, quota, and MRR.
+  // billing_cycle comes from subscriptions, not clients.
+  if (parsed.data.plan || newBillingCycle !== undefined) {
     const { data: current } = await db
       .from("clients")
-      .select("plan, billing_cycle")
+      .select("plan")
       .eq("id", id)
       .maybeSingle();
+    const { data: sub } = await db
+      .from("subscriptions")
+      .select("billing_cycle")
+      .eq("client_id", id)
+      .maybeSingle();
     const tier = resolvePlan(parsed.data.plan ?? current?.plan) as InboundPlanTier;
-    const cycle = parsed.data.billing_cycle ?? current?.billing_cycle;
+    const cycle = newBillingCycle ?? sub?.billing_cycle;
     await db.from("clients").update({
       products:             productsForPlan(tier),
       pipeline_daily_quota: dailyProspectQuotaForPlan(tier),
