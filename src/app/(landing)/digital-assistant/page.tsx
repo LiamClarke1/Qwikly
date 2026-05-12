@@ -121,7 +121,7 @@ function ChatWidgetMockup() {
           {/* Assistant closing CTA (bold) */}
           <div className="flex justify-start">
             <div className="max-w-[80%] rounded-2xl rounded-tl-md bg-paper-deep px-4 py-3 text-sm text-ink leading-relaxed">
-              <strong className="font-semibold">What's your email so the team can confirm availability and reach you?</strong>
+              <strong className="font-semibold">What&apos;s your email so the team can confirm availability and reach you?</strong>
             </div>
           </div>
         </div>
