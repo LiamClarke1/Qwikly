@@ -7,17 +7,35 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Building2, User, Mail, Phone, CreditCard,
-  RefreshCw, CheckCircle2, Loader2, ChevronDown,
+  RefreshCw, CheckCircle2, Loader2, Eye, EyeOff, Lock,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
+// Monthly and annual prices (annual = monthly × 12 × 0.85)
+const PLAN_MONTHLY: Record<string, number> = {
+  starter: 699,
+  pro: 1799,
+  business: 3999,
+  enterprise: 7999,
+};
+const PLAN_ANNUAL_MONTHLY: Record<string, number> = {
+  starter: Math.round(699 * 12 * 0.85 / 12),
+  pro: Math.round(1799 * 12 * 0.85 / 12),
+  business: Math.round(3999 * 12 * 0.85 / 12),
+  enterprise: Math.round(7999 * 12 * 0.85 / 12),
+};
+const PLAN_ANNUAL_TOTAL: Record<string, number> = {
+  starter: Math.round(699 * 12 * 0.85),
+  pro: Math.round(1799 * 12 * 0.85),
+  business: Math.round(3999 * 12 * 0.85),
+  enterprise: Math.round(7999 * 12 * 0.85),
+};
+
 const PLANS = [
-  { value: "trial",      label: "Trial",      sub: "7 days free, 15 leads",    color: "text-slate-600" },
-  { value: "starter",    label: "Starter",    sub: "R699/mo · 20 leads",       color: "text-blue-600" },
-  { value: "pro",        label: "Pro",        sub: "R1,799/mo · 50 leads",     color: "text-violet-600" },
-  { value: "founders",   label: "Founders",   sub: "R2,999/mo · 60 leads",     color: "text-indigo-600" },
-  { value: "business",   label: "Business",   sub: "R3,999/mo · 200 leads",    color: "text-amber-600" },
-  { value: "enterprise", label: "Enterprise", sub: "R7,999/mo · 600 leads",    color: "text-emerald-600" },
+  { value: "starter",    label: "Starter",    sub: "20 leads/mo",  color: "text-blue-600" },
+  { value: "pro",        label: "Pro",        sub: "50 leads/mo",  color: "text-violet-600" },
+  { value: "business",   label: "Business",   sub: "200 leads/mo", color: "text-amber-600" },
+  { value: "enterprise", label: "Enterprise", sub: "600+ leads/mo",color: "text-emerald-600" },
 ] as const;
 
 type Plan = typeof PLANS[number]["value"];
@@ -29,6 +47,7 @@ interface Form {
   phone: string;
   plan: Plan;
   billing_cycle: "monthly" | "annual";
+  password: string;
   note: string;
 }
 
@@ -39,6 +58,7 @@ const EMPTY: Form = {
   phone: "",
   plan: "starter",
   billing_cycle: "monthly",
+  password: "",
   note: "",
 };
 
@@ -101,6 +121,7 @@ export default function NewClientPage() {
   const [done, setDone] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [newClientId, setNewClientId] = useState<number | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   function set<K extends keyof Form>(key: K, val: Form[K]) {
     setForm(f => ({ ...f, [key]: val }));
@@ -114,6 +135,8 @@ export default function NewClientPage() {
     if (!form.owner_name.trim())    e.owner_name    = "Required";
     if (!form.email.trim())         e.email         = "Required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Invalid email";
+    if (!form.password.trim())      e.password      = "Required";
+    else if (form.password.length < 8) e.password   = "Must be at least 8 characters";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -134,6 +157,7 @@ export default function NewClientPage() {
         phone:         form.phone.trim() || undefined,
         plan:          form.plan,
         billing_cycle: form.billing_cycle,
+        password:      form.password,
         note:          form.note.trim() || undefined,
       }),
     });
@@ -151,7 +175,13 @@ export default function NewClientPage() {
   }
 
   const planCfg = PLANS.find(p => p.value === form.plan)!;
-  const annualSaving = form.billing_cycle === "annual" ? "15% off" : null;
+  const isAnnual = form.billing_cycle === "annual";
+  const monthlyDisplay = isAnnual ? PLAN_ANNUAL_MONTHLY[form.plan] : PLAN_MONTHLY[form.plan];
+  const priceLabel = form.plan === "enterprise"
+    ? isAnnual ? `R${PLAN_ANNUAL_MONTHLY[form.plan].toLocaleString()}/mo (R${PLAN_ANNUAL_TOTAL[form.plan].toLocaleString()}/yr)` : "R7,999/mo"
+    : isAnnual
+      ? `R${monthlyDisplay.toLocaleString()}/mo · R${PLAN_ANNUAL_TOTAL[form.plan].toLocaleString()}/yr`
+      : `R${PLAN_MONTHLY[form.plan].toLocaleString()}/mo`;
 
   if (done && newClientId) {
     return (
@@ -162,11 +192,10 @@ export default function NewClientPage() {
         <h2 className="text-[22px] font-bold text-slate-900 mb-2">Client created</h2>
         <p className="text-[14px] text-slate-500 mb-2">
           <strong className="text-slate-800">{form.business_name}</strong> has been set up on the{" "}
-          <strong className="text-slate-800">{planCfg.label}</strong> plan.
+          <strong className="text-slate-800">{planCfg.label}</strong> plan ({form.billing_cycle}).
         </p>
         <p className="text-[13px] text-slate-400 mb-8">
-          An invite email has been sent to <strong>{form.email}</strong> with a link to set their password.
-          A welcome email was also sent confirming their plan.
+          A welcome email has been sent to <strong>{form.email}</strong>. The password you set is active, they can log in now and change it anytime from their settings.
         </p>
         <div className="flex gap-3 justify-center">
           <Link
@@ -200,7 +229,7 @@ export default function NewClientPage() {
         <p className="text-[13px] text-[#E85A2C] font-semibold mb-1">Admin</p>
         <h1 className="text-[26px] font-bold text-slate-900">Add new client</h1>
         <p className="text-[13px] text-slate-500 mt-1">
-          Creates their account, sends a password-setup invite, and activates their plan.
+          Creates their account with a password you set. Sends them a welcome email. They can change their password from settings anytime.
         </p>
       </div>
 
@@ -254,17 +283,45 @@ export default function NewClientPage() {
               disabled={saving}
             />
           </Field>
+
+          <Field label="Password" icon={Lock} error={errors.password}>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <input
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={e => set("password", e.target.value)}
+                placeholder="Set a password for them (min. 8 chars)"
+                disabled={saving}
+                className={cn(
+                  "w-full rounded-xl border border-slate-200 bg-slate-50 text-[14px] text-slate-800 placeholder:text-slate-400",
+                  "pl-10 pr-10 py-2.5",
+                  "focus:outline-none focus:ring-2 focus:ring-[#E85A2C]/20 focus:border-[#E85A2C]/40 transition-shadow",
+                  "disabled:opacity-60",
+                )}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(s => !s)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <p className="mt-1 text-[11px] text-slate-400">Client can change this from their Settings → Security after they log in.</p>
+          </Field>
         </div>
 
         {/* Plan */}
         <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
           <p className="text-[13px] font-semibold text-slate-800 flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-slate-400" /> Plan & billing
+            <CreditCard className="w-4 h-4 text-slate-400" /> Plan &amp; billing
           </p>
 
           <div>
             <label className="block text-[12px] font-semibold text-slate-600 mb-2">Plan</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {PLANS.map(p => (
                 <button
                   key={p.value}
@@ -315,13 +372,11 @@ export default function NewClientPage() {
           {/* Summary line */}
           <div className="rounded-xl bg-slate-50 border border-slate-200 px-4 py-3 flex items-center justify-between">
             <div className="text-[13px] text-slate-600">
-              <span className="font-semibold text-slate-800">{planCfg.label}</span>{" "}
-              · {form.billing_cycle}
-              {annualSaving && (
-                <span className="ml-1 text-emerald-600 font-medium">({annualSaving})</span>
-              )}
+              <span className="font-semibold text-slate-800">{planCfg.label}</span>{" · "}
+              {form.billing_cycle}
+              {isAnnual && <span className="ml-1 text-emerald-600 font-medium">(15% off)</span>}
             </div>
-            <span className="text-[12px] text-slate-400">{planCfg.sub}</span>
+            <span className="text-[13px] font-semibold text-slate-700">{priceLabel}</span>
           </div>
         </div>
 
@@ -362,7 +417,7 @@ export default function NewClientPage() {
                 Creating account…
               </>
             ) : (
-              "Create client & send invite"
+              "Create client & send welcome email"
             )}
           </button>
         </div>

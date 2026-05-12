@@ -94,12 +94,76 @@ function DisputeModal({ periodId, onClose, onDone }: { periodId: string; onClose
   );
 }
 
+function IvePaidModal({ periodId, invoiceNumber, onClose, onDone }: {
+  periodId: string;
+  invoiceNumber: string | null;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [note, setNote] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    await fetch(`/api/billing/periods/${periodId}/notify-paid`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ note: note.trim() || null }),
+    });
+    setLoading(false);
+    setDone(true);
+    setTimeout(onDone, 1800);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-[#1a1f2e] border border-line rounded-2xl p-6 w-full max-w-md">
+        {done ? (
+          <div className="text-center py-4">
+            <CheckCircle className="w-10 h-10 text-success mx-auto mb-3" />
+            <p className="text-body font-semibold text-fg">Notification sent</p>
+            <p className="text-small text-fg-muted mt-1">We&apos;ll confirm your payment and update your account shortly.</p>
+          </div>
+        ) : (
+          <>
+            <h3 className="text-h2 text-fg mb-1">Notify us of your payment</h3>
+            <p className="text-small text-fg-muted mb-5">
+              Use this to let us know you&apos;ve paid invoice{" "}
+              <strong className="text-fg font-mono">{invoiceNumber ?? ""}</strong> via EFT.
+              We&apos;ll verify and update your account.
+            </p>
+            <form onSubmit={submit} className="space-y-4">
+              <div>
+                <label className="block text-small font-medium text-fg mb-1.5">Reference / note (optional)</label>
+                <textarea
+                  value={note}
+                  onChange={e => setNote(e.target.value)}
+                  rows={3}
+                  placeholder="e.g. Paid 14 May, reference QWK-2025-05-0001"
+                  className="w-full bg-white/5 border border-line rounded-xl px-4 py-2.5 text-small text-fg placeholder:text-fg-faint outline-none focus:border-brand/40 resize-none"
+                />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <Button type="button" variant="ghost" onClick={onClose} className="flex-1">Cancel</Button>
+                <Button type="submit" loading={loading} className="flex-1">I&apos;ve paid</Button>
+              </div>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function BillingPeriodPage() {
   const params = useParams<{ period_id: string }>();
   const router = useRouter();
   const [period, setPeriod] = useState<PeriodDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDispute, setShowDispute] = useState(false);
+  const [showIvePaid, setShowIvePaid] = useState(false);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/billing/periods/${params.period_id}`);
@@ -163,10 +227,14 @@ export default function BillingPeriodPage() {
             </Button>
           )}
           {canPay && (
-            <span className="inline-flex items-center gap-1.5 text-tiny text-fg-muted px-3 py-1.5 rounded-full bg-white/5 border border-line">
-              <Banknote className="w-3.5 h-3.5" />
-              Pay by EFT, see invoice email
-            </span>
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Banknote className="w-3.5 h-3.5" />}
+              onClick={() => setShowIvePaid(true)}
+            >
+              I&apos;ve paid
+            </Button>
           )}
         </div>
       </div>
@@ -252,9 +320,19 @@ export default function BillingPeriodPage() {
                   Paid {billingInvoice.paid_at ? fmtDate(billingInvoice.paid_at) : ""}
                 </div>
               ) : canPay ? (
-                <div className="flex items-start gap-2 rounded-lg bg-white/[0.04] border border-line/60 p-3 text-tiny text-fg-muted leading-relaxed">
-                  <Banknote className="w-3.5 h-3.5 mt-0.5 shrink-0 text-fg-muted" />
-                  <span>Pay by EFT to the bank details on your invoice email. Reference the invoice number above.</span>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-2 rounded-lg bg-white/[0.04] border border-line/60 p-3 text-tiny text-fg-muted leading-relaxed">
+                    <Banknote className="w-3.5 h-3.5 mt-0.5 shrink-0 text-fg-muted" />
+                    <span>Pay via EFT to the bank details in your invoice email. Use the invoice number as your reference.</span>
+                  </div>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full justify-center"
+                    onClick={() => setShowIvePaid(true)}
+                  >
+                    I&apos;ve paid — notify us
+                  </Button>
                 </div>
               ) : null}
             </div>
@@ -305,6 +383,15 @@ export default function BillingPeriodPage() {
           periodId={params.period_id}
           onClose={() => setShowDispute(false)}
           onDone={() => { setShowDispute(false); load(); }}
+        />
+      )}
+
+      {showIvePaid && billingInvoice && (
+        <IvePaidModal
+          periodId={params.period_id}
+          invoiceNumber={billingInvoice.invoice_number}
+          onClose={() => setShowIvePaid(false)}
+          onDone={() => { setShowIvePaid(false); load(); }}
         />
       )}
     </div>

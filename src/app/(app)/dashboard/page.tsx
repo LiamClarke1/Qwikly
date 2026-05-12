@@ -490,7 +490,10 @@ export default function HomePage() {
               <div className="w-7 h-7 rounded-lg bg-ember/10 flex items-center justify-center">
                 <Activity className="w-3.5 h-3.5 text-ember" />
               </div>
-              <p className="text-small font-semibold text-ink">Conversations this month</p>
+              <div>
+                <p className="text-small font-semibold text-ink">Conversations this month</p>
+                <p className="text-tiny text-ink-400">One per unique visitor — not per message</p>
+              </div>
             </div>
             <div className="flex items-center gap-2 text-tiny text-ink-500 group-hover:text-ink transition-colors">
               View details <ChevronRight className="w-3.5 h-3.5" />

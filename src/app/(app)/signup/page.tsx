@@ -2,440 +2,38 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState, FormEvent, Suspense } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff, CheckCircle, Zap, Check, X as XIcon, ArrowRight } from "lucide-react";
-import { type PlanTier } from "@/lib/plan";
-
-// ─── Password strength ────────────────────────────────────────────────────────
-
-function PasswordStrength({ password }: { password: string }) {
-  const checks = [
-    { label: "At least 8 characters", valid: password.length >= 8 },
-    { label: "Contains a number", valid: /\d/.test(password) },
-    { label: "Contains a letter", valid: /[a-zA-Z]/.test(password) },
-  ];
-  if (!password) return null;
-  return (
-    <div className="mt-2 space-y-1.5">
-      {checks.map((c) => (
-        <div key={c.label} className="flex items-center gap-2">
-          {c.valid ? (
-            <Check className="w-3.5 h-3.5 text-success" />
-          ) : (
-            <XIcon className="w-3.5 h-3.5 text-ink-400" />
-          )}
-          <span className={`text-tiny ${c.valid ? "text-success" : "text-ink-400"}`}>{c.label}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ─── Plan selection ───────────────────────────────────────────────────────────
-
-const PLANS: {
-  id: PlanTier;
-  name: string;
-  price: string;
-  sub: string;
-  badge?: string;
-  cta: string;
-  features: string[];
-  noCard: boolean;
-}[] = [
-  {
-    id: "starter",
-    name: "Starter",
-    price: "R699",
-    sub: "/month",
-    cta: "Start with Starter",
-    noCard: false,
-    features: [
-      "20 qualified leads/month",
-      "1 dashboard user",
-      '"Powered by Qwikly" branding',
-      "Email support, 24h response",
-      "Solo trades and sole practitioners",
-    ],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    price: "R1,799",
-    sub: "/month",
-    badge: "Most Popular",
-    cta: "Choose Pro",
-    noCard: false,
-    features: [
-      "50 qualified leads/month",
-      "3 dashboard users",
-      "Custom branding (your logo)",
-      "Custom greeting + qualifying questions",
-      "Small multi-person practices",
-    ],
-  },
-  {
-    id: "founders",
-    name: "Founders",
-    price: "R2,999",
-    sub: "/month",
-    cta: "Choose Founders",
-    noCard: false,
-    features: [
-      "Everything in Pro",
-      "10 hand-picked prospects per business day (Outbound)",
-      "60 qualified leads/month",
-      "Priority support, 4h response",
-    ],
-  },
-  {
-    id: "business",
-    name: "Business",
-    price: "R3,999",
-    sub: "/month",
-    cta: "Choose Business",
-    noCard: false,
-    features: [
-      "200 qualified leads/month",
-      "15 hand-picked prospects per business day (Outbound)",
-      "Unlimited dashboard users",
-      "Custom branding (your logo)",
-      "Lead exports (CSV) + priority support",
-    ],
-  },
-];
-
-interface PlanSelectProps {
-  initialPlan: PlanTier | null;
-  onSelect: (plan: PlanTier) => void;
-}
-
-function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
-  const [selected, setSelected] = useState<PlanTier>(initialPlan ?? "starter");
-
-  return (
-    <div className="w-full max-w-4xl">
-      <div className="mb-8">
-        <h2 className="text-h1 text-ink">Choose your plan</h2>
-        <p className="text-ink-500 text-small mt-1.5">
-          Invoiced monthly by EFT. No card needed online. We set everything up for you.
-        </p>
-      </div>
-
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {PLANS.map((plan) => {
-          const isSelected = selected === plan.id;
-          return (
-            <button
-              key={plan.id}
-              type="button"
-              onClick={() => setSelected(plan.id)}
-              className={`relative text-left rounded-2xl border p-5 transition-all duration-200 cursor-pointer flex flex-col gap-4 ${
-                isSelected
-                  ? "border-ember bg-ember/[0.06] ring-1 ring-brand/30"
-                  : "border-line hover:border-ink/[0.20] bg-white/70"
-              }`}
-            >
-              {plan.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-white text-[10px] font-bold tracking-wide whitespace-nowrap bg-ember">
-                  {plan.badge}
-                </span>
-              )}
-              {isSelected && (
-                <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-ember flex items-center justify-center">
-                  <Check className="w-3 h-3 text-white" />
-                </div>
-              )}
-              <div>
-                <p className="text-small font-semibold text-fg">{plan.name}</p>
-                <p className="text-fg mt-1">
-                  <span className="text-2xl font-bold num">{plan.price}</span>
-                  <span className="text-ink-400 text-tiny ml-1">{plan.sub}</span>
-                </p>
-              </div>
-              <ul className="space-y-2 flex-1">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2">
-                    <Check className="w-3.5 h-3.5 text-ember mt-0.5 shrink-0" />
-                    <span className="text-tiny text-ink-500 leading-relaxed">{f}</span>
-                  </li>
-                ))}
-              </ul>
-            </button>
-          );
-        })}
-      </div>
-
-      <button
-        type="button"
-        onClick={() => onSelect(selected)}
-        className="w-full h-12 text-white text-small font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 active:brightness-95 transition-all duration-150 bg-grad-brand shadow-[0_8px_24px_-8px_rgba(232,90,44,0.4)]"
-      >
-        {PLANS.find((p) => p.id === selected)?.cta ?? "Continue"}
-        <ArrowRight className="w-4 h-4" />
-      </button>
-
-      <p className="text-center text-tiny text-ink-400 mt-4">
-        No setup fee · Invoiced monthly by EFT · Cancel anytime
-      </p>
-    </div>
-  );
-}
-
-// ─── Account creation ─────────────────────────────────────────────────────────
-
-interface AccountFormProps {
-  plan: PlanTier;
-  onBack: () => void;
-}
-
-function AccountForm({ plan, onBack }: AccountFormProps) {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [businessName, setBusinessName] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState(false);
-
-  const passwordValid = password.length >= 8;
-
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    if (!passwordValid) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-    setLoading(true);
-    let json: { error?: string; needsConfirmation?: boolean };
-    try {
-      const res = await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, businessName, plan }),
-      });
-      json = await res.json();
-      if (!res.ok) {
-        const msg = (json.error ?? "").toLowerCase();
-        if (msg.includes("already registered") || msg.includes("already exists") || msg.includes("user already")) {
-          setError("An account with this email already exists. Try signing in instead.");
-        } else {
-          setError("Something went wrong. Please try again or message us.");
-        }
-        setLoading(false);
-        return;
-      }
-    } catch {
-      setError("Something went wrong. Please try again or message us.");
-      setLoading(false);
-      return;
-    }
-    if (!json.needsConfirmation) {
-      router.push(`/dashboard/setup?plan=${plan}`);
-      return;
-    }
-    setLoading(false);
-    setDone(true);
-  };
-
-  if (done) {
-    return (
-      <div className="w-full max-w-md text-center space-y-6">
-        <div className="w-16 h-16 bg-success/10 border border-success/20 rounded-full flex items-center justify-center mx-auto">
-          <CheckCircle className="w-8 h-8 text-success" />
-        </div>
-        <div>
-          <h2 className="text-h1 text-ink">Check your email</h2>
-          <p className="text-ink-500 text-small mt-3 leading-relaxed">
-            We sent a confirmation link to{" "}
-            <span className="text-fg font-medium">{email}</span>.
-            Click it to activate your account, then sign in.
-          </p>
-        </div>
-        <Link
-          href="/login"
-          className="inline-flex w-full items-center justify-center gap-2 h-12 bg-grad-brand text-white text-small font-semibold rounded-xl cursor-pointer hover:brightness-110 transition-all duration-150 shadow-[0_8px_24px_-8px_rgba(232,90,44,0.4)]"
-        >
-          Go to Sign In
-        </Link>
-      </div>
-    );
-  }
-
-  const planLabel =
-    plan === "starter" ? "Starter — R699/mo" :
-    plan === "pro" ? "Pro — R1,799/mo" :
-    plan === "founders" ? "Founders — R2,999/mo" :
-    plan === "business" ? "Business — R3,999/mo" :
-    plan === "enterprise" ? "Enterprise — from R7,999/mo" :
-    plan === "premium" ? "Premium — R1,999/mo (legacy)" :
-    "Starter — R699/mo";
-
-  return (
-    <div className="w-full max-w-md">
-      <button
-        type="button"
-        onClick={onBack}
-        className="flex items-center gap-1 text-tiny text-ink-500 hover:text-fg transition-colors duration-150 cursor-pointer mb-6"
-      >
-        <XIcon className="w-3.5 h-3.5" /> Change plan
-      </button>
-
-      <div className="mb-6">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ember/10 border border-ember/20 text-tiny font-semibold text-ember mb-3">
-          <Check className="w-3 h-3" /> {planLabel}
-        </div>
-        <h2 className="text-h1 text-ink">Create your account</h2>
-        <p className="text-ink-500 text-small mt-1.5">
-          Invoiced monthly by EFT. No card needed online. Cancel anytime.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="business_name" className="block text-tiny text-ink font-medium mb-2">
-            Business name
-          </label>
-          <input
-            id="business_name"
-            type="text"
-            value={businessName}
-            onChange={(e) => setBusinessName(e.target.value)}
-            required
-            autoComplete="organization"
-            placeholder="Acme Plumbing"
-            className="w-full h-11 bg-white border border-ink/[0.14] rounded-xl px-4 text-small text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="email" className="block text-tiny text-ink font-medium mb-2">
-            Email address
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            placeholder="you@example.com"
-            className="w-full h-11 bg-white border border-ink/[0.14] rounded-xl px-4 text-small text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="password" className="block text-tiny text-ink font-medium mb-2">
-            Password
-          </label>
-          <div className="relative">
-            <input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="new-password"
-              placeholder="At least 8 characters"
-              className="w-full h-11 bg-white border border-ink/[0.14] rounded-xl px-4 pr-12 text-small text-ink placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-ember/25 focus:border-ember/40 transition-all duration-200"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-400 hover:text-fg cursor-pointer transition-colors duration-200"
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-          <PasswordStrength password={password} />
-        </div>
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-            <p className="text-red-700 text-sm">{error}</p>
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading || !email || !passwordValid || !businessName}
-          className="w-full h-12 bg-grad-brand text-white text-small font-semibold rounded-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:brightness-110 active:brightness-95 transition-all duration-150 shadow-[0_8px_24px_-8px_rgba(232,90,44,0.4)]"
-        >
-          {loading ? (
-            <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-          ) : (
-            "Create your account"
-          )}
-        </button>
-      </form>
-
-      <p className="text-center text-tiny text-ink-400 mt-5 leading-relaxed">
-        By creating an account you agree to our{" "}
-        <Link href="/legal/terms" className="text-ember hover:text-ember-deep underline transition-colors duration-200">
-          Terms of Service
-        </Link>{" "}
-        and{" "}
-        <Link href="/legal/privacy" className="text-ember hover:text-ember-deep underline transition-colors duration-200">
-          Privacy Policy
-        </Link>
-        .
-      </p>
-
-      <p className="text-center text-small text-ink-500 mt-5">
-        Already have an account?{" "}
-        <Link href="/login" className="text-ember hover:text-ember-deep font-medium transition-colors duration-200">
-          Sign in
-        </Link>
-      </p>
-
-      <p className="text-center text-tiny text-ink-400 mt-4">
-        POPIA compliant · No setup fee · Cancel anytime
-      </p>
-    </div>
-  );
-}
-
-// ─── Page shell ───────────────────────────────────────────────────────────────
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Zap, Check, ArrowRight } from "lucide-react";
 
 function SignupContent() {
-  const searchParams = useSearchParams();
-  const rawPlan = searchParams.get("plan");
-  const validPlans: PlanTier[] = ["starter", "pro", "founders", "business", "enterprise", "premium"];
-  const initialPlan: PlanTier | null = validPlans.includes(rawPlan as PlanTier)
-    ? (rawPlan as PlanTier)
-    : null;
+  const router = useRouter();
 
-  const [step, setStep] = useState<"plan" | "account">(initialPlan ? "account" : "plan");
-  const [chosenPlan, setChosenPlan] = useState<PlanTier>(initialPlan ?? "starter");
+  useEffect(() => {
+    // Hard redirect: self-service signup is no longer available.
+    // Visitors must book a call to get set up.
+    router.replace("/contact");
+  }, [router]);
 
-  const handlePlanSelect = (plan: PlanTier) => {
-    setChosenPlan(plan);
-    setStep("account");
-  };
-
+  // Shown briefly while redirect happens
   return (
     <main className="min-h-screen [min-height:100dvh] flex bg-paper">
       {/* Left panel */}
       <div className="hidden lg:flex lg:w-[40%] shrink-0 flex-col justify-between p-12 bg-paper-deep border-r border-ink/[0.08] relative overflow-hidden">
         <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] rounded-full bg-ember/[0.06] blur-3xl pointer-events-none" />
-
         <div>
           <a href="/" className="inline-flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-grad-brand flex items-center justify-center ">
+            <div className="w-9 h-9 rounded-xl bg-grad-brand flex items-center justify-center">
               <Zap className="w-4 h-4 text-white" strokeWidth={2.5} />
             </div>
             <span className="font-heading text-base text-ink font-semibold tracking-tight">Qwikly</span>
           </a>
         </div>
-
         <div className="space-y-8 relative">
           <div>
-            <p className="eyebrow text-ink-500 mb-4">The digital assistant for your website</p>
+            <p className="eyebrow text-ink-500 mb-4">The digital front desk for your business</p>
             <h1 className="font-display text-[2.6rem] text-ink leading-[1.05] tracking-[-0.03em]">
               Captures every lead.
               <br />
@@ -443,17 +41,13 @@ function SignupContent() {
               <br />
               <em className="text-ember italic font-light">Books them in.</em>
             </h1>
-            <p className="text-ink-500 mt-4 text-sm leading-relaxed max-w-sm">
-              Even when you&rsquo;re asleep. Paste one script tag — live in 5 minutes. No per-job fees. Ever.
-            </p>
           </div>
-
           <div className="space-y-3">
             {[
-              "No per-lead fees — flat monthly plan",
-              "Qualifies visitors and captures contact details",
-              "Books them in with a preferred time",
-              "Leads delivered to your email instantly",
+              "We set everything up for you — live in 24–48 hours",
+              "Flat monthly plan, no card needed online",
+              "Digital assistant on your website 24/7",
+              "Leads delivered to your inbox instantly",
               "Cancel anytime, no lock-in contracts",
             ].map((point, i) => (
               <div key={i} className="flex items-start gap-3">
@@ -464,36 +58,45 @@ function SignupContent() {
               </div>
             ))}
           </div>
-
-          <div className="p-4 rounded-2xl bg-white/70 border border-ink/[0.10]">
-            <p className="text-small text-ink italic leading-relaxed">
-              &ldquo;We picked up 4 leads in our first week that came in after hours. None of them would have called back.&rdquo;
-            </p>
-            <p className="text-tiny text-ink-400 mt-2">Thabo M. · Electrician · Cape Town</p>
-          </div>
         </div>
-
         <p className="eyebrow text-ink-400 relative">POPIA compliant · Data stays in South Africa</p>
       </div>
 
       {/* Right panel */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 overflow-y-auto">
-        <div className="w-full flex justify-center">
+        <div className="w-full max-w-md text-center space-y-6">
           {/* Mobile logo */}
-          <div className="lg:hidden absolute top-6 left-6">
+          <div className="lg:hidden mb-6 flex justify-center">
             <a href="/" className="inline-flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-grad-brand flex items-center justify-center ">
+              <div className="w-8 h-8 rounded-xl bg-grad-brand flex items-center justify-center">
                 <Zap className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
               </div>
               <span className="font-heading text-base text-ink font-semibold tracking-tight">Qwikly</span>
             </a>
           </div>
 
-          {step === "plan" ? (
-            <PlanSelect initialPlan={initialPlan} onSelect={handlePlanSelect} />
-          ) : (
-            <AccountForm plan={chosenPlan} onBack={() => setStep("plan")} />
-          )}
+          <div className="w-14 h-14 bg-ember/10 border border-ember/20 rounded-full flex items-center justify-center mx-auto">
+            <Zap className="w-6 h-6 text-ember" strokeWidth={2.5} />
+          </div>
+          <div>
+            <h2 className="text-h1 text-ink">Get started with Qwikly</h2>
+            <p className="text-ink-500 text-small mt-3 leading-relaxed">
+              We set your digital assistant up for you — book a quick call and we&rsquo;ll have you live within 24–48 hours.
+            </p>
+          </div>
+          <Link
+            href="/contact"
+            className="inline-flex w-full items-center justify-center gap-2 h-12 bg-grad-brand text-white text-small font-semibold rounded-xl cursor-pointer hover:brightness-110 transition-all duration-150 shadow-[0_8px_24px_-8px_rgba(232,90,44,0.4)]"
+          >
+            Book a setup call
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <p className="text-tiny text-ink-400">
+            Already have an account?{" "}
+            <Link href="/login" className="text-ember hover:text-ember-deep font-medium transition-colors duration-200">
+              Sign in
+            </Link>
+          </p>
         </div>
       </div>
     </main>

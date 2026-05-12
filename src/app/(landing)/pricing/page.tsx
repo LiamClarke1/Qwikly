@@ -242,8 +242,36 @@ export default function PricingPage() {
             <em className="italic font-light">side by side</em>.
           </h1>
           <p className="mt-8 text-lg text-ink-700 max-w-2xl mx-auto leading-relaxed">
-            One flat monthly fee, no setup costs, no commissions. Pick the row that matters to you and read across. The full matrix is right below.
+            One flat monthly fee, no setup costs, no commissions. Qwikly offers two services — pick what you need or combine them.
           </p>
+
+          {/* Two services overview */}
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto text-left">
+            <a href="#digital-assistant" className="group flex items-start gap-4 bg-white border border-ink/10 rounded-2xl p-5 hover:border-ember/40 hover:shadow-sm transition-all">
+              <span className="w-9 h-9 rounded-xl bg-ember/10 flex items-center justify-center shrink-0 mt-0.5">
+                <svg className="w-4 h-4 text-ember" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </span>
+              <div>
+                <p className="font-display text-base text-ink group-hover:text-ember transition-colors">Digital Assistant</p>
+                <p className="text-xs text-ink-500 mt-1 leading-relaxed">A 24/7 digital assistant on your website that captures and qualifies leads in under 60 seconds.</p>
+                <p className="text-xs text-ember font-medium mt-2">R699 – R7,999/mo →</p>
+              </div>
+            </a>
+            <a href="#pipeline" className="group flex items-start gap-4 bg-white border border-ink/10 rounded-2xl p-5 hover:border-ember/40 hover:shadow-sm transition-all">
+              <span className="w-9 h-9 rounded-xl bg-ember/10 flex items-center justify-center shrink-0 mt-0.5">
+                <svg className="w-4 h-4 text-ember" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </span>
+              <div>
+                <p className="font-display text-base text-ink group-hover:text-ember transition-colors">Pipeline — Outbound</p>
+                <p className="text-xs text-ink-500 mt-1 leading-relaxed">Done-for-you outbound prospecting. We build the list, write the sequences, deliver warm replies.</p>
+                <p className="text-xs text-ember font-medium mt-2">From R3,499/mo →</p>
+              </div>
+            </a>
+          </div>
 
           {/* Monthly / Annual toggle */}
           <div className="mt-12 flex items-center justify-center gap-4 flex-wrap">
@@ -283,7 +311,7 @@ export default function PricingPage() {
       </section>
 
       {/* SECTION 1, THE MATRIX (lead element) */}
-      <section className="pb-24 grain">
+      <section id="digital-assistant" className="pb-24 grain">
         <div className="mx-auto max-w-site px-6 lg:px-10">
 
           <div className="mb-10 flex items-end justify-between flex-wrap gap-4">
@@ -539,7 +567,7 @@ export default function PricingPage() {
       </section>
 
       {/* SECTION 4, PIPELINE PRICING */}
-      <section className="py-24 bg-paper-deep grain border-t border-ink/[0.06]">
+      <section id="pipeline" className="py-24 bg-paper-deep grain border-t border-ink/[0.06]">
         <div className="mx-auto max-w-site px-6 lg:px-10">
 
           <div className="mb-12">

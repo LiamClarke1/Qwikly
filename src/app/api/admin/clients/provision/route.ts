@@ -20,6 +20,7 @@ const Body = z.object({
   phone:          z.string().optional(),
   plan:           z.enum(["trial", "starter", "pro", "founders", "business", "enterprise"]),
   billing_cycle:  z.enum(["monthly", "annual"]).default("monthly"),
+  password:       z.string().min(8).optional(),
   note:           z.string().max(500).optional(),
 });
 
@@ -32,34 +33,63 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_body", detail: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { business_name, owner_name, email, phone, plan, billing_cycle, note } = parsed.data;
+  const { business_name, owner_name, email, phone, plan, billing_cycle, password, note } = parsed.data;
   const db = supabaseAdmin();
 
   // ── 1. Create (or find) the Supabase auth user ──────────────────────────────
-  // Use inviteUserByEmail so the client gets an email to set their own password.
-  // If they already have an account, fall through to the existing user.
+  // If a password is provided, create the user directly so they can log in
+  // immediately with the credentials the admin set. If no password is provided,
+  // fall back to inviteUserByEmail (sends a magic-link).
   let userId: string;
 
-  const { data: invite, error: inviteErr } = await db.auth.admin.inviteUserByEmail(email, {
-    data: { business_name, full_name: owner_name },
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.qwikly.co.za"}/auth/callback?next=/dashboard/setup`,
-  });
+  if (password) {
+    const { data: created, error: createErr } = await db.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { business_name, full_name: owner_name },
+    });
 
-  if (inviteErr) {
-    if (inviteErr.message?.toLowerCase().includes("already")) {
-      // User exists — look them up
-      const { data: existing } = await db.auth.admin.listUsers();
-      const found = existing?.users?.find((u) => u.email === email);
-      if (!found) {
-        return NextResponse.json({ error: "User already exists but could not be found." }, { status: 409 });
+    if (createErr) {
+      if (createErr.message?.toLowerCase().includes("already")) {
+        // User exists — look them up and update their password
+        const { data: existing } = await db.auth.admin.listUsers();
+        const found = existing?.users?.find((u) => u.email === email);
+        if (!found) {
+          return NextResponse.json({ error: "User already exists but could not be found." }, { status: 409 });
+        }
+        userId = found.id;
+        // Update password for existing user
+        await db.auth.admin.updateUserById(userId, { password });
+      } else {
+        return NextResponse.json({ error: createErr.message }, { status: 500 });
       }
-      userId = found.id;
     } else {
-      return NextResponse.json({ error: inviteErr.message }, { status: 500 });
+      if (!created?.user) return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+      userId = created.user.id;
     }
   } else {
-    if (!invite?.user) return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
-    userId = invite.user.id;
+    // Fallback: send magic-link invite
+    const { data: invite, error: inviteErr } = await db.auth.admin.inviteUserByEmail(email, {
+      data: { business_name, full_name: owner_name },
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.qwikly.co.za"}/auth/callback?next=/dashboard/setup`,
+    });
+
+    if (inviteErr) {
+      if (inviteErr.message?.toLowerCase().includes("already")) {
+        const { data: existing } = await db.auth.admin.listUsers();
+        const found = existing?.users?.find((u) => u.email === email);
+        if (!found) {
+          return NextResponse.json({ error: "User already exists but could not be found." }, { status: 409 });
+        }
+        userId = found.id;
+      } else {
+        return NextResponse.json({ error: inviteErr.message }, { status: 500 });
+      }
+    } else {
+      if (!invite?.user) return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+      userId = invite.user.id;
+    }
   }
 
   // ── 2. Businesses row ────────────────────────────────────────────────────────
@@ -178,7 +208,7 @@ export async function POST(req: NextRequest) {
         from: FROM,
         to:   [email],
         subject: `Welcome to Qwikly — your account is ready`,
-        html: welcomeEmailHtml({ business_name, owner_name, plan, billing_cycle }),
+        html: welcomeEmailHtml({ business_name, owner_name, plan, billing_cycle, email, hasPassword: !!password }),
       });
     } catch (err) {
       console.warn("[provision] welcome email failed:", err);
@@ -189,9 +219,26 @@ export async function POST(req: NextRequest) {
 }
 
 function welcomeEmailHtml({
-  business_name, owner_name, plan, billing_cycle,
-}: { business_name: string; owner_name: string; plan: string; billing_cycle: string }) {
+  business_name, owner_name, plan, billing_cycle, email, hasPassword,
+}: { business_name: string; owner_name: string; plan: string; billing_cycle: string; email: string; hasPassword: boolean }) {
   const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+  const loginUrl = process.env.NEXT_PUBLIC_APP_URL
+    ? `${process.env.NEXT_PUBLIC_APP_URL}/login`
+    : "https://www.qwikly.co.za/login";
+  const setupUrl = process.env.NEXT_PUBLIC_APP_URL
+    ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/setup`
+    : "https://www.qwikly.co.za/dashboard/setup";
+
+  const loginInstructions = hasPassword
+    ? `<p style="margin:0 0 8px;font-size:14px;color:#9CA3AF;line-height:1.6;">
+         Your login details:<br>
+         <strong style="color:#F4F4F5;">Email:</strong> <span style="color:#F4F4F5;">${email}</span><br>
+         <strong style="color:#F4F4F5;">Password:</strong> provided by your account manager — change it any time from Settings.
+       </p>`
+    : `<p style="margin:0 0 8px;font-size:14px;color:#9CA3AF;line-height:1.6;">
+         Check your inbox for a separate email with a link to set your password and log in.
+       </p>`;
+
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -208,12 +255,19 @@ function welcomeEmailHtml({
             Your Qwikly account for <strong style="color:#F4F4F5;">${business_name}</strong> has been set up on the
             <strong style="color:#E85A2C;">${planLabel}</strong> plan (${billing_cycle}).
           </p>
-          <p style="margin:0 0 16px;font-size:14px;color:#9CA3AF;line-height:1.6;">
-            Check your inbox for a separate email with a link to set your password and log in to your dashboard.
-          </p>
-          <p style="margin:0 0 24px;font-size:14px;color:#9CA3AF;line-height:1.6;">
-            Once you&apos;re in, you can configure your digital assistant, connect your website, and start capturing leads.
-          </p>
+          ${loginInstructions}
+          <div style="margin:24px 0;">
+            <a href="${loginUrl}" style="display:inline-block;background:#E85A2C;color:#fff;font-size:14px;font-weight:600;padding:12px 28px;border-radius:10px;text-decoration:none;">
+              Log in to your dashboard
+            </a>
+          </div>
+          <p style="margin:0 0 8px;font-size:14px;color:#9CA3AF;line-height:1.6;font-weight:600;color:#F4F4F5;">Next steps once you&apos;re in:</p>
+          <ol style="margin:0 0 20px;padding-left:20px;font-size:13px;color:#9CA3AF;line-height:2;">
+            <li>Go to <a href="${setupUrl}" style="color:#E85A2C;text-decoration:none;">Setup</a> and tell your digital assistant about your business</li>
+            <li>Go to <strong style="color:#F4F4F5;">Install</strong> and paste the script tag on your website</li>
+            <li>Test it — open your website and chat to your own assistant</li>
+            <li>Leads will start arriving in your <strong style="color:#F4F4F5;">Leads</strong> tab</li>
+          </ol>
           <p style="margin:0;font-size:13px;color:#6B7280;">
             Questions? Reply to this email — we&apos;re here to help.
           </p>

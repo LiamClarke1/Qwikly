@@ -151,6 +151,14 @@ export function invoiceReceiptHtml(d: {
   return base(accent, content);
 }
 
+// Liam Clarke's EFT details — used on all Qwikly subscription invoices.
+const QWIKLY_BANK = {
+  accountHolder: "Liam Clarke",
+  bank: "Investec",
+  accountNumber: "10013092087",
+  branchCode: "580105",
+};
+
 export function qwiklyBillingInvoiceHtml(d: {
   businessName: string;
   billingEmail: string;
@@ -181,9 +189,19 @@ export function qwiklyBillingInvoiceHtml(d: {
           <td style="padding:8px 0 0;color:${accent};font-size:15px;font-weight:700;text-align:right;">${fmt(d.subscriptionZar)}</td>
         </tr>
       </table>
-      <p style="margin:0 0 20px;font-size:12px;color:#6B7280;">Due by ${fmtDate(d.dueAt)}. Late payment results in account restrictions.</p>
+
+      <p style="margin:0 0 8px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#6B7280;">EFT payment details</p>
+      <p style="margin:0 0 20px;font-size:12px;color:#9CA3AF;line-height:2;">
+        Account holder: <span style="color:#F4F4F5;">${QWIKLY_BANK.accountHolder}</span><br>
+        Bank: <span style="color:#F4F4F5;">${QWIKLY_BANK.bank}</span><br>
+        Account number: <span style="color:#F4F4F5;font-family:monospace;">${QWIKLY_BANK.accountNumber}</span><br>
+        Branch code: <span style="color:#F4F4F5;font-family:monospace;">${QWIKLY_BANK.branchCode}</span><br>
+        Reference: <span style="color:#F4F4F5;font-weight:600;">${d.invoiceNumber}</span>
+      </p>
+
+      <p style="margin:0 0 8px;font-size:12px;color:#6B7280;">Due by ${fmtDate(d.dueAt)}. Once you&apos;ve paid, click the button below and mark it as paid so we can confirm.</p>
       <a href="${d.billingUrl}" style="display:inline-block;background:${accent};color:#fff;font-size:14px;font-weight:600;padding:12px 28px;border-radius:10px;text-decoration:none;">
-        View billing details &amp; pay
+        View invoice &amp; confirm payment
       </a>
     </td></tr>`;
   return base(accent, content);
