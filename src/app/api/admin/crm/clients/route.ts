@@ -48,12 +48,11 @@ export async function GET(req: NextRequest) {
       billing_anchor_day, billing_anchor_set_at, trial_ends_at
     `, { count: "exact" });
 
-  // Soft-deleted clients (pending_deletion) are hidden from the default list,
-  // they only appear when the admin explicitly filters for that status. The
-  // 30-day grace window keeps them in the DB for restore, but they should
-  // disappear from the CRM the moment delete is pressed.
+  // Churned and pending_deletion clients are hidden from the default list.
+  // They only appear when the admin explicitly filters for those statuses.
+  // Churned = archived (client left). pending_deletion = remove initiated.
   if (status.length) query = query.in("crm_status", status);
-  else               query = query.neq("crm_status", "pending_deletion");
+  else               query = query.in("crm_status", ["onboarding", "active", "at_risk", "paused"]);
   if (plan.length)            query = query.in("plan", plan);
   if (allowedByTag)           query = query.in("id", allowedByTag);
   if (q) {
@@ -216,7 +215,7 @@ export async function GET(req: NextRequest) {
   const statsRes = await db
     .from("clients")
     .select("crm_status, mrr_zar")
-    .neq("crm_status", "pending_deletion")
+    .in("crm_status", ["onboarding", "active", "at_risk", "paused"])
     .returns<{ crm_status: string | null; mrr_zar: number | null }[]>();
   const allClients = statsRes.data ?? [];
   const portfolioStats = {

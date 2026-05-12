@@ -390,6 +390,7 @@ export default function CrmClientsPage() {
   const [viewsOpen,     setViewsOpen]     = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [actionToast, setActionToast] = useState<{ text: string; ok: boolean } | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(query), 350);
@@ -426,53 +427,86 @@ export default function CrmClientsPage() {
     fetch("/api/admin/crm/views").then(r => r.ok ? r.json() : null).then(d => d && setSavedViews(d.views));
   }, []);
 
+  function flash(text: string, ok: boolean) {
+    setActionToast({ text, ok });
+    setTimeout(() => setActionToast(null), 3000);
+  }
+
   // ─── Actions ────────────────────────────────────────────────────────────────
   async function executeAction() {
     if (!confirmAction) return;
     setActionLoading(true);
 
-    if (confirmAction.type === "archive") {
-      await fetch(`/api/admin/crm/clients/${confirmAction.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ crm_status: "churned" }),
-      });
-      setClients(cs => cs.filter(c => c.id !== confirmAction.id));
-      setSelected(s => { const n = new Set(s); n.delete(confirmAction.id); return n; });
-    } else if (confirmAction.type === "restore") {
-      await fetch(`/api/admin/crm/clients/${confirmAction.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ crm_status: "paused", deletion_scheduled_at: null }),
-      });
-      await fetchClients();
-      setSelected(s => { const n = new Set(s); n.delete(confirmAction.id); return n; });
-    } else if (confirmAction.type === "delete") {
-      // Schedule for deletion, 30-day grace period. Drop from the list
-      // immediately so the admin sees it disappear, the API soft-deletes
-      // it server-side and the next refetch will keep it hidden.
-      const id = confirmAction.id;
-      setClients(cs => cs.filter(c => c.id !== id));
-      setSelected(s => { const n = new Set(s); n.delete(id); return n; });
-      await fetch(`/api/admin/crm/clients/${id}`, { method: "DELETE" });
-    } else if (confirmAction.type === "bulk-archive") {
-      await Promise.all(confirmAction.ids.map(id =>
-        fetch(`/api/admin/crm/clients/${id}`, {
+    try {
+      if (confirmAction.type === "archive") {
+        const res = await fetch(`/api/admin/crm/clients/${confirmAction.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ crm_status: "churned" }),
-        })
-      ));
-      const ids = new Set(confirmAction.ids);
-      setClients(cs => cs.filter(c => !ids.has(c.id)));
-      setSelected(new Set());
-    } else if (confirmAction.type === "bulk-delete") {
-      const ids = new Set(confirmAction.ids);
-      setClients(cs => cs.filter(c => !ids.has(c.id)));
-      setSelected(new Set());
-      await Promise.all(confirmAction.ids.map(id =>
-        fetch(`/api/admin/crm/clients/${id}`, { method: "DELETE" })
-      ));
+        });
+        if (!res.ok) { flash("Archive failed — please try again", false); await fetchClients(); }
+        else { setClients(cs => cs.filter(c => c.id !== confirmAction.id)); flash("Client archived", true); }
+        setSelected(s => { const n = new Set(s); n.delete(confirmAction.id); return n; });
+
+      } else if (confirmAction.type === "restore") {
+        const res = await fetch(`/api/admin/crm/clients/${confirmAction.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ crm_status: "paused", deletion_scheduled_at: null }),
+        });
+        if (!res.ok) flash("Restore failed — please try again", false);
+        else flash("Client restored", true);
+        await fetchClients();
+        setSelected(s => { const n = new Set(s); n.delete(confirmAction.id); return n; });
+
+      } else if (confirmAction.type === "delete") {
+        const id = confirmAction.id;
+        // Optimistic removal — reverted by fetchClients() if the API fails
+        setClients(cs => cs.filter(c => c.id !== id));
+        setSelected(s => { const n = new Set(s); n.delete(id); return n; });
+        const res = await fetch(`/api/admin/crm/clients/${id}`, { method: "DELETE" });
+        if (!res.ok) {
+          flash("Remove failed — please try again", false);
+          await fetchClients(); // restore list if API failed
+        } else {
+          flash("Client removed", true);
+        }
+
+      } else if (confirmAction.type === "bulk-archive") {
+        const results = await Promise.all(confirmAction.ids.map(id =>
+          fetch(`/api/admin/crm/clients/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ crm_status: "churned" }),
+          })
+        ));
+        const failed = results.filter(r => !r.ok).length;
+        if (failed > 0) { flash(`${failed} archive(s) failed`, false); await fetchClients(); }
+        else {
+          const ids = new Set(confirmAction.ids);
+          setClients(cs => cs.filter(c => !ids.has(c.id)));
+          flash(`${confirmAction.ids.length} client(s) archived`, true);
+        }
+        setSelected(new Set());
+
+      } else if (confirmAction.type === "bulk-delete") {
+        const ids = new Set(confirmAction.ids);
+        setClients(cs => cs.filter(c => !ids.has(c.id)));
+        setSelected(new Set());
+        const results = await Promise.all(confirmAction.ids.map(id =>
+          fetch(`/api/admin/crm/clients/${id}`, { method: "DELETE" })
+        ));
+        const failed = results.filter(r => !r.ok).length;
+        if (failed > 0) {
+          flash(`${failed} remove(s) failed`, false);
+          await fetchClients();
+        } else {
+          flash(`${confirmAction.ids.length} client(s) removed`, true);
+        }
+      }
+    } catch {
+      flash("Action failed — check your connection", false);
+      await fetchClients();
     }
 
     setConfirmAction(null);
@@ -957,6 +991,18 @@ export default function CrmClientsPage() {
               Next
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Action feedback toast */}
+      {actionToast && (
+        <div className={cn(
+          "fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl text-[13px] font-medium shadow-lg border",
+          actionToast.ok
+            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+            : "bg-red-50 text-red-700 border-red-200",
+        )}>
+          {actionToast.text}
         </div>
       )}
     </div>
