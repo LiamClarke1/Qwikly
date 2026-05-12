@@ -116,25 +116,25 @@ export function computeCallCost(usage: AnthropicUsageBlock): UsageCostBreakdown 
 // ─── Persistence ─────────────────────────────────────────────────────────
 
 /**
- * Insert one row into api_usage. Fire-and-forget from the chat route, never
- * blocks the chat response. Failures are logged but never propagated to the
- * visitor (we'd rather lose a billing record than break a conversation).
+ * Insert one row into api_usage and debit the wholesale cost from the
+ * client's conversation_credits wallet. Fire-and-forget from the chat route,
+ * never blocks the chat response. Failures are logged but never propagated to
+ * the visitor (we'd rather lose a billing record than break a conversation).
  */
 export async function recordApiUsage(input: RecordApiUsageInput): Promise<void> {
   const clientIdStr = input.clientId == null ? null : String(input.clientId);
   if (!clientIdStr) return;
 
   const cost = computeCallCost(input.usage);
-
-  // Guard against zero-token noise (e.g. SDK retries that returned a cached
-  // response before metering kicked in). Insert anyway so we have a row,
-  // but don't bother with cost columns.
   const isInternal = isInternalClientId(input.clientId);
+  const clientIdNum = Number(clientIdStr);
 
   try {
     const db = supabaseAdmin();
+
+    // Insert usage row.
     const { error } = await db.from("api_usage").insert({
-      client_id: Number(clientIdStr),
+      client_id: clientIdNum,
       conversation_id: input.conversationId ?? null,
       input_tokens: cost.inputTokens,
       output_tokens: cost.outputTokens,
@@ -148,7 +148,20 @@ export async function recordApiUsage(input: RecordApiUsageInput): Promise<void> 
     if (error) {
       console.error("[api-usage] insert failed:", { clientId: clientIdStr, error });
     }
+
+    // Debit wholesale cost from the client's credit wallet. Internal tenants
+    // and zero-cost calls are skipped. If the RPC isn't deployed yet (column
+    // missing) the error is caught and logged without affecting the response.
+    if (!isInternal && cost.wholesaleCents > 0) {
+      const { error: debitError } = await db.rpc("debit_conversation_credits", {
+        p_client_id: clientIdNum,
+        p_amount_cents: cost.wholesaleCents,
+      });
+      if (debitError) {
+        console.error("[api-usage] debit failed:", { clientId: clientIdStr, debitError });
+      }
+    }
   } catch (err) {
-    console.error("[api-usage] insert threw:", { clientId: clientIdStr, err });
+    console.error("[api-usage] threw:", { clientId: clientIdStr, err });
   }
 }

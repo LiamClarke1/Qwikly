@@ -152,12 +152,26 @@ export async function POST(req: NextRequest) {
     if (subRow?.id && clientId) {
       // Column may not exist on older DB versions — error is intentionally ignored.
       await db.from("subscriptions").update({ client_id: clientId }).eq("id", subRow.id);
-      await db.from("conversation_credits").upsert({
+      // Try the new split-balance schema first. Falls back to legacy
+      // balance_zar_cents if the migration hasn't landed yet — error is logged
+      // but never blocks signup.
+      const grantCents = startingGrantZarCents(resolvedPlan);
+      const { error: creditError } = await db.from("conversation_credits").upsert({
         client_id: clientId,
-        granted_balance_zar_cents: startingGrantZarCents(resolvedPlan),
+        granted_balance_zar_cents: grantCents,
         granted_expires_at: periodEnd,
         updated_at: new Date().toISOString(),
       }, { onConflict: "client_id" });
+      if (creditError) {
+        // Column not yet migrated — write legacy balance so the client has
+        // something in their wallet until the migration lands.
+        console.warn("[signup] granted_balance upsert failed, falling back to legacy:", creditError.message);
+        await db.from("conversation_credits").upsert({
+          client_id: clientId,
+          balance_zar_cents: grantCents,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "client_id" });
+      }
       try {
         await applySubscriptionToClient(subRow.id);
       } catch (err) {
