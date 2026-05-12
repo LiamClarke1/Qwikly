@@ -33,7 +33,7 @@ export function WebsiteAssistantTab({ client, onSave }: Props) {
   const [verifyResult, setVerifyResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
   const status = client.web_widget_status ?? "pending";
-  const snippet = `<script src="https://embed.qwikly.co.za/v1/widget.js"\n        data-client="${client.id}"\n        defer></script>`;
+  const snippet = `<script\n  src="https://www.qwikly.co.za/embed.js"\n  data-qwikly-id="${(client as ClientRow & { public_key?: string }).public_key ?? ""}"\n  async\n></script>`;
 
   function copySnippet() {
     navigator.clipboard.writeText(snippet).catch(() => {});
