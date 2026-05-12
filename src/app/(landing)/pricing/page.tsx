@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Check, X } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
+import { PipelinePricingBlock } from "@/components/pricing/PipelinePricingBlock";
 
 // Tier pricing. Annual = monthly x 12 x 0.85 (15% off, rounded).
 const MONTHLY = { starter: 699, pro: 1799, business: 3999, enterprise: 7999 } as const;
@@ -537,7 +538,30 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* SECTION 4, FAQ */}
+      {/* SECTION 4, PIPELINE PRICING */}
+      <section className="py-24 bg-paper-deep grain border-t border-ink/[0.06]">
+        <div className="mx-auto max-w-site px-6 lg:px-10">
+
+          <div className="mb-12">
+            <p className="eyebrow text-ink-500 mb-3">Outbound</p>
+            <h2 className="display-lg text-ink max-w-[22ch]">
+              Qwikly Pipeline,{" "}
+              <em className="italic font-light">done-for-you outbound</em>.
+            </h2>
+            <p className="mt-4 text-ink-700 text-base max-w-xl leading-relaxed">
+              Pipeline is a fully managed outbound prospecting service. We build your target list, write and send the sequences, and deliver warm replies into your inbox. No cold-calling, no hiring, no guesswork.
+            </p>
+          </div>
+
+          <PipelinePricingBlock />
+
+          <p className="text-center eyebrow text-ink-500 mt-8">
+            One-time setup fee covers domain warm-up, deliverability infrastructure, and POPIA compliance.
+          </p>
+        </div>
+      </section>
+
+      {/* SECTION 5, FAQ */}
       <section className="py-28 grain border-t border-ink/[0.06]">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
