@@ -501,7 +501,7 @@ export default function PricingPage() {
                 The outbound prospect numbers — 5/day on Pro, 10/day on Business, 20/day on Enterprise — are the number of hand-picked cold prospects we research and reach out to on your behalf each business day. Starter does not include outbound.
               </p>
               <p>
-                If you hit your monthly inbound lead cap, you can top up at your plan's per-lead rate. That is R35 per lead on Starter, R36 on Pro, R20 on Business. There is no flat overage charge, no plan change required, and no automatic billing. You approve every top-up.
+                If you hit your monthly inbound lead cap, you can top up at your plan&apos;s per-lead rate. That is R35 per lead on Starter, R36 on Pro, R20 on Business. There is no flat overage charge, no plan change required, and no automatic billing. You approve every top-up.
               </p>
               <p>
                 Every paid plan is flat monthly with no setup fee, no onboarding charge, and no commission on jobs you win.
