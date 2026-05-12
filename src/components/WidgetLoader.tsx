@@ -6,6 +6,16 @@ export default function WidgetLoader({ publicKey }: { publicKey: string }) {
   useEffect(() => {
     if (!publicKey) return;
 
+    // Preload hint so the browser can start fetching embed.js as early as
+    // possible — before React hydration finishes and this effect fires.
+    if (!document.querySelector('link[href="/embed.js"]')) {
+      const preload = document.createElement("link");
+      preload.rel = "preload";
+      preload.href = "/embed.js";
+      preload.as = "script";
+      document.head.appendChild(preload);
+    }
+
     const el = document.createElement("script");
     el.src = "/embed.js";
     el.setAttribute("data-qwikly-id", publicKey);

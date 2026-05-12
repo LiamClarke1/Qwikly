@@ -65,6 +65,12 @@
   var starterPrompts = null;
   var starterFetched = false;
   var suggestOpen = false;
+  // Pre-load cached prompts from localStorage so the search icon appears
+  // immediately on panel open without waiting for an API round-trip.
+  try {
+    var _cachedStarters = localStorage.getItem("qw_starters_" + TENANT_ID);
+    if (_cachedStarters) starterPrompts = JSON.parse(_cachedStarters);
+  } catch (_e) {}
 
   var style = document.createElement("style");
   style.textContent = [
@@ -923,7 +929,11 @@
     if (attBtn) attBtn.addEventListener("click", handleAttach);
 
     var srchBtn = shadow.getElementById("qw-srch");
-    if (srchBtn) srchBtn.addEventListener("click", toggleSuggestions);
+    if (srchBtn) {
+      srchBtn.addEventListener("click", toggleSuggestions);
+      // Show immediately if prompts are already cached — no flash-in on open.
+      if (starterPrompts) srchBtn.classList.add("show");
+    }
     var sgX = shadow.getElementById("qw-sg-x");
     if (sgX) sgX.addEventListener("click", hideSuggestions);
 
@@ -952,6 +962,12 @@
   function fetchStarterPrompts() {
     if (starterFetched) return;
     starterFetched = true;
+    // If we already have cached prompts, show the button immediately without
+    // waiting for the network — this is the common case for return visits.
+    if (starterPrompts) {
+      var btnNow = shadow.getElementById("qw-srch");
+      if (btnNow) btnNow.classList.add("show");
+    }
     fetch(API_BASE + "/api/web/starter-prompts?tenant_id=" + encodeURIComponent(TENANT_ID), {
       method: "GET",
       headers: { "Accept": "application/json" },
@@ -960,6 +976,7 @@
       .then(function (data) {
         if (data && data.ok && Array.isArray(data.prompts) && data.prompts.length > 0) {
           starterPrompts = data.prompts;
+          try { localStorage.setItem("qw_starters_" + TENANT_ID, JSON.stringify(data.prompts)); } catch (_e) {}
           var btn = shadow.getElementById("qw-srch");
           if (btn) btn.classList.add("show");
           if (suggestOpen) renderSuggestions();
@@ -1183,7 +1200,7 @@
         greeted = true;
         setInputEnabled(true);
         if (!isMobile) { var inp = shadow.getElementById("qw-inp"); if (inp) inp.focus(); }
-      }, 600);
+      }, 350);
     } else {
       if (!isMobile) { var inp = shadow.getElementById("qw-inp"); if (inp) inp.focus(); }
     }
@@ -1253,6 +1270,9 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (b) { if (b) applyBranding(b); })
       .catch(function () {});
+    // Pre-warm starter prompts in the background so the search icon is ready
+    // the moment the panel opens, instead of appearing 200-800ms after.
+    fetchStarterPrompts();
     launcher.addEventListener("click", openPanel);
     if (SHOW_PEEK) setupPeek();
     fireEvent("widget_loaded");
