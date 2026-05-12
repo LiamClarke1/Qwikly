@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { runGeneratorAndInsert } from "@/lib/pipeline/generator/run";
+import { resolvePlan, dailyProspectQuotaForPlan } from "@/lib/plan";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -41,6 +42,18 @@ export async function GET(req: Request) {
     pipeline_daily_quota: number;
   }>) {
     try {
+      // Cap the daily count to the plan's allowed quota. The DB column is an
+      // admin override; the plan config is the billing source of truth. If
+      // someone manually set pipeline_daily_quota higher than the plan allows,
+      // we honour the lower of the two so tenants are never billed for more
+      // prospects than their plan entitles them to receive.
+      const planQuota = dailyProspectQuotaForPlan(resolvePlan(t.plan));
+      const count = Math.min(t.pipeline_daily_quota, planQuota);
+      if (count === 0) {
+        results.push({ clientId: t.id, created: 0, capReached: false, skipped: "plan_quota_zero" });
+        continue;
+      }
+
       // Resolve the linked business_id via auth_user_id ↔ user_id
       const { data: business } = await db
         .from("businesses")
@@ -59,7 +72,7 @@ export async function GET(req: Request) {
         clientId: t.id,
         businessId,
         plan: t.plan,
-        count: t.pipeline_daily_quota,
+        count,
         batchKind: "daily_trickle",
       });
       results.push({ clientId: t.id, created: r.created, capReached: r.capReached });

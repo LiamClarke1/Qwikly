@@ -8,6 +8,7 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { resolvePlan, dailyProspectQuotaForPlan } from "@/lib/plan";
 
 export const dynamic = "force-dynamic";
 
@@ -41,16 +42,17 @@ export async function GET() {
     const db = supabaseAdmin();
     const { data: client } = await db
       .from("clients")
-      .select("plan, pipeline_daily_quota")
+      .select("plan")
       .eq("auth_user_id", user.id)
       .maybeSingle();
 
-    const row = client as { plan?: string; pipeline_daily_quota?: number } | null;
+    const row = client as { plan?: string } | null;
     if (!row) return NextResponse.json(fallback);
 
+    const resolvedPlan = resolvePlan(row.plan ?? null);
     return NextResponse.json({
       plan: row.plan ?? "pro",
-      daily_quota: row.pipeline_daily_quota ?? 5,
+      daily_quota: dailyProspectQuotaForPlan(resolvedPlan),
     });
   } catch {
     return NextResponse.json(fallback);

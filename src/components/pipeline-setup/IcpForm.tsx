@@ -8,6 +8,7 @@ import { Field, Input, Textarea, Label } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import {
   generateAndRedirect,
+  saveIcpForTomorrow,
   suggestIcp,
 } from "@/app/(app)/dashboard/pipeline/setup/actions";
 import type { IcpDefinition } from "@/lib/pipeline/setup-state";
@@ -170,6 +171,7 @@ export default function IcpForm({ initialIcp, hasExistingIcp }: Props) {
 
   const [suggestError, setSuggestError] = useState<string | null>(null);
   const [generateError, setGenerateError] = useState<string | null>(null);
+  const [savedForTomorrow, setSavedForTomorrow] = useState(false);
   const [suggesting, startSuggest] = useTransition();
   const [generating, startGenerate] = useTransition();
   const router = useRouter();
@@ -263,27 +265,8 @@ export default function IcpForm({ initialIcp, hasExistingIcp }: Props) {
     setDealValueZar(0);
   }
 
-  function handleGenerate() {
-    setGenerateError(null);
-
-    if (industries.length < 1) {
-      setGenerateError("Pick at least one industry to target.");
-      return;
-    }
-    if (titles.length < 2) {
-      setGenerateError("Pick at least two job titles to target.");
-      return;
-    }
-    if (locations.length < 1) {
-      setGenerateError("Pick at least one location.");
-      return;
-    }
-    if (!dealValueZar || dealValueZar < 1) {
-      setGenerateError("Enter your average deal value in ZAR.");
-      return;
-    }
-
-    const payload: IcpDefinition = {
+  function buildPayload(): IcpDefinition {
+    return {
       offer: offer.trim(),
       industries,
       titles,
@@ -293,16 +276,55 @@ export default function IcpForm({ initialIcp, hasExistingIcp }: Props) {
       intentSignals,
       dealValueZar,
     };
+  }
 
-    startGenerate(async () => {
-      const res = await generateAndRedirect(payload);
-      if (!res.ok) {
-        setGenerateError(friendlyErrorMessage(res.reason));
-        return;
-      }
-      router.push("/dashboard/pipeline");
-      router.refresh();
-    });
+  function validateForm(): boolean {
+    if (industries.length < 1) {
+      setGenerateError("Pick at least one industry to target.");
+      return false;
+    }
+    if (titles.length < 2) {
+      setGenerateError("Pick at least two job titles to target.");
+      return false;
+    }
+    if (locations.length < 1) {
+      setGenerateError("Pick at least one location.");
+      return false;
+    }
+    if (!dealValueZar || dealValueZar < 1) {
+      setGenerateError("Enter your average deal value in ZAR.");
+      return false;
+    }
+    return true;
+  }
+
+  function handleGenerate() {
+    setGenerateError(null);
+    setSavedForTomorrow(false);
+    if (!validateForm()) return;
+
+    if (hasExistingIcp) {
+      // Edit mode: just save the ICP. The next daily trickle will use it.
+      startGenerate(async () => {
+        const res = await saveIcpForTomorrow(buildPayload());
+        if (!res.ok) {
+          setGenerateError(friendlyErrorMessage(res.reason));
+          return;
+        }
+        setSavedForTomorrow(true);
+      });
+    } else {
+      // First-time setup: generate a sample batch immediately and redirect.
+      startGenerate(async () => {
+        const res = await generateAndRedirect(buildPayload());
+        if (!res.ok) {
+          setGenerateError(friendlyErrorMessage(res.reason));
+          return;
+        }
+        router.push("/dashboard/pipeline");
+        router.refresh();
+      });
+    }
   }
 
   return (
@@ -561,7 +583,9 @@ export default function IcpForm({ initialIcp, hasExistingIcp }: Props) {
                     size="lg"
                     icon={<Sparkles className="w-4 h-4" />}
                   >
-                    {`Generate my ${SAMPLE_LEAD_CAP} sample leads`}
+                    {hasExistingIcp
+                      ? "Save target profile"
+                      : `Generate my ${SAMPLE_LEAD_CAP} sample leads`}
                   </Button>
                 </div>
                 {generateError && (
@@ -569,9 +593,16 @@ export default function IcpForm({ initialIcp, hasExistingIcp }: Props) {
                     {generateError}
                   </p>
                 )}
-                <p className="text-tiny text-fg-muted mt-3 text-right">
-                  Test mode, {SAMPLE_LEAD_CAP} leads. Plan-based caps coming soon.
-                </p>
+                {savedForTomorrow && (
+                  <p className="text-small text-emerald-600 mt-3 text-right">
+                    Profile updated. Tomorrow you will receive prospects based on your new target.
+                  </p>
+                )}
+                {!hasExistingIcp && (
+                  <p className="text-tiny text-fg-muted mt-3 text-right">
+                    {SAMPLE_LEAD_CAP} prospects from your first batch. Daily deliveries follow your plan quota.
+                  </p>
+                )}
               </div>
             </>
           )}

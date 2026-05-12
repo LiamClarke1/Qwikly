@@ -22,6 +22,7 @@ import {
 } from "@/lib/pipeline/generator/types";
 import { suggestIcpFromOffer } from "@/lib/pipeline/icp-suggester";
 import type { SuggestedIcp } from "@/lib/pipeline/icp-suggester.types";
+import { requireOutboundAccess } from "@/lib/auth/require-outbound";
 
 export type SaveResult = { ok: true } | { ok: false; reason: string };
 export type GenerateResult =
@@ -32,7 +33,7 @@ export type SuggestResult =
   | { ok: false; reason: string };
 
 async function resolveTenantId(): Promise<
-  { ok: true; tenantId: string } | { ok: false; reason: string }
+  { ok: true; tenantId: string; userId: string } | { ok: false; reason: string }
 > {
   const cookieStore = cookies();
   const auth = createServerClient(
@@ -68,7 +69,7 @@ async function resolveTenantId(): Promise<
 
   const tenantId = (business as { id?: string } | null)?.id;
   if (!tenantId) return { ok: false, reason: "No tenant found for this account" };
-  return { ok: true, tenantId };
+  return { ok: true, tenantId, userId: user.id };
 }
 
 function revalidate() {
@@ -115,6 +116,53 @@ function toGeneratorInput(icp: IcpDefinition): GenerateProspectInput {
     // Daily trickle uses the plan-based pipeline_daily_quota instead.
     quantity: 5,
   };
+}
+
+/**
+ * Edit-mode save: persist the updated ICP without triggering generation.
+ * The next daily trickle will pick up the new ICP automatically.
+ * Returns ok: true so the UI can show a "tomorrow" confirmation.
+ */
+export async function saveIcpForTomorrow(icp: IcpDefinition): Promise<SaveResult> {
+  const t = await resolveTenantId();
+  if (!t.ok) return t;
+
+  const access = await requireOutboundAccess(t.userId);
+  if (!access.ok) {
+    return { ok: false, reason: "Your plan does not include Pipeline. Upgrade to save a target profile." };
+  }
+
+  try {
+    await updateSetupState(t.tenantId, {
+      icp,
+      status: "generated",
+      last_generated_at: new Date().toISOString(),
+    });
+
+    // Best-effort notify so internal tooling knows the ICP changed.
+    try {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+        process.env.SITE_URL?.replace(/\/$/, "") ||
+        "https://www.qwikly.co.za";
+      await fetch(`${baseUrl}/api/pipeline/setup/notify`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          cookie: cookies().toString(),
+        },
+        body: JSON.stringify({ tenantId: t.tenantId }),
+      });
+    } catch {
+      // non-blocking
+    }
+
+    revalidate();
+    return { ok: true };
+  } catch (err) {
+    console.error("[pipeline-setup/saveIcpForTomorrow] failed:", err);
+    return { ok: false, reason: "Could not save your target profile, try again." };
+  }
 }
 
 export async function saveIcp(icp: IcpDefinition): Promise<SaveResult> {
