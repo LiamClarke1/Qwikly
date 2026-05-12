@@ -140,18 +140,24 @@ export async function POST(req: Request) {
           updates.current_period_start = now;
           updates.current_period_end = periodEnd;
         }
+        // For upgrades, custom_str4 carries the target plan written by the
+        // upgrade route. Apply it now so applySubscriptionToClient reads the
+        // correct tier.
+        if (row.purpose === 'upgrade_proration' && payload.custom_str4) {
+          updates.plan = payload.custom_str4;
+        }
         await db.from('subscriptions').update(updates).eq('id', row.subscription_id);
 
-        // Reset grant on setup or renewal (not on proration — proration just
-        // changes the plan tier mid-cycle, the grant stays the same until
-        // the next renewal).
+        // Reset grant on setup or renewal. On proration we also reset because
+        // moving to a higher tier mid-cycle should give the customer the new
+        // plan's starting grant immediately.
+        const { data: planRow } = await db
+          .from('subscriptions')
+          .select('plan')
+          .eq('id', row.subscription_id)
+          .maybeSingle();
+        const tier = resolvePlan(planRow?.plan ?? 'trial');
         if (row.purpose !== 'upgrade_proration') {
-          const { data: planRow } = await db
-            .from('subscriptions')
-            .select('plan')
-            .eq('id', row.subscription_id)
-            .maybeSingle();
-          const tier = resolvePlan(planRow?.plan ?? 'trial');
           await db
             .from('conversation_credits')
             .upsert(

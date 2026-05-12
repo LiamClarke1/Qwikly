@@ -22,7 +22,6 @@ const PUBLIC_PREFIXES = [
   "/og-image",
   "/api/health",
   "/api/web",
-  "/api/assistant/chat",
   "/api/cron",
   "/api/automations/run",
   "/api/invoices/daily",

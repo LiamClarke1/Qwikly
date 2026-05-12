@@ -32,7 +32,6 @@ const tiers: {
       "Up to 20 leads/month captured by your digital assistant",
       "1 dashboard user",
       '"Powered by Qwikly" branding',
-      "R80 AI credit — covers up to 400 conversations/month",
       "Email support, 24h response",
     ],
   },
@@ -50,7 +49,6 @@ const tiers: {
       "Custom branding, your logo and colours",
       "Custom greeting and qualifying questions",
       "Email lead delivery to the business owner",
-      "R200 AI credit — covers up to 1,000 conversations/month",
       "Email support, 12h response",
     ],
   },
@@ -65,7 +63,6 @@ const tiers: {
       "Up to 200 leads/month captured by your digital assistant",
       "Unlimited dashboard users",
       "Lead exports, CSV",
-      "R500 AI credit — covers up to 4,000 conversations/month",
       "Priority email support, 4h response",
     ],
   },
@@ -79,7 +76,6 @@ const tiers: {
       "Everything in Business",
       "Up to 600+ leads/month captured by your digital assistant",
       "API access for custom integrations",
-      "R1,200 AI credit — covers up to 12,000 conversations/month",
       "Dedicated support, 1h response",
       "Custom onboarding",
     ],
@@ -91,26 +87,26 @@ const cardHighlights: Record<TierId, string[]> = {
   starter: [
     "Digital assistant on your website",
     "Up to 20 leads/month on your assistant",
-    "R80 AI credit (up to 400 conversations)",
+    "Replies to visitors in under 60 seconds",
     "Email support, 24h response",
   ],
   pro: [
     "Everything in Starter",
     "Up to 50 leads/month on your assistant",
     "Custom branding, logo and questions",
-    "R200 AI credit (up to 1,000 conversations)",
+    "3 dashboard users",
   ],
   business: [
     "Everything in Pro",
     "Up to 200 leads/month on your assistant",
     "Unlimited dashboard users",
-    "R500 AI credit (up to 4,000 conversations)",
+    "Priority email support, 4h response",
   ],
   enterprise: [
     "Everything in Business",
     "Up to 600+ leads/month on your assistant",
-    "API access + dedicated support",
-    "R1,200 AI credit (up to 12,000 conversations)",
+    "API access + white-label",
+    "Dedicated support, 1h SLA",
   ],
 };
 
@@ -130,7 +126,6 @@ const featureRows: {
   { label: "Leads captured / month (on your assistant)", starter: "Up to 20", pro: "Up to 50",   business: "Up to 200",    enterprise: "Up to 600+"    },
   { label: "Email lead delivery",                      starter: false,        pro: true,         business: true,           enterprise: true            },
   { label: "Top-up rate beyond plan",                  starter: "R35 / lead", pro: "R36 / lead", business: "R20 / lead",  enterprise: "Volume"        },
-  { label: "AI credit included (covers conversations)", starter: "R80 / mo",   pro: "R200 / mo",  business: "R500 / mo",   enterprise: "R1,200 / mo"   },
   { label: "Dashboard users",                          starter: "1",          pro: "3",          business: "Unlimited",    enterprise: "Unlimited"     },
   { label: "Custom greeting and questions",            starter: false,        pro: true,         business: true,           enterprise: true            },
   { label: '"Powered by Qwikly" branding',             starter: true,         pro: false,        business: false,          enterprise: false           },
@@ -167,11 +162,6 @@ const pricingFAQs = [
     question: "What happens when I hit my monthly lead limit?",
     answer:
       "We notify you before you hit the cap. You can upgrade your plan, or top up at your plan's per-lead rate: R35 on Starter, R36 on Pro and Founders, R20 on Business. No flat overage, no automatic billing, no surprise charges. Your digital assistant keeps working until you decide.",
-  },
-  {
-    question: "What are AI conversation credits and do I pay extra?",
-    answer:
-      "Running your digital assistant uses AI processing, which has a cost. Each plan includes a monthly AI credit to cover this: Starter gets R80 (covers up to 400 conversations), Pro gets R200 (up to 1,000), Business gets R500 (up to 4,000), Enterprise gets R1,200 (up to 12,000). That is far more than any normal visitor volume on your plan. If you run an unusually high number of chats in a month you can top up your AI credit from the dashboard. Unused credit resets each billing cycle.",
   },
   {
     question: "What happens after my 7-day trial?",
@@ -536,9 +526,6 @@ export default function PricingPage() {
               </p>
               <p>
                 A lead is only counted when a visitor shares a phone number or email. Bounced chats, bots, name-only conversations, and your own test messages never come out of your monthly allowance. You only pay for people you can actually reach.
-              </p>
-              <p>
-                Each plan includes an AI conversation credit to cover the cost of running your digital assistant. Starter includes R80, Pro R200, Business R500, and Enterprise R1,200 of credit per month. This is enough to comfortably cover your included lead allowance and typical browse traffic. If you run unusually high chat volumes beyond your plan&apos;s lead cap, you can top up your AI credit directly from the dashboard. Unused credit does not carry over.
               </p>
               <p>
                 Every paid plan is flat monthly with no setup fee, no onboarding charge, and no commission on jobs you win. If you upgrade or downgrade mid-cycle, upgrades take effect immediately and downgrades apply at the start of the next billing period.

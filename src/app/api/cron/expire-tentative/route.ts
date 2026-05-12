@@ -12,7 +12,7 @@ export const maxDuration = 30;
 //
 // 5-minute granularity is fine for both: the emergency hold window is 15
 // minutes by default, and the follow-up window is the rest of day 1.
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const authHeader = req.headers.get("authorization");
   const legacyHeader = req.headers.get("x-cron-secret");
@@ -34,5 +34,3 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Vercel Cron always sends GET too on certain plans, so accept both.
-export const GET = POST;

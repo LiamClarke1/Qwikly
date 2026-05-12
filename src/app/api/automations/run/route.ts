@@ -4,9 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { sendWhatsAppMessage, interpolate } from "@/lib/twilio-whatsapp";
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || req.headers.get("x-cron-secret") !== secret) {
+  const authHeader = req.headers.get("authorization");
+  const legacyHeader = req.headers.get("x-cron-secret");
+  if (!secret || (authHeader !== `Bearer ${secret}` && legacyHeader !== secret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

@@ -60,8 +60,9 @@ type LeadTopupRow = { leads_remaining: number | null };
 export async function getEntitlement(clientId: number): Promise<Entitlement> {
   const db = supabaseAdmin();
   const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const [clientRow, subRow, creditsRow, usageRow, topupsRow] = await Promise.all([
+  const [clientRow, subRow, creditsRow, leadsCountRow, topupsRow] = await Promise.all([
     db
       .from('clients')
       .select('id, plan, ai_paused, auth_user_id')
@@ -80,10 +81,11 @@ export async function getEntitlement(clientId: number): Promise<Entitlement> {
       .eq('client_id', clientId)
       .maybeSingle(),
     db
-      .from('usage_periods')
-      .select('leads_captured')
+      .from('conversations')
+      .select('id', { count: 'exact', head: true })
       .eq('client_id', clientId)
-      .maybeSingle(),
+      .eq('is_lead', true)
+      .gte('created_at', startOfMonth.toISOString()),
     db
       .from('lead_topups')
       .select('leads_remaining, expires_at')
@@ -107,9 +109,10 @@ export async function getEntitlement(clientId: number): Promise<Entitlement> {
   const credits = (creditsRow as {
     data: { granted_balance_zar_cents?: number; purchased_balance_zar_cents?: number } | null;
   }).data ?? null;
-  const usage = (usageRow as { data: { leads_captured?: number } | null }).data ?? null;
   const topups =
     ((topupsRow as { data: LeadTopupRow[] | null }).data ?? []) as LeadTopupRow[];
+
+  const leadsThisMonth = (leadsCountRow as { count: number | null }).count ?? 0;
 
   const tier = resolvePlan(subscription?.plan ?? client?.plan ?? 'trial');
   const cfg = PLAN_CONFIG[tier];
@@ -123,7 +126,7 @@ export async function getEntitlement(clientId: number): Promise<Entitlement> {
         plan: 'enterprise',
         status: 'active',
         assistantPaused: false,
-        leadsThisMonth: 0,
+        leadsThisMonth,
         leadLimit: Number.MAX_SAFE_INTEGER,
         topupLeadsRemaining: 0,
         totalLeadsAvailable: Number.MAX_SAFE_INTEGER,
@@ -144,8 +147,6 @@ export async function getEntitlement(clientId: number): Promise<Entitlement> {
   const grantedCents = credits?.granted_balance_zar_cents ?? 0;
   const purchasedCents = credits?.purchased_balance_zar_cents ?? 0;
   const totalCents = grantedCents + purchasedCents;
-
-  const leadsThisMonth = usage?.leads_captured ?? 0;
   // null leadLimit on PLAN_CONFIG means unlimited (legacy Premium tier).
   const leadLimit = cfg.leadLimit ?? Number.MAX_SAFE_INTEGER;
   const topupLeadsRemaining = topups.reduce(

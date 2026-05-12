@@ -367,6 +367,80 @@ export function setupCallSlotPickerHtml({
 </html>`;
 }
 
+export function convoPausedNotificationHtml({
+  businessName,
+  planName,
+  conversationsIncluded,
+  monthLabel,
+}: {
+  businessName: string;
+  planName: string;
+  conversationsIncluded: number;
+  monthLabel: string;
+}) {
+  const BASE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.qwikly.co.za";
+  const upgradeUrl = `${BASE}/dashboard/settings/billing`;
+  const topupUrl   = `${BASE}/dashboard/billing/topup-ai`;
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#07080B;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#07080B;padding:40px 16px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+
+        <tr><td style="padding-bottom:32px;">
+          <span style="font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.5px;">
+            Qwikly<span style="color:#E85A2C;">.</span>
+          </span>
+        </td></tr>
+
+        <tr><td style="background:#0D111A;border:1px solid rgba(255,255,255,0.07);border-radius:16px;padding:32px;">
+
+          <p style="margin:0 0 4px;font-size:13px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#E85A2C;">Assistant paused</p>
+          <h1 style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;letter-spacing:-0.3px;">Your assistant has reached its limit for ${monthLabel}.</h1>
+          <p style="margin:0 0 28px;font-size:14px;color:#9CA3AF;line-height:1.6;">
+            Your <strong style="color:#F4F4F5;">${planName}</strong> plan includes
+            <strong style="color:#F4F4F5;">${conversationsIncluded.toLocaleString()} conversations</strong> per month
+            and your conversation credit is now at zero. New visitors on
+            <strong style="color:#F4F4F5;">${businessName}</strong>&apos;s website will see a back-next-month message until you top up or upgrade.
+          </p>
+
+          <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid rgba(255,255,255,0.06);margin-bottom:28px;padding-top:20px;">
+            <tr>
+              <td style="padding-bottom:16px;">
+                <a href="${topupUrl}" style="display:inline-block;background:#E85A2C;color:#fff;font-size:14px;font-weight:600;padding:12px 24px;border-radius:8px;text-decoration:none;">
+                  Add conversations
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <a href="${upgradeUrl}" style="font-size:13px;color:#E85A2C;text-decoration:none;">
+                  Or upgrade your plan &rarr;
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <p style="margin:0;font-size:12px;color:#6B7280;line-height:1.6;">
+            Your assistant will automatically resume at the start of next month when your included conversations reset.
+            Adding conversation credit reactivates it straight away.
+          </p>
+        </td></tr>
+
+        <tr><td style="padding-top:24px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#4B5563;">Sent by <a href="https://qwikly.co.za" style="color:#E85A2C;text-decoration:none;">Qwikly</a></p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
 export function bookingReminderHtml({
   customerName,
   businessName,

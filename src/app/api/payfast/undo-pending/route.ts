@@ -38,27 +38,13 @@ export async function POST() {
 
   const db = supabaseAdmin();
 
-  // Resolve the client_id from the auth user; subscriptions are keyed to
-  // clients.id, not auth_user_id directly.
-  const { data: client } = await db
-    .from("clients")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
-
-  if (!client) {
-    return NextResponse.json({ error: "no_client" }, { status: 404 });
-  }
-
-  const clientId = (client as { id: number }).id;
-
   const { error: updErr } = await db
     .from("subscriptions")
     .update({
       pending_plan: null,
       cancel_at_period_end: false,
     })
-    .eq("client_id", clientId);
+    .eq("user_id", user.id);
 
   if (updErr) {
     console.error("[undo-pending] update failed:", updErr.message);

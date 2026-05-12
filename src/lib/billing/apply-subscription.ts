@@ -49,6 +49,12 @@ export async function applySubscriptionToClient(subscriptionId: number): Promise
     );
   }
 
+  if (sub.client_id == null) {
+    throw new Error(
+      `applySubscriptionToClient: subscription ${subscriptionId} has no client_id — run the 20260513_subscriptions_client_id migration and wire the FK first`,
+    );
+  }
+
   const tier = resolvePlan(sub.plan);
   const aiPaused = PAUSED_STATUSES.has(sub.status);
 

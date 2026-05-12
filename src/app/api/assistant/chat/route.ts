@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { embedQuery } from "@/lib/knowledge/embed";
 import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
+import { recordApiUsage, type AnthropicUsageBlock } from "@/lib/billing/api-usage";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -80,6 +83,21 @@ ${knowledge || "(No knowledge base content available yet. Ask the business owner
 }
 
 export async function POST(req: NextRequest) {
+  // Resolve the authenticated user — this route is dashboard-only and requires a session.
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: () => {},
+      },
+    },
+  );
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const ipOk = await checkRateLimit(`assistant:ip:${ip}`, 20);
   if (!ipOk) {
@@ -89,50 +107,59 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: {
-    tenantId: string;
-    message: string;
-    history?: ChatMessage[];
-    visitorName?: string;
-    visitorEmail?: string;
-    visitorPhone?: string;
-  };
-
+  // Accept the component's shape: { messages: ChatMessage[] }
+  // where the last message is the current user turn and the rest are history.
+  let body: { messages?: ChatMessage[]; message?: string; history?: ChatMessage[] };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { tenantId, message, history = [] } = body;
-  if (!tenantId || !message?.trim()) {
-    return NextResponse.json({ error: "tenantId and message required" }, { status: 400 });
+  let message: string;
+  let history: ChatMessage[];
+  if (body.messages && Array.isArray(body.messages)) {
+    const all = body.messages;
+    const last = all[all.length - 1];
+    if (!last || last.role !== "user") {
+      return NextResponse.json({ error: "last message must be a user turn" }, { status: 400 });
+    }
+    message = last.content;
+    history = all.slice(0, -1);
+  } else {
+    message = body.message ?? "";
+    history = body.history ?? [];
   }
 
-  const tenantOk = await checkRateLimit(`assistant:tenant:${tenantId}`, 500, "hour");
+  if (!message.trim()) {
+    return NextResponse.json({ error: "message required" }, { status: 400 });
+  }
+
+  const tenantId = user.id;
+  const tenantOk = await checkRateLimit(`assistant:tenant:${tenantId}`, 100, "hour");
   if (!tenantOk) {
     return NextResponse.json(
-      { error: "Tenant hourly rate limit exceeded." },
+      { error: "Hourly limit reached." },
       { status: 429, headers: { "Retry-After": String(retryAfterSeconds("hour")) } }
     );
   }
 
   const db = supabaseAdmin();
 
-  const { data: client } = await db
+  const { data: clientRow } = await db
     .from("clients")
-    .select("business_name")
+    .select("id, business_name")
     .eq("auth_user_id", tenantId)
     .maybeSingle();
 
-  const businessName = client?.business_name ?? "";
+  const businessName = clientRow?.business_name ?? "";
+  const clientId = clientRow?.id as number | undefined;
 
   const queryEmbedding = await embedQuery(message);
   const chunks = await retrieveChunks(tenantId, queryEmbedding, message);
-
   const systemPrompt = buildSystemPrompt(businessName, chunks);
 
-  const messages: Anthropic.MessageParam[] = [
+  const anthropicMessages: Anthropic.MessageParam[] = [
     ...history.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
     { role: "user", content: message },
   ];
@@ -141,33 +168,24 @@ export async function POST(req: NextRequest) {
     model: "claude-haiku-4-5-20251001",
     max_tokens: 600,
     system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
-    messages,
+    messages: anthropicMessages,
   });
 
-  const replyText = (response.content[0] as { type: string; text: string }).text;
-
-  const needsLead =
-    replyText.includes("don't have that information") ||
-    replyText.includes("connect you with someone");
-
-  if (needsLead && (body.visitorEmail || body.visitorName)) {
-    await db.from("lead_captures").insert({
-      tenant_id: tenantId,
-      visitor_name: body.visitorName ?? null,
-      visitor_email: body.visitorEmail ?? null,
-      visitor_phone: body.visitorPhone ?? null,
-      question: message,
+  if (clientId) {
+    void recordApiUsage({
+      clientId,
+      conversationId: null,
+      usage: response.usage as unknown as AnthropicUsageBlock,
+      source: "assistant_chat",
     });
   }
+
+  const replyText = (response.content[0] as { type: string; text: string }).text;
 
   const citations = chunks.map((c) => ({
     filename: c.metadata?.originalFilename || c.metadata?.sourceUrl || "Knowledge base",
     similarity: c.similarity,
   }));
 
-  return NextResponse.json({
-    reply: replyText,
-    citations: needsLead ? [] : citations,
-    needsLead,
-  });
+  return NextResponse.json({ reply: replyText, citations });
 }

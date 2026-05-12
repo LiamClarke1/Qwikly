@@ -18,6 +18,7 @@ import { wrapUntrustedConfig, PROMPT_SAFETY_NOTE } from "@/lib/prompt-safety";
 import { assertTenantActive } from "@/lib/billing/tenant-gate";
 import { recordApiUsage } from "@/lib/billing/api-usage";
 import { isInternalClientId } from "@/lib/billing/internal-tenant";
+import { notifyConvoCapPaused } from "@/lib/notify-convo-cap";
 
 const QWIKLY_OWN_CLIENT_ID = "1";
 
@@ -719,7 +720,8 @@ export async function POST(req: NextRequest) {
         .select("conversation_id")
         .eq("client_id", Number(client_id))
         .eq("billing_period", billingPeriod)
-        .eq("is_internal", false);
+        .eq("is_internal", false)
+        .neq("source", "convo_cap_notification");
 
       const distinctConversations = new Set(
         (usageRows ?? [])
@@ -748,8 +750,45 @@ export async function POST(req: NextRequest) {
         const balance = granted + purchased + (granted + purchased === 0 ? legacy : 0);
 
         if (zeroBalanceBehaviour === "pause" && balance <= 0) {
-          // Hard stop. Polite reply to the visitor; the owner is notified
-          // separately via the dashboard /usage page.
+          // Fire a one-per-billing-period owner notification using a zero-cost
+          // api_usage row as the dedup marker. If the marker already exists for
+          // this billing period the notification was already sent — skip it.
+          void (async () => {
+            try {
+              const { data: notifyMarker } = await supabaseAdmin
+                .from("api_usage")
+                .select("id")
+                .eq("client_id", Number(client_id))
+                .eq("billing_period", billingPeriod)
+                .eq("source", "convo_cap_notification")
+                .limit(1)
+                .maybeSingle();
+
+              if (!notifyMarker) {
+                await supabaseAdmin.from("api_usage").insert({
+                  client_id: Number(client_id),
+                  conversation_id: null,
+                  input_tokens: 0,
+                  output_tokens: 0,
+                  cache_creation_tokens: 0,
+                  cache_read_tokens: 0,
+                  wholesale_cost_zar_cents: 0,
+                  retail_cost_zar_cents: 0,
+                  is_internal: false,
+                  source: "convo_cap_notification",
+                });
+                await notifyConvoCapPaused({
+                  clientId: Number(client_id),
+                  planName: PLAN_CONFIG[tier].name,
+                  conversationsIncluded: PLAN_CONFIG[tier].conversationsIncluded,
+                  billingPeriod,
+                });
+              }
+            } catch (err) {
+              console.error("[web/chat] convo-cap notify failed:", err);
+            }
+          })();
+
           return NextResponse.json(
             {
               reply:

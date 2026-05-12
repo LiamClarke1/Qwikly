@@ -86,8 +86,8 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     conversationsIncluded: 150,
     overageCentsPerConversation: 750,
     topUpPricePerLeadZar: 35,
-    // R20 loss-leader grant for 7-day window.
-    startingGrantZarCents: 2000,
+    // R30 loss-leader grant for 7-day window.
+    startingGrantZarCents: 3000,
   },
   // Conversation caps are sized at the WORST-HONEST-CASE conv:lead ratio
   // (~20× for explore-heavy industries like real-estate) so an honest
@@ -124,8 +124,8 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     overageCentsPerConversation: 750,
     // R35/lead matches Starter in-plan effective rate (R699/20 = R34.95).
     topUpPricePerLeadZar: 35,
-    // R80 grant. Worst-case wholesale R29.60 at planning rate.
-    startingGrantZarCents: 8000,
+    // R100 grant. Worst-case wholesale R37 at planning rate.
+    startingGrantZarCents: 10000,
   },
   pro: {
     name: 'Pro',
@@ -144,8 +144,8 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     overageCentsPerConversation: 750,
     // R36/lead vs R35.98 in-plan (R1799/50) — minimal nudge to upgrade.
     topUpPricePerLeadZar: 36,
-    // R200 grant on R1,799 plan revenue. Covers ~200 typical conversations.
-    startingGrantZarCents: 20000,
+    // R280 grant on R1,799 plan revenue. Covers ~280 typical conversations.
+    startingGrantZarCents: 28000,
   },
   founders: {
     name: 'Founders',
@@ -162,8 +162,8 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     conversationsIncluded: 1200,
     overageCentsPerConversation: 750,
     topUpPricePerLeadZar: 36,
-    // R250 grant on R2,999 plan revenue.
-    startingGrantZarCents: 25000,
+    // R450 grant on R2,999 plan revenue.
+    startingGrantZarCents: 45000,
   },
   business: {
     name: 'Business',
@@ -182,8 +182,8 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     overageCentsPerConversation: 750,
     // R20/lead vs R19.99 in-plan (R3999/200) — minimal nudge to upgrade.
     topUpPricePerLeadZar: 20,
-    // R500 grant on R3,999 plan revenue.
-    startingGrantZarCents: 50000,
+    // R650 grant on R3,999 plan revenue.
+    startingGrantZarCents: 65000,
   },
   enterprise: {
     name: 'Enterprise',
@@ -202,8 +202,8 @@ export const PLAN_CONFIG: Record<InboundPlanTier, PlanConfig> = {
     overageCentsPerConversation: 750,
     // R14/lead vs R13.33 in-plan (R7999/600) — minimal nudge.
     topUpPricePerLeadZar: 14,
-    // R1,200 grant on R7,999 floor plan revenue.
-    startingGrantZarCents: 120000,
+    // R1,500 grant on R7,999 floor plan revenue.
+    startingGrantZarCents: 150000,
   },
   // ── Legacy tier ───────────────────────────────────────────
   // Pre-2026-05-10 customers signed up at R1,999 with 250 leads + custom

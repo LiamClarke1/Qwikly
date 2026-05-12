@@ -74,7 +74,8 @@ export async function GET() {
     .select("conversation_id, retail_cost_zar_cents, wholesale_cost_zar_cents")
     .eq("client_id", clientId)
     .eq("billing_period", billingPeriod)
-    .eq("is_internal", false);
+    .eq("is_internal", false)
+    .neq("source", "convo_cap_notification");
 
   if (usageErr) {
     console.error("[usage/conversations] query failed:", usageErr.message);
@@ -103,16 +104,23 @@ export async function GET() {
   const { data: creditsRow } = await db
     .from("conversation_credits")
     .select(
-      "balance_zar_cents, total_topped_up_zar_cents, total_spent_zar_cents, zero_balance_behaviour",
+      "granted_balance_zar_cents, purchased_balance_zar_cents, balance_zar_cents, total_topped_up_zar_cents, total_spent_zar_cents, zero_balance_behaviour",
     )
     .eq("client_id", clientId)
     .maybeSingle();
 
-  const credits = creditsRow ?? {
-    balance_zar_cents: 0,
-    total_topped_up_zar_cents: 0,
-    total_spent_zar_cents: 0,
-    zero_balance_behaviour: "pause" as const,
+  // Effective balance: new split columns, falling back to legacy balance_zar_cents
+  // for any rows that pre-date the column split migration.
+  const effectiveBalanceCents = creditsRow
+    ? (creditsRow.granted_balance_zar_cents ?? 0) + (creditsRow.purchased_balance_zar_cents ?? 0) ||
+      (creditsRow.balance_zar_cents ?? 0)
+    : 0;
+
+  const credits = {
+    balance_zar_cents: effectiveBalanceCents,
+    total_topped_up_zar_cents: creditsRow?.total_topped_up_zar_cents ?? 0,
+    total_spent_zar_cents: creditsRow?.total_spent_zar_cents ?? 0,
+    zero_balance_behaviour: creditsRow?.zero_balance_behaviour ?? ("pause" as const),
   };
 
   // Compute overage projection. If the tenant has used more conversations
@@ -125,7 +133,7 @@ export async function GET() {
     distinctConversations - includedConversations,
   );
   const overageCents = overageConversations * planConfig.overageCentsPerConversation;
-  const projectedOverageCents = Math.max(0, overageCents - credits.balance_zar_cents);
+  const projectedOverageCents = Math.max(0, overageCents - effectiveBalanceCents);
 
   // Days remaining in the period for end-of-month calculations.
   const lastDay = new Date(

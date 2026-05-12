@@ -48,7 +48,7 @@ function digestHtml(rows: Array<{ created_at: string; name: string; email: strin
 </body></html>`;
 }
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   const authHeader = req.headers.get("authorization");
   if (!secret || authHeader !== `Bearer ${secret}`) {
@@ -89,4 +89,3 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, count: rows.length, id: result.id });
 }
 
-export const GET = POST;

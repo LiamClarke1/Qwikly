@@ -4,27 +4,14 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { getEntitlement } from "@/lib/billing/entitlement";
-import { resolvePlan } from "@/lib/plan";
+import { resolvePlan, PLAN_CONFIG, startingGrantZarCents } from "@/lib/plan";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page";
-import { startingAiGrantZarCents } from "@/lib/billing/grants";
 import { cn } from "@/lib/cn";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Two-meter usage page driven by `getEntitlement(clientId)`.
- *
- *  - Card 1: leads this month / monthly cap. Includes top-up packs as
- *    headroom and surfaces a "Running low — top up?" CTA at 80% usage.
- *  - Card 2: AI conversation credit wallet (granted + purchased). Surfaces
- *    a "Top up" CTA when the wallet drops below 20% of the plan's starting
- *    grant.
- *
- * Both cards link into the corresponding top-up landing pages
- * (`/dashboard/billing/topup-leads`, `/dashboard/billing/topup-ai`).
- */
 export default async function UsagePage() {
   const cookieStore = cookies();
   const auth = createServerClient(
@@ -59,35 +46,70 @@ export default async function UsagePage() {
   const clientId = (client as { id: number }).id;
   const ent = await getEntitlement(clientId);
 
-  // ── Lead meter math ────────────────────────────────────────────────────
+  // ── Lead meter ─────────────────────────────────────────────────────────
   const isUnlimited = ent.leadLimit >= Number.MAX_SAFE_INTEGER;
   const leadPct = isUnlimited
     ? 0
     : Math.min(100, Math.round((ent.leadsThisMonth / Math.max(1, ent.leadLimit)) * 100));
   const leadsRunningLow = !isUnlimited && ent.leadsThisMonth >= 0.8 * ent.leadLimit;
 
-  // ── AI credit meter math ───────────────────────────────────────────────
+  // ── Conversation meter ─────────────────────────────────────────────────
+  const now = new Date();
+  const billingPeriod = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+    .toISOString()
+    .slice(0, 10);
+
+  const { data: convRows } = await db
+    .from("api_usage")
+    .select("conversation_id")
+    .eq("client_id", clientId)
+    .eq("billing_period", billingPeriod)
+    .eq("is_internal", false)
+    // exclude the zero-cost dedup marker rows inserted by the pause notifier
+    .neq("source", "convo_cap_notification");
+
+  const conversationsThisMonth = new Set(
+    (convRows ?? []).map((r) => (r as { conversation_id: string | number | null }).conversation_id).filter((id) => id != null),
+  ).size;
+
   const tier = resolvePlan(ent.plan);
-  const startingGrantCents = startingAiGrantZarCents(tier);
-  const aiTotalRands = ent.aiCreditTotalZarCents / 100;
+  const planCfg = PLAN_CONFIG[tier];
+  const conversationsIncluded = planCfg.conversationsIncluded;
+  const isConvUnlimited = conversationsIncluded >= Number.MAX_SAFE_INTEGER;
+
+  const convPct = isConvUnlimited
+    ? 0
+    : Math.min(100, Math.round((conversationsThisMonth / Math.max(1, conversationsIncluded)) * 100));
+  const convRemaining = Math.max(0, conversationsIncluded - conversationsThisMonth);
+
+  // Paused = at or over the conversation cap AND no AI credit balance left
+  const isPaused =
+    !isConvUnlimited &&
+    conversationsThisMonth >= conversationsIncluded &&
+    ent.aiCreditTotalZarCents <= 0;
+
+  // Running low = 80%+ of conversations used (but not yet fully paused)
+  const convRunningLow = !isConvUnlimited && !isPaused && convPct >= 80;
+
+  // First day of next month for the reset date label
+  const resetDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  const resetLabel = resetDate.toLocaleDateString("en-ZA", {
+    day: "numeric",
+    month: "long",
+    timeZone: "Africa/Johannesburg",
+  });
+
+  // Legacy AI credit meter math (kept for the detail breakdown)
+  const startingGrantCents = startingGrantZarCents(tier);
   const aiGrantedRands = ent.aiCreditGrantedZarCents / 100;
   const aiPurchasedRands = ent.aiCreditPurchasedZarCents / 100;
-  const aiPct =
-    startingGrantCents > 0
-      ? Math.min(
-          100,
-          Math.max(0, Math.round((ent.aiCreditTotalZarCents / startingGrantCents) * 100)),
-        )
-      : 0;
-  const aiRunningLow =
-    startingGrantCents > 0 && ent.aiCreditTotalZarCents < 0.2 * startingGrantCents;
 
   return (
     <div className="space-y-6 max-w-5xl">
       <PageHeader
         eyebrow="Account"
-        title="Usage & credits"
-        description="Lead capacity and AI conversation credit for the current period."
+        title="Usage & capacity"
+        description="Lead and conversation capacity for the current billing period."
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -155,81 +177,97 @@ export default async function UsagePage() {
           )}
         </Card>
 
-        {/* ── Card 2: AI conversation credit ────────────────────────────── */}
-        <Card>
-          <CardHeader title="AI conversation credit" />
+        {/* ── Card 2: Conversations this month ──────────────────────────── */}
+        <Card className={isPaused ? "border-danger/40 bg-danger/5" : undefined}>
+          <CardHeader title="Conversations this month" />
+
+          {/* Paused state banner */}
+          {isPaused && (
+            <div className="mb-4 p-3 rounded-lg bg-danger/10 border border-danger/25">
+              <p className="text-small font-semibold text-danger mb-0.5">
+                Your assistant is paused
+              </p>
+              <p className="text-tiny text-fg-muted leading-relaxed">
+                Your plan&apos;s conversation limit is reached and your extra credit is spent.
+                Add conversation credit or upgrade to reactivate.
+              </p>
+            </div>
+          )}
 
           <div className="flex items-baseline gap-2 mb-3">
             <span className="text-h1 num text-fg leading-none">
-              R
-              {aiTotalRands.toLocaleString("en-ZA", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
+              {conversationsThisMonth.toLocaleString()}
             </span>
-            <span className="text-fg-muted text-small">remaining</span>
+            <span className="text-fg-muted text-small">
+              of {isConvUnlimited ? "Unlimited" : conversationsIncluded.toLocaleString()}
+            </span>
           </div>
 
-          {startingGrantCents > 0 && (
+          {!isConvUnlimited && (
             <>
               <div
                 className="w-full h-2.5 rounded-full bg-surface-input overflow-hidden mb-2"
                 role="progressbar"
-                aria-valuenow={aiPct}
+                aria-valuenow={convPct}
                 aria-valuemin={0}
                 aria-valuemax={100}
               >
                 <div
                   className={cn(
                     "h-full rounded-full transition-all",
-                    aiPct < 20
+                    isPaused || convPct >= 100
                       ? "bg-danger"
-                      : aiPct < 50
+                      : convPct >= 80
                         ? "bg-warning"
                         : "bg-[var(--accent)]",
                   )}
-                  style={{ width: `${aiPct}%` }}
+                  style={{ width: `${Math.min(convPct, 100)}%` }}
                 />
               </div>
               <div className="flex items-center justify-between text-tiny text-fg-muted">
+                <span>{convPct}% used</span>
                 <span>
-                  {aiPct}% of starting grant (R
-                  {(startingGrantCents / 100).toLocaleString("en-ZA")})
+                  {isPaused ? "Limit reached" : `${convRemaining.toLocaleString()} remaining`}
                 </span>
               </div>
             </>
           )}
 
-          <div className="mt-3 grid grid-cols-2 gap-3 text-tiny">
-            <div>
-              <p className="text-fg-subtle font-medium mb-0.5">Granted</p>
-              <p className="text-small font-medium text-fg num">
-                R
-                {aiGrantedRands.toLocaleString("en-ZA", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </p>
-            </div>
-            <div>
-              <p className="text-fg-subtle font-medium mb-0.5">Purchased</p>
-              <p className="text-small font-medium text-fg num">
-                R
-                {aiPurchasedRands.toLocaleString("en-ZA", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </p>
-            </div>
-          </div>
+          {/* Extra credit balance (only show when there is purchased credit) */}
+          {ent.aiCreditPurchasedZarCents > 0 && (
+            <p className="text-tiny text-fg-muted mt-3">
+              <span className="font-medium text-fg">
+                R{aiPurchasedRands.toLocaleString("en-ZA", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>{" "}
+              extra conversation credit available.
+            </p>
+          )}
 
-          {aiRunningLow && (
+          {/* Monthly reset note */}
+          <p className="text-tiny text-fg-subtle mt-3">
+            Resets {resetLabel}
+          </p>
+
+          {/* Paused: show upgrade + top-up options */}
+          {isPaused && (
+            <div className="mt-4 pt-4 border-t border-[var(--border)] flex flex-wrap gap-2">
+              <Link href="/dashboard/settings/billing">
+                <Button size="sm" variant="primary">Upgrade plan</Button>
+              </Link>
+              <Link href="/dashboard/billing/topup-ai">
+                <Button size="sm" variant="outline">Add conversations</Button>
+              </Link>
+            </div>
+          )}
+
+          {/* Running low: nudge to top up */}
+          {convRunningLow && (
             <div className="mt-4 pt-4 border-t border-[var(--border)] flex items-center justify-between gap-3">
               <p className="text-small text-fg">
-                <span className="font-semibold">Running low</span> — top up?
+                <span className="font-semibold">Running low</span> — add more?
               </p>
               <Link href="/dashboard/billing/topup-ai">
-                <Button size="sm">Top up</Button>
+                <Button size="sm">Add conversations</Button>
               </Link>
             </div>
           )}

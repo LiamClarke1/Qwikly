@@ -9,17 +9,20 @@ vi.mock('@/lib/supabase-server', () => ({
 type Row = Record<string, unknown> | null;
 type RowList = Row[] | null;
 
-function buildFromMock(rows: Record<string, Row | RowList>) {
+// Rows can be normal data rows OR a number (meaning it's a count-only query).
+function buildFromMock(rows: Record<string, Row | RowList | number>) {
   fromMock.mockImplementation((table: string) => {
     const value = rows[table];
-    const list = Array.isArray(value) ? (value as Row[]) : null;
-    const single = list === null ? (value as Row) : null;
+    const isCount = typeof value === 'number';
+    const list = !isCount && Array.isArray(value) ? (value as Row[]) : null;
+    const single = !isCount && list === null ? (value as Row) : null;
+    const count = isCount ? (value as number) : null;
 
     const terminal = {
       maybeSingle: async () => ({ data: single, error: null }),
       single: async () => ({ data: single, error: null }),
-      then: (cb: (r: { data: RowList; error: null }) => unknown) =>
-        cb({ data: list, error: null }),
+      then: (cb: (r: { data: RowList; count: number | null; error: null }) => unknown) =>
+        cb({ data: list, count, error: null }),
     };
 
     const chain: Record<string, (...args: unknown[]) => unknown> = {};
@@ -57,7 +60,7 @@ describe('getEntitlement', () => {
         granted_balance_zar_cents: 8000,
         purchased_balance_zar_cents: 5000,
       },
-      usage_periods: { leads_captured: 12 },
+      conversations: 12,
       lead_topups: [],
     });
 
@@ -66,7 +69,7 @@ describe('getEntitlement', () => {
     expect(e.status).toBe('active');
     expect(e.assistantPaused).toBe(false);
     expect(e.leadsThisMonth).toBe(12);
-    expect(e.leadLimit).toBe(30);
+    expect(e.leadLimit).toBe(20);
     expect(e.aiCreditTotalZarCents).toBe(13000);
   });
 
@@ -83,22 +86,22 @@ describe('getEntitlement', () => {
         trial_ends_at: null,
       },
       conversation_credits: null,
-      usage_periods: null,
+      conversations: 0,
       lead_topups: [],
     });
 
     const e = await getEntitlement(7);
     expect(e.plan).toBe('pro');
-    expect(e.leadLimit).toBe(100);
+    expect(e.leadLimit).toBe(50);
     expect(e.hasOutbound).toBe(true);
     expect(e.pipelineDailyQuota).toBe(5);
     // No credits row: total is zero
     expect(e.aiCreditTotalZarCents).toBe(0);
     expect(e.aiCreditGrantedZarCents).toBe(0);
     expect(e.aiCreditPurchasedZarCents).toBe(0);
-    // No usage row: zero leads used; full cap available + zero top-ups
+    // Zero leads used; full cap available + zero top-ups
     expect(e.leadsThisMonth).toBe(0);
-    expect(e.totalLeadsAvailable).toBe(100);
+    expect(e.totalLeadsAvailable).toBe(50);
     expect(e.topupLeadsRemaining).toBe(0);
   });
 
@@ -115,13 +118,14 @@ describe('getEntitlement', () => {
         trial_ends_at: null,
       },
       conversation_credits: null,
-      usage_periods: { leads_captured: 30 },
+      conversations: 30,
       lead_topups: [
         { leads_remaining: 10, expires_at: '2026-06-01T00:00:00Z' },
         { leads_remaining: 25, expires_at: '2026-06-01T00:00:00Z' },
       ],
     });
 
+    // starter leadLimit=20, leadsThisMonth=30 → 0 included left, plus 35 topup
     const e = await getEntitlement(5);
     expect(e.topupLeadsRemaining).toBe(35);
     expect(e.totalLeadsAvailable).toBe(35);
@@ -140,7 +144,7 @@ describe('getEntitlement', () => {
         trial_ends_at: '2026-05-08T00:00:00Z',
       },
       conversation_credits: null,
-      usage_periods: null,
+      conversations: 0,
       lead_topups: [],
     });
 

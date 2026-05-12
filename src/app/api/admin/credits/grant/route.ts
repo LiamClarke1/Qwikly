@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   // Read the current wallet so we can write the new balance + lifetime totals.
   const { data: existing, error: readErr } = await db
     .from("conversation_credits")
-    .select("balance_zar_cents, total_topped_up_zar_cents")
+    .select("purchased_balance_zar_cents, total_topped_up_zar_cents")
     .eq("client_id", clientId)
     .maybeSingle();
   if (readErr) {
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 
   // The auto-provision trigger should have created this row at signup, but
   // backstop with an upsert in case the trigger failed historically.
-  const newBalance = (existing?.balance_zar_cents ?? 0) + amountCents;
+  const newPurchasedBalance = (existing?.purchased_balance_zar_cents ?? 0) + amountCents;
   const newLifetimeToppedUp =
     Number(existing?.total_topped_up_zar_cents ?? 0) + amountCents;
 
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
     .upsert(
       {
         client_id: clientId,
-        balance_zar_cents: newBalance,
+        purchased_balance_zar_cents: newPurchasedBalance,
         total_topped_up_zar_cents: newLifetimeToppedUp,
         updated_at: new Date().toISOString(),
       },
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     client_id: clientId,
-    new_balance_zar_cents: newBalance,
+    new_purchased_balance_zar_cents: newPurchasedBalance,
     granted_zar_cents: amountCents,
   });
 }

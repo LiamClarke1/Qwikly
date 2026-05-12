@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import twilio from "twilio";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { sendWhatsAppMessage } from "@/lib/twilio-whatsapp";
+import { recordApiUsage, type AnthropicUsageBlock } from "@/lib/billing/api-usage";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -388,6 +389,12 @@ ${kbSection}`;
       reply = (
         aiResponse.content[0] as { type: string; text: string }
       ).text.trim();
+      void recordApiUsage({
+        clientId: client.id,
+        conversationId: String(conversationId),
+        usage: aiResponse.usage as unknown as AnthropicUsageBlock,
+        source: "whatsapp",
+      });
     } catch (err) {
       console.error("[whatsapp] Claude error — AI call failed", {
         message: err instanceof Error ? err.message : String(err),

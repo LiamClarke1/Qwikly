@@ -52,7 +52,7 @@ describe('PLAN_CONFIG', () => {
   it('includes founders between pro and business', () => {
     expect(PLAN_CONFIG.founders.name).toBe('Founders');
     expect(PLAN_CONFIG.founders.priceMonthly).toBe(2999);
-    expect(PLAN_CONFIG.founders.leadLimit).toBe(100);
+    expect(PLAN_CONFIG.founders.leadLimit).toBe(60);
   });
 });
 

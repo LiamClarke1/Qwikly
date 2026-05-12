@@ -91,7 +91,7 @@ function trialReminderHtml({
 </html>`;
 }
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   // Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}` by default.
   // We also accept the legacy `x-cron-secret` header for backward compat.
   const secret = process.env.CRON_SECRET;
@@ -125,8 +125,8 @@ export async function POST(req: NextRequest) {
     const msLeft = trialEndsAt.getTime() - now.getTime();
     const daysLeft = Math.round(msLeft / (1000 * 60 * 60 * 24));
 
-    // Only process at reminder milestones: 5, 2, 1 days remaining, or just expired (0 or -1)
-    const isReminderDay = [5, 2, 1, 0, -1].includes(daysLeft);
+    // Only process at reminder milestones: 5, 2, 1 days remaining, or expiry day (0)
+    const isReminderDay = [5, 2, 1, 0].includes(daysLeft);
     if (!isReminderDay) {
       skipped++;
       continue;
@@ -148,11 +148,10 @@ export async function POST(req: NextRequest) {
     const billingUrl = `${SITE}/dashboard/settings/billing`;
 
     const subjectMap: Record<number, string> = {
-      5:  `5 days left in your Qwikly trial`,
-      2:  `2 days left — your assistant pauses soon`,
-      1:  `Last day of your Qwikly trial`,
-      0:  `Your Qwikly digital assistant has been paused`,
-      [-1]: `Your Qwikly digital assistant has been paused`,
+      5: `5 days left in your Qwikly trial`,
+      2: `2 days left — your assistant pauses soon`,
+      1: `Last day of your Qwikly trial`,
+      0: `Your Qwikly digital assistant has been paused`,
     };
 
     const subject = subjectMap[daysLeft] ?? `Your Qwikly trial is ending`;

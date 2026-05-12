@@ -12,7 +12,7 @@ export const maxDuration = 300;
  * in batched queries, then writes risk_score / risk_flags / health_score
  * back per client. Schedule once a day in vercel.json (02:00 SAST).
  */
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   const legacyHeader = req.headers.get("x-cron-secret");
   const secret = process.env.CRON_SECRET;

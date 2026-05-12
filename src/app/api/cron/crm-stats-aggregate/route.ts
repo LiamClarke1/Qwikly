@@ -5,7 +5,7 @@ import { format, subDays, startOfDay, endOfDay } from "date-fns";
 export const dynamic = "force-dynamic";
 
 // Called nightly by Vercel Cron — rolls yesterday's raw events into crm_stats_daily
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   // Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}` by default.
   // We also accept the legacy `x-cron-secret` header for backward compat.
   const authHeader = req.headers.get("authorization");

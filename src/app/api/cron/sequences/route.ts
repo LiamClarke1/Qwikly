@@ -6,7 +6,7 @@ import { renderSequenceStepEmail } from "@/lib/email/templates/sequence-step";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   // Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}` by default.
   // We also accept the legacy `x-cron-secret` header for backward compat.
   const secret = process.env.CRON_SECRET;

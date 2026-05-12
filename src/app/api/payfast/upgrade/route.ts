@@ -130,5 +130,7 @@ export async function POST(req: NextRequest) {
     recurring: false,
   });
 
-  return NextResponse.json({ url });
+  // Pass the target plan in custom_str4 so the ITN handler can apply it.
+  const finalUrl = `${url}&custom_str4=${encodeURIComponent(newPlan)}`;
+  return NextResponse.json({ url: finalUrl });
 }

@@ -23,7 +23,7 @@ function authCheck(req: NextRequest): boolean {
   return req.headers.get("authorization") === `Bearer ${process.env.CRON_SECRET}`;
 }
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   if (!authCheck(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const db = supabaseAdmin();

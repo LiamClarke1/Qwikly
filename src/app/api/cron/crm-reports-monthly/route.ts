@@ -6,7 +6,7 @@ export const dynamic    = "force-dynamic";
 export const maxDuration = 300; // 5 min Vercel Pro limit
 
 // Runs on the 1st of each month — generates + emails reports for all active clients
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   // Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}` by default.
   // We also accept the legacy `x-cron-secret` header for backward compat
   // with the internal fan-out call below.

@@ -11,6 +11,8 @@ import { notifyLeadCaptured } from "@/lib/notify-lead";
 import { resolvePlan, PLAN_CONFIG } from "@/lib/plan";
 import { log } from "@/lib/log";
 import { checkRateLimit, retryAfterSeconds } from "@/lib/rate-limit";
+import { isInternalClientId } from "@/lib/billing/internal-tenant";
+import { recordApiUsage, type AnthropicUsageBlock } from "@/lib/billing/api-usage";
 import { wrapUntrustedConfig, PROMPT_SAFETY_NOTE } from "@/lib/prompt-safety";
 import {
   buildClientSystemPrompt,
@@ -153,11 +155,12 @@ export async function POST(req: NextRequest) {
     return new Response(err, { status: 403, headers: { "Content-Type": "text/event-stream", ...CORS } });
   }
 
-  // Monthly lead cap check
+  // Monthly lead cap check (internal tenants bypass — never flag admin leads as top-up)
   let isTopUp = false;
+  const isInternal = isInternalClientId(client.id);
   const tier = resolvePlan(client.plan);
   const cap = PLAN_CONFIG[tier].leadLimit;
-  if (cap !== null) {
+  if (!isInternal && cap !== null) {
     const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
     const { count: monthLeads } = await db
       .from("conversations")
@@ -412,6 +415,7 @@ export async function POST(req: NextRequest) {
         }
 
         const finalMsg1 = await stream1.finalMessage();
+        void recordApiUsage({ clientId: client.id, conversationId: convoId, usage: finalMsg1.usage as unknown as AnthropicUsageBlock, source: 'web_chat' });
 
         // Extract tool call if present
         let toolUseBlock: Anthropic.ToolUseBlock | null = null;
@@ -453,6 +457,8 @@ export async function POST(req: NextRequest) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
             }
           }
+          const finalMsg2 = await stream2.finalMessage();
+          void recordApiUsage({ clientId: client.id, conversationId: convoId, usage: finalMsg2.usage as unknown as AnthropicUsageBlock, source: 'web_chat' });
         }
       } catch (err) {
         log("error", "chat_stream_error", {

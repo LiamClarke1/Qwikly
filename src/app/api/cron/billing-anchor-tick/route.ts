@@ -6,7 +6,7 @@ import { todaySast, daysInMonth } from "@/lib/billing/anchor";
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   const legacyHeader = req.headers.get("x-cron-secret");
   const secret = process.env.CRON_SECRET;

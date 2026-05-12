@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 // Hard-deletes any client whose deletion_scheduled_at is older than 30 days
 // and whose crm_status is still "pending_deletion".
 // Deletes all associated data in dependency order before removing the client row.
-export async function POST(req: NextRequest) {
+export async function GET(req: NextRequest) {
   // Vercel Cron sends `Authorization: Bearer ${CRON_SECRET}` by default.
   // We also accept the legacy `x-cron-secret` header for backward compat
   // with any existing manual triggers.
