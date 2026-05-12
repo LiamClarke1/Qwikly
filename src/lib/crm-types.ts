@@ -1,5 +1,5 @@
 export type CrmStatus    = "onboarding" | "active" | "at_risk" | "paused" | "churned" | "pending_deletion";
-export type CrmPlan      = "trial" | "pro" | "premium";
+export type CrmPlan      = "trial" | "starter" | "pro" | "founders" | "business" | "enterprise" | "premium";
 export type BillingCycle = "monthly" | "annual";
 export type TaskStatus   = "open" | "in_progress" | "done" | "cancelled";
 export type TaskPriority = "low" | "medium" | "high" | "urgent";
@@ -50,6 +50,7 @@ export interface CrmClientListItem {
 
 export interface CrmClientDetail extends CrmClientListItem {
   address: string | null;
+  ai_paused: boolean;
   billing_cycle: BillingCycle | null;
   risk_score: number | null;
   next_renewal_at: string | null;

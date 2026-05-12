@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
 import { assertAdmin } from "@/lib/admin-auth";
 import { z } from "zod";
+import { productsForPlan, dailyProspectQuotaForPlan, resolvePlan, type InboundPlanTier } from "@/lib/plan";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,8 @@ const PatchSchema = z.object({
   website:                z.string().nullable().optional(),
   address:                z.string().nullable().optional(),
   crm_status:             z.enum(["onboarding","active","at_risk","paused","churned","pending_deletion"]).optional(),
-  plan:                   z.enum(["trial","pro","premium"]).optional(),
+  plan:                   z.enum(["trial","starter","pro","founders","business","enterprise","premium"]).optional(),
+  ai_paused:              z.boolean().optional(),
   billing_cycle:          z.enum(["monthly","annual"]).nullable().optional(),
   mrr_zar:                z.number().int().min(0).optional(),
   health_score:           z.number().int().min(0).max(100).optional(),
@@ -110,6 +112,17 @@ export async function PATCH(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   if (!data)  return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // When the plan changes, sync all derived entitlement columns on clients.
+  // This mirrors applySubscriptionToClient but writes directly when there is
+  // no subscription row to reference (e.g. admin manual override).
+  if (parsed.data.plan) {
+    const tier = resolvePlan(parsed.data.plan) as InboundPlanTier;
+    await db.from("clients").update({
+      products:             productsForPlan(tier),
+      pipeline_daily_quota: dailyProspectQuotaForPlan(tier),
+    }).eq("id", id);
+  }
 
   if (parsed.data.crm_status) {
     await db.from("crm_events").insert({

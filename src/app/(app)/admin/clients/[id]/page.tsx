@@ -11,7 +11,7 @@ import {
   MessageSquare, BarChart2, FileText, CheckSquare, Paperclip,
   Activity, TrendingUp, Loader2, Plus, Trash2, Pencil,
   Download, Upload, X, ChevronDown, RefreshCw, Send,
-  BookOpen,
+  BookOpen, DollarSign, BellRing, Receipt,
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -26,7 +26,7 @@ import type {
 } from "@/lib/crm-types";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const TABS = ["Overview","Analytics","Conversations","Contacts","Notes","Tasks","Files","Timeline","Reports"] as const;
+const TABS = ["Overview","Billing","Analytics","Conversations","Contacts","Notes","Tasks","Files","Timeline","Reports"] as const;
 type Tab = typeof TABS[number];
 
 const STATUS_CONFIG = {
@@ -258,6 +258,7 @@ export default function CrmClientDetailPage() {
 
       {/* Tab content */}
       {tab === "Overview"       && <OverviewTab client={client} onPatch={patchClient} />}
+      {tab === "Billing"        && <BillingTab clientId={Number(id)} />}
       {tab === "Analytics"      && <AnalyticsTab clientId={id} />}
       {tab === "Conversations"  && <ConversationsTab clientId={id} />}
       {tab === "Contacts"       && <ContactsTab clientId={id} clientName={client.business_name} />}
@@ -305,9 +306,13 @@ function isRealPhone(v: string | null | undefined): boolean {
 
 // ─── Plan select ──────────────────────────────────────────────────────────────
 const PLAN_UI_CONFIG = {
-  trial:    { label: "Trial",    cls: "bg-slate-100 text-slate-500 border-slate-200" },
-  pro:      { label: "Pro",      cls: "bg-violet-50 text-violet-700 border-violet-200" },
-  premium:  { label: "Premium",  cls: "bg-amber-50 text-amber-700 border-amber-200" },
+  trial:      { label: "Trial",            cls: "bg-slate-100 text-slate-500 border-slate-200" },
+  starter:    { label: "Starter",          cls: "bg-blue-50 text-blue-700 border-blue-200" },
+  pro:        { label: "Pro",              cls: "bg-violet-50 text-violet-700 border-violet-200" },
+  founders:   { label: "Founders",         cls: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+  business:   { label: "Business",         cls: "bg-amber-50 text-amber-700 border-amber-200" },
+  enterprise: { label: "Enterprise",       cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  premium:    { label: "Premium (legacy)", cls: "bg-amber-50 text-amber-700 border-amber-200" },
 } as const;
 
 function PlanBadge({ plan }: { plan: string }) {
@@ -321,7 +326,8 @@ function PlanBadge({ plan }: { plan: string }) {
 
 function InlinePlanSelect({ current, onChange }: { current: string; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
-  const plans: Array<keyof typeof PLAN_UI_CONFIG> = ["trial", "pro", "premium"];
+  const plans = (["trial", "starter", "pro", "founders", "business", "enterprise", "premium"] as const)
+    .filter(p => p !== "premium" || current === "premium");
   return (
     <div className="relative inline-block">
       <button
@@ -332,7 +338,7 @@ function InlinePlanSelect({ current, onChange }: { current: string; onChange: (v
         <Pencil className="w-3 h-3 text-slate-300 group-hover:text-slate-500 transition-colors" />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-1 w-36 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1">
+        <div className="absolute left-0 top-full mt-1 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1">
           {plans.map(p => (
             <button key={p} onClick={() => { onChange(p); setOpen(false); }}
               className={cn("w-full text-left flex items-center gap-2 px-3 py-2 text-[12px] hover:bg-slate-50 cursor-pointer",
@@ -578,6 +584,32 @@ function OverviewTab({ client, onPatch }: { client: CrmClientDetail; onPatch: (u
             <p className="text-[13px] text-slate-700">{formatDate(client.next_renewal_at)}</p>
           </div>
         )}
+
+        {/* AI paused toggle */}
+        <div className="flex items-start gap-3 py-2 border-b border-slate-50">
+          <p className="text-[12px] text-slate-400 w-28 shrink-0 mt-0.5">Assistant</p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onPatch({ ai_paused: !client.ai_paused })}
+              className={cn(
+                "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200",
+                client.ai_paused ? "bg-red-400" : "bg-emerald-500",
+              )}
+              title={client.ai_paused ? "Resume assistant" : "Pause assistant"}
+            >
+              <span className={cn(
+                "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200",
+                client.ai_paused ? "translate-x-0" : "translate-x-4",
+              )} />
+            </button>
+            <span className={cn(
+              "text-[12px] font-medium",
+              client.ai_paused ? "text-red-500" : "text-emerald-600",
+            )}>
+              {client.ai_paused ? "Paused" : "Running"}
+            </span>
+          </div>
+        </div>
 
         {/* Risk score */}
         <div className="flex items-start gap-3 py-2">
@@ -1324,6 +1356,242 @@ function ReportsTab({ clientId, clientName }: { clientId: string; clientName: st
               )}
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Billing tab ─────────────────────────────────────────────────────────────
+
+interface BillingInvoiceRow {
+  id: string;
+  invoice_number: string | null;
+  status: string;
+  total_zar: number;
+  vat_zar: number;
+  due_at: string | null;
+  paid_at: string | null;
+  sent_at: string | null;
+  created_at: string;
+  qwikly_billing_periods: { period_start: string; period_end: string } | null;
+}
+
+const BINV_STATUS: Record<string, { label: string; cls: string }> = {
+  draft:                 { label: "Draft",            cls: "bg-slate-100 text-slate-500" },
+  sent:                  { label: "Sent",             cls: "bg-blue-50 text-blue-700" },
+  awaiting_verification: { label: "Client confirmed", cls: "bg-violet-50 text-violet-700" },
+  paid:                  { label: "Paid",             cls: "bg-emerald-50 text-emerald-700" },
+  overdue:               { label: "Overdue",          cls: "bg-red-50 text-red-600" },
+  written_off:           { label: "Written off",      cls: "bg-slate-100 text-slate-400" },
+  disputed:              { label: "Disputed",         cls: "bg-amber-50 text-amber-700" },
+};
+
+function MarkPaidInline({ invoiceId, onDone }: { invoiceId: string; onDone: () => void }) {
+  const [ref, setRef] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr]   = useState<string | null>(null);
+
+  async function pay() {
+    setBusy(true);
+    setErr(null);
+    const res = await fetch(`/api/admin/qwikly-billing-invoices/${invoiceId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "mark_paid", payment_method: "eft", external_ref: ref.trim() || undefined }),
+    });
+    setBusy(false);
+    if (res.ok) onDone();
+    else { const d = await res.json().catch(() => ({})); setErr(d.error ?? "Failed"); }
+  }
+
+  return (
+    <div className="flex items-center gap-2 mt-2 flex-wrap" onClick={e => e.stopPropagation()}>
+      <input
+        value={ref}
+        onChange={e => setRef(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") pay(); }}
+        placeholder="EFT reference (optional)"
+        className="px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-[12px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 w-52"
+      />
+      <button onClick={pay} disabled={busy}
+        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-500 text-white text-[12px] font-semibold hover:bg-emerald-600 disabled:opacity-60 cursor-pointer">
+        {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+        Confirm paid
+      </button>
+      {err && <span className="text-[11px] text-red-500">{err}</span>}
+    </div>
+  );
+}
+
+function BillingTab({ clientId }: { clientId: number }) {
+  const [invoices, setInvoices] = useState<BillingInvoiceRow[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [genBusy,  setGenBusy]  = useState(false);
+  const [sendBusy, setSendBusy] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [toast,    setToast]    = useState<{ text: string; ok: boolean } | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch(`/api/admin/billing?client_id=${clientId}&limit=50`);
+    if (res.ok) {
+      const { periods } = await res.json();
+      // Flatten periods → invoices for display
+      const rows: BillingInvoiceRow[] = (periods ?? [])
+        .map((p: { qwikly_billing_invoices: BillingInvoiceRow | BillingInvoiceRow[] | null; period_start: string; period_end: string }) => {
+          const inv = Array.isArray(p.qwikly_billing_invoices)
+            ? p.qwikly_billing_invoices[0]
+            : p.qwikly_billing_invoices;
+          if (!inv) return null;
+          return { ...inv, qwikly_billing_periods: { period_start: p.period_start, period_end: p.period_end } };
+        })
+        .filter(Boolean);
+      setInvoices(rows);
+    }
+    setLoading(false);
+  }, [clientId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  function flash(text: string, ok: boolean) {
+    setToast({ text, ok });
+    setTimeout(() => setToast(null), 3000);
+  }
+
+  async function generateInvoice() {
+    setGenBusy(true);
+    const res = await fetch("/api/admin/billing/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ client_id: clientId }),
+    });
+    setGenBusy(false);
+    const d = await res.json().catch(() => ({}));
+    if (res.ok) { flash(d.status === "skipped" ? "Invoice already exists for today" : "Draft invoice generated", true); await load(); }
+    else flash(d.error ?? "Generate failed", false);
+  }
+
+  async function sendOrRemind(inv: BillingInvoiceRow) {
+    setSendBusy(inv.id);
+    const action = inv.status === "draft" ? "send" : "remind";
+    const res = await fetch(`/api/admin/qwikly-billing-invoices/${inv.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    setSendBusy(null);
+    const d = await res.json().catch(() => ({}));
+    if (res.ok) { flash(action === "send" ? "Invoice sent" : "Reminder sent", true); await load(); }
+    else flash(d.error ?? "Send failed", false);
+  }
+
+  if (loading) return <SkeletonList />;
+
+  return (
+    <div className="space-y-4">
+      {/* Header with generate button */}
+      <div className="flex items-center justify-between">
+        <p className="text-[13px] text-slate-500">Subscription invoices for this client</p>
+        <button onClick={generateInvoice} disabled={genBusy}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#E85A2C] text-white text-[12px] font-semibold hover:bg-[#d04f25] disabled:opacity-60 cursor-pointer">
+          {genBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Receipt className="w-3.5 h-3.5" />}
+          Generate invoice now
+        </button>
+      </div>
+
+      {invoices.length === 0 ? (
+        <EmptyTabState icon={<DollarSign className="w-8 h-8 text-slate-300" />} label="No invoices yet — click Generate to create the first one" />
+      ) : (
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-visible shadow-sm">
+          {invoices.map((inv, i) => {
+            const scfg = BINV_STATUS[inv.status] ?? BINV_STATUS.draft;
+            const period = inv.qwikly_billing_periods;
+            const canSend   = inv.status === "draft";
+            const canRemind = ["sent", "overdue", "awaiting_verification"].includes(inv.status);
+            const canPay    = ["draft", "sent", "overdue", "awaiting_verification"].includes(inv.status);
+            const isExpanded = expanded === inv.id;
+
+            return (
+              <div key={inv.id} className={cn("px-5 py-4", i > 0 && "border-t border-slate-100")}>
+                <div className="flex items-start gap-3 flex-wrap">
+                  {/* Invoice info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-[13px] font-semibold text-slate-800">
+                        {period
+                          ? new Date(period.period_start).toLocaleDateString("en-ZA", { month: "long", year: "numeric" })
+                          : "Invoice"}
+                      </p>
+                      <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium", scfg.cls)}>
+                        {scfg.label}
+                      </span>
+                      {inv.invoice_number && (
+                        <span className="text-[11px] font-mono text-slate-400">#{inv.invoice_number}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                      <p className="text-[12px] text-slate-500">
+                        {formatZAR(inv.total_zar)} incl. VAT
+                      </p>
+                      {inv.due_at && inv.status !== "paid" && (
+                        <p className={cn("text-[12px]", new Date(inv.due_at) < new Date() ? "text-red-500 font-medium" : "text-slate-400")}>
+                          Due {formatDate(inv.due_at)}
+                        </p>
+                      )}
+                      {inv.paid_at && (
+                        <p className="text-[12px] text-emerald-600 font-medium">Paid {formatDate(inv.paid_at)}</p>
+                      )}
+                      {inv.sent_at && !inv.paid_at && (
+                        <p className="text-[12px] text-slate-400">Sent {timeAgo(inv.sent_at)}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {(canSend || canRemind) && (
+                      <button onClick={() => sendOrRemind(inv)} disabled={sendBusy === inv.id}
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[12px] font-medium cursor-pointer transition-colors disabled:opacity-60",
+                          canSend ? "bg-blue-50 text-blue-700 hover:bg-blue-100" : "bg-amber-50 text-amber-700 hover:bg-amber-100",
+                        )}>
+                        {sendBusy === inv.id
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : canSend ? <Send className="w-3.5 h-3.5" /> : <BellRing className="w-3.5 h-3.5" />}
+                        {canSend ? "Send" : "Remind"}
+                      </button>
+                    )}
+                    {canPay && (
+                      <button onClick={() => setExpanded(isExpanded ? null : inv.id)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-[12px] font-medium hover:bg-emerald-100 cursor-pointer transition-colors">
+                        <DollarSign className="w-3.5 h-3.5" />
+                        Mark paid
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Inline mark-paid form */}
+                {isExpanded && (
+                  <MarkPaidInline
+                    invoiceId={inv.id}
+                    onDone={() => { setExpanded(null); load(); }}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className={cn(
+          "fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl text-[13px] font-medium shadow-lg border",
+          toast.ok ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-red-50 text-red-700 border-red-200",
+        )}>
+          {toast.text}
         </div>
       )}
     </div>

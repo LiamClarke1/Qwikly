@@ -26,19 +26,22 @@ export async function GET(req: NextRequest) {
   const status = req.nextUrl.searchParams.get("status") ?? "";
   const limit = parseInt(req.nextUrl.searchParams.get("limit") ?? "100");
 
+  const clientId = req.nextUrl.searchParams.get("client_id") ?? "";
+
   let query = db
     .from("qwikly_billing_periods")
     .select(`
       id, client_id, period_start, period_end,
       total_invoiced_zar, total_paid_zar, commission_zar, vat_zar,
       status, due_at, paid_at,
-      clients (business_name),
-      qwikly_billing_invoices (invoice_number, status)
+      clients (id, business_name, client_email),
+      qwikly_billing_invoices (id, invoice_number, status, sent_at, paid_at, due_at, total_zar)
     `)
     .order("period_start", { ascending: false })
     .limit(limit);
 
   if (status) query = query.eq("status", status);
+  if (clientId) query = query.eq("client_id", clientId);
 
   const { data } = await query;
   return NextResponse.json({ periods: data ?? [] });

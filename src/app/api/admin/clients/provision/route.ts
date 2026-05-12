@@ -1,0 +1,231 @@
+import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase-server";
+import { assertAdmin } from "@/lib/admin-auth";
+import { z } from "zod";
+import {
+  productsForPlan,
+  dailyProspectQuotaForPlan,
+  startingGrantZarCents,
+  type InboundPlanTier,
+} from "@/lib/plan";
+import { applySubscriptionToClient } from "@/lib/billing/apply-subscription";
+import { resend, FROM } from "@/lib/resend";
+
+export const dynamic = "force-dynamic";
+
+const Body = z.object({
+  business_name:  z.string().min(1),
+  owner_name:     z.string().min(1),
+  email:          z.string().email(),
+  phone:          z.string().optional(),
+  plan:           z.enum(["trial", "starter", "pro", "founders", "business", "enterprise"]),
+  billing_cycle:  z.enum(["monthly", "annual"]).default("monthly"),
+  note:           z.string().max(500).optional(),
+});
+
+export async function POST(req: NextRequest) {
+  const auth = await assertAdmin();
+  if (!auth.ok) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const parsed = Body.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) {
+    return NextResponse.json({ error: "invalid_body", detail: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const { business_name, owner_name, email, phone, plan, billing_cycle, note } = parsed.data;
+  const db = supabaseAdmin();
+
+  // ── 1. Create (or find) the Supabase auth user ──────────────────────────────
+  // Use inviteUserByEmail so the client gets an email to set their own password.
+  // If they already have an account, fall through to the existing user.
+  let userId: string;
+
+  const { data: invite, error: inviteErr } = await db.auth.admin.inviteUserByEmail(email, {
+    data: { business_name, full_name: owner_name },
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? "https://app.qwikly.co.za"}/auth/callback?next=/dashboard/setup`,
+  });
+
+  if (inviteErr) {
+    if (inviteErr.message?.toLowerCase().includes("already")) {
+      // User exists — look them up
+      const { data: existing } = await db.auth.admin.listUsers();
+      const found = existing?.users?.find((u) => u.email === email);
+      if (!found) {
+        return NextResponse.json({ error: "User already exists but could not be found." }, { status: 409 });
+      }
+      userId = found.id;
+    } else {
+      return NextResponse.json({ error: inviteErr.message }, { status: 500 });
+    }
+  } else {
+    if (!invite?.user) return NextResponse.json({ error: "Failed to create user" }, { status: 500 });
+    userId = invite.user.id;
+  }
+
+  // ── 2. Businesses row ────────────────────────────────────────────────────────
+  await db.from("businesses").upsert({
+    user_id: userId,
+    name: business_name,
+    contact_email: email,
+  }, { onConflict: "user_id" });
+
+  // ── 3. Subscription period dates ─────────────────────────────────────────────
+  const now = new Date();
+  const periodStart = now.toISOString();
+  const periodEnd = billing_cycle === "annual"
+    ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString()
+    : new Date(now.getFullYear(), now.getMonth() + 1, now.getDate()).toISOString();
+
+  // ── 4. Clients row ───────────────────────────────────────────────────────────
+  // Check if a clients row already exists for this user
+  const { data: existingClient } = await db
+    .from("clients")
+    .select("id")
+    .eq("auth_user_id", userId)
+    .maybeSingle();
+
+  let clientId: number;
+
+  if (existingClient) {
+    clientId = existingClient.id;
+    await db.from("clients").update({
+      business_name,
+      owner_name,
+      client_email: email,
+      ...(phone ? { whatsapp_number: phone } : {}),
+      plan,
+      products: productsForPlan(plan),
+      pipeline_daily_quota: dailyProspectQuotaForPlan(plan),
+      crm_status: "onboarding",
+      web_widget_enabled: true,
+    }).eq("id", clientId);
+  } else {
+    const { data: newClient, error: clientErr } = await db.from("clients").insert({
+      auth_user_id: userId,
+      business_name,
+      owner_name,
+      client_email: email,
+      ...(phone ? { whatsapp_number: phone } : {}),
+      plan,
+      products: productsForPlan(plan),
+      pipeline_daily_quota: dailyProspectQuotaForPlan(plan),
+      onboarding_step: 1,
+      web_widget_enabled: true,
+      crm_status: "onboarding",
+    }).select("id").single();
+
+    if (clientErr || !newClient) {
+      return NextResponse.json({ error: "Failed to create client row", detail: clientErr?.message }, { status: 500 });
+    }
+    clientId = newClient.id;
+  }
+
+  // ── 5. Subscription row ───────────────────────────────────────────────────────
+  const { data: subRow, error: subErr } = await db.from("subscriptions").upsert({
+    user_id:               userId,
+    client_id:             clientId,
+    plan,
+    billing_cycle,
+    status:                "active",
+    current_period_start:  periodStart,
+    current_period_end:    periodEnd,
+  }, { onConflict: "user_id" }).select("id").single();
+
+  if (subErr || !subRow) {
+    return NextResponse.json({ error: "Failed to create subscription", detail: subErr?.message }, { status: 500 });
+  }
+
+  // ── 6. Wire subscription FK back to client ─────────────────────────────────
+  await db.from("subscriptions").update({ client_id: clientId }).eq("id", subRow.id);
+
+  // ── 7. AI credit grant ────────────────────────────────────────────────────
+  const grantCents = startingGrantZarCents(plan);
+  const { error: creditErr } = await db.from("conversation_credits").upsert({
+    client_id:                clientId,
+    granted_balance_zar_cents: grantCents,
+    granted_expires_at:        periodEnd,
+    updated_at:                now.toISOString(),
+  }, { onConflict: "client_id" });
+  if (creditErr) {
+    await db.from("conversation_credits").upsert({
+      client_id:         clientId,
+      balance_zar_cents: grantCents,
+      updated_at:        now.toISOString(),
+    }, { onConflict: "client_id" });
+  }
+
+  // ── 8. Apply entitlement ──────────────────────────────────────────────────
+  try {
+    await applySubscriptionToClient(subRow.id);
+  } catch (err) {
+    console.error("[provision] applySubscriptionToClient failed:", err);
+  }
+
+  // ── 9. Log CRM event ──────────────────────────────────────────────────────
+  await db.from("crm_events").insert({
+    client_id:  clientId,
+    actor_id:   auth.userId,
+    event_type: "plan_changed",
+    payload:    { to: plan, source: "admin_provision", note: note ?? null },
+  });
+
+  // ── 10. Send welcome email ─────────────────────────────────────────────────
+  // The Supabase invite already sends a magic-link email. We additionally
+  // send a branded welcome note so the client knows who to contact.
+  if (process.env.RESEND_API_KEY) {
+    try {
+      await resend.emails.send({
+        from: FROM,
+        to:   [email],
+        subject: `Welcome to Qwikly — your account is ready`,
+        html: welcomeEmailHtml({ business_name, owner_name, plan, billing_cycle }),
+      });
+    } catch (err) {
+      console.warn("[provision] welcome email failed:", err);
+    }
+  }
+
+  return NextResponse.json({ ok: true, client_id: clientId, user_id: userId }, { status: 201 });
+}
+
+function welcomeEmailHtml({
+  business_name, owner_name, plan, billing_cycle,
+}: { business_name: string; owner_name: string; plan: string; billing_cycle: string }) {
+  const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1);
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#07080B;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0">
+    <tr><td align="center" style="padding:40px 16px;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="padding-bottom:28px;">
+          <span style="font-size:22px;font-weight:800;color:#E85A2C;letter-spacing:-0.5px;">Qwikly</span>
+        </td></tr>
+        <tr><td style="background:#111318;border-radius:16px;padding:32px;">
+          <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#F4F4F5;">Welcome, ${owner_name}!</p>
+          <p style="margin:0 0 24px;font-size:14px;color:#9CA3AF;line-height:1.6;">
+            Your Qwikly account for <strong style="color:#F4F4F5;">${business_name}</strong> has been set up on the
+            <strong style="color:#E85A2C;">${planLabel}</strong> plan (${billing_cycle}).
+          </p>
+          <p style="margin:0 0 16px;font-size:14px;color:#9CA3AF;line-height:1.6;">
+            Check your inbox for a separate email with a link to set your password and log in to your dashboard.
+          </p>
+          <p style="margin:0 0 24px;font-size:14px;color:#9CA3AF;line-height:1.6;">
+            Once you&apos;re in, you can configure your digital assistant, connect your website, and start capturing leads.
+          </p>
+          <p style="margin:0;font-size:13px;color:#6B7280;">
+            Questions? Reply to this email — we&apos;re here to help.
+          </p>
+        </td></tr>
+        <tr><td style="padding-top:24px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#4B5563;">
+            Sent by <a href="https://qwikly.co.za" style="color:#E85A2C;text-decoration:none;">Qwikly</a>
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
