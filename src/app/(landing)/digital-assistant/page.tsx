@@ -114,14 +114,14 @@ function ChatWidgetMockup() {
           {/* Assistant */}
           <div className="flex justify-start">
             <div className="max-w-[80%] rounded-2xl rounded-tl-md bg-paper-deep px-4 py-3 text-sm text-ink leading-relaxed">
-              Got it, after-hours geyser callout in Rondebosch. We can have someone with you within the hour.
+              Got it — urgent geyser callout, Rondebosch. Is the water shut off or still running?
             </div>
           </div>
 
           {/* Assistant closing CTA (bold) */}
           <div className="flex justify-start">
             <div className="max-w-[80%] rounded-2xl rounded-tl-md bg-paper-deep px-4 py-3 text-sm text-ink leading-relaxed">
-              <strong className="font-semibold">What email should we send the booking confirmation to?</strong>
+              <strong className="font-semibold">What's your email so the team can confirm availability and reach you?</strong>
             </div>
           </div>
         </div>
