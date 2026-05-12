@@ -19,6 +19,7 @@ const schema = z.object({
   phone: z.string().max(20).optional(),
   subject: z.string().min(2, "Subject required").max(200),
   message: z.string().min(10, "Message too short").max(3000),
+  plan_label: z.string().max(50).optional(),
 });
 
 export type ContactFormState = {
@@ -40,6 +41,7 @@ export async function submitContactForm(
     phone: formData.get("phone") || undefined,
     subject: formData.get("subject"),
     message: formData.get("message"),
+    plan_label: formData.get("plan_label") || undefined,
   };
 
   const parsed = schema.safeParse(raw);
@@ -50,7 +52,7 @@ export async function submitContactForm(
     };
   }
 
-  const { name, email, phone, subject, message } = parsed.data;
+  const { name, email, phone, subject, message, plan_label: planLabel } = parsed.data;
 
   const db = supabaseAdmin();
   const { error: dbError } = await db
@@ -66,8 +68,8 @@ export async function submitContactForm(
     from: "Qwikly Contact <hello@qwikly.co.za>",
     to: ["clarkeagency1@outlook.com"],
     replyTo: email,
-    subject: `[Qwikly Contact] ${subject}`,
-    html: contactFormHostNotificationHtml({ name, email, phone: phone ?? null, subject, message }),
+    subject: `[Qwikly Contact] ${subject}${planLabel ? ` — ${planLabel} plan` : ""}`,
+    html: contactFormHostNotificationHtml({ name, email, phone: phone ?? null, subject, message, planLabel }),
   });
 
   try {
@@ -90,6 +92,7 @@ const setupCallSchema = z.object({
   phone: z.string().max(20).optional(),
   slot_start: z.string().datetime({ offset: true }),
   slot_end: z.string().datetime({ offset: true }),
+  plan_label: z.string().max(50).optional(),
 });
 
 export type SetupCallState = {
@@ -113,6 +116,7 @@ export async function bookSetupCall(
     phone: formData.get("phone") || undefined,
     slot_start: formData.get("slot_start"),
     slot_end: formData.get("slot_end"),
+    plan_label: formData.get("plan_label") || undefined,
   };
 
   const parsed = setupCallSchema.safeParse(raw);
@@ -123,7 +127,8 @@ export async function bookSetupCall(
     };
   }
 
-  const { name, email, phone, slot_start, slot_end } = parsed.data;
+  const { name, email, phone, slot_start, slot_end, plan_label: planLabel } = parsed.data;
+  const planNote = planLabel ? ` Interested in ${planLabel} plan.` : "";
 
   const db = supabaseAdmin();
   const { error: dbError } = await db.from("support_messages").insert({
@@ -131,7 +136,7 @@ export async function bookSetupCall(
     email,
     phone: phone ?? null,
     subject: SETUP_CALL_SUBJECT,
-    message: `Slot booked via /contact picker: ${slot_start} → ${slot_end}`,
+    message: `Slot booked via /contact picker: ${slot_start} → ${slot_end}.${planNote}`,
   });
   if (dbError) {
     console.error("[bookSetupCall] support_messages insert error:", dbError);
@@ -144,7 +149,7 @@ export async function bookSetupCall(
     visitorPhone: phone ?? null,
     start: slot_start,
     end: slot_end,
-    notes: "Booked via /contact setup-call picker.",
+    notes: `Booked via /contact setup-call picker.${planNote}`,
     conversationId: null,
   });
 

@@ -66,7 +66,7 @@ export default function AboutPage() {
                 </p>
                 <p>
                   Flat monthly pricing, no per-job fees, no commissions, and no surprises. Plans
-                  start with a 7-day free trial, then Starter from R699/month.{" "}
+                  start from R699/month for Starter, invoiced monthly by EFT.{" "}
                   <Link href="/pricing" className="text-ember underline transition-colors">
                     See pricing
                   </Link>

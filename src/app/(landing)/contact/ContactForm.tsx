@@ -30,20 +30,34 @@ const SUBJECTS = [
   "Other",
 ];
 
+const PLAN_LABELS: Record<string, string> = {
+  "plan-starter": "Starter",
+  "plan-pro": "Pro",
+  "plan-founders": "Founders",
+  "plan-business": "Business",
+  "plan-enterprise": "Enterprise",
+};
+
 /**
  * Map ?subject= query slugs to a default service_interest.
  * Keeps URLs like /contact?subject=pipeline-strategy-call routing the
  * visitor straight to the Pipeline track without changing the
  * server-side form action.
+ * Also handles plan-* slugs from pricing page CTAs (/contact?subject=plan-starter etc).
  */
 function deriveFromSubjectParam(subjectParam: string | null): {
   subject: string;
   service: ServiceInterest;
+  planLabel?: string;
 } {
   if (!subjectParam) {
     return { subject: "", service: DEFAULT_SERVICE_INTEREST };
   }
   const slug = subjectParam.toLowerCase();
+  if (slug.startsWith("plan-")) {
+    const planLabel = PLAN_LABELS[slug] ?? slug.replace("plan-", "").replace(/^./, (c) => c.toUpperCase());
+    return { subject: SETUP_CALL_SUBJECT, service: "Digital Assistant", planLabel };
+  }
   if (slug.includes("pipeline")) {
     return { subject: PIPELINE_STRATEGY_SUBJECT, service: "Pipeline" };
   }
@@ -105,6 +119,7 @@ export default function ContactForm() {
   const [serviceInterest, setServiceInterest] = useState<ServiceInterest>(
     initial.service
   );
+  const planLabel = initial.planLabel;
   const isSetupCall = subject === SETUP_CALL_SUBJECT;
   const [forceTextarea, setForceTextarea] = useState(false);
   const showPicker = isSetupCall && !forceTextarea;
@@ -199,6 +214,16 @@ export default function ContactForm() {
         onChange={setServiceInterest}
         name="service_interest"
       />
+
+      {planLabel && (
+        <>
+          <input type="hidden" name="plan_label" value={planLabel} />
+          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-ember/8 border border-ember/20 text-sm text-ink-700">
+            <span className="w-2 h-2 rounded-full bg-ember flex-shrink-0" />
+            Interested in the <strong className="text-ink">{planLabel} plan</strong>
+          </div>
+        </>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div>

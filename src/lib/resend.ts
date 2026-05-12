@@ -565,12 +565,14 @@ export function contactFormHostNotificationHtml({
   phone,
   subject,
   message,
+  planLabel,
 }: {
   name: string;
   email: string;
   phone?: string | null;
   subject: string;
   message: string;
+  planLabel?: string | null;
 }) {
   const submittedAt = new Date().toLocaleString("en-ZA", {
     timeZone: "Africa/Johannesburg",
@@ -596,7 +598,8 @@ export function contactFormHostNotificationHtml({
           <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid rgba(255,255,255,0.06);margin-bottom:18px;">
             <tr><td style="padding:12px 0 6px;color:#9CA3AF;font-size:13px;">From</td><td style="padding:12px 0 6px;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;">${escHtml(name)}</td></tr>
             <tr><td style="padding:6px 0;color:#9CA3AF;font-size:13px;">Email</td><td style="padding:6px 0;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;"><a href="mailto:${escHtml(email)}" style="color:#F4F4F5;text-decoration:none;">${escHtml(email)}</a></td></tr>
-            ${phone ? `<tr><td style="padding:6px 0 12px;color:#9CA3AF;font-size:13px;">Phone</td><td style="padding:6px 0 12px;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;">${escHtml(phone)}</td></tr>` : ""}
+            ${phone ? `<tr><td style="padding:6px 0;color:#9CA3AF;font-size:13px;">Phone</td><td style="padding:6px 0;color:#F4F4F5;font-size:13px;text-align:right;font-weight:600;">${escHtml(phone)}</td></tr>` : ""}
+            ${planLabel ? `<tr><td style="padding:6px 0 12px;color:#9CA3AF;font-size:13px;">Plan interest</td><td style="padding:6px 0 12px;font-size:13px;text-align:right;font-weight:700;"><span style="background:#E85A2C;color:#fff;padding:2px 8px;border-radius:6px;">${escHtml(planLabel)}</span></td></tr>` : ""}
           </table>
           <p style="margin:0 0 6px;font-size:13px;color:#F4F4F5;font-weight:600;">Message</p>
           <p style="margin:0 0 24px;font-size:13px;color:#9CA3AF;line-height:1.65;white-space:pre-wrap;">${escHtml(message)}</p>

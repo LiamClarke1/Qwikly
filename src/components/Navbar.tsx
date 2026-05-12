@@ -74,8 +74,8 @@ export default function Navbar() {
             >
               Sign in
             </a>
-            <CTAButton size="sm" href="/signup">
-              Start trial
+            <CTAButton size="sm" href="/contact">
+              Book a call
             </CTAButton>
           </div>
 
@@ -118,8 +118,8 @@ export default function Navbar() {
           >
             Sign in
           </a>
-          <CTAButton size="sm" href="/signup" className="w-full justify-center">
-            Start trial
+          <CTAButton size="sm" href="/contact" className="w-full justify-center">
+            Book a call
           </CTAButton>
         </div>
       </div>

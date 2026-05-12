@@ -46,22 +46,6 @@ const PLANS: {
   noCard: boolean;
 }[] = [
   {
-    id: "trial",
-    name: "Free Trial",
-    price: "Free",
-    sub: "7 days",
-    badge: "No card required",
-    cta: "Start Free Trial",
-    noCard: true,
-    features: [
-      "15 qualified leads (7-day trial)",
-      "Try the Starter tier free",
-      "Digital assistant + embed snippet",
-      "Upgrade to any paid tier anytime",
-      "No bank account needed",
-    ],
-  },
-  {
     id: "starter",
     name: "Starter",
     price: "R699",
@@ -129,14 +113,14 @@ interface PlanSelectProps {
 }
 
 function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
-  const [selected, setSelected] = useState<PlanTier>(initialPlan ?? "trial");
+  const [selected, setSelected] = useState<PlanTier>(initialPlan ?? "starter");
 
   return (
     <div className="w-full max-w-4xl">
       <div className="mb-8">
-        <h2 className="text-h1 text-ink">Start your free trial</h2>
+        <h2 className="text-h1 text-ink">Choose your plan</h2>
         <p className="text-ink-500 text-small mt-1.5">
-          7 days free. No bank account required. Upgrade when you&apos;re ready.
+          Invoiced monthly by EFT. No card needed online. We set everything up for you.
         </p>
       </div>
 
@@ -149,17 +133,13 @@ function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
               type="button"
               onClick={() => setSelected(plan.id)}
               className={`relative text-left rounded-2xl border p-5 transition-all duration-200 cursor-pointer flex flex-col gap-4 ${
-                plan.id === "trial"
-                  ? isSelected
-                    ? "border-emerald-500 bg-emerald-50 ring-1 ring-emerald-300"
-                    : "border-emerald-200 bg-emerald-50/50 hover:border-emerald-400"
-                  : isSelected
+                isSelected
                   ? "border-ember bg-ember/[0.06] ring-1 ring-brand/30"
                   : "border-line hover:border-ink/[0.20] bg-white/70"
               }`}
             >
               {plan.badge && (
-                <span className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-white text-[10px] font-bold tracking-wide whitespace-nowrap ${plan.id === "trial" ? "bg-emerald-500" : "bg-ember"}`}>
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-white text-[10px] font-bold tracking-wide whitespace-nowrap bg-ember">
                   {plan.badge}
                 </span>
               )}
@@ -169,9 +149,9 @@ function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
                 </div>
               )}
               <div>
-                <p className={`text-small font-semibold ${plan.id === "trial" ? "text-emerald-700" : "text-fg"}`}>{plan.name}</p>
+                <p className="text-small font-semibold text-fg">{plan.name}</p>
                 <p className="text-fg mt-1">
-                  <span className={`text-2xl font-bold num ${plan.id === "trial" ? "text-emerald-600" : ""}`}>{plan.price}</span>
+                  <span className="text-2xl font-bold num">{plan.price}</span>
                   <span className="text-ink-400 text-tiny ml-1">{plan.sub}</span>
                 </p>
               </div>
@@ -191,14 +171,14 @@ function PlanSelect({ initialPlan, onSelect }: PlanSelectProps) {
       <button
         type="button"
         onClick={() => onSelect(selected)}
-        className={`w-full h-12 text-white text-small font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 active:brightness-95 transition-all duration-150 ${selected === "trial" ? "bg-emerald-600 shadow-[0_8px_24px_-8px_rgba(16,185,129,0.4)]" : "bg-grad-brand shadow-[0_8px_24px_-8px_rgba(232,90,44,0.4)]"}`}
+        className="w-full h-12 text-white text-small font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer hover:brightness-110 active:brightness-95 transition-all duration-150 bg-grad-brand shadow-[0_8px_24px_-8px_rgba(232,90,44,0.4)]"
       >
         {PLANS.find((p) => p.id === selected)?.cta ?? "Continue"}
         <ArrowRight className="w-4 h-4" />
       </button>
 
       <p className="text-center text-tiny text-ink-400 mt-4">
-        {selected === "trial" ? "No bank account required · Cancel anytime" : "No setup fee · No per-lead fees · Cancel anytime"}
+        No setup fee · Invoiced monthly by EFT · Cancel anytime
       </p>
     </div>
   );
@@ -287,14 +267,13 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
   }
 
   const planLabel =
-    plan === "trial" ? "Free Trial — 7 days, no card required" :
     plan === "starter" ? "Starter — R699/mo" :
     plan === "pro" ? "Pro — R1,799/mo" :
     plan === "founders" ? "Founders — R2,999/mo" :
     plan === "business" ? "Business — R3,999/mo" :
     plan === "enterprise" ? "Enterprise — from R7,999/mo" :
     plan === "premium" ? "Premium — R1,999/mo (legacy)" :
-    "Free Trial — 7 days, no card required";
+    "Starter — R699/mo";
 
   return (
     <div className="w-full max-w-md">
@@ -312,8 +291,7 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
         </div>
         <h2 className="text-h1 text-ink">Create your account</h2>
         <p className="text-ink-500 text-small mt-1.5">
-          {plan === "trial" ? "No bank account required. Live in 5 minutes." :
-           "Cancel anytime. No lock-in."}
+          Invoiced monthly by EFT. No card needed online. Cancel anytime.
         </p>
       </div>
 
@@ -427,13 +405,13 @@ function AccountForm({ plan, onBack }: AccountFormProps) {
 function SignupContent() {
   const searchParams = useSearchParams();
   const rawPlan = searchParams.get("plan");
-  const validPlans: PlanTier[] = ["trial", "starter", "pro", "founders", "business", "enterprise", "premium"];
+  const validPlans: PlanTier[] = ["starter", "pro", "founders", "business", "enterprise", "premium"];
   const initialPlan: PlanTier | null = validPlans.includes(rawPlan as PlanTier)
     ? (rawPlan as PlanTier)
     : null;
 
   const [step, setStep] = useState<"plan" | "account">(initialPlan ? "account" : "plan");
-  const [chosenPlan, setChosenPlan] = useState<PlanTier>(initialPlan ?? "trial");
+  const [chosenPlan, setChosenPlan] = useState<PlanTier>(initialPlan ?? "starter");
 
   const handlePlanSelect = (plan: PlanTier) => {
     setChosenPlan(plan);

@@ -512,8 +512,8 @@ export default function Home() {
             <em className="italic font-light text-ember">every visitor</em>.
           </h2>
           <div className="mt-14 flex items-center justify-center reveal-up">
-            <CTAButton size="lg" variant="solid" href="/signup">
-              Start your free trial
+            <CTAButton size="lg" variant="solid" href="/contact">
+              Book a setup call
             </CTAButton>
           </div>
         </div>

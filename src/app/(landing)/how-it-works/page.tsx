@@ -24,7 +24,7 @@ const howToSchema = {
   totalTime: "PT10M",
   estimatedCost: { "@type": "MonetaryAmount", currency: "ZAR", value: "0" },
   supply: [{ "@type": "HowToSupply", name: "An existing business website (Wix, WordPress, Squarespace, Webflow, Shopify, or any custom site)" }],
-  tool: [{ "@type": "HowToTool", name: "Qwikly account (free 7-day trial)" }],
+  tool: [{ "@type": "HowToTool", name: "Qwikly account" }],
   step: [
     {
       "@type": "HowToStep",
@@ -172,8 +172,8 @@ export default function HowItWorksPage() {
             <em className="italic font-light text-ember">It just works.</em>
           </h2>
           <div className="mt-12 flex justify-center">
-            <CTAButton size="lg" variant="solid" href="/signup">
-              Start Free
+            <CTAButton size="lg" variant="solid" href="/contact">
+              Book a setup call
             </CTAButton>
           </div>
         </div>

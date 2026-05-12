@@ -57,11 +57,11 @@ export default function FAQPage() {
             <em className="italic font-light text-ember">Talk to us.</em>
           </h2>
           <p className="text-paper/70 text-lg mt-8 max-w-xl mx-auto leading-relaxed">
-            We reply within one business day. Or start free and try Qwikly for yourself. No card required.
+            Book a setup call and we&rsquo;ll have your digital assistant live within 24–48 hours.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <CTAButton size="lg" variant="solid" href="/signup">
-              Start Free
+            <CTAButton size="lg" variant="solid" href="/contact">
+              Book a setup call
             </CTAButton>
             <CTAButton size="lg" variant="outline-light" href="/contact" withArrow={false}>
               Contact us

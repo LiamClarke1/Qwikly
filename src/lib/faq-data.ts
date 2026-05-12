@@ -24,7 +24,7 @@ export const FAQ_DATA = [
   {
     question: "How much does it cost?",
     answer:
-      "Qwikly has four plans. Starter is R699/month for 30 leads, ideal for solos. Pro is R1,799/month for 100 leads with custom branding (your logo), custom greeting, and qualifying questions, ideal for small multi-person practices. Business is R3,999/month for 400 leads with unlimited users, CSV exports, and priority support, ideal for multi-doctor or multi-agent practices. Enterprise is from R7,999/month with white-label, API access, and a 1-hour support SLA, custom volume pricing on request. A 7-day free trial of the Starter tier is available, no card required, so you can try Qwikly before paying. Annual billing saves 15%. Top-ups for extra leads are billed at your plan's per-lead rate (R23 on Starter, R20 on Pro, R12 on Business — close to what you're already paying inside your plan, never a flat overage). No per-job fees, no commissions ever.",
+      "Qwikly has four plans. Starter is R699/month for 20 leads, ideal for solos. Pro is R1,799/month for 50 leads with custom branding (your logo), custom greeting, and qualifying questions, ideal for small multi-person practices. Business is R3,999/month for 200 leads with unlimited users, CSV exports, and priority support, ideal for multi-doctor or multi-agent practices. Enterprise is from R7,999/month with white-label, API access, and a 1-hour support SLA, custom volume pricing on request. All plans are invoiced monthly by EFT, no card required online. Book a setup call and we set everything up for you. Annual billing saves 15%. Top-ups for extra leads are billed at your plan's per-lead rate. No per-job fees, no commissions ever.",
   },
   {
     question: "What counts as a qualified lead?",
@@ -35,11 +35,6 @@ export const FAQ_DATA = [
     question: "What happens when I hit my monthly lead limit?",
     answer:
       "We'll notify you before you hit your cap. You can upgrade your plan or top up at your plan's per-lead rate (R23 on Starter, R20 on Pro, R12 on Business — close to what you're already paying inside your plan, never a flat overage). No automatic billing, no surprise charges. Your digital assistant keeps working either way.",
-  },
-  {
-    question: "What happens after my 7-day trial?",
-    answer:
-      "At the end of your trial, you choose a paid plan to continue. If you don't upgrade, your account pauses and no further leads are captured. You keep access to your dashboard and all lead history. Upgrade at any time to reactivate.",
   },
   {
     question: "What businesses is Qwikly built for?",

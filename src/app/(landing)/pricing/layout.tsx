@@ -3,12 +3,12 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Qwikly offers four flat monthly plans: Starter R699, Pro R1,799, Business R3,999, Enterprise from R7,999. 7-day free trial on every plan. No per-job fees, no commissions. Cancel anytime.",
+    "Qwikly offers four flat monthly plans: Starter R699, Pro R1,799, Business R3,999, Enterprise from R7,999. Invoiced monthly by EFT, no card needed online. No per-job fees, no commissions. Cancel anytime.",
   alternates: { canonical: "https://www.qwikly.co.za/pricing" },
   openGraph: {
     title: "Qwikly Pricing: Flat Monthly Plans. No Per-Job Fees.",
     description:
-      "Starter R699 · Pro R1,799 · Business R3,999 · Enterprise R7,999+. 7-day free trial. No commissions, no setup fees, no lock-in.",
+      "Starter R699 · Pro R1,799 · Business R3,999 · Enterprise R7,999+. Invoiced monthly by EFT. No commissions, no setup fees, no lock-in.",
     url: "https://www.qwikly.co.za/pricing",
   },
 };
@@ -23,21 +23,11 @@ const productSchema = {
   offers: [
     {
       "@type": "Offer",
-      name: "Free Trial",
-      priceCurrency: "ZAR",
-      price: "0",
-      priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P7D" },
-      description: "7-day free trial of the Qwikly digital assistant platform. No card required.",
-      availability: "https://schema.org/InStock",
-      url: "https://www.qwikly.co.za/pricing",
-    },
-    {
-      "@type": "Offer",
       name: "Starter",
       priceCurrency: "ZAR",
       price: "699",
       priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
-      description: "30 qualified leads per month. Digital assistant platform, email lead delivery, POPIA compliant.",
+      description: "20 qualified leads per month. Digital assistant platform, email lead delivery, POPIA compliant.",
       availability: "https://schema.org/InStock",
       url: "https://www.qwikly.co.za/pricing",
     },
@@ -47,7 +37,7 @@ const productSchema = {
       priceCurrency: "ZAR",
       price: "1799",
       priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
-      description: "100 qualified leads per month. Custom branding (your logo, no Qwikly footer), custom greeting and qualifying questions, 3 dashboard users.",
+      description: "50 qualified leads per month. Custom branding (your logo, no Qwikly footer), custom greeting and qualifying questions, 3 dashboard users.",
       availability: "https://schema.org/InStock",
       url: "https://www.qwikly.co.za/pricing",
     },
@@ -57,7 +47,7 @@ const productSchema = {
       priceCurrency: "ZAR",
       price: "3999",
       priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
-      description: "400 qualified leads per month. Unlimited users, CSV exports, priority 4-hour support, custom branding.",
+      description: "200 qualified leads per month. Unlimited users, CSV exports, priority 4-hour support, custom branding.",
       availability: "https://schema.org/InStock",
       url: "https://www.qwikly.co.za/pricing",
     },

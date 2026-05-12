@@ -159,15 +159,15 @@ export default function ComparePage() {
         <div className="dot-grid absolute inset-0 opacity-50" aria-hidden="true" />
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
           <h2 className="display-xl text-paper max-w-[20ch] mx-auto">
-            Try Qwikly{" "}
-            <em className="italic font-light text-ember">free for 7 days</em>.
+            One thing, done well.{" "}
+            <em className="italic font-light text-ember">Let&rsquo;s get you live.</em>
           </h2>
           <p className="text-paper/70 text-lg mt-8 max-w-xl mx-auto leading-relaxed">
-            Live on your website in 24 hours. No card required.
+            Live on your website in 24–48 hours. Invoiced monthly, no card needed online.
           </p>
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
-            <CTAButton size="lg" variant="solid" href="/get-started">
-              Try Qwikly free for 7 days
+            <CTAButton size="lg" variant="solid" href="/contact">
+              Book a setup call
             </CTAButton>
             <CTAButton size="lg" variant="outline-light" href="/pricing" withArrow={false}>
               See pricing

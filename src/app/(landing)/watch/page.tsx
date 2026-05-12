@@ -88,10 +88,10 @@ export default function WatchPage() {
               Book a 15 minute call
             </CTAButton>
             <a
-              href="/get-started"
+              href="/pricing"
               className="text-sm text-paper/70 hover:text-ember underline-offset-4 hover:underline transition-colors"
             >
-              Or start the 7 day free trial yourself
+              Or see pricing
             </a>
           </div>
         </div>

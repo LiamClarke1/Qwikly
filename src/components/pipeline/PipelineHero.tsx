@@ -83,8 +83,8 @@ export default function PipelineHero() {
             </p>
 
             <div className="mt-9 flex flex-col sm:flex-row gap-4">
-              <CTAButton href="/signup" variant="solid" size="lg">
-                Get started
+              <CTAButton href="/contact?subject=pipeline-strategy-call" variant="solid" size="lg">
+                Book a strategy call
               </CTAButton>
               <Link
                 href="/pricing"

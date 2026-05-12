@@ -211,8 +211,8 @@ export default function PipelinePage() {
             <em className="italic font-light text-ember">prospect feed.</em>
           </h2>
           <div className="mt-12 flex justify-center">
-            <CTAButton href="/signup" variant="solid" size="lg">
-              Get started
+            <CTAButton href="/contact?subject=pipeline-strategy-call" variant="solid" size="lg">
+              Book a strategy call
             </CTAButton>
           </div>
         </div>

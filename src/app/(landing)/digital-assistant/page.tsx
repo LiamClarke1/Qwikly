@@ -169,7 +169,7 @@ export default function DigitalAssistantPage() {
               </p>
 
               <div className="mt-10 flex flex-col sm:flex-row sm:items-center gap-4">
-                <CTAButton href="/signup" variant="solid" size="lg">
+                <CTAButton href="/contact" variant="solid" size="lg">
                   Get started
                 </CTAButton>
                 <a
@@ -296,7 +296,7 @@ export default function DigitalAssistantPage() {
               Live on your website in 24 hours,{" "}
               <em className="italic font-light text-ember">no lock-in.</em>
             </p>
-            <CTAButton href="/signup" variant="solid" size="lg">
+            <CTAButton href="/contact" variant="solid" size="lg">
               Get started
             </CTAButton>
           </div>

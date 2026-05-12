@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   const validPlans: InboundPlanTier[] = ['trial', 'starter', 'pro', 'founders', 'business', 'enterprise', 'premium'];
   const resolvedPlan: InboundPlanTier = validPlans.includes(planParam as InboundPlanTier)
     ? (planParam as InboundPlanTier)
-    : 'trial';
+    : 'starter';
 
   const cookieStore = cookies();
   const supabase = createServerClient(

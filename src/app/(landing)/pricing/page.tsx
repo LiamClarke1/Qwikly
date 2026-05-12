@@ -25,7 +25,7 @@ const tiers: {
     name: "Starter",
     tagline: "Solo trades, individual agents, sole practitioners",
     highlight: false,
-    cta: "Start with Starter",
+    cta: "Book a call",
     features: [
       "Digital assistant on your website, 24/7",
       "Replies to visitors in under 60 seconds",
@@ -43,7 +43,7 @@ const tiers: {
     tagline: "Small multi-person practices and teams",
     highlight: true,
     pill: { label: "Most Popular", variant: "popular" },
-    cta: "Start with Pro",
+    cta: "Book a call",
     features: [
       "Everything in Starter",
       "Up to 50 leads/month captured by your digital assistant",
@@ -60,7 +60,7 @@ const tiers: {
     name: "Business",
     tagline: "Multi-doctor, multi-agent, busy practices",
     highlight: false,
-    cta: "Start with Business",
+    cta: "Book a call",
     features: [
       "Everything in Pro",
       "Up to 200 leads/month captured by your digital assistant",
@@ -178,11 +178,6 @@ const pricingFAQs = [
       "We notify you before you hit the cap. You can upgrade your plan, or top up at your plan's per-lead rate: R35 on Starter, R36 on Pro and Founders, R20 on Business. No flat overage, no automatic billing, no surprise charges. Your digital assistant keeps working until you decide.",
   },
   {
-    question: "What happens after my 7-day trial?",
-    answer:
-      "At the end of your 7-day trial you choose a paid plan to continue. If you do not upgrade, your account pauses. You keep your dashboard and your lead history. Upgrade any time to reactivate.",
-  },
-  {
     question: "Can I switch plans anytime?",
     answer:
       "Yes. Upgrade or downgrade from your dashboard at any time. Upgrades take effect immediately. Downgrades apply at the start of your next billing period.",
@@ -195,7 +190,7 @@ const pricingFAQs = [
   {
     question: "Is there a setup fee?",
     answer:
-      "No. Every paid plan is a flat monthly fee, no setup fee, no onboarding charge.",
+      "No. Every paid plan is a flat monthly fee, no setup fee, no onboarding charge. We invoice you monthly by EFT — no card required online. Book a call and we set your digital assistant up for you, live within 24–48 hours.",
   },
 ];
 
@@ -232,11 +227,7 @@ export default function PricingPage() {
   }
 
   function handleTierCTA(id: TierId) {
-    if (id === "enterprise") {
-      window.location.href = "/contact?subject=enterprise";
-      return;
-    }
-    window.location.href = `/signup?plan=${id}`;
+    window.location.href = `/contact?subject=plan-${id}`;
   }
 
   return (
@@ -357,7 +348,7 @@ export default function PricingPage() {
                                   : "border border-ink/15 text-ink hover:border-ink hover:bg-ink hover:text-paper"
                               }`}
                             >
-                              {tier.id === "enterprise" ? "Talk to us" : "Choose"}
+                              Book a call
                             </button>
                           </div>
                         </th>
@@ -491,7 +482,7 @@ export default function PricingPage() {
                     </CTAButton>
                   ) : (
                     <a
-                      href={`/signup?plan=${tier.id}`}
+                      href={`/contact?subject=plan-${tier.id}`}
                       className={`w-full block text-center text-xs font-medium py-2.5 rounded-full cursor-pointer transition-colors ${
                         isPro
                           ? "bg-ember text-paper hover:bg-ember/90"
@@ -507,15 +498,12 @@ export default function PricingPage() {
           </div>
 
           <div className="mt-10 flex justify-center">
-            <a
-              href="/signup?plan=trial"
-              className="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-ember/10 border border-ember/20 hover:bg-ember/15 transition-colors"
-            >
-              <span className="w-2 h-2 rounded-full bg-ember" />
-              <span className="text-sm text-ink-700">
-                <strong className="text-ink">7-day free trial of Starter</strong>, no card required
+            <div className="inline-flex items-start gap-3 px-5 py-4 rounded-2xl bg-ink/[0.03] border border-ink/[0.08] max-w-xl text-center">
+              <span className="text-sm text-ink-700 leading-relaxed">
+                <strong className="text-ink">Invoiced monthly — pay by EFT, no card needed online.</strong>
+                {" "}Book a call and we set your digital assistant up for you, live within 24–48 hours.
               </span>
-            </a>
+            </div>
           </div>
         </div>
       </section>
@@ -618,11 +606,14 @@ export default function PricingPage() {
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
           <h2 className="display-xl text-paper max-w-[22ch] mx-auto">
             One thing, done well.{" "}
-            <em className="italic font-light text-ember">Try it for 7 days.</em>
+            <em className="italic font-light text-ember">Let&rsquo;s get you live.</em>
           </h2>
-          <div className="mt-12 flex justify-center">
-            <CTAButton size="lg" variant="solid" href="/signup?plan=trial">
-              Start free trial
+          <p className="mt-6 text-paper/60 text-base max-w-lg mx-auto leading-relaxed">
+            Book a call, pick your plan, and we set everything up for you. Invoiced monthly, no card needed online.
+          </p>
+          <div className="mt-10 flex justify-center">
+            <CTAButton size="lg" variant="solid" href="/contact">
+              Book a setup call
             </CTAButton>
           </div>
         </div>

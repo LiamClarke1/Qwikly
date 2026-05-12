@@ -538,7 +538,7 @@ ${f.ai_never_say || "Not specified"}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
           {/* Digital Assistant card */}
           <a
-            href="#assistant-setup"
+            href="/contact?subject=setup"
             className="group bg-white rounded-2xl border-2 border-accent shadow-sm p-6 flex flex-col hover:shadow-md transition-all duration-200"
           >
             <div className="flex items-center justify-between mb-3">
@@ -546,19 +546,19 @@ ${f.ai_never_say || "Not specified"}
                 Service 1, inbound
               </span>
               <span className="text-[0.7rem] font-medium text-accent bg-accent/10 px-2 py-1 rounded-full">
-                7-day free trial
+                Setup call
               </span>
             </div>
             <h2 className="text-xl font-bold text-text-dark mb-2">
-              Start the 7-day Digital Assistant trial
+              Get your Digital Assistant set up
             </h2>
             <p className="text-sm text-text-muted-dark leading-relaxed mb-5 flex-1">
-              Self-serve. Live on your website in under 24 hours. No card
-              required for the trial. Best for service businesses with a
-              website that already gets enquiries.
+              Book a call and we set everything up for you. Live on your
+              website in 24–48 hours. Invoiced monthly, no card needed
+              online.
             </p>
             <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent">
-              Set up your assistant
+              Book a setup call
               <ChevronRight className="w-4 h-4" />
             </span>
           </a>
@@ -592,11 +592,11 @@ ${f.ai_never_say || "Not specified"}
           </a>
         </div>
 
-        {/* Anchor + sub-header for the existing trial flow */}
+        {/* Anchor + sub-header for the assistant setup form */}
         <div id="assistant-setup" className="text-center mb-8 scroll-mt-24">
-          <h2 className="text-2xl font-bold text-text-dark mb-2">Set up your digital assistant</h2>
+          <h2 className="text-2xl font-bold text-text-dark mb-2">Tell us about your business</h2>
           <p className="text-text-muted-dark text-sm">
-            The more detail you give, the better your assistant responds. Takes about 5 minutes.
+            Fill this in before your setup call and we&rsquo;ll have your assistant ready faster. Takes about 5 minutes.
           </p>
         </div>
 

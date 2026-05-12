@@ -162,8 +162,8 @@ export function RevenueCalculator() {
           </p>
 
           <div className="mt-6">
-            <CTAButton size="lg" variant="solid" href="/signup" className="w-full justify-center">
-              Start free trial. Pay nothing for 7 days.
+            <CTAButton size="lg" variant="solid" href="/contact" className="w-full justify-center">
+              Book a setup call
             </CTAButton>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-const DEFAULT_HREF = "/signup";
+const DEFAULT_HREF = "/contact";
 
 interface CTAButtonProps {
   children: React.ReactNode;

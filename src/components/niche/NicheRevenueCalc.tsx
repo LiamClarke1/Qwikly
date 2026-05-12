@@ -193,10 +193,10 @@ export function NicheRevenueCalc({
             <CTAButton
               size="lg"
               variant="solid"
-              href="/get-started"
+              href="/contact"
               className="w-full justify-center"
             >
-              Try Qwikly free for 7 days
+              Book a setup call
             </CTAButton>
           </div>
         </div>
