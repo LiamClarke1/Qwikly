@@ -27,11 +27,13 @@ const tiers: {
     highlight: false,
     cta: "Start with Starter",
     features: [
-      "Digital assistant on your website",
+      "Digital assistant on your website, 24/7",
       "Replies to visitors in under 60 seconds",
       "Up to 20 leads/month captured by your digital assistant",
+      "400 conversations/month included",
       "1 dashboard user",
       '"Powered by Qwikly" branding',
+      "POPIA compliant",
       "Email support, 24h response",
     ],
   },
@@ -45,6 +47,7 @@ const tiers: {
     features: [
       "Everything in Starter",
       "Up to 50 leads/month captured by your digital assistant",
+      "1,000 conversations/month included",
       "3 dashboard users",
       "Custom branding, your logo and colours",
       "Custom greeting and qualifying questions",
@@ -61,6 +64,7 @@ const tiers: {
     features: [
       "Everything in Pro",
       "Up to 200 leads/month captured by your digital assistant",
+      "4,000 conversations/month included",
       "Unlimited dashboard users",
       "Lead exports, CSV",
       "Priority email support, 4h response",
@@ -75,6 +79,7 @@ const tiers: {
     features: [
       "Everything in Business",
       "Up to 600+ leads/month captured by your digital assistant",
+      "12,000+ conversations/month included",
       "API access for custom integrations",
       "Dedicated support, 1h response",
       "Custom onboarding",
@@ -85,28 +90,36 @@ const tiers: {
 // The 4 most important features per card (compressed summary list)
 const cardHighlights: Record<TierId, string[]> = {
   starter: [
-    "Digital assistant on your website",
-    "Up to 20 leads/month on your assistant",
+    "Digital assistant on your website, 24/7",
+    "400 conversations/month included",
+    "Up to 20 leads/month captured",
     "Replies to visitors in under 60 seconds",
+    "POPIA compliant",
     "Email support, 24h response",
   ],
   pro: [
     "Everything in Starter",
-    "Up to 50 leads/month on your assistant",
-    "Custom branding, logo and questions",
+    "1,000 conversations/month included",
+    "Up to 50 leads/month captured",
+    "Custom branding, your logo and colours",
     "3 dashboard users",
+    "Email support, 12h response",
   ],
   business: [
     "Everything in Pro",
-    "Up to 200 leads/month on your assistant",
+    "4,000 conversations/month included",
+    "Up to 200 leads/month captured",
     "Unlimited dashboard users",
+    "Lead exports, CSV",
     "Priority email support, 4h response",
   ],
   enterprise: [
     "Everything in Business",
-    "Up to 600+ leads/month on your assistant",
-    "API access + white-label",
+    "12,000+ conversations/month included",
+    "Up to 600+ leads/month captured",
+    "API access for custom integrations",
     "Dedicated support, 1h SLA",
+    "Custom onboarding",
   ],
 };
 
@@ -123,6 +136,7 @@ const featureRows: {
   { label: "Digital assistant on your website",        starter: true,         pro: true,         business: true,           enterprise: true            },
   { label: "Reply under 60 seconds",                   starter: true,         pro: true,         business: true,           enterprise: true            },
   { label: "POPIA compliant",                          starter: true,         pro: true,         business: true,           enterprise: true            },
+  { label: "Conversations included / month",           starter: "400/mo",     pro: "1,000/mo",   business: "4,000/mo",     enterprise: "12,000+/mo"    },
   { label: "Leads captured / month (on your assistant)", starter: "Up to 20", pro: "Up to 50",   business: "Up to 200",    enterprise: "Up to 600+"    },
   { label: "Email lead delivery",                      starter: false,        pro: true,         business: true,           enterprise: true            },
   { label: "Top-up rate beyond plan",                  starter: "R35 / lead", pro: "R36 / lead", business: "R20 / lead",  enterprise: "Volume"        },
