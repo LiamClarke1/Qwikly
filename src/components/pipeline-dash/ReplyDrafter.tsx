@@ -227,12 +227,19 @@ function detectProspect(text: string, prospects: ProspectOption[]): ProspectOpti
   return null;
 }
 
-function renderDraft(pattern: ReplyPattern, prospect: ProspectOption | null): string {
+function renderDraft(
+  pattern: ReplyPattern,
+  prospect: ProspectOption | null,
+  ownerName: string,
+): string {
   const vars: Record<string, string> = {
     firstName: prospect?.first_name || "there",
     business: prospect?.business || "your business",
+    ownerName,
   };
-  return pattern.draft.replace(/\{(firstName|business)\}/g, (_m, k) => vars[k] ?? "");
+  return pattern.draft
+    .replace(/\{(firstName|business|ownerName)\}/g, (_m, k) => vars[k] ?? "")
+    .replace(/\bLiam\b/g, ownerName);
 }
 
 interface Toast {
@@ -242,6 +249,7 @@ interface Toast {
 
 export function ReplyDrafter() {
   const [prospects, setProspects] = useState<ProspectOption[]>([]);
+  const [ownerName, setOwnerName] = useState("Liam");
   const [inbound, setInbound] = useState("");
   const [draft, setDraft] = useState("");
   const [selectedProspectId, setSelectedProspectId] = useState<string>("");
@@ -252,35 +260,46 @@ export function ReplyDrafter() {
     let cancelled = false;
     async function load() {
       try {
-        const { data, error } = await supabase
-          .from("pipeline_prospects")
-          .select("id, first_name, last_name, company, email")
-          .order("created_at", { ascending: false })
-          .limit(500);
+        const [prospectsRes, businessRes] = await Promise.all([
+          supabase
+            .from("pipeline_prospects")
+            .select("id, first_name, last_name, company, email")
+            .order("created_at", { ascending: false })
+            .limit(500),
+          supabase
+            .from("businesses")
+            .select("owner_first_name")
+            .limit(1)
+            .maybeSingle(),
+        ]);
         if (cancelled) return;
-        if (error || !data) {
-          setProspects([]);
-          return;
+
+        // Resolve the owner's first name for sign-off substitution.
+        const ownerFirst = (businessRes.data as { owner_first_name?: string | null } | null)
+          ?.owner_first_name;
+        if (ownerFirst && ownerFirst.trim()) {
+          setOwnerName(ownerFirst.trim());
         }
-        // Schema columns: first_name + last_name + company. Compose business
-        // label from company (preferred) or person name as fallback.
-        const rows: ProspectOption[] = (data as unknown[]).map((r) => {
-          const row = r as unknown as {
-            id: string;
-            first_name: string | null;
-            last_name: string | null;
-            company: string | null;
-            email: string | null;
-          };
-          const personName = [row.first_name, row.last_name].filter(Boolean).join(" ").trim();
-          return {
-            id: row.id,
-            business: row.company || personName || "Unknown",
-            first_name: row.first_name,
-            email: row.email,
-          };
-        });
-        setProspects(rows);
+
+        if (!prospectsRes.error && prospectsRes.data) {
+          const rows: ProspectOption[] = (prospectsRes.data as unknown[]).map((r) => {
+            const row = r as unknown as {
+              id: string;
+              first_name: string | null;
+              last_name: string | null;
+              company: string | null;
+              email: string | null;
+            };
+            const personName = [row.first_name, row.last_name].filter(Boolean).join(" ").trim();
+            return {
+              id: row.id,
+              business: row.company || personName || "Unknown",
+              first_name: row.first_name,
+              email: row.email,
+            };
+          });
+          setProspects(rows);
+        }
       } catch {
         setProspects([]);
       }
@@ -305,7 +324,7 @@ export function ReplyDrafter() {
       if (detected) setSelectedProspectId(detected.id);
     }
     if (matched) {
-      setDraft(renderDraft(matched, selectedProspect ?? detectProspect(value, prospects)));
+      setDraft(renderDraft(matched, selectedProspect ?? detectProspect(value, prospects), ownerName));
     }
   }
 
@@ -313,7 +332,7 @@ export function ReplyDrafter() {
     const pat = REPLY_PATTERNS.find((p) => p.id === patternId);
     if (!pat) return;
     setMatchedPatternId(patternId);
-    setDraft(renderDraft(pat, selectedProspect));
+    setDraft(renderDraft(pat, selectedProspect, ownerName));
   }
 
   async function copyDraft() {

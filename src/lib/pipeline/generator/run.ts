@@ -51,10 +51,6 @@ const SITE_BATCH_SIZE = 5;
 const HOOK_BATCH_SIZE = 10;
 const OVERSAMPLE_FACTOR = 3;
 const HARD_CAP = 100;
-// TODO: replace with plan-based cap from tenant subscription. For now we
-// hard-cap test runs at 5 prospects so we do not burn external API quota
-// while the pipeline is still being shaken down.
-const TEST_MODE_CAP = 5;
 
 // --- helpers ------------------------------------------------------------
 
@@ -224,15 +220,9 @@ export async function runGenerator(
   input: GenerateProspectInput,
   clientId: string | number = "0",
 ): Promise<MockProspect[]> {
-  const effectiveQuantity = Math.min(input.quantity, TEST_MODE_CAP);
-  if (effectiveQuantity < input.quantity) {
-    console.log(
-      `[pipeline/runGenerator] capped quantity from ${input.quantity} to ${effectiveQuantity} (TEST_MODE_CAP)`,
-    );
-  }
   const cappedInput: GenerateProspectInput = {
     ...input,
-    quantity: effectiveQuantity,
+    quantity: Math.min(input.quantity, HARD_CAP),
   };
 
   // No mock fallback. If the real API can't deliver (missing key, zero results,

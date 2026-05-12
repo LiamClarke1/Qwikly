@@ -54,6 +54,22 @@ async function loadProspect(id: string): Promise<ProspectRow | null> {
   }
 }
 
+async function loadOwnerName(businessId: string | null): Promise<string> {
+  if (!businessId) return "Liam";
+  try {
+    const db = supabaseAdmin();
+    const { data } = await db
+      .from("businesses")
+      .select("owner_first_name")
+      .eq("id", businessId)
+      .maybeSingle();
+    const name = (data as { owner_first_name?: string } | null)?.owner_first_name;
+    return name && name.trim() ? name.trim() : "Liam";
+  } catch {
+    return "Liam";
+  }
+}
+
 function readIcpString(
   icp: Record<string, unknown> | null,
   key: string,
@@ -103,7 +119,7 @@ function displayName(row: ProspectRow): string {
   return full || "Unknown business";
 }
 
-function buildOutreach(row: ProspectRow) {
+function buildOutreach(row: ProspectRow, ownerName: string = "Liam") {
   const firstName = (row.first_name || "").trim();
   const business = (row.company || "").trim() || "your business";
   const city = (row.city || "").trim();
@@ -124,14 +140,13 @@ function buildOutreach(row: ProspectRow) {
     businessName: business,
     icebreaker: icebreakerLine,
     painPoint,
-    senderFirstName: "Liam",
+    senderFirstName: ownerName,
   });
 
-  // Override subject to the city-specific line per spec.
   const emailBody = rendered.body;
 
   const whatsappBody = [
-    `Hi ${firstName || "there"}, Liam here from Qwikly.`,
+    `Hi ${firstName || "there"}, ${ownerName} here from Qwikly.`,
     "",
     `Quick one, I had a look at ${business} and noticed a few things on the site.`,
     "",
@@ -147,7 +162,7 @@ function buildOutreach(row: ProspectRow) {
   ].join("\n");
 
   const callBullets = [
-    `Hi ${firstName || "there"}, this is Liam from Qwikly. Got 30 seconds?`,
+    `Hi ${firstName || "there"}, this is ${ownerName} from Qwikly. Got 30 seconds?`,
     `I help ${business} style operators catch after hours enquiries in under a minute, no setup fees, no lock-in.`,
     "Worth me sending a 90 second walkthrough, or would a quick call this week work better?",
   ];
@@ -165,7 +180,7 @@ export default async function ProspectDetailPage({
 
   const score10 = toTenScore(row.enrichment_score);
   const rating = readIcpNumber(row.icp_match, "rating");
-  const reviewCount = readIcpNumber(row.icp_match, "review_count");
+  const reviewCount = readIcpNumber(row.icp_match, "reviews_count");
 
   const websiteFromIcp = readIcpString(row.icp_match, "website");
   const phoneFromIcp = readIcpString(row.icp_match, "phone");
@@ -173,25 +188,32 @@ export default async function ProspectDetailPage({
 
   const heroTitle = displayName(row);
 
+  // site_recon fields are nested inside icp_match.site_recon, not at top level
+  const siteReconObj =
+    row.icp_match?.site_recon && typeof row.icp_match.site_recon === "object"
+      ? (row.icp_match.site_recon as Record<string, unknown>)
+      : null;
+
   const siteReconData: SiteReconData = {
     id: row.id,
-    title: readIcpString(row.icp_match, "title"),
-    h1: readIcpString(row.icp_match, "h1"),
-    metaDescription: readIcpString(row.icp_match, "meta_description"),
+    title: readIcpString(siteReconObj, "title"),
+    h1: readIcpString(siteReconObj, "h1"),
+    metaDescription: readIcpString(siteReconObj, "meta_description"),
     specialism: row.industry,
-    heroText: readIcpString(row.icp_match, "hero_text"),
+    heroText: readIcpString(siteReconObj, "hero_text"),
     uniqueHook: readIcpString(row.icp_match, "unique_hook"),
     scrapedFromUrl: row.linkedin_url || websiteFromIcp,
     scrapedFromLabel: row.linkedin_url || websiteFromIcp || null,
     verified: !!row.email_verified,
     hasReconData:
-      !!readIcpString(row.icp_match, "title") ||
-      !!readIcpString(row.icp_match, "h1") ||
-      !!readIcpString(row.icp_match, "meta_description") ||
-      !!readIcpString(row.icp_match, "hero_text"),
+      !!readIcpString(siteReconObj, "title") ||
+      !!readIcpString(siteReconObj, "h1") ||
+      !!readIcpString(siteReconObj, "meta_description") ||
+      !!readIcpString(siteReconObj, "hero_text"),
   };
 
-  const outreach = buildOutreach(row);
+  const ownerName = await loadOwnerName(row.business_id);
+  const outreach = buildOutreach(row, ownerName);
 
   const firstName = (row.first_name || "").trim();
   const firstNameIsAuto = firstName.length === 0;
@@ -202,7 +224,7 @@ export default async function ProspectDetailPage({
     [row.city, row.country].filter(Boolean).join(", "),
   ]
     .filter((part) => part && String(part).trim().length > 0)
-    .join(" , ");
+    .join(", ");
 
   return (
     <div className="flex flex-col gap-6">

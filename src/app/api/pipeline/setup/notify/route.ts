@@ -52,13 +52,20 @@ export async function POST(_req: NextRequest) {
   }
 
   const db = supabaseAdmin();
-  const { data: client } = await db
-    .from("clients")
-    .select("id, business_name, contact_email, notification_email")
-    .eq("auth_user_id", user.id)
-    .maybeSingle();
+  const [clientRes, businessRes] = await Promise.all([
+    db
+      .from("clients")
+      .select("id, business_name, contact_email, notification_email")
+      .eq("auth_user_id", user.id)
+      .maybeSingle(),
+    db
+      .from("businesses")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
 
-  const tenant = client as
+  const tenant = clientRes.data as
     | {
         id: number | string;
         business_name?: string | null;
@@ -71,7 +78,11 @@ export async function POST(_req: NextRequest) {
     return NextResponse.json({ ok: false, error: "No tenant" }, { status: 404 });
   }
 
-  const state = await getSetupState(tenant.id);
+  // getSetupState is keyed on businesses.id (UUID), not clients.id (BIGINT).
+  // Using the wrong key returns an empty default state — the ICP email would
+  // always show "not set" for every field.
+  const businessId = (businessRes.data as { id?: string } | null)?.id;
+  const state = await getSetupState(businessId ?? tenant.id);
   const tenantName = tenant.business_name || "a Pipeline tenant";
 
   const sizeLabel = `${state.icp.sizeMin} to ${state.icp.sizeMax}`;

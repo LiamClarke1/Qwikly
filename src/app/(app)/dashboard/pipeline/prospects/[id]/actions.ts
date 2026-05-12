@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase-server";
 
-// Soft action result. The caller decides what to do with errors, the page
-// always re-renders on revalidate so this just needs to not throw.
 export type ActionResult =
   | { ok: true }
   | { ok: false; error: string };
@@ -22,8 +22,38 @@ function clean(input: unknown): string {
   return typeof input === "string" ? input.trim() : "";
 }
 
-// Try to update a real snoozed_until column. If the column does not exist,
-// stuff the timestamp into icp_match.snoozed_until JSONB instead.
+async function resolveBusinessId(): Promise<string | null> {
+  const cookieStore = cookies();
+  const auth = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options),
+          );
+        },
+      },
+    },
+  );
+  const {
+    data: { user },
+  } = await auth.auth.getUser();
+  if (!user) return null;
+
+  const db = supabaseAdmin();
+  const { data: biz } = await db
+    .from("businesses")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  return (biz as { id?: string } | null)?.id ?? null;
+}
+
 export async function snoozeProspect(
   prospectId: string,
   days: number,
@@ -34,15 +64,17 @@ export async function snoozeProspect(
     return { ok: false, error: "Invalid snooze window" };
   }
 
+  const businessId = await resolveBusinessId();
+  if (!businessId) return { ok: false, error: "Not signed in" };
+
   const until = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
   const db = supabaseAdmin();
 
-  // First try the dedicated column. If the column does not exist, Postgres
-  // returns code 42703, which we soft-fall-through.
   const direct = await db
     .from("pipeline_prospects")
     .update({ snoozed_until: until })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("business_id", businessId);
 
   if (!direct.error) {
     revalidatePath(`/dashboard/pipeline/prospects/${id}`);
@@ -50,11 +82,12 @@ export async function snoozeProspect(
     return { ok: true };
   }
 
-  // Fallback: read icp_match, merge snoozed_until, write back.
+  // Fallback: merge snoozed_until into icp_match JSONB if the column doesn't exist.
   const { data: row } = await db
     .from("pipeline_prospects")
     .select("icp_match")
     .eq("id", id)
+    .eq("business_id", businessId)
     .maybeSingle();
 
   const existing =
@@ -65,7 +98,8 @@ export async function snoozeProspect(
   const { error } = await db
     .from("pipeline_prospects")
     .update({ icp_match: next })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("business_id", businessId);
 
   if (error) {
     console.error("[prospects/snoozeProspect] failed:", error);
@@ -88,11 +122,15 @@ export async function setProspectStatus(
     return { ok: false, error: "Invalid status" };
   }
 
+  const businessId = await resolveBusinessId();
+  if (!businessId) return { ok: false, error: "Not signed in" };
+
   const db = supabaseAdmin();
   const { error } = await db
     .from("pipeline_prospects")
-    .update({ status })
-    .eq("id", id);
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("business_id", businessId);
 
   if (error) {
     console.error("[prospects/setProspectStatus] failed:", error);
@@ -113,11 +151,15 @@ export async function saveUniqueHook(
   if (!id) return { ok: false, error: "Missing prospect id" };
   const safeHook = clean(hook);
 
+  const businessId = await resolveBusinessId();
+  if (!businessId) return { ok: false, error: "Not signed in" };
+
   const db = supabaseAdmin();
   const { data: row } = await db
     .from("pipeline_prospects")
     .select("icp_match")
     .eq("id", id)
+    .eq("business_id", businessId)
     .maybeSingle();
 
   const existing =
@@ -128,7 +170,8 @@ export async function saveUniqueHook(
   const { error } = await db
     .from("pipeline_prospects")
     .update({ icp_match: next })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("business_id", businessId);
 
   if (error) {
     console.error("[prospects/saveUniqueHook] failed:", error);

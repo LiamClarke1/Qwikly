@@ -135,7 +135,7 @@ export default async function PipelineBoardPage({
       <header className="flex flex-col gap-3 pb-6 border-b border-ink/[0.08]">
         <div className="eyebrow text-ink-500">Pipeline</div>
         <h1 className="font-display text-[40px] md:text-[48px] leading-[1.05] tracking-tight text-ink">
-          Pipeline
+          Board
         </h1>
         <p className="text-ink-500 text-[15px] max-w-[680px]">
           Drag a prospect by changing its status. Right-click any pill for the full menu.

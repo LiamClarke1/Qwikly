@@ -147,6 +147,7 @@ export async function persistProspects(args: {
         business_status: p.business_status ?? null,
         place_types: p.place_types ?? null,
         email_verification_status: p.email_verification_status ?? null,
+        email_source: p.email_source ?? null,
         site_recon: p.site_recon ?? null,
         score_breakdown: p.score_breakdown ?? null,
         unique_hook: p.unique_hook ?? null,

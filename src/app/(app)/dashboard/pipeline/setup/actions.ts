@@ -111,7 +111,9 @@ function toGeneratorInput(icp: IcpDefinition): GenerateProspectInput {
     companySize: { min: sizeMin, max: sizeMax },
     locations,
     intentSignals,
-    quantity: 100,
+    // Matches the "Generate my 5 sample leads" button copy in IcpForm.
+    // Daily trickle uses the plan-based pipeline_daily_quota instead.
+    quantity: 5,
   };
 }
 

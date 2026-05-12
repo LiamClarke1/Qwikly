@@ -223,7 +223,7 @@ export default function ProspectsPage() {
             </p>
           </div>
           <Link
-            href="/dashboard/pipeline/generate"
+            href="/dashboard/pipeline/setup"
             className="inline-flex items-center gap-2 rounded-full bg-ink text-paper px-4 py-2.5 text-[13.5px] font-medium hover:bg-ink-800 transition-colors"
           >
             <Plus className="w-4 h-4" />
@@ -311,7 +311,7 @@ function EmptyState() {
         </p>
       </div>
       <Link
-        href="/dashboard/pipeline/generate"
+        href="/dashboard/pipeline/setup"
         className="inline-flex items-center gap-2 rounded-full bg-ink text-paper px-4 py-2.5 text-[13px] font-medium hover:bg-ink-800 transition-colors"
       >
         <Plus className="w-4 h-4" />

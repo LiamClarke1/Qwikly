@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Megaphone } from "lucide-react";
+import { Megaphone } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
   CampaignCard,
@@ -75,11 +75,10 @@ export default function CampaignsPage() {
             </p>
           </div>
           <Link
-            href="/dashboard/pipeline/setup"
-            className="inline-flex items-center gap-2 rounded-full bg-ink text-paper px-4 py-2.5 text-[13.5px] font-medium hover:bg-ink-800 transition-colors"
+            href="/dashboard/pipeline/prospects"
+            className="inline-flex items-center gap-2 rounded-full bg-[#F1EADD] text-ink px-4 py-2.5 text-[13.5px] font-medium ring-1 ring-[#E8DFD0] hover:bg-[#EBE3D2] transition-colors"
           >
-            <Plus className="w-4 h-4" />
-            Create campaign
+            View prospects
           </Link>
         </div>
       </header>
@@ -107,18 +106,18 @@ function EmptyState() {
       </span>
       <div className="flex flex-col gap-1.5">
         <p className="font-display text-[22px] tracking-tight text-ink">
-          No campaigns yet
+          Campaigns coming soon
         </p>
         <p className="text-[13.5px] text-ink-500 max-w-[44ch]">
-          No campaigns yet. Run setup to launch your first.
+          Structured outbound campaigns are on the roadmap. For now, your
+          prospects arrive daily via Mission Control.
         </p>
       </div>
       <Link
-        href="/dashboard/pipeline/setup"
-        className="inline-flex items-center gap-2 rounded-full bg-ink text-paper px-4 py-2.5 text-[13px] font-medium hover:bg-ink-800 transition-colors"
+        href="/dashboard/pipeline"
+        className="inline-flex items-center gap-2 rounded-full bg-ember text-cream px-4 py-2.5 text-[13px] font-medium hover:bg-ember-deep transition-colors"
       >
-        <Plus className="w-4 h-4" />
-        Open setup
+        Go to Mission Control
       </Link>
     </div>
   );

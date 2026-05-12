@@ -5,38 +5,40 @@ export const dynamic = "force-dynamic";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, CalendarClock, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, Settings2, Sparkles, Users } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { timeAgo, formatDateTime } from "@/lib/format";
 import { KpiCard } from "@/components/pipeline-dash/KpiCard";
-import {
-  ContactFilterPills,
-  type ContactFilter,
-  type ContactFilterCounts,
-} from "@/components/pipeline-dash/ContactFilterPills";
 import { QueueRow, type QueueRowData } from "@/components/pipeline-dash/QueueRow";
-import {
-  StatusPill,
-  replyClassTone,
-} from "@/components/pipeline-dash/StatusPill";
 
 // ---------------------------------------------------------------------------
-// Pipeline dashboard hub, Mission Control overview.
+// Pipeline dashboard hub — Mission Control.
 //
 // Sections in render order:
-//   1. Header with title, day, prospect count, streak, plus Open queue / Start
-//      sprint CTAs.
-//   2. Sprint KPI row (SENT TODAY, REPLY RATE, BOOKED, STREAK).
-//   3. Coverage KPI row (TOTAL PROSPECTS, SITE VERIFIED, HAS EMAIL, HAS PHONE).
-//   4. Contact info filter pills, filters the queue list below.
-//   5. Two column body: Top of queue (left), Recent replies + Upcoming calls.
-//   6. Empty state when there are no pipeline_prospects rows at all.
-// All Supabase queries soft-fail, the UI never throws.
+//   1. Header: title, plan badge, Edit ICP + View all CTAs.
+//   2. Today's batch hero (prospects with delivery_batch_date == today).
+//   3. Four real KPIs: Delivered Today, This Week, Total in Pool, Email Found.
+//   4. Two-column: ICP summary card (left) + delivery history log (right).
+//
+// Removed (all were permanently zero and we cannot track them):
+//   - Sent today / Reply rate / Booked / Streak
+//   - Has phone (column does not exist)
+//   - Site verified
+//   - Recent replies panel (pipeline_replies is not populated)
+//   - Upcoming calls panel (pipeline_meetings is not populated)
 // ---------------------------------------------------------------------------
 
-// Minimal row shape we read from pipeline_prospects.
-// NOTE: schema has first_name + last_name + company, no `name` column.
-// We compose the display name on the client from company or first/last.
+const PLAN_LABELS: Record<string, string> = {
+  trial: "Trial",
+  starter: "Starter",
+  pro: "Pro",
+  founders: "Founders",
+  business: "Business",
+  enterprise: "Enterprise",
+  premium: "Premium",
+  pipeline_lite: "Pro",
+  pipeline_pro: "Business",
+};
+
 interface ProspectRow {
   id: string;
   first_name: string | null;
@@ -46,40 +48,26 @@ interface ProspectRow {
   city: string | null;
   email: string | null;
   email_verified: boolean | null;
-  linkedin_url: string | null;
   enrichment_score: number | null;
   status: string | null;
-  created_at: string;
-  updated_at: string | null;
+  delivery_batch_date: string | null;
 }
 
-// Compose the display name for a prospect, prefer company, fall back to person.
+interface QuotaData {
+  plan: string;
+  daily_quota: number;
+}
+
 function prospectDisplayName(p: {
   company: string | null;
   first_name: string | null;
   last_name: string | null;
 }): string {
-  if (p.company && p.company.trim()) return p.company.trim();
+  if (p.company?.trim()) return p.company.trim();
   const parts = [p.first_name, p.last_name].filter(Boolean).join(" ").trim();
   return parts || "Untitled prospect";
 }
 
-interface ReplyRow {
-  id: string;
-  prospect_id: string | null;
-  classification: string | null;
-  body: string | null;
-  received_at: string | null;
-}
-
-interface MeetingRow {
-  id: string;
-  prospect_id: string | null;
-  scheduled_at: string | null;
-  created_at: string;
-}
-
-// Soft fetch helper, never throws.
 async function safeQuery<T = unknown>(
   build: () => Promise<{
     data: T[] | null;
@@ -95,53 +83,42 @@ async function safeQuery<T = unknown>(
   }
 }
 
-function startOfTodayISO(): string {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-}
-
-function startOfWeekISO(): string {
-  const d = new Date();
-  const day = d.getDay(); // Sun, 0
-  const diff = day === 0 ? 6 : day - 1; // Mon, start of week
-  d.setDate(d.getDate() - diff);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
-}
-
-// Compute the current consecutive-day streak based on prospects whose
-// last_activity_at falls on each day. We accept any activity timestamp as a
-// "send" because the pipeline has no dedicated events table here.
-function computeStreak(activityDates: string[]): number {
-  if (activityDates.length === 0) return 0;
-  const days = new Set<string>();
-  for (const iso of activityDates) {
-    if (!iso) continue;
-    const d = new Date(iso);
-    d.setHours(0, 0, 0, 0);
-    days.add(d.toISOString().slice(0, 10));
-  }
-  if (days.size === 0) return 0;
-  let count = 0;
-  const cursor = new Date();
-  cursor.setHours(0, 0, 0, 0);
-  // If today has no activity, start the streak check from yesterday so a
-  // morning visit before today's first send still reflects yesterday's run.
-  if (!days.has(cursor.toISOString().slice(0, 10))) {
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  while (days.has(cursor.toISOString().slice(0, 10))) {
-    count += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return count;
-}
-
-// Today's date in YYYY-MM-DD (UTC), used to filter pipeline_prospects by
-// delivery_batch_date for the "Today's N prospects" hero section.
-function todayBatchDate(): string {
+function todayDate(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+function startOfWeekDate(): string {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = day === 0 ? 6 : day - 1;
+  d.setDate(d.getDate() - diff);
+  return d.toISOString().slice(0, 10);
+}
+
+function startOfMonthDate(): string {
+  const d = new Date();
+  d.setDate(1);
+  return d.toISOString().slice(0, 10);
+}
+
+function daysUntilMonthEnd(): number {
+  const now = new Date();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return lastDay - now.getDate();
+}
+
+function formatBatchDate(dateStr: string): string {
+  const today = todayDate();
+  if (dateStr === today) return "Today";
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  if (dateStr === d.toISOString().slice(0, 10)) return "Yesterday";
+  const parsed = new Date(dateStr + "T00:00:00");
+  return parsed.toLocaleDateString("en-ZA", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
 }
 
 export default function PipelineHubPage() {
@@ -149,10 +126,25 @@ export default function PipelineHubPage() {
   const searchParams = useSearchParams();
   const isFirstBatch = searchParams.get("firstBatch") === "1";
 
-  // Task 22: setup gate. If the tenant has outbound enrolled but no generated
-  // ICP, redirect to the wizard before rendering anything.
   const [setupChecked, setSetupChecked] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [prospects, setProspects] = useState<ProspectRow[]>([]);
+  const [quota, setQuota] = useState<QuotaData | null>(null);
+  const [dayLabel, setDayLabel] = useState("");
 
+  useEffect(() => {
+    setDayLabel(
+      new Date().toLocaleDateString("en-ZA", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    );
+  }, []);
+
+  // Task 22 setup gate: if outbound is enrolled but ICP is not generated,
+  // redirect to the wizard before rendering anything.
   useEffect(() => {
     let cancelled = false;
     fetch("/api/pipeline/setup-status", { cache: "no-store" })
@@ -173,81 +165,27 @@ export default function PipelineHubPage() {
     };
   }, [router]);
 
-  const [loading, setLoading] = useState(true);
-  const [prospects, setProspects] = useState<ProspectRow[]>([]);
-  const [todaysProspects, setTodaysProspects] = useState<ProspectRow[]>([]);
-  const [replies, setReplies] = useState<ReplyRow[]>([]);
-  const [meetings, setMeetings] = useState<MeetingRow[]>([]);
-  const [contactFilter, setContactFilter] = useState<ContactFilter>("all");
-  const [dayLabel, setDayLabel] = useState("");
-
-  // Client-side day label, avoids hydration mismatches.
-  useEffect(() => {
-    setDayLabel(
-      new Date().toLocaleDateString("en-ZA", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }),
-    );
-  }, []);
-
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const todayISO = startOfTodayISO();
-      const weekISO = startOfWeekISO();
-
-      const today = todayBatchDate();
-
-      const [pRes, rRes, mRes, tRes] = await Promise.all([
+      const [pRes, qRes] = await Promise.all([
         safeQuery<ProspectRow>(() =>
           supabase
             .from("pipeline_prospects")
             .select(
-              "id, first_name, last_name, company, industry, city, email, email_verified, linkedin_url, enrichment_score, status, created_at, updated_at",
+              "id, first_name, last_name, company, industry, city, email, email_verified, enrichment_score, status, delivery_batch_date",
             )
             .order("enrichment_score", { ascending: false, nullsFirst: false })
             .limit(500),
         ),
-        safeQuery<ReplyRow>(() =>
-          supabase
-            .from("pipeline_replies")
-            .select("id, prospect_id, classification, body, received_at")
-            .order("received_at", { ascending: false, nullsFirst: false })
-            .limit(10),
-        ),
-        safeQuery<MeetingRow>(() =>
-          supabase
-            .from("pipeline_meetings")
-            .select("id, prospect_id, scheduled_at, created_at")
-            .gte("scheduled_at", weekISO)
-            .order("scheduled_at", { ascending: true, nullsFirst: false })
-            .limit(20),
-        ),
-        // Task 23: today's batch hero. Reuses the same tenant-isolated
-        // pipeline_prospects table (RLS by business_id), filtered to rows
-        // whose delivery_batch_date is today.
-        safeQuery<ProspectRow>(() =>
-          supabase
-            .from("pipeline_prospects")
-            .select(
-              "id, first_name, last_name, company, industry, city, email, email_verified, linkedin_url, enrichment_score, status, created_at, updated_at",
-            )
-            .eq("delivery_batch_date", today)
-            .order("enrichment_score", { ascending: false, nullsFirst: false })
-            .limit(100),
-        ),
+        fetch("/api/pipeline/quota", { cache: "no-store" })
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null),
       ]);
       if (cancelled) return;
       setProspects(pRes.data);
-      setReplies(rRes.data);
-      setMeetings(mRes.data);
-      setTodaysProspects(tRes.data);
+      setQuota(qRes);
       setLoading(false);
-      // Suppress "unused" warning on todayISO when KPIs derive it via filters.
-      void todayISO;
     }
     load();
     return () => {
@@ -256,150 +194,50 @@ export default function PipelineHubPage() {
   }, []);
 
   // -------------------------------------------------------------------------
-  // Derived KPIs
+  // Derived values
   // -------------------------------------------------------------------------
-  const total = prospects.length;
+  const today = todayDate();
+  const weekStart = startOfWeekDate();
+  const monthStart = startOfMonthDate();
 
-  const sentAll = useMemo(
-    () =>
-      prospects.filter((p) => {
-        const s = (p.status || "").toLowerCase();
-        return ["contacted", "replied", "qualified", "booked"].includes(s);
-      }).length,
-    [prospects],
+  const todaysProspects = useMemo(
+    () => prospects.filter((p) => p.delivery_batch_date === today),
+    [prospects, today],
   );
 
-  const sentToday = useMemo(() => {
-    const startMs = new Date(startOfTodayISO()).getTime();
-    return prospects.filter((p) => {
-      const s = (p.status || "").toLowerCase();
-      if (!["contacted", "replied", "qualified", "booked"].includes(s)) {
-        return false;
-      }
-      const t = p.updated_at ? new Date(p.updated_at).getTime() : 0;
-      return t >= startMs;
-    }).length;
-  }, [prospects]);
-
-  const repliedCount = useMemo(
-    () =>
-      prospects.filter((p) => {
-        const s = (p.status || "").toLowerCase();
-        return ["replied", "qualified", "booked"].includes(s);
-      }).length,
-    [prospects],
-  );
-  const replyRate = sentAll > 0 ? Math.round((repliedCount / sentAll) * 100) : 0;
-
-  const bookedThisWeek = useMemo(() => {
-    const weekMs = new Date(startOfWeekISO()).getTime();
-    return meetings.filter((m) => {
-      const t = m.scheduled_at ? new Date(m.scheduled_at).getTime() : 0;
-      return t >= weekMs;
-    }).length;
-  }, [meetings]);
-  const bookedPctOfSent = sentAll > 0
-    ? Math.round((bookedThisWeek / sentAll) * 100)
-    : 0;
-
-  const streak = useMemo(
-    () =>
-      computeStreak(
-        prospects
-          .map((p) => p.updated_at)
-          .filter((x): x is string => !!x),
-      ),
-    [prospects],
-  );
-
-  const lastSentHoursAgo = useMemo(() => {
-    const stamps = prospects
-      .map((p) =>
-        p.updated_at ? new Date(p.updated_at).getTime() : 0,
-      )
-      .filter((n) => n > 0);
-    if (stamps.length === 0) return null;
-    const newest = Math.max(...stamps);
-    return Math.max(0, Math.floor((Date.now() - newest) / (1000 * 60 * 60)));
-  }, [prospects]);
-
-  // Coverage row
-  const siteVerified = useMemo(
+  const thisWeekCount = useMemo(
     () =>
       prospects.filter(
-        (p) => p.email_verified === true || !!p.linkedin_url,
+        (p) => p.delivery_batch_date && p.delivery_batch_date >= weekStart,
       ).length,
+    [prospects, weekStart],
+  );
+
+  const emailCount = useMemo(
+    () => prospects.filter((p) => !!p.email).length,
     [prospects],
   );
-  const coveragePct = total > 0 ? Math.round((siteVerified / total) * 100) : 0;
 
-  const hasEmail = useMemo(
-    () =>
-      prospects.filter((p) => !!p.email && p.email_verified === true).length,
-    [prospects],
-  );
-  // Phone column does not exist yet, treat as zero per spec.
-  const hasPhone = 0;
-  const hasBoth = 0; // Cannot have both without a phone column.
-  const phoneOnly = 0;
+  const total = prospects.length;
 
-  // Contact filter counts and filtered queue (top of queue list).
-  const counts: ContactFilterCounts = useMemo(() => {
-    return {
-      all: total,
-      has_email: hasEmail,
-      has_phone: hasPhone,
-      email_and_phone: hasBoth,
-      email_only: hasEmail,
-      phone_only: phoneOnly,
-    };
-  }, [total, hasEmail]);
-
-  // Eligible cold queue, filterable by contact-info pill, scored DESC.
-  const queue: QueueRowData[] = useMemo(() => {
-    const cold = prospects.filter(
-      (p) => (p.status || "new").toLowerCase() === "new",
-    );
-    const filtered = cold.filter((p) => {
-      const e = !!p.email && p.email_verified === true;
-      switch (contactFilter) {
-        case "all":
-          return true;
-        case "has_email":
-          return e;
-        case "email_only":
-          return e;
-        case "has_phone":
-        case "email_and_phone":
-        case "phone_only":
-          // No phone column yet, nothing matches phone-related filters.
-          return false;
-        default:
-          return true;
-      }
+  // Group all prospects by delivery_batch_date for the history panel.
+  // Prospects with no batch date (generated before the column existed) go
+  // into a catch-all "Earlier" bucket at the bottom.
+  const historyGroups = useMemo(() => {
+    const byDate = new Map<string, ProspectRow[]>();
+    for (const p of prospects) {
+      const key = p.delivery_batch_date ?? "_earlier";
+      if (!byDate.has(key)) byDate.set(key, []);
+      byDate.get(key)!.push(p);
+    }
+    const dates = Array.from(byDate.keys()).sort((a, b) => {
+      if (a === "_earlier") return 1;
+      if (b === "_earlier") return -1;
+      return b.localeCompare(a);
     });
-    return filtered.slice(0, 6).map((p) => ({
-      id: p.id,
-      name: prospectDisplayName(p),
-      industry: p.industry,
-      city: p.city,
-      enrichment_score: p.enrichment_score,
-      email_verified: p.email_verified,
-      status: p.status,
-    }));
-  }, [prospects, contactFilter]);
+    return dates.map((d) => ({ date: d, count: byDate.get(d)!.length }));
+  }, [prospects]);
 
-  const totalColdEligible = useMemo(
-    () =>
-      prospects.filter((p) => (p.status || "new").toLowerCase() === "new")
-        .length,
-    [prospects],
-  );
-
-  const recentReplies = replies.slice(0, 3);
-  const upcomingCalls = meetings.slice(0, 3);
-
-  // Today's batch rendered as QueueRow data, score-ranked.
   const todaysQueue: QueueRowData[] = useMemo(
     () =>
       todaysProspects.map((p) => ({
@@ -415,8 +253,7 @@ export default function PipelineHubPage() {
   );
 
   // -------------------------------------------------------------------------
-  // Task 22 gate, show a loading shell until the setup check resolves so we
-  // never flash an empty dashboard at a tenant who needs the wizard.
+  // Setup gate: show nothing until the redirect check resolves.
   // -------------------------------------------------------------------------
   if (!setupChecked) {
     return <div className="p-8 text-ink-500">Loading...</div>;
@@ -440,14 +277,14 @@ export default function PipelineHubPage() {
             No prospects yet
           </h2>
           <p className="text-[14.5px] text-ink-500 leading-relaxed max-w-[48ch]">
-            Define your ICP and Qwikly will generate the hottest matching
-            prospects.
+            Define your target profile and Qwikly will start delivering
+            best-fit prospects every morning.
           </p>
           <Link
             href="/dashboard/pipeline/setup"
             className="inline-flex items-center gap-2 rounded-full bg-ember text-cream px-5 py-2.5 text-[13.5px] font-medium hover:bg-ember-deep transition-colors"
           >
-            Set up my ICP
+            Set up my target profile
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -455,56 +292,59 @@ export default function PipelineHubPage() {
     );
   }
 
+  const planLabel = PLAN_LABELS[quota?.plan ?? ""] ?? quota?.plan ?? "Pro";
+  const dailyQuota = quota?.daily_quota ?? 5;
+  const daysLeft = daysUntilMonthEnd();
+
   return (
     <div className="flex flex-col gap-8">
-      {/* 1. HEADER ROW */}
+      {/* 1. HEADER */}
       <header className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 pb-6 border-b border-ink/[0.08]">
         <div className="flex flex-col gap-2">
           <div className="eyebrow text-ink-500">Pipeline</div>
           <h1 className="font-display text-[40px] md:text-[48px] leading-[1.05] tracking-tight text-ink">
             Mission Control
           </h1>
-          <p className="text-ink-500 text-[14px]">
+          <p className="text-ink-500 text-[14px] flex items-center gap-2 flex-wrap">
             {dayLabel || "Today"}
-            {" · "}
-            <span className="font-mono tabular-nums">{total}</span> prospects
-            loaded
-            {" · streak "}
-            <span className="font-mono tabular-nums">{streak}</span>d
+            {quota && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-ember/10 text-ember text-[12px] font-medium font-mono">
+                {planLabel} · {dailyQuota}/day
+              </span>
+            )}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Link
-            href="/dashboard/pipeline/board"
+            href="/dashboard/pipeline/prospects"
             className="inline-flex items-center gap-2 rounded-full bg-[#F1EADD] text-ink px-4 py-2 text-[13px] font-medium ring-1 ring-[#E8DFD0] hover:bg-[#EBE3D2] transition-colors"
           >
-            Open queue
+            <Users className="w-3.5 h-3.5" />
+            All prospects
           </Link>
           <Link
-            href="/dashboard/pipeline/board?sprint=10x25"
+            href="/dashboard/pipeline/setup"
             className="inline-flex items-center gap-2 rounded-full bg-ember text-cream px-4 py-2 text-[13px] font-medium hover:bg-ember-deep transition-colors"
           >
-            Start sprint, 10 in 25 mins
-            <ArrowRight className="w-3.5 h-3.5" />
+            <Settings2 className="w-3.5 h-3.5" />
+            Edit target profile
           </Link>
         </div>
       </header>
 
-      {/* TASK 23: TODAY'S BATCH HERO
-          Shows prospects whose delivery_batch_date == today. If the user
-          arrived via ?firstBatch=1 (right after the wizard fired the first
-          generation), the heading switches to a welcome variant. */}
-      {todaysQueue.length > 0 && (
+      {/* 2. TODAY'S BATCH HERO */}
+      {todaysQueue.length > 0 ? (
         <section className="rounded-lg border border-ember/30 bg-ember/5 p-6">
           <h2 className="font-display text-[24px] md:text-[28px] leading-tight tracking-tight text-ink">
             {isFirstBatch ? "Your first" : "Today's"} {todaysQueue.length}{" "}
-            best-fit {todaysQueue.length === 1 ? "prospect" : "prospects"}
+            best-fit{" "}
+            {todaysQueue.length === 1 ? "prospect" : "prospects"}
           </h2>
-          {isFirstBatch && (
-            <p className="text-ink-600 mt-1 text-[14px]">
-              Welcome, here&apos;s what we built for you.
-            </p>
-          )}
+          <p className="text-ink-500 mt-1 text-[13px]">
+            {isFirstBatch
+              ? "Welcome, here's what we built for you."
+              : "Delivered this morning, scored by best fit to your target profile."}
+          </p>
           <div className="mt-4 ed-card !p-0 overflow-hidden">
             <div className="flex flex-col">
               {todaysQueue.map((q) => (
@@ -513,208 +353,143 @@ export default function PipelineHubPage() {
             </div>
           </div>
         </section>
+      ) : (
+        <section className="rounded-lg border border-ink/10 bg-[#F9F7F4] p-6">
+          <h2 className="font-display text-[22px] leading-tight tracking-tight text-ink">
+            Today&apos;s prospects
+          </h2>
+          <p className="text-ink-500 text-[14px] mt-1.5">
+            {loading
+              ? "Loading..."
+              : "No prospects delivered yet today. Your next batch arrives tomorrow morning."}
+          </p>
+        </section>
       )}
 
-      {/* 2. SPRINT KPI ROW */}
+      {/* 3. KPI ROW — only metrics we can actually measure */}
       <section
-        aria-label="Sprint metrics"
+        aria-label="Prospect metrics"
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
       >
         <KpiCard
-          label="SENT TODAY"
-          value={loading ? "," : sentToday}
-          hint={!loading ? `${sentAll} all-time` : undefined}
+          label="DELIVERED TODAY"
+          value={loading ? "·" : todaysProspects.length}
+          hint={!loading ? `${dailyQuota} on your plan` : undefined}
         />
         <KpiCard
-          label="REPLY RATE"
-          value={loading ? "," : `${replyRate}%`}
-          hint={!loading ? `${repliedCount} of ${sentAll} sent` : undefined}
+          label="THIS WEEK"
+          value={loading ? "·" : thisWeekCount}
+          hint={!loading ? "Mon to today" : undefined}
         />
         <KpiCard
-          label="BOOKED"
-          value={loading ? "," : bookedThisWeek}
-          hint={!loading ? `${bookedPctOfSent}% of sent` : undefined}
-        />
-        <KpiCard
-          label="STREAK"
-          value={loading ? "," : `${streak}d`}
+          label="TOTAL IN POOL"
+          value={loading ? "·" : total}
           hint={
             !loading
-              ? lastSentHoursAgo === null
-                ? "No sends yet"
-                : `last sent ${lastSentHoursAgo}h ago`
+              ? daysLeft <= 3
+                ? `Resets in ${daysLeft}d`
+                : `${daysLeft}d until month resets`
+              : undefined
+          }
+        />
+        <KpiCard
+          label="EMAIL FOUND"
+          value={loading ? "·" : emailCount}
+          hint={
+            !loading && total > 0
+              ? `${Math.round((emailCount / total) * 100)}% of pool`
               : undefined
           }
         />
       </section>
 
-      {/* 3. COVERAGE KPI ROW */}
-      <section
-        aria-label="Prospect coverage"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-      >
-        <KpiCard
-          label="TOTAL PROSPECTS"
-          value={loading ? "," : total}
-          hint={!loading ? "all working sites + contact" : undefined}
-        />
-        <KpiCard
-          label="SITE VERIFIED"
-          value={loading ? "," : siteVerified}
-          hint={!loading ? `${coveragePct}% scrape coverage` : undefined}
-        />
-        <KpiCard
-          label="HAS EMAIL"
-          value={loading ? "," : hasEmail}
-          hint={!loading ? `${hasBoth} have both` : undefined}
-        />
-        <KpiCard
-          label="HAS PHONE"
-          value={loading ? "," : hasPhone}
-          hint={!loading ? `${phoneOnly} phone-only` : undefined}
-          estimate
-        />
-      </section>
-
-      {/* 4. CONTACT INFO FILTER PILLS */}
-      <ContactFilterPills
-        active={contactFilter}
-        counts={counts}
-        onChange={setContactFilter}
-      />
-
-      {/* 5. TWO-COLUMN BODY */}
+      {/* 4. ICP CARD + DELIVERY HISTORY */}
       <section className="grid grid-cols-1 md:grid-cols-12 gap-5">
-        {/* LEFT: Top of queue */}
-        <div className="md:col-span-7 ed-card !p-0 overflow-hidden flex flex-col">
-          <div className="px-5 pt-5 pb-3 flex items-start justify-between gap-3 border-b border-ink/[0.06]">
+        {/* LEFT: Target profile summary */}
+        <div className="md:col-span-4 ed-card !p-6 flex flex-col gap-5">
+          <div>
+            <h2 className="font-display text-[20px] leading-tight tracking-tight text-ink">
+              Your target profile
+            </h2>
+            <p className="text-[12.5px] text-ink-500 mt-1 leading-relaxed">
+              Qwikly uses this to select and score every prospect. Changes you
+              make take effect the following morning.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/pipeline/setup"
+            className="inline-flex items-center gap-2 rounded-full bg-ember text-cream px-4 py-2.5 text-[13px] font-medium hover:bg-ember-deep transition-colors self-start"
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+            Edit target profile
+          </Link>
+        </div>
+
+        {/* RIGHT: Delivery history log */}
+        <div className="md:col-span-8 ed-card !p-0 overflow-hidden flex flex-col">
+          <div className="px-5 pt-5 pb-3 border-b border-ink/[0.06] flex items-start justify-between gap-3">
             <div>
-              <h2 className="font-display text-[22px] leading-tight tracking-tight text-ink">
-                Top of queue
+              <h2 className="font-display text-[20px] leading-tight tracking-tight text-ink">
+                Prospect history
               </h2>
               <p className="text-[12.5px] text-ink-500 mt-0.5">
-                Score-ranked, not yet contacted
+                All deliveries this account has received. Archived at month end.
               </p>
             </div>
             <Link
               href="/dashboard/pipeline/prospects"
-              className="text-[12.5px] font-medium text-ember inline-flex items-center gap-1.5 hover:text-ember-deep shrink-0"
+              className="text-[12.5px] font-medium text-ember inline-flex items-center gap-1.5 hover:text-ember-deep shrink-0 mt-0.5"
             >
-              See all (
-              <span className="font-mono tabular-nums">{totalColdEligible}</span>
-              )
+              View all
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
+
           {loading ? (
-            <div className="px-5 py-6 text-[13px] text-ink-500">Loading,</div>
-          ) : queue.length === 0 ? (
-            <div className="px-6 py-10 flex flex-col items-center text-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-ink-400" />
-              <p className="text-[13.5px] text-ink-500 max-w-[44ch]">
-                No cold prospects match this filter. Try widening it, or
-                generate more.
-              </p>
+            <div className="px-5 py-6 text-[13px] text-ink-500">
+              Loading...
+            </div>
+          ) : historyGroups.length === 0 ? (
+            <div className="px-5 py-6 text-[13px] text-ink-500">
+              No delivery history yet.
             </div>
           ) : (
-            <div className="flex flex-col">
-              {queue.map((q) => (
-                <QueueRow key={q.id} prospect={q} />
-              ))}
+            <div className="flex flex-col divide-y divide-ink/[0.06]">
+              {historyGroups.slice(0, 20).map(({ date, count }) => {
+                const isCurrentMonth =
+                  date !== "_earlier" && date >= monthStart;
+                const label =
+                  date === "_earlier" ? "Earlier" : formatBatchDate(date);
+                return (
+                  <div
+                    key={date}
+                    className={`px-5 py-3 flex items-center justify-between gap-3 ${
+                      !isCurrentMonth ? "opacity-50" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13.5px] font-medium text-ink">
+                        {label}
+                      </span>
+                      {!isCurrentMonth && (
+                        <span className="text-[11px] text-ink-400 font-mono">
+                          archived
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-mono text-[12px] text-ink-500 tabular-nums">
+                      {count} {count === 1 ? "prospect" : "prospects"}
+                    </span>
+                  </div>
+                );
+              })}
+              {historyGroups.length > 20 && (
+                <div className="px-5 py-3 text-[12.5px] text-ink-400">
+                  + {historyGroups.length - 20} older batches
+                </div>
+              )}
             </div>
           )}
-        </div>
-
-        {/* RIGHT: Recent replies + Upcoming calls */}
-        <div className="md:col-span-5 flex flex-col gap-5">
-          {/* Recent replies */}
-          <div className="ed-card !p-0 overflow-hidden">
-            <div className="px-5 pt-5 pb-3 border-b border-ink/[0.06]">
-              <h2 className="font-display text-[20px] leading-tight tracking-tight text-ink">
-                Recent replies
-              </h2>
-              <p className="text-[12.5px] text-ink-500 mt-0.5">
-                Drop into Replies view to draft responses
-              </p>
-            </div>
-            {loading ? (
-              <div className="px-5 py-6 text-[13px] text-ink-500">Loading,</div>
-            ) : recentReplies.length === 0 ? (
-              <div className="px-5 py-6 text-[13px] text-ink-500">
-                No replies yet. Keep sending.
-              </div>
-            ) : (
-              <ul className="divide-y divide-ink/[0.06]">
-                {recentReplies.map((r) => (
-                  <li
-                    key={r.id}
-                    className="px-5 py-3.5 flex flex-col gap-1.5"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[13.5px] font-medium text-ink truncate">
-                        {r.prospect_id ? "Reply" : "Unknown sender"}
-                      </span>
-                      <span className="font-mono text-[11px] text-ink-500 shrink-0">
-                        {r.received_at ? timeAgo(r.received_at) : ""}
-                      </span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <p className="text-[12.5px] text-ink-500 leading-relaxed line-clamp-1 flex-1">
-                        {(r.body || "(no preview)").slice(0, 100)}
-                      </p>
-                      {r.classification ? (
-                        <StatusPill tone={replyClassTone(r.classification)}>
-                          {r.classification.replace(/_/g, " ").toLowerCase()}
-                        </StatusPill>
-                      ) : null}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Upcoming calls */}
-          <div className="ed-card !p-0 overflow-hidden">
-            <div className="px-5 pt-5 pb-3 border-b border-ink/[0.06]">
-              <h2 className="font-display text-[20px] leading-tight tracking-tight text-ink">
-                Upcoming calls
-              </h2>
-              <p className="text-[12.5px] text-ink-500 mt-0.5">
-                Discovery + demo bookings
-              </p>
-            </div>
-            {loading ? (
-              <div className="px-5 py-6 text-[13px] text-ink-500">Loading,</div>
-            ) : upcomingCalls.length === 0 ? (
-              <div className="px-5 py-6 text-[13px] text-ink-500">
-                No bookings yet. Aim for 3 this week.
-              </div>
-            ) : (
-              <ul className="divide-y divide-ink/[0.06]">
-                {upcomingCalls.map((m) => (
-                  <li
-                    key={m.id}
-                    className="px-5 py-3.5 flex items-center gap-3"
-                  >
-                    <span className="w-8 h-8 rounded-full bg-[#FBE8DD] text-[#8A3B2A] inline-flex items-center justify-center shrink-0">
-                      <CalendarClock className="w-4 h-4" />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[13.5px] font-medium text-ink truncate">
-                        Booking
-                      </div>
-                      <div className="font-mono text-[11.5px] text-ink-500">
-                        {m.scheduled_at
-                          ? formatDateTime(m.scheduled_at)
-                          : "Time pending"}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
         </div>
       </section>
     </div>
