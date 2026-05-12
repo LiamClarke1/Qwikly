@@ -3,6 +3,7 @@ import { Inter, Fraunces, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import CookieBanner from "@/components/CookieBanner";
+import InAppBrowserGate from "@/components/InAppBrowserGate";
 import "./globals.css";
 
 const inter = Inter({
@@ -210,6 +211,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased bg-paper text-ink">
+        <InAppBrowserGate />
         {children}
         <CookieBanner />
         <Analytics />
