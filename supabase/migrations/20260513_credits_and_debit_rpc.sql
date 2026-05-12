@@ -91,7 +91,7 @@ SET
     WHEN 'pro'        THEN 20000   -- R200
     WHEN 'founders'   THEN 25000   -- R250
     WHEN 'business'   THEN 50000   -- R500
-    WHEN 'enterprise' THEN120000   -- R1,200
+    WHEN 'enterprise' THEN 120000  -- R1,200
     WHEN 'premium'    THEN 28000   -- R280 (legacy)
     ELSE                   2000    -- fallback: trial amount
   END,
