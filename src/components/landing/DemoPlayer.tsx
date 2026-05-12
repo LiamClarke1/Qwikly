@@ -13,7 +13,7 @@ type ToneId = "friendly" | "direct" | "professional" | "casual";
 
 const tones: { id: ToneId; label: string; sub: string }[] = [
   { id: "friendly", label: "Friendly & warm", sub: "Like your best employee" },
-  { id: "direct",   label: "Direct & efficient", sub: "No fluff, just booked" },
+  { id: "direct",   label: "Direct & efficient", sub: "No fluff, just results" },
   { id: "professional", label: "Professional", sub: "Formal and polished" },
   { id: "casual",   label: "Laid-back", sub: "Conversational, easy-going" },
 ];
@@ -21,43 +21,43 @@ const tones: { id: ToneId; label: string; sub: string }[] = [
 const toneMessages: Record<ToneId, DemoMessage[]> = {
   friendly: [
     { sender: "customer", text: "Hi, I have a leaking tap in the kitchen. Can someone come tomorrow?", delay: 0 },
-    { sender: "ai", text: "Hi! Yes, we can definitely sort that out. Is it a constant drip or does it run when you use the tap?", delay: 1400 },
+    { sender: "ai", text: "Hi! Happy to help. Is it a constant drip or does it only run when you use the tap?", delay: 1400 },
     { sender: "customer", text: "It's a constant drip. Getting worse.", delay: 2800 },
-    { sender: "ai", text: "That's usually a washer or cartridge. Quick fix. What suburb are you in?", delay: 4200 },
+    { sender: "ai", text: "That's usually a worn washer — a quick fix. Which suburb are you in?", delay: 4200 },
     { sender: "customer", text: "Midrand.", delay: 5600 },
-    { sender: "ai", text: "We're in Midrand tomorrow. I have 9am or 1pm available. Which works for you?", delay: 7000 },
-    { sender: "customer", text: "9am please", delay: 8400 },
-    { sender: "ai", text: "Done! Booked for 9am tomorrow in Midrand. You'll get a confirmation now and a reminder in the morning. What's your name?", delay: 9800 },
+    { sender: "ai", text: "Got it. What's your email so I can send your details through to the team? They'll reach out to confirm a time.", delay: 7000 },
+    { sender: "customer", text: "john@gmail.com", delay: 8400 },
+    { sender: "ai", text: "Done! Your details are with the team. You'll hear from them shortly.", delay: 9800 },
   ],
   direct: [
     { sender: "customer", text: "Hi, I have a leaking tap in the kitchen. Can someone come tomorrow?", delay: 0 },
-    { sender: "ai", text: "Hi. Constant drip or only when you use the tap?", delay: 1400 },
+    { sender: "ai", text: "Hi. Constant drip or only when in use?", delay: 1400 },
     { sender: "customer", text: "Constant drip.", delay: 2800 },
-    { sender: "ai", text: "Washer or cartridge. Straightforward job. Suburb?", delay: 4200 },
+    { sender: "ai", text: "Worn washer. Easy job. Suburb?", delay: 4200 },
     { sender: "customer", text: "Midrand.", delay: 5600 },
-    { sender: "ai", text: "Midrand: 9am or 1pm tomorrow. Which?", delay: 7000 },
-    { sender: "customer", text: "9am", delay: 8400 },
-    { sender: "ai", text: "9am booked. Confirmation on its way. Your name?", delay: 9800 },
+    { sender: "ai", text: "Email address so the team can reach you?", delay: 7000 },
+    { sender: "customer", text: "john@gmail.com", delay: 8400 },
+    { sender: "ai", text: "Sent. Team will be in touch to confirm a time.", delay: 9800 },
   ],
   professional: [
     { sender: "customer", text: "Hi, I have a leaking tap in the kitchen. Can someone come tomorrow?", delay: 0 },
-    { sender: "ai", text: "Good day. Thank you for reaching out. Is the leak continuous or does it occur when the tap is in use?", delay: 1400 },
+    { sender: "ai", text: "Good day. Is the leak continuous or does it only occur when the tap is in use?", delay: 1400 },
     { sender: "customer", text: "It's continuous.", delay: 2800 },
-    { sender: "ai", text: "That typically indicates a worn washer or cartridge, a minor repair. May I confirm your suburb?", delay: 4200 },
+    { sender: "ai", text: "That typically indicates a worn washer or cartridge. May I confirm your suburb?", delay: 4200 },
     { sender: "customer", text: "Midrand.", delay: 5600 },
-    { sender: "ai", text: "We have availability in Midrand tomorrow at 9:00am or 1:00pm. Which time would suit you?", delay: 7000 },
-    { sender: "customer", text: "9am please", delay: 8400 },
-    { sender: "ai", text: "Your appointment is confirmed for 9:00am tomorrow in Midrand. You will receive a booking confirmation shortly. May I take your name?", delay: 9800 },
+    { sender: "ai", text: "Thank you. Could you share your email address so the team can reach you to confirm availability?", delay: 7000 },
+    { sender: "customer", text: "john@gmail.com", delay: 8400 },
+    { sender: "ai", text: "Your enquiry has been logged. The team will be in touch shortly to arrange a suitable time.", delay: 9800 },
   ],
   casual: [
     { sender: "customer", text: "Hi, I have a leaking tap in the kitchen. Can someone come tomorrow?", delay: 0 },
-    { sender: "ai", text: "Hey! Sure thing, we can sort that no problem. Is it dripping all the time or just when you turn it on?", delay: 1400 },
+    { sender: "ai", text: "Hey! Sure, what's going on with it — dripping all the time or just when you use it?", delay: 1400 },
     { sender: "customer", text: "All the time. Getting annoying.", delay: 2800 },
-    { sender: "ai", text: "Yeah that's probably just a washer. Easy fix honestly. What area are you in?", delay: 4200 },
+    { sender: "ai", text: "Yeah sounds like just a washer, easy fix. What area are you in?", delay: 4200 },
     { sender: "customer", text: "Midrand.", delay: 5600 },
-    { sender: "ai", text: "Cool, we're in Midrand tomorrow! Morning slot at 9 or afternoon at 1, which works better for you?", delay: 7000 },
-    { sender: "customer", text: "9am works", delay: 8400 },
-    { sender: "ai", text: "Sorted! See you at 9am tomorrow in Midrand. I'll send you a confirmation now and ping you in the morning. What's your name?", delay: 9800 },
+    { sender: "ai", text: "Nice, what's your email? I'll send your details across and the team will reach out to lock in a time.", delay: 7000 },
+    { sender: "customer", text: "john@gmail.com", delay: 8400 },
+    { sender: "ai", text: "Sorted! You'll hear from them soon.", delay: 9800 },
   ],
 };
 
@@ -67,11 +67,11 @@ const otherScenarios: { id: string; label: string; messages: DemoMessage[] }[] =
     label: "After-hours emergency",
     messages: [
       { sender: "customer", text: "URGENT. My geyser just burst. It's 11pm. Is anyone available?", delay: 0 },
-      { sender: "ai", text: "Sorry to hear that. Turn off the mains water now if you haven't. We have an emergency callout available. Which area?", delay: 1400 },
+      { sender: "ai", text: "On it. First — shut off your mains water now if you haven't already. Which area are you in?", delay: 1400 },
       { sender: "customer", text: "Bryanston. Mains is off.", delay: 2800 },
-      { sender: "ai", text: "Good. Our tech can be there in about 45 minutes. Emergency callout is R1,200 + parts. Want me to book it?", delay: 4200 },
-      { sender: "customer", text: "Yes please, as soon as possible", delay: 5600 },
-      { sender: "ai", text: "Booked. Tech is on his way. You'll get his number so you can track him. ETA 11:45pm. Stay dry!", delay: 7000 },
+      { sender: "ai", text: "Good. What's your email or number so the team can reach you right away?", delay: 4200 },
+      { sender: "customer", text: "john@gmail.com", delay: 5600 },
+      { sender: "ai", text: "Your emergency has been flagged as urgent. The team will contact you now. Stay safe.", delay: 7000 },
     ],
   },
   {
@@ -79,13 +79,13 @@ const otherScenarios: { id: string; label: string; messages: DemoMessage[] }[] =
     label: "Customer asking for a quote",
     messages: [
       { sender: "customer", text: "How much would it cost to install solar panels on a 3-bedroom house?", delay: 0 },
-      { sender: "ai", text: "Great question. A standard 3-bed setup with 6 panels and a 5kWh battery runs R85,000 to R110,000 installed. That's typically paid back in 4–5 years. Are you grid-tied or looking for full off-grid?", delay: 1400 },
-      { sender: "customer", text: "Grid-tied would be fine. I just want to reduce my Eskom bill.", delay: 2800 },
-      { sender: "ai", text: "Grid-tied is the sweet spot for most homes. We can do a free site assessment and give you an exact quote. Which area are you in and when works for a visit?", delay: 4200 },
-      { sender: "customer", text: "Cape Town. Next week sometime.", delay: 5600 },
-      { sender: "ai", text: "I've got Tuesday or Thursday next week for a free assessment. Which day works?", delay: 7000 },
-      { sender: "customer", text: "Thursday", delay: 8400 },
-      { sender: "ai", text: "Locked in. Thursday assessment confirmed in Cape Town. What's your name so I can send the details?", delay: 9800 },
+      { sender: "ai", text: "Good question. It depends on a few things — are you looking to stay grid-tied or go fully off-grid?", delay: 1400 },
+      { sender: "customer", text: "Grid-tied. I just want to cut my Eskom bill.", delay: 2800 },
+      { sender: "ai", text: "Grid-tied is the most popular option. A free site assessment gives you an exact number. Which area are you in?", delay: 4200 },
+      { sender: "customer", text: "Cape Town.", delay: 5600 },
+      { sender: "ai", text: "Got it. What's your email so the team can reach you to set up the assessment?", delay: 7000 },
+      { sender: "customer", text: "jane@gmail.com", delay: 8400 },
+      { sender: "ai", text: "Details sent through. The team will be in touch to arrange a convenient time.", delay: 9800 },
     ],
   },
 ];
@@ -209,7 +209,7 @@ export function DemoPlayer() {
                   : "bg-white/60 text-ink-700 border-ink/12 hover:border-ink/25 hover:bg-white"
               )}
             >
-              Show me a leaking-tap booking
+              Leaking tap enquiry
             </button>
             {otherScenarios.map((s) => (
               <button
@@ -222,7 +222,7 @@ export function DemoPlayer() {
                     : "bg-white/60 text-ink-700 border-ink/12 hover:border-ink/25 hover:bg-white"
                 )}
               >
-                {s.label === "After-hours emergency" ? "Show me an after-hours emergency" : "Show me a customer asking for a quote"}
+                {s.label === "After-hours emergency" ? "After-hours emergency" : "Customer asking for a quote"}
               </button>
             ))}
           </div>
