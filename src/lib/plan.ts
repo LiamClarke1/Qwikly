@@ -286,6 +286,22 @@ export function topUpPricePerLeadZar(tier: InboundPlanTier): number {
 // 15% discount for annual billing
 export const PLAN_ANNUAL_DISCOUNT_PCT = 0.15;
 
+/**
+ * MRR in ZAR cents for a given plan + billing cycle.
+ * For annual billing the monthly-equivalent (annual / 12) is used so MRR
+ * reflects what the customer effectively pays per month.
+ * Trial always returns 0.
+ */
+export function mrrZarCents(tier: InboundPlanTier, billingCycle: string | null | undefined): number {
+  const monthly = PLAN_CONFIG[tier].priceMonthly;
+  if (monthly === 0) return 0;
+  if (billingCycle === "annual") {
+    // annual price / 12, rounded to whole cents
+    return Math.round((monthly * 12 * (1 - PLAN_ANNUAL_DISCOUNT_PCT)) / 12) * 100;
+  }
+  return monthly * 100;
+}
+
 export function annualPrice(monthlyPrice: number): number {
   return Math.round(monthlyPrice * 12 * (1 - PLAN_ANNUAL_DISCOUNT_PCT));
 }

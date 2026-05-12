@@ -6,6 +6,8 @@ import {
   productsForPlan,
   dailyProspectQuotaForPlan,
   startingGrantZarCents,
+  mrrZarCents,
+  resolvePlan,
   type InboundPlanTier,
 } from "@/lib/plan";
 import { applySubscriptionToClient } from "@/lib/billing/apply-subscription";
@@ -116,6 +118,9 @@ export async function POST(req: NextRequest) {
 
   let clientId: number;
 
+  const tier = resolvePlan(plan) as InboundPlanTier;
+  const mrr = mrrZarCents(tier, billing_cycle);
+
   if (existingClient) {
     clientId = existingClient.id;
     await db.from("clients").update({
@@ -126,6 +131,8 @@ export async function POST(req: NextRequest) {
       plan,
       products: productsForPlan(plan),
       pipeline_daily_quota: dailyProspectQuotaForPlan(plan),
+      billing_cycle,
+      mrr_zar: mrr,
       crm_status: "onboarding",
       web_widget_enabled: true,
     }).eq("id", clientId);
@@ -139,6 +146,8 @@ export async function POST(req: NextRequest) {
       plan,
       products: productsForPlan(plan),
       pipeline_daily_quota: dailyProspectQuotaForPlan(plan),
+      billing_cycle,
+      mrr_zar: mrr,
       onboarding_step: 1,
       web_widget_enabled: true,
       crm_status: "onboarding",
