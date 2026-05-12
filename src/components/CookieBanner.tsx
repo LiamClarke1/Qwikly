@@ -42,7 +42,7 @@ export default function CookieBanner() {
     <div
       role="dialog"
       aria-label="Cookie consent"
-      className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-sm z-50 bg-ink text-paper rounded-2xl shadow-pop p-5 border border-paper/10 animate-slide-up"
+      className="fixed bottom-4 left-4 right-4 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:bottom-6 sm:max-w-sm z-50 bg-ink text-paper rounded-2xl shadow-pop p-5 border border-paper/10 animate-slide-up"
     >
       <p className="text-sm text-paper/90 leading-relaxed mb-4">
         We use a small number of cookies to keep you signed in and to remember your choices, in line

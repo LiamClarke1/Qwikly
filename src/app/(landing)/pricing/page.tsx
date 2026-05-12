@@ -29,10 +29,10 @@ const tiers: {
     features: [
       "Digital assistant on your website",
       "Replies to visitors in under 60 seconds",
-      "20 qualified leads/month",
-      "Email lead delivery to the business owner",
+      "Up to 20 leads/month captured by your digital assistant",
       "1 dashboard user",
       '"Powered by Qwikly" branding',
+      "R80 AI conversation credit included",
       "Email support, 24h response",
     ],
   },
@@ -45,10 +45,12 @@ const tiers: {
     cta: "Start with Pro",
     features: [
       "Everything in Starter",
-      "50 qualified leads/month",
+      "Up to 50 leads/month captured by your digital assistant",
       "3 dashboard users",
       "Custom branding, your logo and colours",
       "Custom greeting and qualifying questions",
+      "Email lead delivery to the business owner",
+      "R200 AI conversation credit included",
       "Email support, 12h response",
     ],
   },
@@ -60,9 +62,10 @@ const tiers: {
     cta: "Start with Business",
     features: [
       "Everything in Pro",
-      "200 qualified leads/month",
+      "Up to 200 leads/month captured by your digital assistant",
       "Unlimited dashboard users",
       "Lead exports, CSV",
+      "R500 AI conversation credit included",
       "Priority email support, 4h response",
     ],
   },
@@ -74,8 +77,9 @@ const tiers: {
     cta: "Talk to us",
     features: [
       "Everything in Business",
-      "600+ qualified leads/month",
+      "Up to 600+ leads/month captured by your digital assistant",
       "API access for custom integrations",
+      "R1,200 AI conversation credit included",
       "Dedicated support, 1h response",
       "Custom onboarding",
     ],
@@ -86,27 +90,27 @@ const tiers: {
 const cardHighlights: Record<TierId, string[]> = {
   starter: [
     "Digital assistant on your website",
-    "20 qualified leads/month",
-    "Email lead delivery",
+    "Up to 20 leads/month on your assistant",
+    "R80 AI conversation credit included",
     "Email support, 24h response",
   ],
   pro: [
     "Everything in Starter",
-    "50 qualified leads/month",
-    "Custom branding and questions",
-    "Email support, 12h response",
+    "Up to 50 leads/month on your assistant",
+    "Custom branding, logo and questions",
+    "Email lead delivery + 12h support",
   ],
   business: [
     "Everything in Pro",
-    "200 qualified leads/month",
+    "Up to 200 leads/month on your assistant",
     "Unlimited dashboard users",
-    "CSV lead exports",
+    "R500 AI credit + CSV exports",
   ],
   enterprise: [
     "Everything in Business",
-    "600+ qualified leads/month",
-    "API access, dedicated support",
-    "Custom onboarding",
+    "Up to 600+ leads/month on your assistant",
+    "API access + dedicated support",
+    "Custom onboarding + R1,200 AI credit",
   ],
 };
 
@@ -120,31 +124,39 @@ const featureRows: {
   business: FeatureCell;
   enterprise: FeatureCell;
 }[] = [
-  { label: "Digital assistant on your website",  starter: true,         pro: true,         business: true,           enterprise: true            },
-  { label: "Reply under 60 seconds",              starter: true,         pro: true,         business: true,           enterprise: true            },
-  { label: "Email lead delivery",                 starter: true,         pro: true,         business: true,           enterprise: true            },
-  { label: "POPIA compliant",                     starter: true,         pro: true,         business: true,           enterprise: true            },
-  { label: "Qualified leads / month",             starter: "20",         pro: "50",         business: "200",          enterprise: "600+"          },
-  { label: "Top-up rate beyond plan",             starter: "R35 / lead", pro: "R36 / lead", business: "R20 / lead",  enterprise: "Volume"        },
-  { label: "Dashboard users",                     starter: "1",          pro: "3",          business: "Unlimited",    enterprise: "Unlimited"     },
-  { label: "Custom greeting and questions",       starter: false,        pro: true,         business: true,           enterprise: true            },
-  { label: '"Powered by Qwikly" branding',        starter: true,         pro: false,        business: false,          enterprise: false           },
-  { label: "Custom branding, your logo",          starter: false,        pro: true,         business: true,           enterprise: true            },
-  { label: "Lead exports, CSV",                   starter: false,        pro: false,        business: true,           enterprise: true            },
-  { label: "API access",                          starter: false,        pro: false,        business: false,          enterprise: true            },
-  { label: "Support response",                    starter: "24h",        pro: "12h",        business: "4h",           enterprise: "1h"            },
+  { label: "Digital assistant on your website",        starter: true,         pro: true,         business: true,           enterprise: true            },
+  { label: "Reply under 60 seconds",                   starter: true,         pro: true,         business: true,           enterprise: true            },
+  { label: "POPIA compliant",                          starter: true,         pro: true,         business: true,           enterprise: true            },
+  { label: "Leads captured / month (on your assistant)", starter: "Up to 20", pro: "Up to 50",   business: "Up to 200",    enterprise: "Up to 600+"    },
+  { label: "Email lead delivery",                      starter: false,        pro: true,         business: true,           enterprise: true            },
+  { label: "Top-up rate beyond plan",                  starter: "R35 / lead", pro: "R36 / lead", business: "R20 / lead",  enterprise: "Volume"        },
+  { label: "AI conversation credit included",          starter: "R80 / mo",   pro: "R200 / mo",  business: "R500 / mo",   enterprise: "R1,200 / mo"   },
+  { label: "Dashboard users",                          starter: "1",          pro: "3",          business: "Unlimited",    enterprise: "Unlimited"     },
+  { label: "Custom greeting and questions",            starter: false,        pro: true,         business: true,           enterprise: true            },
+  { label: '"Powered by Qwikly" branding',             starter: true,         pro: false,        business: false,          enterprise: false           },
+  { label: "Custom branding, your logo",               starter: false,        pro: true,         business: true,           enterprise: true            },
+  { label: "Lead exports, CSV",                        starter: false,        pro: false,        business: true,           enterprise: true            },
+  { label: "API access",                               starter: false,        pro: false,        business: false,          enterprise: true            },
+  { label: "Dedicated support manager",                starter: false,        pro: false,        business: false,          enterprise: true            },
+  { label: "Custom onboarding",                        starter: false,        pro: false,        business: false,          enterprise: true            },
+  { label: "Support response",                         starter: "24h",        pro: "12h",        business: "4h",           enterprise: "1h"            },
 ];
 
 const pricingFAQs = [
   {
     question: "What exactly does Qwikly do?",
     answer:
-      "A digital assistant on your website that replies to visitors in under 60 seconds, asks them your qualifying questions, captures their contact info, and emails you when a new lead comes in. That is the whole product.",
+      "A digital assistant on your website that replies to visitors in under 60 seconds, asks them your qualifying questions, captures their contact info, and delivers the lead to you. That is the whole product. Qwikly does not source leads for you — it captures the people already visiting your website and makes sure none of them slip through the cracks.",
+  },
+  {
+    question: "Does Qwikly find leads for me?",
+    answer:
+      "No. Qwikly captures leads from your existing website traffic. When someone lands on your site and opens the chat, your digital assistant qualifies them and saves their details. You get up to the number of leads your plan allows per month, depending on how many visitors engage with your assistant. Qwikly does not run ads, send cold messages, or add prospects from outside your website.",
   },
   {
     question: "How fast does Qwikly reply to a new visitor?",
     answer:
-      "Under 60 seconds, every time. The digital assistant replies in the chat on your website, and as soon as the visitor shares their phone number or email, the lead lands in your inbox by email. That is the only notification channel, no SMS, no WhatsApp, just email.",
+      "Under 60 seconds, every time. The digital assistant replies in the chat on your website, and as soon as the visitor shares their phone number or email, the lead lands in your inbox by email (Pro plans and above). On Starter, new leads appear in your dashboard.",
   },
   {
     question: "What counts as a qualified lead?",
@@ -155,6 +167,11 @@ const pricingFAQs = [
     question: "What happens when I hit my monthly lead limit?",
     answer:
       "We notify you before you hit the cap. You can upgrade your plan, or top up at your plan's per-lead rate: R35 on Starter, R36 on Pro and Founders, R20 on Business. No flat overage, no automatic billing, no surprise charges. Your digital assistant keeps working until you decide.",
+  },
+  {
+    question: "What are AI conversation credits and do I pay extra?",
+    answer:
+      "Running your digital assistant uses AI processing, which has a cost. Each plan includes a monthly AI credit to cover this: R80 on Starter, R200 on Pro, R500 on Business, R1,200 on Enterprise. This credit is more than enough to handle your included lead allowance and typical browse traffic — most customers never come close to using it all. If you run unusually high chat volumes, you can top up your AI credit from the dashboard at any time. Unused credit resets each month and does not roll over.",
   },
   {
     question: "What happens after my 7-day trial?",
@@ -512,10 +529,16 @@ export default function PricingPage() {
             </div>
             <div className="md:col-span-8 md:col-start-5 space-y-6 text-ink-700 text-base leading-relaxed">
               <p>
+                The lead numbers on each plan are the maximum your digital assistant can capture per month. Starter captures up to 20 leads, Pro up to 50, Business up to 200, Enterprise up to 600+. These are leads captured through your assistant on your website — Qwikly does not source or deliver leads to you independently.
+              </p>
+              <p>
                 If you hit your monthly lead cap, you can top up at the per-lead rate on your plan. That is R35 per lead on Starter, R36 on Pro, R20 on Business. Enterprise tops up at volume pricing. There is no flat overage charge, no plan change required, and no automatic billing. You approve every top-up.
               </p>
               <p>
                 A lead is only counted when a visitor shares a phone number or email. Bounced chats, bots, name-only conversations, and your own test messages never come out of your monthly allowance. You only pay for people you can actually reach.
+              </p>
+              <p>
+                Each plan includes an AI conversation credit to cover the cost of running your digital assistant. Starter includes R80, Pro R200, Business R500, and Enterprise R1,200 of credit per month. This is enough to comfortably cover your included lead allowance and typical browse traffic. If you run unusually high chat volumes beyond your plan&apos;s lead cap, you can top up your AI credit directly from the dashboard. Unused credit does not carry over.
               </p>
               <p>
                 Every paid plan is flat monthly with no setup fee, no onboarding charge, and no commission on jobs you win. If you upgrade or downgrade mid-cycle, upgrades take effect immediately and downgrades apply at the start of the next billing period.

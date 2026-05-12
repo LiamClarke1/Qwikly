@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
       current_period_start: periodStart,
       current_period_end: periodEnd,
       ...(trialEndsAt ? { trial_ends_at: trialEndsAt } : {}),
-    }, { onConflict: "user_id" }).select("id, client_id").single();
+    }, { onConflict: "user_id" }).select("id").single();
 
     if (subError) {
       return NextResponse.json({ error: "account_setup_failed" }, { status: 500 });
@@ -147,12 +147,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Wire subscription -> client link if missing, then credit the starting AI grant
+    // Wire subscription -> client link, credit the starting AI grant,
     // and run the source-of-truth writer so clients reflects current entitlement.
     if (subRow?.id && clientId) {
-      if (!subRow.client_id) {
-        await db.from("subscriptions").update({ client_id: clientId }).eq("id", subRow.id);
-      }
+      // Column may not exist on older DB versions — error is intentionally ignored.
+      await db.from("subscriptions").update({ client_id: clientId }).eq("id", subRow.id);
       await db.from("conversation_credits").upsert({
         client_id: clientId,
         granted_balance_zar_cents: startingGrantZarCents(resolvedPlan),
