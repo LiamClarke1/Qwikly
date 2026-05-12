@@ -122,6 +122,7 @@ export default function CrmClientDetailPage() {
   const [tab,    setTab]    = useState<Tab>("Overview");
   const [client, setClient] = useState<CrmClientDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [patchToast, setPatchToast] = useState<{ text: string; ok: boolean } | null>(null);
 
   const loadClient = useCallback(async () => {
     const res = await fetch(`/api/admin/crm/clients/${id}`);
@@ -132,12 +133,16 @@ export default function CrmClientDetailPage() {
   useEffect(() => { loadClient(); }, [loadClient]);
 
   async function patchClient(updates: Record<string, unknown>) {
-    await fetch(`/api/admin/crm/clients/${id}`, {
+    const res = await fetch(`/api/admin/crm/clients/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
     });
     await loadClient();
+    const d = await res.json().catch(() => ({}));
+    const text = res.ok ? "Saved" : (d.error ?? "Save failed");
+    setPatchToast({ text, ok: res.ok });
+    setTimeout(() => setPatchToast(null), 2500);
   }
 
   if (loading) return <DetailSkeleton />;
@@ -258,7 +263,7 @@ export default function CrmClientDetailPage() {
 
       {/* Tab content */}
       {tab === "Overview"       && <OverviewTab client={client} onPatch={patchClient} />}
-      {tab === "Billing"        && <BillingTab clientId={Number(id)} />}
+      {tab === "Billing"        && <BillingTab clientId={Number(id)} creditsBalanceZarCents={client.credits_balance_zar_cents ?? 0} onCreditGranted={loadClient} />}
       {tab === "Analytics"      && <AnalyticsTab clientId={id} />}
       {tab === "Conversations"  && <ConversationsTab clientId={id} />}
       {tab === "Contacts"       && <ContactsTab clientId={id} clientName={client.business_name} />}
@@ -267,6 +272,18 @@ export default function CrmClientDetailPage() {
       {tab === "Files"          && <FilesTab clientId={id} />}
       {tab === "Timeline"       && <TimelineTab clientId={id} />}
       {tab === "Reports"        && <ReportsTab clientId={id} clientName={client.business_name} />}
+
+      {/* Patch feedback toast */}
+      {patchToast && (
+        <div className={cn(
+          "fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl text-[13px] font-medium shadow-lg border",
+          patchToast.ok
+            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+            : "bg-red-50 text-red-700 border-red-200",
+        )}>
+          {patchToast.text}
+        </div>
+      )}
     </div>
   );
 }
@@ -302,6 +319,44 @@ function isRealPhone(v: string | null | undefined): boolean {
   if (!v) return false;
   const stripped = v.replace(/^whatsapp:/, "");
   return /^(\+|0)\d{7,}/.test(stripped);
+}
+
+// ─── Billing cycle select ─────────────────────────────────────────────────────
+function InlineBillingCycleSelect({ current, onChange }: { current: string | null; onChange: (v: "monthly" | "annual") => void }) {
+  const [open, setOpen] = useState(false);
+  const options: { v: "monthly" | "annual"; label: string; cls: string }[] = [
+    { v: "monthly", label: "Monthly",          cls: "bg-slate-100 text-slate-600 border-slate-200" },
+    { v: "annual",  label: "Annual (15% off)", cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  ];
+  const selected = options.find(o => o.v === current);
+  return (
+    <div className="relative inline-block">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 cursor-pointer group"
+      >
+        {selected ? (
+          <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border", selected.cls)}>
+            {selected.label}
+          </span>
+        ) : (
+          <span className="text-[13px] text-slate-400">— (not set)</span>
+        )}
+        <Pencil className="w-3 h-3 text-slate-300 group-hover:text-slate-500 transition-colors" />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-1 w-52 bg-white border border-slate-200 rounded-xl shadow-lg z-20 py-1">
+          {options.map(o => (
+            <button key={o.v} onClick={() => { onChange(o.v); setOpen(false); }}
+              className={cn("w-full text-left flex items-center gap-2 px-3 py-2 text-[12px] hover:bg-slate-50 cursor-pointer",
+                current === o.v && "font-semibold text-[#E85A2C]")}>
+              <span className={cn("px-2 py-0.5 rounded-full text-[11px] font-medium border", o.cls)}>{o.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── Plan select ──────────────────────────────────────────────────────────────
@@ -535,20 +590,10 @@ function OverviewTab({ client, onPatch }: { client: CrmClientDetail; onPatch: (u
         {/* Billing cycle */}
         <div className="flex items-start gap-3 py-2 border-b border-slate-50">
           <p className="text-[12px] text-slate-400 w-28 shrink-0 mt-0.5">Billing</p>
-          <div className="flex items-center gap-2">
-            {client.billing_cycle ? (
-              <span className={cn(
-                "px-2 py-0.5 rounded-full text-[11px] font-semibold border",
-                client.billing_cycle === "annual"
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                  : "bg-slate-100 text-slate-600 border-slate-200"
-              )}>
-                {client.billing_cycle === "annual" ? "Annual (15% off)" : "Monthly"}
-              </span>
-            ) : (
-              <span className="text-[13px] text-slate-400">—</span>
-            )}
-          </div>
+          <InlineBillingCycleSelect
+            current={client.billing_cycle}
+            onChange={v => onPatch({ billing_cycle: v })}
+          />
         </div>
 
         {/* MRR */}
@@ -1424,13 +1469,21 @@ function MarkPaidInline({ invoiceId, onDone }: { invoiceId: string; onDone: () =
   );
 }
 
-function BillingTab({ clientId }: { clientId: number }) {
+function BillingTab({ clientId, creditsBalanceZarCents, onCreditGranted }: {
+  clientId: number;
+  creditsBalanceZarCents: number;
+  onCreditGranted: () => void;
+}) {
   const [invoices, setInvoices] = useState<BillingInvoiceRow[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [genBusy,  setGenBusy]  = useState(false);
   const [sendBusy, setSendBusy] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [toast,    setToast]    = useState<{ text: string; ok: boolean } | null>(null);
+  const [grantOpen,   setGrantOpen]   = useState(false);
+  const [grantAmount, setGrantAmount] = useState("");
+  const [grantNote,   setGrantNote]   = useState("");
+  const [grantBusy,   setGrantBusy]   = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1486,10 +1539,102 @@ function BillingTab({ clientId }: { clientId: number }) {
     else flash(d.error ?? "Send failed", false);
   }
 
+  async function grantCredits() {
+    const zarFloat = parseFloat(grantAmount);
+    if (!zarFloat || zarFloat <= 0) return;
+    setGrantBusy(true);
+    const res = await fetch("/api/admin/credits/grant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        client_id: clientId,
+        amount_zar_cents: Math.round(zarFloat * 100),
+        note: grantNote.trim() || undefined,
+        source: "manual_admin",
+      }),
+    });
+    setGrantBusy(false);
+    const d = await res.json().catch(() => ({}));
+    if (res.ok) {
+      flash(`Granted R${zarFloat.toFixed(2)} in AI credits`, true);
+      setGrantAmount("");
+      setGrantNote("");
+      setGrantOpen(false);
+      onCreditGranted();
+    } else {
+      flash(d.error ?? "Grant failed", false);
+    }
+  }
+
   if (loading) return <SkeletonList />;
 
   return (
     <div className="space-y-4">
+      {/* AI Credits card */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-[13px] font-semibold text-slate-800">AI Credits balance</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Credited to the conversation wallet — used per AI response</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[22px] font-bold text-slate-900 leading-none">
+              {formatZAR(creditsBalanceZarCents / 100)}
+            </p>
+            <p className="text-[11px] text-slate-400 mt-0.5">current balance</p>
+          </div>
+        </div>
+        {!grantOpen ? (
+          <button
+            onClick={() => setGrantOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-[12px] font-semibold hover:bg-emerald-100 border border-emerald-200 cursor-pointer transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" /> Grant credits
+          </button>
+        ) : (
+          <div className="border-t border-slate-100 pt-4 space-y-3">
+            <p className="text-[12px] font-semibold text-slate-700">Grant AI credits</p>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 max-w-[160px]">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-slate-400 font-medium">R</span>
+                <input
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  value={grantAmount}
+                  onChange={e => setGrantAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full pl-7 pr-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[13px] text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-400/20"
+                />
+              </div>
+              <input
+                type="text"
+                value={grantNote}
+                onChange={e => setGrantNote(e.target.value)}
+                placeholder="Note (optional)"
+                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/20"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={grantCredits}
+                disabled={grantBusy || !grantAmount || parseFloat(grantAmount) <= 0}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-[12px] font-semibold hover:bg-emerald-700 disabled:opacity-50 cursor-pointer transition-colors"
+              >
+                {grantBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                Confirm grant
+              </button>
+              <button
+                onClick={() => { setGrantOpen(false); setGrantAmount(""); setGrantNote(""); }}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 text-[12px] text-slate-600 hover:bg-slate-50 cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Header with generate button */}
       <div className="flex items-center justify-between">
         <p className="text-[13px] text-slate-500">Subscription invoices for this client</p>

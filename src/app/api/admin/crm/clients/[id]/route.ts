@@ -47,7 +47,7 @@ export async function GET(
   const sastNow = new Date(now.toLocaleString("en-US", { timeZone: "Africa/Johannesburg" }));
   const monthStart = new Date(Date.UTC(sastNow.getFullYear(), sastNow.getMonth(), 1)).toISOString();
 
-  const [clientRes, tagsRes, convosRes, notesCountRes, tasksOpenRes, bookingsRes, leadsMtdRes] = await Promise.all([
+  const [clientRes, tagsRes, convosRes, notesCountRes, tasksOpenRes, bookingsRes, leadsMtdRes, creditsRes] = await Promise.all([
     db.from("clients").select("*").eq("id", id).maybeSingle(),
     db.from("crm_client_tags").select("crm_tags(id,name,color)").eq("client_id", id),
     db.from("conversations").select("channel, created_at").eq("client_id", id).order("created_at", { ascending: false }).limit(5000),
@@ -56,6 +56,7 @@ export async function GET(
     db.from("bookings").select("id", { count: "exact", head: true }).eq("client_id", id),
     db.from("conversations").select("id", { count: "exact", head: true })
       .eq("client_id", id).eq("is_lead", true).gte("created_at", monthStart),
+    db.from("conversation_credits").select("purchased_balance_zar_cents").eq("client_id", id).maybeSingle(),
   ]);
 
   if (!clientRes.data) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -84,6 +85,7 @@ export async function GET(
       // Real month-to-date lead count from conversations.is_lead.
       // Computed on demand rather than stored, so it never goes stale.
       leads_used_mtd: leadsMtdRes.count ?? 0,
+      credits_balance_zar_cents: creditsRes.data?.purchased_balance_zar_cents ?? 0,
     },
   });
 }

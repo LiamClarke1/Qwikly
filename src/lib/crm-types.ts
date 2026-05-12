@@ -65,6 +65,7 @@ export interface CrmClientDetail extends CrmClientListItem {
   notes_count: number;
   tasks_open: number;
   bookings_total: number;
+  credits_balance_zar_cents: number;
 }
 
 export interface CrmNote {
