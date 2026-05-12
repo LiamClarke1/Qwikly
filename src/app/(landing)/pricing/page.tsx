@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Check, X } from "lucide-react";
 import CTAButton from "@/components/CTAButton";
-import { PipelinePricingBlock } from "@/components/pricing/PipelinePricingBlock";
 
 // Tier pricing. Annual = monthly x 12 x 0.85 (15% off, rounded).
 const MONTHLY = { starter: 699, pro: 1799, business: 3999, enterprise: 7999 } as const;
@@ -15,10 +14,8 @@ const tiers: {
   id: TierId;
   name: string;
   tagline: string;
-  features: string[];
   highlight: boolean;
   pill?: { label: string; variant: "popular" };
-  bundleBadge?: string;
   cta: string;
 }[] = [
   {
@@ -27,16 +24,6 @@ const tiers: {
     tagline: "Solo trades, individual agents, sole practitioners",
     highlight: false,
     cta: "Book a call",
-    features: [
-      "Digital assistant on your website, 24/7",
-      "Replies to visitors in under 60 seconds",
-      "Up to 20 leads/month captured by your digital assistant",
-      "400 conversations/month included",
-      "1 dashboard user",
-      '"Powered by Qwikly" branding',
-      "POPIA compliant",
-      "Email support, 24h response",
-    ],
   },
   {
     id: "pro",
@@ -45,16 +32,6 @@ const tiers: {
     highlight: true,
     pill: { label: "Most Popular", variant: "popular" },
     cta: "Book a call",
-    features: [
-      "Everything in Starter",
-      "Up to 50 leads/month captured by your digital assistant",
-      "1,000 conversations/month included",
-      "3 dashboard users",
-      "Custom branding, your logo and colours",
-      "Custom greeting and qualifying questions",
-      "Email lead delivery to the business owner",
-      "Email support, 12h response",
-    ],
   },
   {
     id: "business",
@@ -62,14 +39,6 @@ const tiers: {
     tagline: "Multi-doctor, multi-agent, busy practices",
     highlight: false,
     cta: "Book a call",
-    features: [
-      "Everything in Pro",
-      "Up to 200 leads/month captured by your digital assistant",
-      "4,000 conversations/month included",
-      "Unlimited dashboard users",
-      "Lead exports, CSV",
-      "Priority email support, 4h response",
-    ],
   },
   {
     id: "enterprise",
@@ -77,96 +46,97 @@ const tiers: {
     tagline: "Multi-location, white-label, mission-critical",
     highlight: false,
     cta: "Talk to us",
-    features: [
-      "Everything in Business",
-      "Up to 600+ leads/month captured by your digital assistant",
-      "12,000+ conversations/month included",
-      "API access for custom integrations",
-      "Dedicated support, 1h response",
-      "Custom onboarding",
-    ],
   },
 ];
 
-// The 4 most important features per card (compressed summary list)
+// Plan card highlights — both inbound and outbound features
 const cardHighlights: Record<TierId, string[]> = {
   starter: [
     "Digital assistant on your website, 24/7",
-    "400 conversations/month included",
     "Up to 20 leads/month captured",
+    "400 conversations/month included",
     "Replies to visitors in under 60 seconds",
     "POPIA compliant",
     "Email support, 24h response",
   ],
   pro: [
     "Everything in Starter",
-    "1,000 conversations/month included",
     "Up to 50 leads/month captured",
+    "5 outbound prospects per business day",
+    "1,000 conversations/month included",
     "Custom branding, your logo and colours",
     "3 dashboard users",
-    "Email support, 12h response",
   ],
   business: [
     "Everything in Pro",
-    "4,000 conversations/month included",
     "Up to 200 leads/month captured",
+    "10 outbound prospects per business day",
+    "4,000 conversations/month included",
     "Unlimited dashboard users",
     "Lead exports, CSV",
-    "Priority email support, 4h response",
   ],
   enterprise: [
     "Everything in Business",
-    "12,000+ conversations/month included",
     "Up to 600+ leads/month captured",
+    "20 outbound prospects per business day",
+    "12,000+ conversations/month included",
     "API access for custom integrations",
-    "Dedicated support, 1h SLA",
     "Custom onboarding",
   ],
 };
 
 type FeatureCell = boolean | string;
 
-// Comparison matrix rows — 4 tiers: Starter, Pro, Business, Enterprise.
+// Comparison matrix — inbound AND outbound rows together
 const featureRows: {
   label: string;
+  section?: string;
   starter: FeatureCell;
   pro: FeatureCell;
   business: FeatureCell;
   enterprise: FeatureCell;
 }[] = [
-  { label: "Digital assistant on your website",        starter: true,         pro: true,         business: true,           enterprise: true            },
-  { label: "Reply under 60 seconds",                   starter: true,         pro: true,         business: true,           enterprise: true            },
-  { label: "POPIA compliant",                          starter: true,         pro: true,         business: true,           enterprise: true            },
-  { label: "Conversations included / month",           starter: "400/mo",     pro: "1,000/mo",   business: "4,000/mo",     enterprise: "12,000+/mo"    },
-  { label: "Leads captured / month (on your assistant)", starter: "Up to 20", pro: "Up to 50",   business: "Up to 200",    enterprise: "Up to 600+"    },
-  { label: "Email lead delivery",                      starter: false,        pro: true,         business: true,           enterprise: true            },
-  { label: "Top-up rate beyond plan",                  starter: "R35 / lead", pro: "R36 / lead", business: "R20 / lead",  enterprise: "Volume"        },
-  { label: "Dashboard users",                          starter: "1",          pro: "3",          business: "Unlimited",    enterprise: "Unlimited"     },
-  { label: "Custom greeting and questions",            starter: false,        pro: true,         business: true,           enterprise: true            },
-  { label: '"Powered by Qwikly" branding',             starter: true,         pro: false,        business: false,          enterprise: false           },
-  { label: "Custom branding, your logo",               starter: false,        pro: true,         business: true,           enterprise: true            },
-  { label: "Lead exports, CSV",                        starter: false,        pro: false,        business: true,           enterprise: true            },
-  { label: "API access",                               starter: false,        pro: false,        business: false,          enterprise: true            },
-  { label: "Dedicated support manager",                starter: false,        pro: false,        business: false,          enterprise: true            },
-  { label: "Custom onboarding",                        starter: false,        pro: false,        business: false,          enterprise: true            },
-  { label: "Support response",                         starter: "24h",        pro: "12h",        business: "4h",           enterprise: "1h"            },
+  // Inbound
+  { label: "Digital assistant on your website",         section: "Inbound", starter: true,         pro: true,         business: true,           enterprise: true            },
+  { label: "Reply under 60 seconds",                    starter: true,         pro: true,         business: true,           enterprise: true            },
+  { label: "POPIA compliant",                           starter: true,         pro: true,         business: true,           enterprise: true            },
+  { label: "Conversations included / month",            starter: "400/mo",     pro: "1,000/mo",   business: "4,000/mo",     enterprise: "12,000+/mo"    },
+  { label: "Leads captured / month (inbound)",          starter: "Up to 20",   pro: "Up to 50",   business: "Up to 200",    enterprise: "Up to 600+"    },
+  { label: "Email lead delivery",                       starter: false,        pro: true,         business: true,           enterprise: true            },
+  { label: "Top-up rate beyond plan",                   starter: "R35/lead",   pro: "R36/lead",   business: "R20/lead",     enterprise: "Volume"        },
+  { label: "Custom greeting and questions",             starter: false,        pro: true,         business: true,           enterprise: true            },
+  { label: '"Powered by Qwikly" branding',              starter: true,         pro: false,        business: false,          enterprise: false           },
+  { label: "Custom branding, your logo",                starter: false,        pro: true,         business: true,           enterprise: true            },
+  { label: "Lead exports, CSV",                         starter: false,        pro: false,        business: true,           enterprise: true            },
+  // Outbound
+  { label: "Outbound prospects / day",                  section: "Outbound", starter: false,      pro: "5/day",      business: "10/day",        enterprise: "20/day"        },
+  { label: "Done-for-you outbound prospecting",         starter: false,        pro: true,         business: true,           enterprise: true            },
+  { label: "Target list built for you",                 starter: false,        pro: true,         business: true,           enterprise: true            },
+  { label: "Sequences written and sent for you",        starter: false,        pro: true,         business: true,           enterprise: true            },
+  { label: "Warm replies delivered to your inbox",      starter: false,        pro: true,         business: true,           enterprise: true            },
+  // Platform
+  { label: "Dashboard users",                           section: "Platform", starter: "1",        pro: "3",          business: "Unlimited",     enterprise: "Unlimited"     },
+  { label: "API access",                                starter: false,        pro: false,        business: false,          enterprise: true            },
+  { label: "Dedicated support manager",                 starter: false,        pro: false,        business: false,          enterprise: true            },
+  { label: "Custom onboarding",                         starter: false,        pro: false,        business: false,          enterprise: true            },
+  { label: "Support response",                          starter: "24h",        pro: "12h",        business: "4h",           enterprise: "1h"            },
 ];
 
 const pricingFAQs = [
   {
     question: "What exactly does Qwikly do?",
     answer:
-      "A digital assistant on your website that replies to visitors in under 60 seconds, asks them your qualifying questions, captures their contact info, and delivers the lead to you. That is the whole product. Qwikly does not source leads for you — it captures the people already visiting your website and makes sure none of them slip through the cracks.",
+      "Qwikly is one service with two engines. The first is a digital assistant on your website — it replies to visitors in under 60 seconds, qualifies them, captures their contact info, and delivers the lead to you. The second is done-for-you outbound prospecting — we build your target list, write and send cold outreach sequences, and deliver warm replies to your inbox. Both are included in the same monthly plan (Pro and above).",
   },
   {
-    question: "Does Qwikly find leads for me?",
+    question: "Does outbound replace cold calling?",
     answer:
-      "No. Qwikly captures leads from your existing website traffic. When someone lands on your site and opens the chat, your digital assistant qualifies them and saves their details. You get up to the number of leads your plan allows per month, depending on how many visitors engage with your assistant. Qwikly does not run ads, send cold messages, or add prospects from outside your website.",
+      "Yes. On Pro, Business, and Enterprise plans we handle the outbound prospecting for you — building the target list, writing the sequences, sending them, and forwarding replies to your inbox. You close the conversations. Starter is inbound-only.",
   },
   {
-    question: "How fast does Qwikly reply to a new visitor?",
+    question: "How fast does the digital assistant reply?",
     answer:
-      "Under 60 seconds, every time. The digital assistant replies in the chat on your website, and as soon as the visitor shares their phone number or email, the lead lands in your inbox by email (Pro plans and above). On Starter, new leads appear in your dashboard.",
+      "Under 60 seconds, every time. The moment a visitor opens the chat on your website, your assistant replies, qualifies them, and captures their details. Leads appear in your dashboard immediately and are emailed to you on Pro plans and above.",
   },
   {
     question: "What counts as a qualified lead?",
@@ -176,7 +146,7 @@ const pricingFAQs = [
   {
     question: "What happens when I hit my monthly lead limit?",
     answer:
-      "We notify you before you hit the cap. You can upgrade your plan, or top up at your plan's per-lead rate: R35 on Starter, R36 on Pro and Founders, R20 on Business. No flat overage, no automatic billing, no surprise charges. Your digital assistant keeps working until you decide.",
+      "We notify you before you hit the cap. You can upgrade or top up at your plan's per-lead rate — R35 on Starter, R36 on Pro, R20 on Business. No flat overage, no automatic billing, no surprise charges.",
   },
   {
     question: "Can I switch plans anytime?",
@@ -184,14 +154,14 @@ const pricingFAQs = [
       "Yes. Upgrade or downgrade from your dashboard at any time. Upgrades take effect immediately. Downgrades apply at the start of your next billing period.",
   },
   {
+    question: "Is there a setup fee?",
+    answer:
+      "No. Every paid plan is a flat monthly fee — no setup fee, no onboarding charge. We invoice you monthly by EFT. No card required online. Book a call and we set everything up for you, live within 24–48 hours.",
+  },
+  {
     question: "Do you take a cut of my jobs?",
     answer:
       "Never. Qwikly charges a flat monthly rate only. We earn nothing from your bookings. Every rand you earn stays yours.",
-  },
-  {
-    question: "Is there a setup fee?",
-    answer:
-      "No. Every paid plan is a flat monthly fee, no setup fee, no onboarding charge. We invoice you monthly by EFT — no card required online. Book a call and we set your digital assistant up for you, live within 24–48 hours.",
   },
 ];
 
@@ -214,7 +184,7 @@ function MatrixCell({ value, isPremiumCol }: { value: FeatureCell; isPremiumCol?
   }
   return (
     <span className="flex items-center justify-center">
-      <span className="text-[11px] tracking-wide uppercase text-ink-300">Not included</span>
+      <span className="text-[11px] tracking-wide uppercase text-ink-300">—</span>
     </span>
   );
 }
@@ -234,44 +204,16 @@ export default function PricingPage() {
   return (
     <div className="bg-paper">
 
-      {/* HERO, single headline + paragraph + toggle */}
+      {/* HERO */}
       <section className="relative pt-36 md:pt-44 pb-12 grain overflow-hidden">
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
           <h1 className="display-huge text-ink mx-auto max-w-[18ch] reveal-up">
-            Compare every plan,{" "}
-            <em className="italic font-light">side by side</em>.
+            One service,{" "}
+            <em className="italic font-light">every plan</em>.
           </h1>
           <p className="mt-8 text-lg text-ink-700 max-w-2xl mx-auto leading-relaxed">
-            One flat monthly fee, no setup costs, no commissions. Qwikly offers two services — pick what you need or combine them.
+            Every Qwikly plan includes both inbound <em>(digital assistant on your website)</em> and outbound <em>(done-for-you prospecting)</em>. Starter is inbound only. Pro and above unlock outbound.
           </p>
-
-          {/* Two services overview */}
-          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto text-left">
-            <a href="#digital-assistant" className="group flex items-start gap-4 bg-white border border-ink/10 rounded-2xl p-5 hover:border-ember/40 hover:shadow-sm transition-all">
-              <span className="w-9 h-9 rounded-xl bg-ember/10 flex items-center justify-center shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-ember" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </span>
-              <div>
-                <p className="font-display text-base text-ink group-hover:text-ember transition-colors">Digital Assistant</p>
-                <p className="text-xs text-ink-500 mt-1 leading-relaxed">A 24/7 digital assistant on your website that captures and qualifies leads in under 60 seconds.</p>
-                <p className="text-xs text-ember font-medium mt-2">R699 – R7,999/mo →</p>
-              </div>
-            </a>
-            <a href="#pipeline" className="group flex items-start gap-4 bg-white border border-ink/10 rounded-2xl p-5 hover:border-ember/40 hover:shadow-sm transition-all">
-              <span className="w-9 h-9 rounded-xl bg-ember/10 flex items-center justify-center shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-ember" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </span>
-              <div>
-                <p className="font-display text-base text-ink group-hover:text-ember transition-colors">Pipeline — Outbound</p>
-                <p className="text-xs text-ink-500 mt-1 leading-relaxed">Done-for-you outbound prospecting. We build the list, write the sequences, deliver warm replies.</p>
-                <p className="text-xs text-ember font-medium mt-2">From R3,499/mo →</p>
-              </div>
-            </a>
-          </div>
 
           {/* Monthly / Annual toggle */}
           <div className="mt-12 flex items-center justify-center gap-4 flex-wrap">
@@ -310,8 +252,8 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* SECTION 1, THE MATRIX (lead element) */}
-      <section id="digital-assistant" className="pb-24 grain">
+      {/* SECTION 1 — COMPARISON MATRIX */}
+      <section className="pb-24 grain">
         <div className="mx-auto max-w-site px-6 lg:px-10">
 
           <div className="mb-10 flex items-end justify-between flex-wrap gap-4">
@@ -322,7 +264,7 @@ export default function PricingPage() {
               </h2>
             </div>
             <p className="text-ink-500 text-sm max-w-md">
-              Pro is the most popular plan. Business steps up to 200 leads per month with unlimited users and CSV exports.
+              Inbound and outbound features listed together. Pro is the most popular plan.
             </p>
           </div>
 
@@ -387,23 +329,32 @@ export default function PricingPage() {
                 </thead>
                 <tbody className="divide-y divide-ink/[0.06]">
                   {featureRows.map((row) => (
-                    <tr key={row.label} className="hover:bg-ink/[0.015] transition-colors">
-                      <td className="py-4 px-6 text-sm text-ink-700 leading-snug font-sans">
-                        {row.label}
-                      </td>
-                      <td className="py-4 px-5 text-left">
-                        <MatrixCell value={row.starter} />
-                      </td>
-                      <td className="py-4 px-5 text-left bg-ember/5">
-                        <MatrixCell value={row.pro} isPremiumCol />
-                      </td>
-                      <td className="py-4 px-5 text-left">
-                        <MatrixCell value={row.business} />
-                      </td>
-                      <td className="py-4 px-5 text-left">
-                        <MatrixCell value={row.enterprise} />
-                      </td>
-                    </tr>
+                    <>
+                      {row.section && (
+                        <tr key={`section-${row.section}`} className="bg-ink/[0.025]">
+                          <td colSpan={5} className="py-2 px-6">
+                            <span className="eyebrow text-ink-400 text-[10px]">{row.section}</span>
+                          </td>
+                        </tr>
+                      )}
+                      <tr key={row.label} className="hover:bg-ink/[0.015] transition-colors">
+                        <td className="py-4 px-6 text-sm text-ink-700 leading-snug font-sans">
+                          {row.label}
+                        </td>
+                        <td className="py-4 px-5 text-left">
+                          <MatrixCell value={row.starter} />
+                        </td>
+                        <td className="py-4 px-5 text-left bg-ember/5">
+                          <MatrixCell value={row.pro} isPremiumCol />
+                        </td>
+                        <td className="py-4 px-5 text-left">
+                          <MatrixCell value={row.business} />
+                        </td>
+                        <td className="py-4 px-5 text-left">
+                          <MatrixCell value={row.enterprise} />
+                        </td>
+                      </tr>
+                    </>
                   ))}
                 </tbody>
               </table>
@@ -416,7 +367,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* SECTION 2, TIER CARDS (compressed quick summary) */}
+      {/* SECTION 2 — PLAN CARDS */}
       <section className="py-24 bg-paper-deep grain border-t border-ink/[0.06]">
         <div className="mx-auto max-w-site px-6 lg:px-10">
 
@@ -428,7 +379,7 @@ export default function PricingPage() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-stretch">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
             {tiers.map((tier) => {
               const price = displayPrice(tier.id);
               const isContact = tier.id === "enterprise";
@@ -445,13 +396,7 @@ export default function PricingPage() {
                 >
                   {tier.pill && (
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                      <span
-                        className={`eyebrow px-3 py-1 rounded-full whitespace-nowrap text-[10px] ${
-                          tier.pill.variant === "popular"
-                            ? "bg-ember text-paper"
-                            : "bg-ink text-paper"
-                        }`}
-                      >
+                      <span className="eyebrow px-3 py-1 rounded-full whitespace-nowrap text-[10px] bg-ember text-paper">
                         {tier.pill.label}
                       </span>
                     </div>
@@ -537,7 +482,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* SECTION 3, EXTRAS (quiet prose, no boxes) */}
+      {/* SECTION 3 — EXTRAS */}
       <section className="py-24 bg-paper grain">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
@@ -550,46 +495,23 @@ export default function PricingPage() {
             </div>
             <div className="md:col-span-8 md:col-start-5 space-y-6 text-ink-700 text-base leading-relaxed">
               <p>
-                The lead numbers on each plan are the maximum your digital assistant can capture per month. Starter captures up to 20 leads, Pro up to 50, Business up to 200, Enterprise up to 600+. These are leads captured through your assistant on your website — Qwikly does not source or deliver leads to you independently.
+                The lead numbers on each plan are the maximum your digital assistant can capture per month from your website. Starter captures up to 20 leads, Pro up to 50, Business up to 200, Enterprise up to 600+. These are inbound leads — people already visiting your site who engage with your assistant.
               </p>
               <p>
-                If you hit your monthly lead cap, you can top up at the per-lead rate on your plan. That is R35 per lead on Starter, R36 on Pro, R20 on Business. Enterprise tops up at volume pricing. There is no flat overage charge, no plan change required, and no automatic billing. You approve every top-up.
+                The outbound prospect numbers — 5/day on Pro, 10/day on Business, 20/day on Enterprise — are the number of hand-picked cold prospects we research and reach out to on your behalf each business day. Starter does not include outbound.
               </p>
               <p>
-                A lead is only counted when a visitor shares a phone number or email. Bounced chats, bots, name-only conversations, and your own test messages never come out of your monthly allowance. You only pay for people you can actually reach.
+                If you hit your monthly inbound lead cap, you can top up at your plan's per-lead rate. That is R35 per lead on Starter, R36 on Pro, R20 on Business. There is no flat overage charge, no plan change required, and no automatic billing. You approve every top-up.
               </p>
               <p>
-                Every paid plan is flat monthly with no setup fee, no onboarding charge, and no commission on jobs you win. If you upgrade or downgrade mid-cycle, upgrades take effect immediately and downgrades apply at the start of the next billing period.
+                Every paid plan is flat monthly with no setup fee, no onboarding charge, and no commission on jobs you win.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECTION 4, PIPELINE PRICING */}
-      <section id="pipeline" className="py-24 bg-paper-deep grain border-t border-ink/[0.06]">
-        <div className="mx-auto max-w-site px-6 lg:px-10">
-
-          <div className="mb-12">
-            <p className="eyebrow text-ink-500 mb-3">Outbound</p>
-            <h2 className="display-lg text-ink max-w-[22ch]">
-              Qwikly Pipeline,{" "}
-              <em className="italic font-light">done-for-you outbound</em>.
-            </h2>
-            <p className="mt-4 text-ink-700 text-base max-w-xl leading-relaxed">
-              Pipeline is a fully managed outbound prospecting service. We build your target list, write and send the sequences, and deliver warm replies into your inbox. No cold-calling, no hiring, no guesswork.
-            </p>
-          </div>
-
-          <PipelinePricingBlock />
-
-          <p className="text-center eyebrow text-ink-500 mt-8">
-            One-time setup fee covers domain warm-up, deliverability infrastructure, and POPIA compliance.
-          </p>
-        </div>
-      </section>
-
-      {/* SECTION 5, FAQ */}
+      {/* SECTION 4 — FAQ */}
       <section className="py-28 grain border-t border-ink/[0.06]">
         <div className="mx-auto max-w-site px-6 lg:px-10">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
@@ -657,7 +579,7 @@ export default function PricingPage() {
         <div className="dot-grid absolute inset-0 opacity-50" />
         <div className="relative mx-auto max-w-site px-6 lg:px-10 text-center">
           <h2 className="display-xl text-paper max-w-[22ch] mx-auto">
-            One thing, done well.{" "}
+            One service. Inbound + outbound.{" "}
             <em className="italic font-light text-ember">Let&rsquo;s get you live.</em>
           </h2>
           <p className="mt-6 text-paper/60 text-base max-w-lg mx-auto leading-relaxed">

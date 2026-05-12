@@ -319,9 +319,9 @@ export function dailyProspectQuotaForPlan(plan: InboundPlanTier): number {
     case 'founders':
       return 10;
     case 'business':
-      return 15;
+      return 10;
     case 'enterprise':
-      return 25;
+      return 20;
     default:
       return 0;
   }
